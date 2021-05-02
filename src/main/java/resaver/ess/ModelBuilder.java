@@ -426,8 +426,18 @@ public class ModelBuilder {
      */
     static final Function<Element, Character> ALPHABETICAL = (v) -> {
         String str = v.toString();
-        char firstChar = str.length() == 0 ? '0' : Character.toUpperCase(str.charAt(0));
-        char category = Character.isLetter(firstChar) ? firstChar : '0';
+        char firstChar;
+        if (str.length() == 0) {
+            firstChar = '0';
+        } else {
+            firstChar = Character.toUpperCase(str.charAt(0));
+        }
+        char category;
+        if (Character.isLetter(firstChar)) {
+            category = firstChar;
+        } else {
+            category = '0';
+        }
         return category;
     };
 
