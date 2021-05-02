@@ -13,129 +13,79 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mf;
+package mf
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.function.BiFunction
+import java.lang.StringBuilder
+import java.util.*
 
 /**
  * A simple stopwatch class.
  *
  * @author Mark Fairchild
  */
-final public class Timer {
-
+class Timer(name: String?) {
     /**
-     * Creates a <code>Timer</code>, starts it, and then returns it. For convenience.
-     * @param name The name of the <code>Timer</code>.
-     * @return The newly created <code>Timer</code>.
-     */
-    static public Timer startNew(String name) {
-        Timer t = new Timer(name);
-        t.start();
-        return t;
-    }
-    
-    /**
-     * Creates a new <code>Timer</code> with the specified name.
-     *
-     * @param name The name of the <code>Timer</code>.
-     *
-     */
-    public Timer(String name) {
-        if (null == name || name.isEmpty()) {
-            this.NAME = null;
-        } else if (name.length() > 100) {
-            this.NAME = name.substring(0, 100).trim();
-        } else {
-            this.NAME = name.trim();
-        }
-
-        this.reset();
-    }
-
-    /**
-     * Resets the <code>Timer</code>. If the <code>Timer</code> is running, it
+     * Resets the `Timer`. If the `Timer` is running, it
      * will be stopped.
      */
-    public void reset() {
-        this.totalElapsed_ = 0;
-        this.initialTime_ = 0;
-        this.running_ = false;
+    fun reset() {
+        totalElapsed_ = 0
+        initialTime_ = 0
+        isRunning = false
     }
 
     /**
-     * Starts the <code>Timer</code>. If the <code>Timer</code> is already
+     * Starts the `Timer`. If the `Timer` is already
      * running, this method has no effect.
      */
-    public void start() {
-        if (this.running_) {
-            return;
+    fun start() {
+        if (isRunning) {
+            return
         }
-
-        this.initialTime_ = System.nanoTime();
-        this.running_ = true;
+        initialTime_ = System.nanoTime()
+        isRunning = true
     }
 
     /**
-     * This method is equivalent to:      <code>
+     * This method is equivalent to:      `
      * Timer.reset();
      * Timer.start();
-     * </code>
+    ` *
      *
      */
-    public void restart() {
-        this.reset();
-        this.start();
+    fun restart() {
+        reset()
+        start()
     }
 
     /**
-     * Stops the <code>Timer</code>. If the <code>Timer</code> isn't running,
+     * Stops the `Timer`. If the `Timer` isn't running,
      * this method has no effect.
      */
-    public void stop() {
-        if (!this.running_) {
-            return;
+    fun stop() {
+        if (!isRunning) {
+            return
         }
-
-        long finalTime = System.nanoTime();
-        this.running_ = false;
-        this.totalElapsed_ += (finalTime - this.initialTime_);
+        val finalTime = System.nanoTime()
+        isRunning = false
+        totalElapsed_ += finalTime - initialTime_
     }
 
     /**
-     * Checks if the <code>Timer</code> is running.
-     *
-     * @return A flag indicating the the <code>Timer</code> is running.
-     */
-    public boolean isRunning() {
-        return this.running_;
-    }
-
-    /**
-     * Returns the amount of time that has elapsed while the <code>Timer</code>
+     * Returns the amount of time that has elapsed while the `Timer`
      * was running, in nanoseconds.
      *
      * @return The total amount of time elapsed between calls to
-     * <code>start()</code> and <code>stop()</code>.
+     * `start()` and `stop()`.
      */
-    public long getElapsed() {
-        if (this.running_) {
-            long finalTime = System.nanoTime();
-            return this.totalElapsed_ + (finalTime - this.initialTime_);
+    val elapsed: Long
+        get() = if (isRunning) {
+            val finalTime = System.nanoTime()
+            totalElapsed_ + (finalTime - initialTime_)
         } else {
-            return this.totalElapsed_;
+            totalElapsed_
         }
-    }
-
-    /**
-     * Returns the name of the <code>Timer</code>.
-     *
-     * @return The name of the <code>Timer</code>.
-     */
-    public String getName() {
-        return this.NAME;
-    }
 
     /**
      * Stores a record of the current elapsed time. If there is already a record
@@ -143,27 +93,29 @@ final public class Timer {
      *
      * @param recordName The record name under which to make the record.
      */
-    public void record(String recordName) {
-        Objects.requireNonNull(recordName);
-        long elapsed = this.getElapsed();
-
-        if (null == this.records) {
-            this.records = new java.util.LinkedHashMap<>();
+    fun record(recordName: String) {
+        Objects.requireNonNull(recordName)
+        val elapsed = elapsed
+        if (null == records) {
+            records = LinkedHashMap()
         }
-
-        this.records.merge(recordName, elapsed, Long::sum);
+        records!!.merge(recordName, elapsed) { a: Long?, b: Long? ->
+            java.lang.Long.sum(
+                a!!, b!!
+            )
+        }
     }
 
     /**
      * Stores a record of the current elapsed time and resets the timer.
      *
-     * @see Timer#record(java.lang.String)
-     * @see Timer#reset()
+     * @see Timer.record
+     * @see Timer.reset
      * @param recordName The record name under which to make the record.
      */
-    public void recordRestart(String recordName) {
-        this.record(recordName);
-        this.restart();
+    fun recordRestart(recordName: String) {
+        record(recordName)
+        restart()
     }
 
     /**
@@ -172,13 +124,12 @@ final public class Timer {
      *
      * @return A map of record name to elapsed times or null if no records have
      * been recorded.
-     *
      */
-    public Map<String, Long> getRecords() {
-        if (null == this.records) {
-            return null;
+    fun getRecords(): Map<String, Long>? {
+        return if (null == records) {
+            null
         } else {
-            return java.util.Collections.unmodifiableMap(this.records);
+            Collections.unmodifiableMap(records)
         }
     }
 
@@ -186,72 +137,108 @@ final public class Timer {
      * Returns the elapsed time as a string with a unit.
      *
      * @return A string of the form "<ELAPSED TIME> <UNIT>".
-     *
-     */
-    public String getFormattedTime() {
-        long elapsed = this.getElapsed();
-
-        if (elapsed < MICROSECOND) {
-            return String.format("%d ns", elapsed);
-        } else if (elapsed < MILLISECOND) {
-            float microseconds = elapsed / MICROSECOND;
-            return String.format("%1.1f us", microseconds);
-        } else if (elapsed < SECOND) {
-            float milliseconds = elapsed / MILLISECOND;
-            return String.format("%1.1f ms", milliseconds);
-        } else if (elapsed < MINUTE) {
-            float seconds = elapsed / SECOND;
-            return String.format("%1.1f s", seconds);
-        } else {
-            float seconds = elapsed / MINUTE;
-            return String.format("%1.1f m", seconds);
+    </UNIT></ELAPSED> */
+    val formattedTime: String
+        get() {
+            val elapsed = elapsed
+            return if (elapsed < MICROSECOND) {
+                String.format("%d ns", elapsed)
+            } else if (elapsed < MILLISECOND) {
+                val microseconds = elapsed / MICROSECOND
+                String.format("%1.1f us", microseconds)
+            } else if (elapsed < SECOND) {
+                val milliseconds = elapsed / MILLISECOND
+                String.format("%1.1f ms", milliseconds)
+            } else if (elapsed < MINUTE) {
+                val seconds = elapsed / SECOND
+                String.format("%1.1f s", seconds)
+            } else {
+                val seconds = elapsed / MINUTE
+                String.format("%1.1f m", seconds)
+            }
         }
+
+    /**
+     * Returns a pretty-print representation of the `Timer`.
+     *
+     * @return A string of the form "Timer <NAME>: <ELAPSED TIME> ns (running)".
+    </ELAPSED></NAME> */
+    override fun toString(): String {
+        val SB = StringBuilder()
+        SB.append("Timer ")
+        SB.append(name)
+        SB.append(": ")
+        val elapsed = elapsed
+        if (elapsed < MICROSECOND) {
+            SB.append(String.format("%d ns", elapsed))
+        } else if (elapsed < MILLISECOND) {
+            val microseconds = elapsed / MICROSECOND
+            SB.append(String.format("%.2f us", microseconds))
+        } else if (elapsed < SECOND) {
+            val milliseconds = elapsed / MILLISECOND
+            SB.append(String.format("%.2f ms", milliseconds))
+        } else if (elapsed < MINUTE) {
+            val seconds = elapsed / SECOND
+            SB.append(String.format("%.2f s", seconds))
+        } else {
+            val seconds = elapsed / MINUTE
+            SB.append(String.format("%.2f m", seconds))
+        }
+        if (isRunning) {
+            SB.append(" (running)")
+        }
+        return SB.toString()
     }
 
     /**
-     * Returns a pretty-print representation of the <code>Timer</code>.
+     * Returns the name of the `Timer`.
      *
-     * @return A string of the form "Timer <NAME>: <ELAPSED TIME> ns (running)".
+     * @return The name of the `Timer`.
      */
-    @Override
-    public String toString() {
-        final StringBuilder SB = new StringBuilder();
-        SB.append("Timer ");
-        SB.append(this.getName());
-        SB.append(": ");
+    var name: String? = null
+    private var totalElapsed_: Long = 0
+    private var initialTime_: Long = 0
 
-        long elapsed = this.getElapsed();
-        if (elapsed < MICROSECOND) {
-            SB.append(String.format("%d ns", elapsed));
-        } else if (elapsed < MILLISECOND) {
-            float microseconds = elapsed / MICROSECOND;
-            SB.append(String.format("%.2f us", microseconds));
-        } else if (elapsed < SECOND) {
-            float milliseconds = elapsed / MILLISECOND;
-            SB.append(String.format("%.2f ms", milliseconds));
-        } else if (elapsed < MINUTE) {
-            float seconds = elapsed / SECOND;
-            SB.append(String.format("%.2f s", seconds));
-        } else {
-            float seconds = elapsed / MINUTE;
-            SB.append(String.format("%.2f m", seconds));
+    /**
+     * Checks if the `Timer` is running.
+     *
+     * @return A flag indicating the the `Timer` is running.
+     */
+    var isRunning = false
+        private set
+    private var records: MutableMap<String, Long>? = null
+
+    companion object {
+        /**
+         * Creates a `Timer`, starts it, and then returns it. For convenience.
+         * @param name The name of the `Timer`.
+         * @return The newly created `Timer`.
+         */
+        fun startNew(name: String?): Timer {
+            val t = Timer(name)
+            t.start()
+            return t
         }
 
-        if (this.running_) {
-            SB.append(" (running)");
-        }
-
-        return SB.toString();
+        private const val MICROSECOND = 1.0e3f
+        private const val MILLISECOND = 1.0e6f
+        private const val SECOND = 1.0e9f
+        private const val MINUTE = 6.0e10f
     }
 
-    final private String NAME;
-    private long totalElapsed_;
-    private long initialTime_;
-    private boolean running_;
-    private java.util.Map<String, Long> records;
-
-    static final private float MICROSECOND = 1.0e3f;
-    static final private float MILLISECOND = 1.0e6f;
-    static final private float SECOND = 1.0e9f;
-    static final private float MINUTE = 6.0e10f;
+    /**
+     * Creates a new `Timer` with the specified name.
+     *
+     * @param name The name of the `Timer`.
+     */
+    init {
+        if (null == name || name.isEmpty()) {
+            this.name = null
+        } else if (name.length > 100) {
+            this.name = name.substring(0, 100).trim { it <= ' ' }
+        } else {
+            this.name = name.trim { it <= ' ' }
+        }
+        reset()
+    }
 }

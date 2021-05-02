@@ -35,6 +35,8 @@ import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+
+import mf.Timer;
 import resaver.Game;
 import resaver.Mod;
 import resaver.ResaverFormatting;
@@ -75,7 +77,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
      */
     @Override
     protected resaver.Analysis doInBackground() throws Exception {
-        final mf.Timer TIMER = mf.Timer.startNew("Load Plugins");
+        final mf.Timer TIMER = Timer.Companion.startNew("Load Plugins");
         final Game GAME = this.SAVE.getHeader().GAME;
         this.WINDOW.addWindowListener(this.LISTENER);
         this.PROGRESS.accept("Initializing");

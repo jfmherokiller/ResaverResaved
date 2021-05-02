@@ -73,7 +73,7 @@ final public class ESS implements Element {
         Objects.requireNonNull(model);
 
         // Timer, for analyzing stuff.
-        final Timer TIMER = Timer.startNew("reading savefile");
+        final Timer TIMER = Timer.Companion.startNew("reading savefile");
 
         // Doublecheck that the savefile has a correct extension.
         if (!Game.Companion.getFILTER_ALL().accept(saveFile.toFile())) {
@@ -125,7 +125,7 @@ final public class ESS implements Element {
             throw new IOException(String.format("%s is truncated and can't be saved.", ess.getOriginalFile().getFileName()));
         }
 
-        final Timer TIMER = Timer.startNew("writing savefile");
+        final Timer TIMER = Timer.Companion.startNew("writing savefile");
         final Game GAME = ess.getHeader().GAME;
         Path backup = null;
 
