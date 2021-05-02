@@ -304,7 +304,7 @@ final public class Mod implements java.io.Serializable {
                         final Plugin PLUGIN = this.getStringsFilePlugin(path, language, plugins);
                         if (PLUGIN != null) {
                             try {
-                                final StringsFile STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN, input.get());
+                                final StringsFile STRINGSFILE = StringsFile.Companion.readStringsFile(path, PLUGIN, input.get());
                                 ARCHIVE_STRINGSFILES.add(STRINGSFILE);
                             } catch (java.nio.BufferUnderflowException ex) {
                                 STRINGSFILE_ERRORS.add(archivePath.getFileName());
@@ -320,7 +320,7 @@ final public class Mod implements java.io.Serializable {
                 SCRIPT_ORIGINS.putAll(ARCHIVE_SCRIPTS);
                 STRINGSFILES.addAll(ARCHIVE_STRINGSFILES);
 
-                int stringsCount = ARCHIVE_STRINGSFILES.stream().mapToInt(s -> s.TABLE.size()).sum();
+                int stringsCount = ARCHIVE_STRINGSFILES.stream().mapToInt(s -> s.getTABLE().size()).sum();
                 int scriptsCount = ARCHIVE_SCRIPTS.size();
 
                 if (stringsCount > 0 || scriptsCount > 0) {
@@ -341,7 +341,7 @@ final public class Mod implements java.io.Serializable {
                     try {
                         final Plugin PLUGIN = this.getStringsFilePlugin(path, language, plugins);
                         if (PLUGIN != null) {
-                            final StringsFile STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN);
+                            final StringsFile STRINGSFILE = StringsFile.Companion.readStringsFile(path, PLUGIN);
                             return STRINGSFILE;
                         } else {
                             return null;
@@ -359,7 +359,7 @@ final public class Mod implements java.io.Serializable {
                 .collect(Collectors.toMap(p -> p, Path::getFileName));
         SCRIPT_ORIGINS.putAll(LOOSE_SCRIPTS);
 
-        int stringsCount = LOOSE_STRINGSFILES.stream().mapToInt(s -> s.TABLE.size()).sum();
+        int stringsCount = LOOSE_STRINGSFILES.stream().mapToInt(s -> s.getTABLE().size()).sum();
         int scriptsCount = LOOSE_SCRIPTS.size();
 
         if (stringsCount > 0 || scriptsCount > 0) {

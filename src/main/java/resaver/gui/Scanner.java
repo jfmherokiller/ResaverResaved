@@ -159,7 +159,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
 
             // Map plugins to their stringsfiles.
             Map<Plugin, List<StringsFile>> PLUGIN_STRINGS = STRINGSFILES.stream()
-                    .collect(Collectors.groupingBy(stringsFile -> stringsFile.PLUGIN));
+                    .collect(Collectors.groupingBy(StringsFile::getPLUGIN));
 
             // The master stringtable.
             final resaver.esp.StringTable STRINGTABLE = new resaver.esp.StringTable();

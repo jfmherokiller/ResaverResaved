@@ -44,7 +44,7 @@ public class StringTable {
         Objects.requireNonNull(stringsFiles);
 
         final Map<Integer, String> SUBTABLE = this.TABLE.computeIfAbsent(plugin, p -> new HashMap<>());
-        stringsFiles.stream().forEach(stringsFile -> SUBTABLE.putAll(stringsFile.TABLE));
+        stringsFiles.stream().forEach(stringsFile -> SUBTABLE.putAll(stringsFile.getTABLE()));
     }
 
     /**
