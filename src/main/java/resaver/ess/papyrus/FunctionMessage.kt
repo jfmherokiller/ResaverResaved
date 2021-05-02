@@ -13,248 +13,203 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import resaver.ess.AnalyzableElement;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.SortedSet;
-import java.nio.ByteBuffer;
-import resaver.Analysis;
-import resaver.IString;
-import resaver.ess.ESS;
-import resaver.ess.Element;
-import resaver.ess.Linkable;
+import resaver.Analysis
+import resaver.ess.AnalyzableElement
+import resaver.ess.ESS
+import resaver.ess.Element
+import resaver.ess.Linkable
+import resaver.ess.papyrus.EID.Companion.pad8
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Describes a function message in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class FunctionMessage implements PapyrusElement, AnalyzableElement, Linkable {//, HasID {
-
+class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable {
     /**
-     * Creates a new <code>FunctionMessage</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusElementException
-     */
-    public FunctionMessage(ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-
-        this.UNKNOWN = input.get();
-        this.ID = this.UNKNOWN <= 2 ? context.readEID32(input) : null;
-        this.FLAG = input.get();
-
-        this.THREAD = this.ID == null ? null : context.findActiveScript(this.ID);
-        assert this.THREAD != null;
-
-        if (this.FLAG == 0) {
-            this.MESSAGE = null;
-        } else {
-            FunctionMessageData message = null;
-            try {
-                message = new FunctionMessageData(input, this, context);
-
-            } catch (PapyrusElementException ex) {
-                message = (FunctionMessageData) ex.getPartial();
-                throw new PapyrusElementException("Failed to read message for FunctionMessage.", ex, this);
-
-            } catch (PapyrusFormatException ex) {
-                throw new PapyrusElementException("Failed to read message for FunctionMessage.", ex, this);
-
-            } finally {
-                this.MESSAGE = message;
-            }
-        }
-    }
-
-    /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.UNKNOWN);
-
-        if (this.ID != null) {
-            this.ID.write(output);
-        }
-
-        output.put(this.FLAG);
-
-        if (this.MESSAGE != null) {
-            this.MESSAGE.write(output);
-        }
+    override fun write(output: ByteBuffer) {
+        output.put(UNKNOWN)
+        iD?.write(output)
+        output.put(FLAG)
+        message?.write(output)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 2;
-        sum += this.ID == null ? 0 : this.ID.calculateSize();
-        sum += this.MESSAGE == null ? 0 : this.MESSAGE.calculateSize();
-        return sum;
-    }
-
-    /**
-     * @return The ID of the papyrus element.
-     */
-    public EID getID() {
-        return this.ID;
+    override fun calculateSize(): Int {
+        var sum = 2
+        sum += if (iD == null) 0 else iD.calculateSize()
+        sum += (if (message == null) 0 else message?.calculateSize())!!
+        return sum
     }
 
     /**
      * @return The message field.
      */
-    public boolean hasMessage() {
-        return this.MESSAGE != null;
+    fun hasMessage(): Boolean {
+        return message != null
     }
 
     /**
-     * @return The message field.
+     * @return The corresponding `Script`.
      */
-    public FunctionMessageData getMessage() {
-        return this.MESSAGE;
-    }
+    val script: Script?
+        get() = if (hasMessage()) message!!.script else null
 
     /**
-     * @return The corresponding <code>Script</code>.
-     */
-    public Script getScript() {
-        return this.hasMessage() ? this.MESSAGE.getScript() : null;
-    }
-
-    /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        if (null != target && null != this.MESSAGE) {
-            Optional<Variable> result = this.MESSAGE.getVariables().stream()
-                    .filter(v -> v.hasRef())
-                    .filter(v -> v.getReferent() == target)
-                    .findFirst();
-
-            if (result.isPresent()) {
-                int i = this.MESSAGE.getVariables().indexOf(result.get());
+    override fun toHTML(target: Element): String {
+        if (null != target && null != message) {
+            val result = message!!.variables.stream()
+                .filter { obj: Variable -> obj.hasRef() }
+                .filter { v: Variable -> v.referent === target }
+                .findFirst()
+            if (result.isPresent) {
+                val i = message!!.variables.indexOf(result.get())
                 if (i >= 0) {
-                    return Linkable.makeLink("message", this.ID, i, this.toString());
+                    return Linkable.makeLink("message", iD, i, this.toString())
                 }
             }
         }
-
-        return Linkable.makeLink("message", this.ID, this.toString());
+        return Linkable.makeLink("message", iD, this.toString())
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        if (this.MESSAGE != null) {
-            TString scriptName = this.MESSAGE.getScriptName();
-
-            if (this.isUndefined()) {
-                if (this.UNKNOWN <= 2) {
-                    return "MSG #" + scriptName + "# (" + this.ID + ")";
+    override fun toString(): String {
+        return if (message != null) {
+            val scriptName = message!!.scriptName
+            if (isUndefined) {
+                if (UNKNOWN <= 2) {
+                    "MSG #$scriptName# ($iD)"
                 } else {
-                    return "MSG #" + scriptName;
+                    "MSG #$scriptName"
                 }
-            } else if (this.UNKNOWN <= 2) {
-                return "MSG " + scriptName + " (" + this.ID + ")";
+            } else if (UNKNOWN <= 2) {
+                "MSG $scriptName ($iD)"
             } else {
-                return "MSG " + scriptName;
+                "MSG $scriptName"
             }
-
-        } else if (this.ID != null) {
-            return "MSG " + this.FLAG + "," + EID.Companion.pad8(this.UNKNOWN) + " (" + this.ID + ")";
-
+        } else if (iD != null) {
+            "MSG " + FLAG + "," + pad8(UNKNOWN.toInt()) + " (" + iD + ")"
         } else {
-            return "MSG " + this.FLAG + "," + EID.Companion.pad8(this.UNKNOWN);
+            "MSG " + FLAG + "," + pad8(UNKNOWN.toInt())
         }
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGE</h3>"));
-
-        if (null != analysis && null != this.MESSAGE) {
-            IString scriptName = this.MESSAGE.getScriptName().toIString();
-            SortedSet<String> mods = analysis.SCRIPT_ORIGINS.get(scriptName);
+    override fun getInfo(analysis: Analysis, save: ESS): String {
+        val BUILDER = StringBuilder()
+        BUILDER.append("<html><h3>FUNCTIONMESSAGE</h3>")
+        if (null != analysis && null != message) {
+            val scriptName = message!!.scriptName.toIString()
+            val mods = analysis.SCRIPT_ORIGINS[scriptName]
             if (null != mods) {
-                String mod = mods.last();
-                BUILDER.append(String.format("<p>Probably running code from mod %s.</p>", mod));
+                val mod = mods.last()
+                BUILDER.append("<p>Probably running code from mod $mod.</p>")
             }
         }
-
-        BUILDER.append("<p>");
-        if (this.MESSAGE != null) {
-            BUILDER.append(String.format("Function: %s<br/>", this.MESSAGE.getFName()));
+        BUILDER.append("<p>")
+        if (message != null) {
+            BUILDER.append("Function: ${message!!.fName}<br/>")
         }
-
-        BUILDER.append(String.format("ID: %s<br/>", this.ID));
-
-        if (this.THREAD != null) {
-            BUILDER.append(String.format("ActiveScript: %s<br/>", this.THREAD.toHTML(null)));
+        BUILDER.append("ID: $iD<br/>")
+        if (THREAD != null) {
+            BUILDER.append("ActiveScript: ${THREAD.toHTML(null)}<br/>")
         } else {
-            BUILDER.append("ActiveScript: NONE<br/>");
+            BUILDER.append("ActiveScript: NONE<br/>")
         }
-
-        BUILDER.append(String.format("Flag: %s<br/>", this.FLAG));
-        BUILDER.append(String.format("Unknown: %d<br/>", this.UNKNOWN));
-        BUILDER.append("</p>");
-
-        if (this.hasMessage()) {
-            BUILDER.append("<hr/>");
-            BUILDER.append(this.getMessage().getInfo(analysis, save));
+        BUILDER.append("Flag: $FLAG<br/>")
+        BUILDER.append("Unknown: $UNKNOWN<br/>")
+        BUILDER.append("</p>")
+        if (hasMessage()) {
+            BUILDER.append("<hr/>")
+            BUILDER.append(message!!.getInfo(analysis, save))
         }
-
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(Analysis analysis, String mod) {
-        Objects.requireNonNull(analysis);
-        Objects.requireNonNull(mod);
-        return this.hasMessage() && this.MESSAGE.matches(analysis, mod);
+    override fun matches(analysis: Analysis, mod: String): Boolean {
+        Objects.requireNonNull(analysis)
+        Objects.requireNonNull(mod)
+        return hasMessage() && message!!.matches(analysis, mod)
     }
 
     /**
-     * @return A flag indicating if the <code>FunctionMessage</code> is
+     * @return A flag indicating if the `FunctionMessage` is
      * undefined.
-     *
      */
-    public boolean isUndefined() {
-        return this.hasMessage() && this.MESSAGE.isUndefined();
+    val isUndefined: Boolean
+        get() = hasMessage() && message!!.isUndefined
+    private val UNKNOWN: Byte
+
+    /**
+     * @return The ID of the papyrus element.
+     */
+    val iD: EID?
+    private val FLAG: Byte
+
+    /**
+     * @return The message field.
+     */
+    var message: FunctionMessageData? = null
+    private val THREAD: ActiveScript?
+    //, HasID {
+    /**
+     * Creates a new `FunctionMessage` by reading from a
+     * `ByteBuffer`. No error handling is performed.
+     *
+     * @param input The input stream.
+     * @param context The `PapyrusContext` info.
+     * @throws PapyrusElementException
+     */
+    init {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(context)
+        UNKNOWN = input.get()
+        iD = if (UNKNOWN <= 2) context.readEID32(input) else null
+        FLAG = input.get()
+        THREAD = if (iD == null) null else context.findActiveScript(iD)
+        assert(THREAD != null)
+        if (FLAG.toInt() == 0) {
+            message = null
+        } else {
+            var message: FunctionMessageData? = null
+            try {
+                message = FunctionMessageData(input, this, context)
+            } catch (ex: PapyrusElementException) {
+                message = ex.partial as FunctionMessageData
+                throw PapyrusElementException("Failed to read message for FunctionMessage.", ex, this)
+            } catch (ex: PapyrusFormatException) {
+                throw PapyrusElementException("Failed to read message for FunctionMessage.", ex, this)
+            } finally {
+                this.message = message
+            }
+        }
     }
-
-    final private byte UNKNOWN;
-    final private EID ID;
-    final private byte FLAG;
-    final private FunctionMessageData MESSAGE;
-    final private ActiveScript THREAD;
-
 }
