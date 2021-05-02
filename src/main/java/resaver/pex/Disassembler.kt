@@ -371,7 +371,7 @@ object Disassembler {
             } else if (null != WHILE) {
                 return intArrayOf(subptr - ptr + WHILE[0])
             }
-            if (!next.OPCODE.isConditional) {
+            if (next.OPCODE.isConditional.not()) {
                 //return null;
             }
             subptr++
@@ -459,15 +459,11 @@ object Disassembler {
                 types,
                 indent
             )
-            Opcode.RETURN -> if (null == RHS) {
-                String.format("%sRETURN", tab(indent))
-            } else {
-                String.format("%sRETURN %s", tab(indent), RHS)
-            }
+            Opcode.RETURN -> "${tab(indent)}RETURN $RHS"
             Opcode.PROPSET -> {
                 val obj = inst.ARGS[1]
                 val prop = inst.ARGS[0] as VData.ID
-                String.format("%s%s.%s = %s", tab(indent), obj, prop, RHS)
+                "${tab(indent)}$obj.$prop = $RHS"
             }
             Opcode.ARR_SET -> {
                 //VData.ID arr = (VData.ID) inst.getARGS().get(0);
@@ -619,12 +615,12 @@ object Disassembler {
             }
             Opcode.NOT -> {
                 replaceVariables(args, terms, 0)
-                term = String.format("!%s", args[1]!!.paren())
+                term = String.format("!%s", args[1].paren())
                 processTerm(args, terms, 0, term)
             }
             Opcode.INEG, Opcode.FNEG -> {
                 replaceVariables(args, terms, 0)
-                term = String.format("-%s", args[1]!!.paren())
+                term = String.format("-%s", args[1].paren())
                 processTerm(args, terms, 0, term)
             }
             Opcode.ASSIGN -> {
@@ -647,7 +643,7 @@ object Disassembler {
                 } else if (type.equals(IString.get("string"))) {
                     arg.toString()
                 } else {
-                    String.format("%s as %s", arg!!.paren(), type)
+                    String.format("%s as %s", arg.paren(), type)
                 }
                 processTerm(args, terms, 0, term)
             }
@@ -662,35 +658,35 @@ object Disassembler {
                 replaceVariables(args, terms, 0)
                 operand1 = args[1]
                 operand2 = args[2]
-                term = String.format("%s == %s", operand1!!.paren(), operand2!!.paren())
+                term = String.format("%s == %s", operand1.paren(), operand2.paren())
                 processTerm(args, terms, 0, term)
             }
             Opcode.CMP_LT -> {
                 replaceVariables(args, terms, 0)
                 operand1 = args[1]
                 operand2 = args[2]
-                term = String.format("%s < %s", operand1!!.paren(), operand2!!.paren())
+                term = String.format("%s < %s", operand1.paren(), operand2.paren())
                 processTerm(args, terms, 0, term)
             }
             Opcode.CMP_LE -> {
                 replaceVariables(args, terms, 0)
                 operand1 = args[1]
                 operand2 = args[2]
-                term = String.format("%s <= %s", operand1!!.paren(), operand2!!.paren())
+                term = String.format("%s <= %s", operand1.paren(), operand2.paren())
                 processTerm(args, terms, 0, term)
             }
             Opcode.CMP_GT -> {
                 replaceVariables(args, terms, 0)
                 operand1 = args[1]
                 operand2 = args[2]
-                term = String.format("%s > %s", operand1!!.paren(), operand2!!.paren())
+                term = String.format("%s > %s", operand1.paren(), operand2.paren())
                 processTerm(args, terms, 0, term)
             }
             Opcode.CMP_GE -> {
                 replaceVariables(args, terms, 0)
                 operand1 = args[1]
                 operand2 = args[2]
-                term = String.format("%s >= %s", operand1!!.paren(), operand2!!.paren())
+                term = String.format("%s >= %s", operand1.paren(), operand2.paren())
                 processTerm(args, terms, 0, term)
             }
             Opcode.ARR_CREATE -> {
