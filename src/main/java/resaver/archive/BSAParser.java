@@ -100,12 +100,12 @@ public class BSAParser extends ArchiveParser {
     @Override
     public Map<Path, Optional<ByteBuffer>> getFiles(Path dir, PathMatcher matcher) throws IOException {
         return this.FOLDERRECORDS.stream()
-                .filter(block -> dir == null || dir.equals(block.PATH))
-                .flatMap(block -> block.FILERECORDS.stream())
+                .filter(block -> dir == null || dir.equals(block.getPATH()))
+                .flatMap(block -> block.getFILERECORDS().stream())
                 .filter(rec -> matcher.matches(rec.getPath()))
                 .collect(Collectors.toMap(
                         record -> super.PATH.getFileName().resolve(record.getPath()),
-                        record -> BSAFileData.getData(super.CHANNEL, record, HEADER)));
+                        record -> BSAFileData.INSTANCE.getData(super.CHANNEL, record, HEADER)));
     }
 
     /**
@@ -115,8 +115,8 @@ public class BSAParser extends ArchiveParser {
     @Override
     public Map<Path, Path> getFilenames(Path dir, PathMatcher matcher) throws IOException {
         return this.FOLDERRECORDS.stream()
-                .filter(block -> dir == null || dir.equals(block.PATH))
-                .flatMap(block -> block.FILERECORDS.stream())
+                .filter(block -> dir == null || dir.equals(block.getPATH()))
+                .flatMap(block -> block.getFILERECORDS().stream())
                 .filter(rec -> matcher.matches(rec.getPath()))
                 .collect(Collectors.toMap(
                         record -> super.PATH.getFileName().resolve(record.getPath()),

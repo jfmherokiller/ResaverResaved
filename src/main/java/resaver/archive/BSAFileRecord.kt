@@ -13,64 +13,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
-import java.nio.ByteBuffer;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.function.Supplier;
+import java.nio.ByteBuffer
+import java.nio.file.InvalidPathException
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.function.Supplier
 
 /**
  * Describes a BSA file record.
  *
  * @author Mark Fairchild
  */
-class BSAFileRecord {
+class BSAFileRecord(input: ByteBuffer, header: BSAHeader, names: Supplier<String>) {
+    override fun toString(): String {
+        return NAME ?: String.format("%d bytes at offset %d", FILESIZE, OFFSET)
+    }
+
+    val path: Path?
+        get() = try {
+            Paths.get(NAME)
+        } catch (ex: InvalidPathException) {
+            null
+        }
+    val NAMEHASH: Long
+    val FILESIZE: Int
+    val OFFSET: Int
+    val ISCOMPRESSED: Boolean
+    val NAME: String
+
+    companion object {
+        const val SIZE = 16
+    }
 
     /**
-     * Creates a new <code>FileRecord</code> by reading from a
-     * <code>LittleEndianDataInput</code>. The name field will be set to null.
+     * Creates a new `FileRecord` by reading from a
+     * `LittleEndianDataInput`. The name field will be set to null.
      *
      * @param input The file from which to readFully.
      * @param header
      * @param names
-     *
      */
-    public BSAFileRecord(ByteBuffer input, BSAHeader header, Supplier<String> names) {
-        this.NAMEHASH = input.getLong();
-
-        int size = input.getInt();
-        final int BIT30 = 1 << 30;
-        boolean compressToggle = ((size & BIT30) != 0);
-
-        this.FILESIZE = size & ~BIT30;
-        this.OFFSET = input.getInt();
-        this.ISCOMPRESSED = header.getISCOMPRESSED() ^ compressToggle;
-        this.NAME = names.get();
+    init {
+        NAMEHASH = input.long
+        val size = input.int
+        val BIT30 = 1 shl 30
+        val compressToggle = size and BIT30 != 0
+        FILESIZE = size and BIT30.inv()
+        OFFSET = input.int
+        ISCOMPRESSED = header.ISCOMPRESSED xor compressToggle
+        NAME = names.get()
     }
-
-    @Override
-    public String toString() {
-        if (this.NAME == null) {
-            return String.format("%d bytes at offset %d", this.FILESIZE, this.OFFSET);
-        } else {
-            return this.NAME;
-        }
-    }
-
-    public Path getPath() {
-        try {
-            return Paths.get(this.NAME);
-        } catch (java.nio.file.InvalidPathException ex) {
-            return null;
-        }
-    }
-
-    static final int SIZE = 16;
-    
-    final public long NAMEHASH;
-    final public int FILESIZE;
-    final public int OFFSET;
-    final public boolean ISCOMPRESSED;
-    final public String NAME;
 }

@@ -13,67 +13,66 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
-import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.util.Optional;
-import java.util.zip.DataFormatException;
-import mf.BufferUtil;
+import mf.BufferUtil
+import net.jpountz.lz4.LZ4Exception
+import java.io.IOException
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.channels.FileChannel
+import java.util.*
+import java.util.zip.DataFormatException
 
 /**
  * Describes a block of BSA file data.
  *
  * @author Mark Fairchild
  */
-public class BSAFileData {
-
-    static Optional<ByteBuffer> getData(FileChannel channel, BSAFileRecord record, BSAHeader header) {
-        try {
-            channel.position(record.OFFSET);
-            ByteBuffer buffer = ByteBuffer.allocate(record.FILESIZE);
-            int bytesRead = channel.read(buffer);
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-            ((Buffer) buffer).flip();
-            if (bytesRead != record.FILESIZE) {
-                throw new IllegalStateException(String.format("Read %d bytes but expected %d bytes.", bytesRead, record.FILESIZE));
+object BSAFileData {
+    fun getData(channel: FileChannel, record: BSAFileRecord, header: BSAHeader): Optional<ByteBuffer> {
+        return try {
+            channel.position(record.OFFSET.toLong())
+            val buffer = ByteBuffer.allocate(record.FILESIZE)
+            val bytesRead = channel.read(buffer)
+            buffer.order(ByteOrder.LITTLE_ENDIAN)
+            (buffer as Buffer).flip()
+            check(bytesRead == record.FILESIZE) {
+                String.format(
+                    "Read %d bytes but expected %d bytes.",
+                    bytesRead,
+                    record.FILESIZE
+                )
             }
 
             // If the filename is embedded, readFully it from the data block.
             // Otherwise retrieve it from the file record.
-            if (header.getEMBED_FILENAME()) {
-                byte b = buffer.get();
-                buffer.position(b + 2);
+            if (header.EMBED_FILENAME) {
+                val b = buffer.get()
+                buffer.position(b + 2)
             }
 
             // If the file is compressed, inflateZLIB it. Otherwise just readFully it in.
             if (!record.ISCOMPRESSED) {
-                return Optional.of(buffer);
-
+                Optional.of(buffer)
             } else {
-                int uncompressedSize = buffer.getInt();
-                ByteBuffer uncompressedData; // = ByteBuffer.allocate(uncompressedSize);
-
-                switch (header.getVERSION()) {
-                    case 104:
-                        uncompressedData = BufferUtil.inflateZLIB(buffer, uncompressedSize, record.FILESIZE);
-                        break;
-                    case 105:
-                        uncompressedData = BufferUtil.inflateLZ4(buffer, uncompressedSize);
-                        break;
-                    default:
-                        throw new IOException("Unknown version " + header.getVERSION());
+                val uncompressedSize = buffer.int
+                val uncompressedData: ByteBuffer // = ByteBuffer.allocate(uncompressedSize);
+                uncompressedData = when (header.VERSION) {
+                    104 -> BufferUtil.inflateZLIB(buffer, uncompressedSize, record.FILESIZE)
+                    105 -> BufferUtil.inflateLZ4(buffer, uncompressedSize)
+                    else -> throw IOException("Unknown version " + header.VERSION)
                 }
-
-                uncompressedData.order(ByteOrder.LITTLE_ENDIAN);
-                return Optional.of(uncompressedData);
+                uncompressedData.order(ByteOrder.LITTLE_ENDIAN)
+                Optional.of(uncompressedData)
             }
-        } catch (net.jpountz.lz4.LZ4Exception | DataFormatException | IOException ex) {
-            return Optional.empty();
+        } catch (ex: LZ4Exception) {
+            Optional.empty()
+        } catch (ex: DataFormatException) {
+            Optional.empty()
+        } catch (ex: IOException) {
+            Optional.empty()
         }
     }
-
 }

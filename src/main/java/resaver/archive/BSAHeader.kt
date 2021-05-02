@@ -25,7 +25,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-internal class BSAHeader(input: ByteBuffer, name: String) {
+class BSAHeader(input: ByteBuffer, name: String) {
     override fun toString(): String {
         return NAME
     }

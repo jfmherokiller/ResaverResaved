@@ -13,110 +13,98 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
-import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.zip.DataFormatException;
-import mf.BufferUtil;
+import mf.BufferUtil
+import resaver.archive.BA2Header
+import java.nio.channels.FileChannel
+import java.util.Optional
+import java.util.Objects
+import java.io.IOException
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.util.zip.DataFormatException
+import java.nio.file.Paths
+import java.nio.file.InvalidPathException
+import java.nio.file.Path
 
 /**
  * Describes a BA2 file record.
  *
  * @author Mark Fairchild
  */
-class BA2FileRecord {
+internal class BA2FileRecord(input: ByteBuffer, header: BA2Header?) {
+    override fun toString(): String {
+        return name
+    }
+
+    fun getData(channel: FileChannel): Optional<ByteBuffer> {
+        Objects.requireNonNull(channel)
+        return try {
+            when (FILESIZE) {
+                0 -> {
+                    val DATA = ByteBuffer.allocate(REALSIZE)
+                    channel.read(DATA, OFFSET)
+                    Optional.of(DATA)
+                }
+                REALSIZE -> {
+                    val DATA = ByteBuffer.allocate(FILESIZE)
+                    channel.read(DATA, OFFSET)
+                    Optional.of(DATA)
+                }
+                else -> {
+                    val COMPRESSED = ByteBuffer.allocate(FILESIZE)
+                    channel.read(COMPRESSED, OFFSET)
+                    (COMPRESSED as Buffer).flip()
+                    val DATA = BufferUtil.inflateZLIB(COMPRESSED, REALSIZE, FILESIZE)
+                    Optional.of(DATA)
+                }
+            }
+        } catch (ex: IOException) {
+            Optional.empty()
+        } catch (ex: DataFormatException) {
+            Optional.empty()
+        }
+    }
+
+    val path: Path?
+        get() = try {
+            Paths.get(name)
+        } catch (ex: InvalidPathException) {
+            null
+        }
+    val NAMEHASH: Int
+    val EXT: ByteArray
+    val DIRHASH: Int
+    val FLAGS: Int
+    val OFFSET: Long
+    val FILESIZE: Int
+    val REALSIZE: Int
+    val ALIGN: Int
+    var name: String
+
+    companion object {
+        const val SIZE = 36
+    }
 
     /**
-     * Creates a new <code>FileRecord</code> by reading from a
-     * <code>ByteBuffer</code>. The name field will be set to null.
+     * Creates a new `FileRecord` by reading from a
+     * `ByteBuffer`. The name field will be set to null.
      *
      * @param input The file from which to read..
      * @param header
      * @throws IOException
-     *
      */
-    public BA2FileRecord(ByteBuffer input, BA2Header header) throws IOException {
-        this.NAMEHASH = input.getInt();
-
-        this.EXT = new byte[4];
-        input.get(this.EXT);
-
-        this.DIRHASH = input.getInt();
-        this.FLAGS = input.getInt();
-        this.OFFSET = input.getLong();
-        this.FILESIZE = input.getInt();
-        this.REALSIZE = input.getInt();
-        this.ALIGN = input.getInt();
-        this.name = null;
+    init {
+        NAMEHASH = input.int
+        EXT = ByteArray(4)
+        input[EXT]
+        DIRHASH = input.int
+        FLAGS = input.int
+        OFFSET = input.long
+        FILESIZE = input.int
+        REALSIZE = input.int
+        ALIGN = input.int
+        name = null.toString()
     }
-
-    @Override
-    public String toString() {
-        if (this.name == null) {
-            return String.format("%d bytes at offset %d", Math.max(this.FILESIZE, this.REALSIZE), this.OFFSET);
-        } else {
-            return this.name;
-        }
-    }
-
-    public Optional<ByteBuffer> getData(FileChannel channel) {
-        Objects.requireNonNull(channel);
-
-        try {
-        if (this.FILESIZE == 0) {
-            final ByteBuffer DATA = ByteBuffer.allocate(this.REALSIZE);
-            channel.read(DATA, this.OFFSET);
-            return Optional.of(DATA);
-
-        } else if (this.FILESIZE == this.REALSIZE) {
-            final ByteBuffer DATA = ByteBuffer.allocate(this.FILESIZE);
-            channel.read(DATA, this.OFFSET);
-            return Optional.of(DATA);
-
-        } else {
-                final ByteBuffer COMPRESSED = ByteBuffer.allocate(this.FILESIZE);
-                channel.read(COMPRESSED, this.OFFSET);
-                ((Buffer) COMPRESSED).flip();
-                final ByteBuffer DATA = BufferUtil.inflateZLIB(COMPRESSED, this.REALSIZE, this.FILESIZE);
-                return Optional.of(DATA);
-        }
-        } catch (IOException | DataFormatException ex) {
-            return Optional.empty();
-        }
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public Path getPath() {
-        try {
-            return Paths.get(this.name);
-        } catch (java.nio.file.InvalidPathException ex) {
-            return null;
-        }
-    }
-
-    static public final int SIZE = 36;
-    final public int NAMEHASH;
-    final public byte[] EXT;
-    final public int DIRHASH;
-    final public int FLAGS;
-    final public long OFFSET;
-    final public int FILESIZE;
-    final public int REALSIZE;
-    final public int ALIGN;
-    private String name;
-
 }

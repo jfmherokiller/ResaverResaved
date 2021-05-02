@@ -15,9 +15,7 @@
  */
 package resaver.archive
 
-import resaver.archive.BA2Subtype
 import java.io.IOException
-import java.lang.IllegalArgumentException
 import java.nio.ByteBuffer
 
 /**
@@ -54,16 +52,16 @@ class BA2Header(input: ByteBuffer) {
             val magic = String(MAGIC1)
             type = Type.valueOf(magic)
             if (type !== Type.BTDX) {
-                throw IOException("Invalid archive format: " + String(MAGIC1))
+                throw IOException("Invalid archive format: ${String(MAGIC1)}")
             }
         } catch (ex: IllegalArgumentException) {
-            throw IOException("Invalid archive format: " + String(MAGIC1), ex)
+            throw IOException("Invalid archive format: ${String(MAGIC1)}", ex)
         }
         val subtype: BA2Subtype = try {
             val magic = String(MAGIC2)
             BA2Subtype.valueOf(magic)
         } catch (ex: IllegalArgumentException) {
-            throw IOException("Invalid archive format: " + String(MAGIC2), ex)
+            throw IOException("Invalid archive format: ${String(MAGIC2)}", ex)
         }
         TYPE = type
         SUBTYPE = subtype
