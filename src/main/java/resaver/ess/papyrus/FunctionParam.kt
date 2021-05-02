@@ -13,34 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Describes a function parameter in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class FunctionParam extends MemberDesc {
-
-    /**
-     * @see MemberDesc#MemberData(resaver.ByteBuffer,
-     * resaver.ess.papyrus.StringTable)
-     * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     */
-    public FunctionParam(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
-        super(input, context);
-    }
-
+class FunctionParam
+/**
+ * @see MemberDesc.MemberData
+ * @param input The input stream.
+ * @param context The `PapyrusContext` info.
+ * @throws PapyrusFormatException
+ */
+    (input: ByteBuffer?, context: PapyrusContext?) : MemberDesc(input, context!!) {
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return "(param) " + super.toString();
+    override fun toString(): String {
+        return "(param) ${super.toString()}"
     }
-
 }
