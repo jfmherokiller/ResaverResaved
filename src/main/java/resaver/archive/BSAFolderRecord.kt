@@ -31,7 +31,7 @@ import java.util.function.Supplier
  *
  * @author Mark Fairchild
  */
-internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: FileChannel, names: Supplier<String>) {
+class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: FileChannel, names: Supplier<String>) {
     override fun toString(): String {
         return NAME!!
     }

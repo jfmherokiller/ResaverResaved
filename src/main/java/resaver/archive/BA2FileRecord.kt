@@ -33,7 +33,7 @@ import java.nio.file.Path
  *
  * @author Mark Fairchild
  */
-internal class BA2FileRecord(input: ByteBuffer, header: BA2Header?) {
+class BA2FileRecord(input: ByteBuffer, header: BA2Header?) {
     override fun toString(): String {
         return name
     }

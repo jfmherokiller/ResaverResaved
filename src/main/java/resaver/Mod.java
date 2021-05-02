@@ -295,7 +295,7 @@ final public class Mod implements java.io.Serializable {
 
         this.ARCHIVE_FILES.forEach(archivePath -> {
             try (FileChannel channel = FileChannel.open(archivePath, StandardOpenOption.READ);
-                    final ArchiveParser PARSER = ArchiveParser.createParser(archivePath, channel)) {
+                    final ArchiveParser PARSER = ArchiveParser.Companion.createParser(archivePath, channel)) {
 
                 final List<StringsFile> ARCHIVE_STRINGSFILES = new LinkedList<>();
 
