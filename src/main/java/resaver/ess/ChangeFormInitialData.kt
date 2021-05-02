@@ -13,62 +13,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import resaver.ess.ESS.ESSContext
+import resaver.ess.GeneralElement
+import java.util.Objects
+import resaver.ess.RefID
+import java.nio.ByteBuffer
 
 /**
- * Manages the initial data field from a <code>ChangeForm</code>.
+ * Manages the initial data field from a `ChangeForm`.
  *
  * @author Mark Fairchild
  */
-class ChangeFormInitialData extends GeneralElement {
-
+internal class ChangeFormInitialData(input: ByteBuffer, initialType: Int, context: ESSContext?) : GeneralElement() {
     /**
-     * Creates a new <code>ChangeFormInitialData</code>.
+     * Creates a new `ChangeFormInitialData`.
      * @param input
      * @param initialType
      */
-    public ChangeFormInitialData(ByteBuffer input, int initialType, ESS.ESSContext context) {
-        Objects.requireNonNull(input);
-        switch (initialType) {
-            case 1:
-                super.readShort(input, "UNK");
-                super.readByte(input, "CELLX");
-                super.readByte(input, "CELLY");
-                super.readInt(input, "UNK2");
-                break;
-            case 2:
-                super.readShort(input, "UNK");
-                super.readShort(input, "UNK1");
-                super.readShort(input, "UNK2");
-                super.readInt(input, "UNK3");
-                break;
-            case 3:
-                super.readInt(input, "UNK");
-                break;
-            case 4:
-                super.readRefID(input, "CELL", context);
-                super.readFloats(input, "POS", 3);
-                super.readFloats(input, "ROT", 3);
-                break;
-            case 5:
-                super.readRefID(input, "CELL", context);
-                super.readFloats(input, "POS", 3);
-                super.readFloats(input, "ROT", 3);
-                super.readByte(input, "UNK");
-                RefID ref = super.readRefID(input, "BASE_OBJECT", context);
-                break;
-            case 6:
-                super.readRefID(input, "CELL", context);
-                super.readFloats(input, "POS", 3);
-                super.readFloats(input, "ROT", 3);
-                super.readRefID(input, "STARTING CELL", context);
-                super.readShort(input, "UNK1");
-                super.readShort(input, "UNK2");
-                break;
-            default:
+    init {
+        Objects.requireNonNull(input)
+        when (initialType) {
+            1 -> {
+                super.readShort(input, "UNK")
+                super.readByte(input, "CELLX")
+                super.readByte(input, "CELLY")
+                super.readInt(input, "UNK2")
+            }
+            2 -> {
+                super.readShort(input, "UNK")
+                super.readShort(input, "UNK1")
+                super.readShort(input, "UNK2")
+                super.readInt(input, "UNK3")
+            }
+            3 -> super.readInt(input, "UNK")
+            4 -> {
+                super.readRefID(input, "CELL", context)
+                super.readFloats(input, "POS", 3)
+                super.readFloats(input, "ROT", 3)
+            }
+            5 -> {
+                super.readRefID(input, "CELL", context)
+                super.readFloats(input, "POS", 3)
+                super.readFloats(input, "ROT", 3)
+                super.readByte(input, "UNK")
+                val ref = super.readRefID(input, "BASE_OBJECT", context)
+            }
+            6 -> {
+                super.readRefID(input, "CELL", context)
+                super.readFloats(input, "POS", 3)
+                super.readFloats(input, "ROT", 3)
+                super.readRefID(input, "STARTING CELL", context)
+                super.readShort(input, "UNK1")
+                super.readShort(input, "UNK2")
+            }
+            else -> {
+            }
         }
     }
 }
