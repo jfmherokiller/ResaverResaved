@@ -15,11 +15,15 @@
  */
 package resaver.ess
 
-import java.lang.IllegalArgumentException
-import java.util.Arrays
-import resaver.ess.VSVal
 import java.lang.Byte
 import java.nio.ByteBuffer
+import kotlin.Any
+import kotlin.Boolean
+import kotlin.ByteArray
+import kotlin.IllegalArgumentException
+import kotlin.Int
+import kotlin.String
+import kotlin.byteArrayOf
 import kotlin.experimental.and
 
 /**
@@ -122,21 +126,21 @@ class VSVal : Element {
         }
 
     override fun hashCode(): Int {
-        return Arrays.hashCode(DATA)
+        return DATA.contentHashCode()
     }
 
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (obj == null) {
+        if (other == null) {
             return false
         }
-        if (javaClass != obj.javaClass) {
+        if (javaClass != other.javaClass) {
             return false
         }
-        val other = obj as VSVal
-        return DATA.contentEquals(other.DATA)
+        val other2 = other as VSVal
+        return DATA.contentEquals(other2.DATA)
     }
 
     private val DATA: ByteArray
