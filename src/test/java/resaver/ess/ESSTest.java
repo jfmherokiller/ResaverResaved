@@ -108,7 +108,7 @@ public class ESSTest {
     /**
      * Test of readESS and writeESS methods, of class ESS.
      *
-     * @param path
+     * @param path ess path
      */
     //@ParameterizedTest
     //@MethodSource("pathProvider")    
