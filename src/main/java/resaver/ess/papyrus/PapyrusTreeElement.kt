@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.papyrus.PapyrusElement
 
 /**
  *
  * @author Mark
  */
-public interface PapyrusTreeElement extends PapyrusElement {
-
-}
+interface PapyrusTreeElement : PapyrusElement
