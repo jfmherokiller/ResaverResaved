@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
 /**
  *
  * @author Mark
  */
-public enum BA2Subtype {
+enum class BA2Subtype {
     GNRL, DX10, UNKNOWN
-    
 }

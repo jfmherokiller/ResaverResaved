@@ -120,7 +120,7 @@ public class BSAParser extends ArchiveParser {
                 .filter(rec -> matcher.matches(rec.getPath()))
                 .collect(Collectors.toMap(
                         record -> super.PATH.getFileName().resolve(record.getPath()),
-                        record -> record.getPath()));
+                        BSAFileRecord::getPath));
     }
 
     @Override
