@@ -27,7 +27,7 @@ import java.nio.ByteBuffer
 class SuspendedStackMap : PapyrusElementMap<SuspendedStack> {
     internal constructor(input: ByteBuffer?, context: PapyrusContext?) : super(
         input,
-        PapyrusElementReader<SuspendedStack> { b: ByteBuffer? -> SuspendedStack(b, context) }) {
+        PapyrusElementReader<SuspendedStack> { b: ByteBuffer? -> SuspendedStack(b!!, context!!) }) {
     }
 
     internal constructor() {}
