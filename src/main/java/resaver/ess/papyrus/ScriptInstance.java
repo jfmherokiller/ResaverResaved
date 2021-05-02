@@ -261,7 +261,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
 
         } else {
             return this.getVariables().stream()
-                    .filter(var -> var.hasRef())
+                    .filter(Variable::hasRef)
                     .filter(var -> var.getReferent() == target)
                     .map(var -> this.getVariables().indexOf(var))
                     .filter(index -> index >= 0)
@@ -497,7 +497,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
             sum += getID().calculateSize();
             sum += ((this.FLAG & 0x04) != 0 ? 4 : 0);
             sum += this.TYPE.calculateSize();
-            sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
+            sum += this.VARIABLES.stream().mapToInt(Variable::calculateSize).sum();
             return sum;
         }
 
