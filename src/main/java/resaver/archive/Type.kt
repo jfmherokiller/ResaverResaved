@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
 /**
  * Types of archives.
  *
  * @author Mark
  */
-public enum Type {
-    BSA, // BSA -- Oblivion, Fallout 3, New Vega, Skyrim Legendary
-    BTDX, // BA2 -- Fallout 4
-    UNKNOWN, // Unknown -- Quake 2, Sin, Commander Keen
-};
+enum class Type {
+    BSA,  // BSA -- Oblivion, Fallout 3, New Vega, Skyrim Legendary
+    BTDX,  // BA2 -- Fallout 4
+    UNKNOWN
+    // Unknown -- Quake 2, Sin, Commander Keen
+}

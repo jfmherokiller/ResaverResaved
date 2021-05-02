@@ -64,8 +64,8 @@ abstract public class BSAHash {
 
         hash2 = chars[len - 1];
         hash2 |= (len > 2 ? chars[len - 2] : 0);
-        hash2 |= (len << 16);
-        hash2 |= (chars[0] << 24);
+        hash2 |= ((long) len << 16);
+        hash2 |= ((long) chars[0] << 24);
         
         throw new UnsupportedOperationException();
     }
