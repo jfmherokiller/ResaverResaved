@@ -61,7 +61,7 @@ public class ESSTest {
 
         try {
             paths = Files.walk(TESTSAVES_DIR)
-                    .filter(p -> Game.FILTER_ALL.accept(p.toFile()))
+                    .filter(p -> Game.Companion.getFILTER_ALL().accept(p.toFile()))
                     .filter(Files::isReadable)
                     .filter(Files::isRegularFile)
                     .collect(Collectors.toList());
@@ -99,7 +99,7 @@ public class ESSTest {
         final int COUNT = this.PATHS.size();
         
         for (Path path : this.PATHS) {
-            System.out.println(String.format("Test save %d / %d : %s", index, COUNT, path));
+            System.out.printf("Test save %d / %d : %s%n", index, COUNT, path);
             testReadESS(path);
             index++;
         }
@@ -123,7 +123,7 @@ public class ESSTest {
                 return;
             }
             
-            final String EXT = "." + ORIGINAL.getHeader().GAME.SAVE_EXT;
+            final String EXT = "." + ORIGINAL.getHeader().GAME.getSAVE_EXT();
 
             final Path F2 = Files.createTempFile("ess_test", EXT);
             ESS.writeESS(ORIGINAL, F2);
