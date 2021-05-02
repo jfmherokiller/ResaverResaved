@@ -21,7 +21,6 @@ import java.nio.ByteOrder;
 import java.util.zip.DataFormatException;
 import resaver.IString;
 import resaver.ess.papyrus.EID;
-import static resaver.esp.Entry.advancingSlice;
 
 /**
  * Base class for the records of an ESP file.
@@ -80,7 +79,7 @@ abstract public class Record implements Entry {
             return FIELDS;
         }
 
-        final ByteBuffer FIELDINPUT = advancingSlice(input, ACTUALSIZE);
+        final ByteBuffer FIELDINPUT = Entry.Companion.advancingSlice(input, ACTUALSIZE);
 
         // Depending on what code we found, pick a subclass to readFully in the
         // rest of the data.
@@ -144,10 +143,10 @@ abstract public class Record implements Entry {
         // GRUPs get handled differently than other records.
         if (CODE == RecordCode.GRUP) {
             // Read the header.
-            final ByteBuffer HEADER = advancingSlice(input, 16);
+            final ByteBuffer HEADER = Entry.Companion.advancingSlice(input, 16);
 
             // Read the record data.
-            final ByteBuffer RECORDINPUT = advancingSlice(input, DATASIZE - 24);
+            final ByteBuffer RECORDINPUT = Entry.Companion.advancingSlice(input, DATASIZE - 24);
 
             // Read the rest of the record.
             return new RecordGrup(CODE, HEADER, RECORDINPUT, ctx);
@@ -157,7 +156,7 @@ abstract public class Record implements Entry {
             final Header HEADER = new Header(input, ctx);
 
             // Read the record data.
-            final ByteBuffer RECORDINPUT = advancingSlice(input, DATASIZE);
+            final ByteBuffer RECORDINPUT = Entry.Companion.advancingSlice(input, DATASIZE);
 
             // Read the rest of the record. Handle compressed records separately.
             if (HEADER.isCompressed()) {
@@ -198,7 +197,7 @@ abstract public class Record implements Entry {
 
         // GRUPs get handled differently than other records.
         if (CODE == RecordCode.GRUP) {
-            final ByteBuffer HEADER = advancingSlice(input, 16);
+            final ByteBuffer HEADER = Entry.Companion.advancingSlice(input, 16);
 
             final int PREFIX = HEADER.getInt();
             final int TYPE = HEADER.getInt();
@@ -227,7 +226,7 @@ abstract public class Record implements Entry {
             }
 
             // Get the record data.
-            final ByteBuffer RECORDINPUT = advancingSlice(input, DATASIZE - 24);
+            final ByteBuffer RECORDINPUT = Entry.Companion.advancingSlice(input, DATASIZE - 24);
 
             // Read the rest of the record.
             while (RECORDINPUT.hasRemaining()) {
@@ -241,7 +240,7 @@ abstract public class Record implements Entry {
             ctx.pushContext(EID.Companion.pad8(HEADER.ID));
 
             // Read the record data.
-            final ByteBuffer RECORDINPUT = advancingSlice(input, DATASIZE);
+            final ByteBuffer RECORDINPUT = Entry.Companion.advancingSlice(input, DATASIZE);
 
             // Read the rest of the record. Handle compressed records separately.
             if (HEADER.isCompressed()) {

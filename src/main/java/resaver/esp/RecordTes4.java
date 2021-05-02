@@ -15,20 +15,19 @@
  */
 package resaver.esp;
 
+import org.jetbrains.annotations.NotNull;
+import resaver.IString;
+import resaver.ess.Plugin;
+import resaver.ess.PluginInfo;
+
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
-import resaver.IString;
-import resaver.ess.Plugin;
-import static resaver.esp.Entry.advancingSlice;
-import resaver.ess.PluginInfo;
 
 /**
  * RecordTes4 is the first record. It handles its own data and is not read using
@@ -63,7 +62,7 @@ public class RecordTes4 extends Record {
         this.HEADER = new Record.Header(input, ctx);
 
         // Read the record data.
-        final ByteBuffer FIELDINPUT = advancingSlice(input, DATASIZE);
+        final ByteBuffer FIELDINPUT = Entry.Companion.advancingSlice(input, DATASIZE);
         this.FIELDS = new FieldList();
 
         while (FIELDINPUT.hasRemaining()) {
