@@ -292,9 +292,10 @@ final public class ArrayInfo implements AnalyzableElement, Linkable, HasID, Sepa
      */
     @Override
     public List<Variable> getVariables() {
-        return this.data == null 
-                ? Collections.emptyList() 
-                : Collections.unmodifiableList(this.data.VARIABLES);
+        if (this.data == null) {
+            return Collections.emptyList();
+        }
+        return Collections.unmodifiableList(this.data.VARIABLES);
     }
 
     /**
