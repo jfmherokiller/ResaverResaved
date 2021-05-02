@@ -321,7 +321,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             }
 
             model.addUnknownIDList(this.UNKS);
-            SUM.click(4 + this.UNKS.parallelStream().mapToInt(v -> v.calculateSize()).sum());
+            SUM.click(4 + this.UNKS.parallelStream().mapToInt(EID::calculateSize).sum());
 
             UnbindMap unbinds = null;
             try {
@@ -430,7 +430,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
 
         // Write the "unknown" fields.
         output.putInt(this.UNK1);
-        this.UNK2.ifPresent(v -> output.putInt(v));
+        this.UNK2.ifPresent(output::putInt);
         output.putInt(this.UNKS.size());
         this.UNKS.forEach(id -> id.write(output));
 
@@ -438,7 +438,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         this.UNBINDMAP.write(output);
 
         // Write the save file version field, if present.
-        this.SAVE_FILE_VERSION.ifPresent(v -> output.putShort(v));
+        this.SAVE_FILE_VERSION.ifPresent(output::putShort);
 
         // Write the remaining data.
         output.put(this.ARRAYSBLOCK);
@@ -464,12 +464,12 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         sum += this.getArrays().calculateSize();
         sum += this.PAPYRUS_RUNTIME == null ? 0 : this.PAPYRUS_RUNTIME.calculateSize();
         sum += this.getActiveScripts().calculateSize();
-        sum += 4 + this.getFunctionMessages().parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += 4 + this.getFunctionMessages().parallelStream().mapToInt(FunctionMessage::calculateSize).sum();
         sum += this.getSuspendedStacks1().calculateSize();
         sum += this.getSuspendedStacks2().calculateSize();
         sum += 4; // UNK1
         sum += this.UNK2 != null && this.UNK2.isPresent() ? 4 : 0;
-        sum += 4 + this.getUnknownIDList().parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += 4 + this.getUnknownIDList().parallelStream().mapToInt(EID::calculateSize).sum();
         sum += this.getUnbinds().calculateSize();
         sum += this.SAVE_FILE_VERSION != null && this.SAVE_FILE_VERSION.isPresent() ? 2 : 0;
         sum += this.ARRAYSBLOCK == null ? 0 : this.ARRAYSBLOCK.length;
@@ -638,7 +638,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @return The number of unattached instances.
      */
     public int countUnattachedInstances() {
-        return (int) this.getScriptInstances().values().stream().filter(v -> v.isUnattached()).count();
+        return (int) this.getScriptInstances().values().stream().filter(ScriptInstance::isUnattached).count();
     }
 
     /**
@@ -651,11 +651,11 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         int count = 0;
         int threads = 0;
 
-        count += this.getScripts().values().stream().filter(v -> v.isUndefined()).count();
-        count += this.getScriptInstances().values().parallelStream().filter(v -> v.isUndefined()).count();
-        count += this.getReferences().values().stream().filter(v -> v.isUndefined()).count();
-        count += this.getStructs().values().stream().filter(v -> v.isUndefined()).count();
-        count += this.getStructInstances().values().stream().filter(v -> v.isUndefined()).count();
+        count += this.getScripts().values().stream().filter(Script::isUndefined).count();
+        count += this.getScriptInstances().values().parallelStream().filter(ScriptInstance::isUndefined).count();
+        count += this.getReferences().values().stream().filter(Reference::isUndefined).count();
+        count += this.getStructs().values().stream().filter(Struct::isUndefined).count();
+        count += this.getStructInstances().values().stream().filter(StructInstance::isUndefined).count();
         threads += this.getActiveScripts().values().stream().filter(v -> v.isUndefined() && !v.isTerminated()).count();
         return new int[]{count, threads};
     }
@@ -684,11 +684,11 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     public Set<PapyrusElement> removeUndefinedElements() {
         final java.util.Set<PapyrusElement> REMOVED = new java.util.HashSet<>();
 
-        REMOVED.addAll(this.removeElements(this.getScripts().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getStructs().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getScriptInstances().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getReferences().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getStructInstances().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getScripts().values().stream().filter(Script::isUndefined).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getStructs().values().stream().filter(Struct::isUndefined).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getScriptInstances().values().stream().filter(ScriptInstance::isUndefined).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getReferences().values().stream().filter(Reference::isUndefined).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getStructInstances().values().stream().filter(StructInstance::isUndefined).collect(Collectors.toSet())));
 
         this.getActiveScripts().values().stream()
                 .filter(v -> v.isUndefined() && !v.isTerminated())
