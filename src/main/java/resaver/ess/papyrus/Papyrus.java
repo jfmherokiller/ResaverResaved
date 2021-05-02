@@ -365,7 +365,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 ARRAYSBUFFER.order(ByteOrder.LITTLE_ENDIAN);
 
                 other = new OtherData(input, CONTEXT);
-            } catch (PapyrusFormatException | BufferUnderflowException ex) {
+            } catch (BufferUnderflowException ex) {
 
             } finally {
                 this.OTHER = other;
