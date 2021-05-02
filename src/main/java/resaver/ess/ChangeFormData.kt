@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
+
+import resaver.ess.AnalyzableElement
 
 /**
  * Contains the data for a changeform.
- * 
+ *
  * @author Mark Fairchild
  */
-public interface ChangeFormData extends Element, AnalyzableElement {
-    
-}
+interface ChangeFormData : Element, AnalyzableElement
