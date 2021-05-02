@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.papyrus.PapyrusElementMap
+import resaver.ess.papyrus.SuspendedStack
+import resaver.ess.papyrus.PapyrusContext
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark
  */
-final public class SuspendedStackMap extends PapyrusElementMap<SuspendedStack> {
-
-    SuspendedStackMap(java.nio.ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
-        super(input, b -> new SuspendedStack(b, context));
+class SuspendedStackMap : PapyrusElementMap<SuspendedStack> {
+    internal constructor(input: ByteBuffer?, context: PapyrusContext?) : super(
+        input,
+        PapyrusElementReader<SuspendedStack> { b: ByteBuffer? -> SuspendedStack(b, context) }) {
     }
 
-    SuspendedStackMap() {
-    }
-
+    internal constructor() {}
 }

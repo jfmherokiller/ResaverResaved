@@ -288,9 +288,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             SuspendedStackMap suspendStacks1 = null;
             try {
                 suspendStacks1 = new SuspendedStackMap(input, CONTEXT);
-            } catch (PapyrusElementException ex) {
-                suspendStacks1 = (SuspendedStackMap) ex.getPartial();
-                throw new PapyrusException("Error reading SuspendedStacks1.", ex, this);
             } finally {
                 this.SUSPENDEDSTACKS1 = suspendStacks1;
                 SUM.click(this.SUSPENDEDSTACKS1.calculateSize());
@@ -300,9 +297,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             SuspendedStackMap suspendStacks2 = null;
             try {
                 suspendStacks2 = new SuspendedStackMap(input, CONTEXT);
-            } catch (PapyrusElementException ex) {
-                suspendStacks2 = (SuspendedStackMap) ex.getPartial();
-                throw new PapyrusException("Error reading SuspendedStacks2.", ex, this);
             } finally {
                 this.SUSPENDEDSTACKS2 = suspendStacks2;
                 SUM.click(this.SUSPENDEDSTACKS2.calculateSize());
