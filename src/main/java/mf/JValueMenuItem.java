@@ -48,13 +48,13 @@ public class JValueMenuItem<T> extends JMenuItem {
     }
 
     private void updateText() {
+        final String formatted;
         if (this.value == null) {
-            final String formatted = String.format(this.format, "none");
-            super.setText(formatted);
+            formatted = String.format(this.format, "none");
         } else {
-            final String formatted = String.format(this.format, this.value);
-            super.setText(formatted);
+            formatted = String.format(this.format, this.value);
         }
+        super.setText(formatted);
     }
 
     /**
