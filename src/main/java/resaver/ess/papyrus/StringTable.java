@@ -66,8 +66,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             throw new PapyrusFormatException(String.format("Invalid TString index: %d / %d", index, this.size()));
         }
 
-        TString newString = this.get(index);
-        return newString;
+        return this.get(index);
     }
 
     /**
@@ -193,7 +192,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             sum += 2;
         }
 
-        sum += this.parallelStream().mapToInt(v -> v.calculateFullSize()).sum();
+        sum += this.parallelStream().mapToInt(TString::calculateFullSize).sum();
         return sum;
     }
 
@@ -344,7 +343,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
     /**
      * TString implementation for 32 bit TStrings.
      */
-    final private class TString32 extends TString {
+    static final private class TString32 extends TString {
 
         /**
          * Creates a new <code>TString32</code> from a <code>WStringElement</code> and
