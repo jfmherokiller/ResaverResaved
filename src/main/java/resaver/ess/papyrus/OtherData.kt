@@ -18,7 +18,6 @@ package resaver.ess.papyrus
 import resaver.ess.Element
 import resaver.ess.Flags
 import resaver.ess.GeneralElement
-import resaver.ess.papyrus.OtherData
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.logging.Logger
@@ -29,7 +28,7 @@ import java.util.logging.Logger
  */
 class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(), PapyrusElement {
     val arrays: List<Array<Element>>
-        get() = Arrays.asList(
+        get() = listOf(
             ARRAY1,
             ARRAY2,
             ARRAY3,
@@ -43,13 +42,13 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(),
             ARRAY6,
             ARRAY7,
             ARRAY8,
-            ARRAY9,
-            ARRAY10,
-            ARRAY11,
-            ARRAY12,
-            ARRAY13,
-            ARRAY14,
-            ARRAY15
+            ARRAY9!!,
+            ARRAY10!!,
+            ARRAY11!!,
+            ARRAY12!!,
+            ARRAY13!!,
+            ARRAY14!!,
+            ARRAY15!!
         )
     val ARRAY1: Array<Element>
     val ARRAY1A: Array<Element>
@@ -113,9 +112,9 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(),
     internal class Array2(input: ByteBuffer?, context: PapyrusContext) : GeneralElement() {
         override fun toString(): String {
             return if (THREAD == null) {
-                "null(" + super.toString() + ")"
+                "null(${super.toString()})"
             } else {
-                THREAD.toString() + "(" + super.toString() + ")"
+                "$THREAD(${super.toString()})"
             }
         }
 
@@ -171,13 +170,13 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(),
             val FLAG = super.readByte(input, "flag")
             super.readInt(input, "data")
             super.readRefID(input, "ref", context)
-            if (FLAG >= 0 && FLAG <= 6) {
+            if (FLAG in 0..6) {
                 super.readInts(input, "data1array", 3)
             }
             if (FLAG.toInt() == 0) {
                 super.readInts(input, "data2array", 4)
             }
-            if (FLAG >= 0 && FLAG <= 3) {
+            if (FLAG in 0..3) {
                 super.readByte(input, "unk")
             }
         }
