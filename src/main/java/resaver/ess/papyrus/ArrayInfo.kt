@@ -143,14 +143,10 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
             HOLDERS.stream().forEach { owner: PapyrusElement? ->
                 if (owner is Linkable) {
                     BUILDER.append(
-                        String.format(
-                            "<li>%s %s",
-                            owner.javaClass.simpleName,
-                            (owner as Linkable).toHTML(this)
-                        )
+                        "<li>${owner.javaClass.simpleName} ${(owner as Linkable).toHTML(this)}"
                     )
                 } else if (owner != null) {
-                    BUILDER.append(String.format("<li>%s %s", owner.javaClass.simpleName, owner))
+                    BUILDER.append("<li>${owner.javaClass.simpleName} $owner")
                 }
             }
             BUILDER.append("</ul>")
@@ -164,29 +160,24 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
                         val mod = mods.last()
                         val type = instance.scriptName
                         BUILDER.append(
-                            String.format(
-                                "<p>Probably created by script <a href=\"script://%s\">%s</a> which came from mod \"%s\".</p>",
-                                type,
-                                type,
-                                mod
-                            )
+                            "<p>Probably created by script <a href=\"script://$type\">$type</a> which came from mod \"$mod\".</p>"
                         )
                     }
                 }
             })
         }
         BUILDER.append("<p/>")
-        BUILDER.append(String.format("<p>ID: %s</p>", this.id))
-        BUILDER.append(String.format("<p>Content type: %s</p>", type))
+        BUILDER.append("<p>ID: ${this.id}</p>")
+        BUILDER.append("<p>Content type: $type</p>")
         if (type.isRefType) {
             val SCRIPT = save.papyrus.scripts[refType]
             if (null != SCRIPT) {
-                BUILDER.append(String.format("<p>Reference type: %s</p>", SCRIPT.toHTML(this)))
+                BUILDER.append("<p>Reference type: ${SCRIPT.toHTML(this)}</p>")
             } else {
-                BUILDER.append(String.format("<p>Reference type: %s</p>", refType))
+                BUILDER.append("<p>Reference type: $refType</p>")
             }
         }
-        BUILDER.append(String.format("<p>Length: %d</p>", length))
+        BUILDER.append("<p>Length: $length</p>")
         //BUILDER.append("</p>");
         BUILDER.append("</html>")
         return BUILDER.toString()
