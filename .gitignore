@@ -170,3 +170,8 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,java,maven,kotlin,intellij+all
+/ReSaver.0.log.xml
+/ReSaver.0.log.xml.1
+/ReSaver.0.log.xml.1.lck
+/ReSaver.0.log.xml.lck
+/ReSaver.exe
