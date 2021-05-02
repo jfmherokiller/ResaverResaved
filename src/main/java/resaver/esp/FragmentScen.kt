@@ -13,164 +13,164 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.util.List;
-import resaver.IString;
+import mf.BufferUtil
+import resaver.IString
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.util.function.Consumer
 
 /**
  * Describes script fragments for QUST records.
  *
  * @author Mark Fairchild
  */
-public class FragmentScen extends FragmentBase {
+class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
+    override fun write(output: ByteBuffer) {
+        output.put(UNKNOWN)
+        output.put(FLAGS)
+        SCRIPT?.write(output)
+        output.put(FILENAME?.toByteArray(StandardCharsets.UTF_8))
+        FRAGMENTS.forEach(Consumer { fragment: Fragment -> fragment.write(output) })
+        output.putShort(PHASES.size.toShort())
+        PHASES.forEach(Consumer { phase: Phase -> phase.write(output) })
+    }
 
-    public FragmentScen(ByteBuffer input, ESPContext ctx) {
-        this.UNKNOWN = input.get();
-        this.FLAGS = input.get();
+    override fun calculateSize(): Int {
+        var sum = 4
+        sum += SCRIPT?.calculateSize() ?: 0
+        sum += if (null != FILENAME) 2 + FILENAME!!.length else 0
+        sum += FRAGMENTS.stream().mapToInt { obj: Fragment -> obj.calculateSize() }.sum()
+        sum += PHASES.stream().mapToInt { obj: Phase -> obj.calculateSize() }.sum()
+        return sum
+    }
 
-        if (ctx.getGAME().isFO4()) {
-            ctx.pushContext("FragmentScene");
-            this.FILENAME = null;
-            this.SCRIPT = new Script(input, ctx);
-            ctx.getPLUGIN_INFO().addScriptData(this.SCRIPT);
+    override fun toString(): String {
+        return if (null != SCRIPT) {
+            String.format(
+                "Scene: %s (%d, %d, %d frags, %d phases)",
+                SCRIPT!!.NAME,
+                FLAGS,
+                UNKNOWN,
+                FRAGMENTS.size,
+                PHASES.size
+            )
+        } else if (null != FILENAME) {
+            String.format(
+                "Scene: %s (%d, %d, %d frags, %d phases)",
+                FILENAME,
+                FLAGS,
+                UNKNOWN,
+                FRAGMENTS.size,
+                PHASES.size
+            )
         } else {
-            this.FILENAME = mf.BufferUtil.getUTF(input);
-            this.SCRIPT = null;
-            ctx.pushContext("FragmentScene:" + this.FILENAME);
-        }
-
-        this.FRAGMENTS = new java.util.LinkedList<>();
-        this.PHASES = new java.util.LinkedList<>();
-
-        int flagCount = FragmentBase.NumberOfSetBits(this.FLAGS);
-        for (int i = 0; i < flagCount; i++) {
-            Fragment fragment = new Fragment(input);
-            this.FRAGMENTS.add(fragment);
-        }
-
-        int phaseCount = Short.toUnsignedInt(input.getShort());
-        for (int i = 0; i < phaseCount; i++) {
-            Phase phase = new Phase(input);
-            this.PHASES.add(phase);
+            String.format(
+                "Scene: (%d, %d, %d frags, %d phases)",
+                FLAGS,
+                UNKNOWN,
+                FRAGMENTS.size,
+                PHASES.size
+            )
         }
     }
 
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.UNKNOWN);
-        output.put(this.FLAGS);
-        if (null != this.SCRIPT) {
-            this.SCRIPT.write(output);
-        }
-        if (null != this.FILENAME) {
-            output.put(this.FILENAME.getBytes(UTF_8));
-        }
-
-        this.FRAGMENTS.forEach(fragment -> fragment.write(output));
-        output.putShort((short) this.PHASES.size());
-        this.PHASES.forEach(phase -> phase.write(output));
-    }
-
-    @Override
-    public int calculateSize() {
-        int sum = 4;
-        sum += (null != this.SCRIPT ? this.SCRIPT.calculateSize() : 0);
-        sum += (null != this.FILENAME ? 2 + this.FILENAME.length() : 0);
-        sum += this.FRAGMENTS.stream().mapToInt(v -> v.calculateSize()).sum();
-        sum += this.PHASES.stream().mapToInt(v -> v.calculateSize()).sum();
-        return sum;
-    }
-
-    @Override
-    public String toString() {
-        if (null != this.SCRIPT) {
-            return String.format("Scene: %s (%d, %d, %d frags, %d phases)", this.SCRIPT.getNAME(), this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size(), this.PHASES.size());
-        } else if (null != this.FILENAME) {
-            return String.format("Scene: %s (%d, %d, %d frags, %d phases)", this.FILENAME, this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size(), this.PHASES.size());
-        } else {
-            return String.format("Scene: (%d, %d, %d frags, %d phases)", this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size(), this.PHASES.size());
-        }
-    }
-
-    final private byte UNKNOWN;
-    final private byte FLAGS;
-    final private Script SCRIPT;
-    final private String FILENAME;
-    final private List<Fragment> FRAGMENTS;
-    final private List<Phase> PHASES;
+    private val UNKNOWN: Byte
+    private val FLAGS: Byte
+    private var SCRIPT: Script? = null
+    private var FILENAME: String? = null
+    private val FRAGMENTS: MutableList<Fragment>
+    private val PHASES: MutableList<Phase>
 
     /**
      *
      */
-    public class Fragment implements Entry {
-
-        public Fragment(ByteBuffer input) {
-            this.UNKNOWN = input.get();
-            this.SCRIPTNAME = IString.get(mf.BufferUtil.getUTF(input));
-            this.FRAGMENTNAME = IString.get(mf.BufferUtil.getUTF(input));
+    inner class Fragment(input: ByteBuffer) : Entry {
+        override fun write(output: ByteBuffer) {
+            output.put(this.UNKNOWN)
+            output.put(SCRIPTNAME.utF8)
+            output.put(FRAGMENTNAME.utF8)
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.put(this.UNKNOWN);
-            output.put(this.SCRIPTNAME.getUTF8());
-            output.put(this.FRAGMENTNAME.getUTF8());
+        override fun calculateSize(): Int {
+            return 5 + SCRIPTNAME.length + FRAGMENTNAME.length
         }
 
-        @Override
-        public int calculateSize() {
-            return 5 + this.SCRIPTNAME.length() + this.FRAGMENTNAME.length();
+        override fun toString(): String {
+            return String.format("Frag %d %s[%s]", this.UNKNOWN, SCRIPTNAME, FRAGMENTNAME)
         }
 
-        @Override
-        public String toString() {
-            return String.format("Frag %d %s[%s]", this.UNKNOWN, this.SCRIPTNAME, this.FRAGMENTNAME);
-        }
+        private val UNKNOWN: Byte
+        private val SCRIPTNAME: IString
+        private val FRAGMENTNAME: IString
 
-        final private byte UNKNOWN;
-        final private IString SCRIPTNAME;
-        final private IString FRAGMENTNAME;
+        init {
+            this.UNKNOWN = input.get()
+            SCRIPTNAME = IString.get(BufferUtil.getUTF(input))
+            FRAGMENTNAME = IString.get(BufferUtil.getUTF(input))
+        }
     }
 
     /**
      *
      */
-    public class Phase implements Entry {
-
-        public Phase(ByteBuffer input) {
-            this.UNKNOWN1 = input.get();
-            this.PHASE = input.getInt();
-            this.UNKNOWN2 = input.get();
-            this.SCRIPTNAME = IString.get(mf.BufferUtil.getUTF(input));
-            this.FRAGMENTNAME = IString.get(mf.BufferUtil.getUTF(input));
+    inner class Phase(input: ByteBuffer) : Entry {
+        override fun write(output: ByteBuffer) {
+            output.put(UNKNOWN1)
+            output.putInt(PHASE)
+            output.put(UNKNOWN2)
+            output.put(SCRIPTNAME.utF8)
+            output.put(FRAGMENTNAME.utF8)
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.put(this.UNKNOWN1);
-            output.putInt(this.PHASE);
-            output.put(this.UNKNOWN2);
-            output.put(this.SCRIPTNAME.getUTF8());
-            output.put(this.FRAGMENTNAME.getUTF8());
+        override fun calculateSize(): Int {
+            return 10 + SCRIPTNAME.length + FRAGMENTNAME.length
         }
 
-        @Override
-        public int calculateSize() {
-            return 10 + this.SCRIPTNAME.length() + this.FRAGMENTNAME.length();
+        override fun toString(): String {
+            return String.format("Phase %d.%d.%d %s[%s]", PHASE, UNKNOWN1, UNKNOWN2, SCRIPTNAME, FRAGMENTNAME)
         }
 
-        @Override
-        public String toString() {
-            return String.format("Phase %d.%d.%d %s[%s]", this.PHASE, this.UNKNOWN1, this.UNKNOWN2, this.SCRIPTNAME, this.FRAGMENTNAME);
-        }
+        private val UNKNOWN1: Byte
+        private val PHASE: Int
+        private val UNKNOWN2: Byte
+        private val SCRIPTNAME: IString
+        private val FRAGMENTNAME: IString
 
-        final private byte UNKNOWN1;
-        final private int PHASE;
-        final private byte UNKNOWN2;
-        final private IString SCRIPTNAME;
-        final private IString FRAGMENTNAME;
+        init {
+            UNKNOWN1 = input.get()
+            PHASE = input.int
+            UNKNOWN2 = input.get()
+            SCRIPTNAME = IString.get(BufferUtil.getUTF(input))
+            FRAGMENTNAME = IString.get(BufferUtil.getUTF(input))
+        }
+    }
+
+    init {
+        UNKNOWN = input.get()
+        FLAGS = input.get()
+        if (ctx.GAME.isFO4) {
+            ctx.pushContext("FragmentScene")
+            FILENAME = null
+            SCRIPT = Script(input, ctx)
+            ctx.PLUGIN_INFO.addScriptData(SCRIPT!!)
+        } else {
+            FILENAME = BufferUtil.getUTF(input)
+            SCRIPT = null
+            ctx.pushContext("FragmentScene:$FILENAME")
+        }
+        FRAGMENTS = mutableListOf()
+        PHASES = mutableListOf()
+        val flagCount = NumberOfSetBits(FLAGS.toInt())
+        for (i in 0 until flagCount) {
+            val fragment: Fragment = Fragment(input)
+            FRAGMENTS.add(fragment)
+        }
+        val phaseCount = java.lang.Short.toUnsignedInt(input.short)
+        for (i in 0 until phaseCount) {
+            val phase: Phase = Phase(input)
+            PHASES.add(phase)
+        }
     }
 }

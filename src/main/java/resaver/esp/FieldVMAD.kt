@@ -13,112 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import java.util.List;
-
-import org.jetbrains.annotations.NotNull;
-import resaver.IString;
+import resaver.IString
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.function.Consumer
 
 /**
  * FieldVMAD represents all a VMAD field.
  *
  * @author Mark Fairchild
  */
-public class FieldVMAD implements Field {
-
+class FieldVMAD(recordCode: RecordCode, fieldCode: IString, input: ByteBuffer, big: Boolean, ctx: ESPContext) : Field {
     /**
-     * Creates a new FieldVMAD by reading it from a LittleEndianInput.
-     *
-     * @param recordCode The record code.
-     * @param fieldCode The field code, which must be "VMAD".
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param big A flag indicating that this is a BIG field.
-     * @param ctx
-     */
-    public FieldVMAD(RecordCode recordCode, IString fieldCode, ByteBuffer input, boolean big, ESPContext ctx) {
-        assert input.hasRemaining();
-        assert fieldCode.equals(IString.get("VMAD"));
-
-        this.RECORDCODE = recordCode;
-        this.CODE = fieldCode;
-        this.VERSION = input.getShort();
-        this.OBJFORMAT = input.getShort();
-        this.SCRIPTS = new java.util.LinkedList<>();
-        this.FRAGMENTS = new java.util.LinkedList<>();
-        this.BIG = big;
-
-        int scriptCount = Short.toUnsignedInt(input.getShort());
-
-        for (int i = 0; i < scriptCount; i++) {
-            Script script = new Script(input, ctx);
-            ctx.getPLUGIN_INFO().addScriptData(script);
-        }
-
-        int i = 0;
-        while (input.hasRemaining()) {
-            switch (recordCode) {
-                case INFO:
-                case PACK:
-                    this.FRAGMENTS.add(new FragmentInfoPack(input, ctx));
-                    break;
-                case PERK:
-                    this.FRAGMENTS.add(new FragmentPerk(input, ctx));
-                    break;
-                case QUST:
-                    this.FRAGMENTS.add(new FragmentQust(input, ctx));
-                    break;
-                case SCEN:
-                    this.FRAGMENTS.add(new FragmentScen(input, ctx));
-                    break;
-                case TERM:
-                    this.FRAGMENTS.add(new FragmentTerm(input, ctx));
-                    break;
-                default:
-                    throw new IllegalStateException("Unexpected fragment type: " + recordCode);
-            }
-            i++;
-        }
-    }
-
-    /**
-     * @see Entry#write(transposer.ByteBuffer)
+     * @see Entry.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.CODE.getUTF8());
-
-        output.putShort((short) (this.BIG ? 0 : this.calculateSize() - 6));
-        output.putShort(this.VERSION);
-        output.putShort(this.OBJFORMAT);
-        output.putShort((short) this.SCRIPTS.size());
-        this.SCRIPTS.forEach(script -> script.write(output));
-        this.FRAGMENTS.forEach(fragment -> fragment.write(output));
+    override fun write(output: ByteBuffer) {
+        output.put(this.code.utF8)
+        output.putShort((if (BIG) 0 else calculateSize() - 6).toShort())
+        output.putShort(VERSION)
+        output.putShort(OBJFORMAT)
+        output.putShort(SCRIPTS.size.toShort())
+        SCRIPTS.forEach(Consumer { script: Script -> script.write(output) })
+        FRAGMENTS.forEach(Consumer { fragment: FragmentBase -> fragment.write(output) })
     }
 
     /**
      * @return The calculated size of the field.
-     * @see Entry#calculateSize()
+     * @see Entry.calculateSize
      */
-    @Override
-    public int calculateSize() {
-        int sum = 12;
-        sum += this.SCRIPTS.stream().mapToInt(Script::calculateSize).sum();
-        sum += this.FRAGMENTS.stream().mapToInt(Entry::calculateSize).sum();
-        return sum;
-    }
-
-    /**
-     * Returns the field code.
-     *
-     * @return The field code.
-     */
-    @NotNull
-    @Override
-    public IString getCode() {
-        return this.CODE;
+    override fun calculateSize(): Int {
+        var sum = 12
+        sum += SCRIPTS.stream().mapToInt { obj: Script -> obj.calculateSize() }.sum()
+        sum += FRAGMENTS.stream().mapToInt { obj: FragmentBase -> obj.calculateSize() }.sum()
+        return sum
     }
 
     /**
@@ -126,19 +56,60 @@ public class FieldVMAD implements Field {
      * string.
      *
      * @return A string representation.
-     *
      */
-    @Override
-    public String toString() {
-        return this.getCode().toString();
+    override fun toString(): String {
+        return this.code.toString()
     }
 
-    final private RecordCode RECORDCODE;
-    final private IString CODE;
-    final private short VERSION;
-    final private short OBJFORMAT;
-    final private List<Script> SCRIPTS;
-    final private List<FragmentBase> FRAGMENTS;
-    final boolean BIG;
+    private val RECORDCODE: RecordCode
 
+    /**
+     * Returns the field code.
+     *
+     * @return The field code.
+     */
+    override val code: IString
+    private val VERSION: Short
+    private val OBJFORMAT: Short
+    private val SCRIPTS: List<Script>
+    private val FRAGMENTS: MutableList<FragmentBase>
+    val BIG: Boolean
+
+    /**
+     * Creates a new FieldVMAD by reading it from a LittleEndianInput.
+     *
+     * @param recordCode The record code.
+     * @param fieldCode The field code, which must be "VMAD".
+     * @param input The `ByteBuffer` to read.
+     * @param big A flag indicating that this is a BIG field.
+     * @param ctx
+     */
+    init {
+        assert(input.hasRemaining())
+        assert(fieldCode.equals(IString.get("VMAD")))
+        RECORDCODE = recordCode
+        this.code = fieldCode
+        VERSION = input.short
+        OBJFORMAT = input.short
+        SCRIPTS = LinkedList()
+        FRAGMENTS = LinkedList()
+        BIG = big
+        val scriptCount = java.lang.Short.toUnsignedInt(input.short)
+        for (i in 0 until scriptCount) {
+            val script = Script(input, ctx)
+            ctx.PLUGIN_INFO.addScriptData(script)
+        }
+        var i = 0
+        while (input.hasRemaining()) {
+            when (recordCode) {
+                RecordCode.INFO, RecordCode.PACK -> FRAGMENTS.add(FragmentInfoPack(input, ctx))
+                RecordCode.PERK -> FRAGMENTS.add(FragmentPerk(input, ctx))
+                RecordCode.QUST -> FRAGMENTS.add(FragmentQust(input, ctx))
+                RecordCode.SCEN -> FRAGMENTS.add(FragmentScen(input, ctx))
+                RecordCode.TERM -> FRAGMENTS.add(FragmentTerm(input, ctx))
+                else -> throw IllegalStateException("Unexpected fragment type: $recordCode")
+            }
+            i++
+        }
+    }
 }

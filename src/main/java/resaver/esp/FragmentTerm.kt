@@ -13,94 +13,83 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import resaver.IString;
+import mf.BufferUtil
+import resaver.IString
+import java.nio.ByteBuffer
+import java.util.function.Consumer
 
 /**
  * Describes script fragments for QUST records.
  *
  * @author Mark Fairchild
  */
-public class FragmentTerm extends FragmentBase {
-
-    public FragmentTerm(ByteBuffer input, ESPContext ctx) {
-        //input = <code>ByteBuffer</code>.debug(input);
-        this.UNKNOWN = input.get();
-        this.SCRIPT = new Script(input, ctx);
-        ctx.getPLUGIN_INFO().addScriptData(this.SCRIPT);
-
-        int fragCount = input.getShort();
-        this.FRAGMENTS = new java.util.ArrayList<>(fragCount);
-
-        for (int i = 0; i < fragCount; i++) {
-            Fragment fragment = new Fragment(input);
-            this.FRAGMENTS.add(fragment);
-        }
+class FragmentTerm(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
+    override fun write(output: ByteBuffer) {
+        output.put(UNKNOWN)
+        SCRIPT.write(output)
+        output.putShort(FRAGMENTS.size.toShort())
+        FRAGMENTS.forEach(Consumer { fragment: Fragment -> fragment.write(output) })
     }
 
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.UNKNOWN);
-        this.SCRIPT.write(output);
-        output.putShort((short) this.FRAGMENTS.size());
-
-        this.FRAGMENTS.forEach(fragment -> fragment.write(output));
+    override fun calculateSize(): Int {
+        var sum = 3
+        sum += SCRIPT.calculateSize()
+        sum += FRAGMENTS.stream().mapToInt { v: Fragment -> v.calculateSize() }.sum()
+        return sum
     }
 
-    @Override
-    public int calculateSize() {
-        int sum = 3;
-        sum += this.SCRIPT.calculateSize();
-        sum += this.FRAGMENTS.stream().mapToInt(v -> v.calculateSize()).sum();
-        return sum;
+    override fun toString(): String {
+        return String.format("Term: %s (%d, %d fragments)", SCRIPT.NAME, UNKNOWN, FRAGMENTS.size)
     }
 
-    @Override
-    public String toString() {
-        return String.format("Term: %s (%d, %d fragments)", this.SCRIPT.getNAME(), this.UNKNOWN, this.FRAGMENTS.size());
-    }
-
-    final private byte UNKNOWN;
-    final private Script SCRIPT;
-    final private List<Fragment> FRAGMENTS;
+    private val UNKNOWN: Byte
+    private val SCRIPT: Script
+    private val FRAGMENTS: MutableList<Fragment>
 
     /**
      *
      */
-    public class Fragment implements Entry {
-
-        public Fragment(ByteBuffer input) {
-            this.INDEX = input.getInt();
-            this.UNKNOWN = input.get();
-            this.SCRIPTNAME = IString.get(mf.BufferUtil.getUTF(input));
-            this.FRAGMENTNAME = IString.get(mf.BufferUtil.getUTF(input));
+    inner class Fragment(input: ByteBuffer) : Entry {
+        override fun write(output: ByteBuffer) {
+            output.put(INDEX.toByte())
+            output.put(this.UNKNOWN)
+            output.put(SCRIPTNAME.utF8)
+            output.put(FRAGMENTNAME.utF8)
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.put((byte) this.INDEX);
-            output.put(this.UNKNOWN);
-            output.put(this.SCRIPTNAME.getUTF8());
-            output.put(this.FRAGMENTNAME.getUTF8());
+        override fun calculateSize(): Int {
+            return 9 + SCRIPTNAME.length + FRAGMENTNAME.length
         }
 
-        @Override
-        public int calculateSize() {
-            return 9 + this.SCRIPTNAME.length() + this.FRAGMENTNAME.length();
+        override fun toString(): String {
+            return String.format("%d: %s [%s] (%d)", INDEX, SCRIPTNAME, FRAGMENTNAME, this.UNKNOWN)
         }
 
-        @Override
-        public String toString() {
-            return String.format("%d: %s [%s] (%d)", this.INDEX, this.SCRIPTNAME, this.FRAGMENTNAME, this.UNKNOWN);
-        }
+        private val INDEX: Int
+        private val UNKNOWN: Byte
+        private val SCRIPTNAME: IString
+        private val FRAGMENTNAME: IString
 
-        final private int INDEX;
-        final private byte UNKNOWN;
-        final private IString SCRIPTNAME;
-        final private IString FRAGMENTNAME;
+        init {
+            INDEX = input.int
+            this.UNKNOWN = input.get()
+            SCRIPTNAME = IString.get(BufferUtil.getUTF(input))
+            FRAGMENTNAME = IString.get(BufferUtil.getUTF(input))
+        }
     }
 
+    init {
+        //input = <code>ByteBuffer</code>.debug(input);
+        UNKNOWN = input.get()
+        SCRIPT = Script(input, ctx)
+        ctx.PLUGIN_INFO.addScriptData(SCRIPT)
+        val fragCount = input.short.toInt()
+        FRAGMENTS = ArrayList(fragCount)
+        for (i in 0 until fragCount) {
+            val fragment: Fragment = Fragment(input)
+            FRAGMENTS.add(fragment)
+        }
+    }
 }

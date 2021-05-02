@@ -13,33 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
-import resaver.ess.Plugin;
+import resaver.ess.Plugin
+import java.util.*
+import java.util.stream.Collectors
 
 /**
  * Stores somethin'.
  *
  * @author Mark Fairchild
  */
-final public class PluginData {
-
-    /**
-     * Creates a new <code>ESPInfo</code>.
-     * Not threadsafe.
-     *
-     * @param plugin The name of the ESP.
-     */
-    public PluginData(Plugin plugin) {
-        this.MAP = new java.util.HashMap<>();
-        this.ESPNAME = plugin;
-        this.scriptDataSize = 0;
-    }
-
+class PluginData(plugin: Plugin) {
     /**
      * Adds an entry for a record.
      *
@@ -47,41 +32,33 @@ final public class PluginData {
      * @param fields The record's fields, which will be sampled for suitable
      * names.
      */
-    public void addRecord(int formID, FieldList fields) {
-        final Info INFO = new Info(fields);
-        this.MAP.put(formID, INFO);
+    fun addRecord(formID: Int, fields: FieldList) {
+        val INFO = Info(fields)
+        MAP[formID] = INFO
     }
 
     /**
      * Calculates the script data size and adds it.
-     * @param script 
+     * @param script
      */
-    public void addScriptData(Script script) {
-        this.scriptDataSize += script.calculateSize();
+    fun addScriptData(script: Script) {
+        scriptDataSize += script.calculateSize().toLong()
     }
-    
-    /**
-     * @return The size of the plugin's script data.
-     */
-    public long getScriptDataSize() {
-        return this.scriptDataSize;
-    }
-    
+
     /**
      * @return The number of stored names.
      */
-    public long getNameCount() {
-        return this.MAP.size();
-    }
-    
+    val nameCount: Long
+        get() = MAP.size.toLong()
+
     /**
-     * Adds all of the entries from on <code>PluginData</code> to another.
+     * Adds all of the entries from on `PluginData` to another.
      *
      * @param other
      */
-    public void addAll(PluginData other) {
-        this.MAP.putAll(other.MAP);
-        this.scriptDataSize += other.scriptDataSize;
+    fun addAll(other: PluginData) {
+        MAP.putAll(other.MAP)
+        scriptDataSize += other.scriptDataSize
     }
 
     /**
@@ -90,13 +67,13 @@ final public class PluginData {
      * @param strings
      * @return
      */
-    public Set<Integer> getID(String searchTerm, StringTable strings) {
-        Set<Integer> matches = new TreeSet<>(this.MAP.keySet()
+    fun getID(searchTerm: String, strings: StringTable?): Set<Int> {
+        return TreeSet(
+            MAP.keys
                 .stream()
-                .filter(id -> searchTerm.equalsIgnoreCase(this.getName(id, strings)))
-                .collect(Collectors.toSet()));
-
-        return matches;
+                .filter { id: Int -> searchTerm.equals(getName(id, strings), ignoreCase = true) }
+                .collect(Collectors.toSet())
+        )
     }
 
     /**
@@ -106,92 +83,97 @@ final public class PluginData {
      * @param strings The StringTable.
      * @return
      */
-    public String getName(int formID, StringTable strings) {
-        if (!this.MAP.containsKey(formID)) {
-            return null;
+    fun getName(formID: Int, strings: StringTable?): String? {
+        if (!MAP.containsKey(formID)) {
+            return null
         }
-
-        final Info INFO = this.MAP.get(formID);
-
-        if (INFO.FULL != null) {
-            if (INFO.FULL.hasString()) {
-                return INFO.FULL.getString();
-            } else if (INFO.FULL.hasIndex() && null != strings) {
-                int index = INFO.FULL.getIndex();
-                String lookup = strings.get(this.ESPNAME, index);
+        val INFO = MAP[formID]
+        if (INFO!!.FULL != null) {
+            if (INFO.FULL?.hasString() == true) {
+                return INFO.FULL.string
+            } else if (INFO.FULL!!.hasIndex() && null != strings) {
+                val index = INFO.FULL.index
+                val lookup = strings[ESPNAME, index]
                 if (lookup != null) {
-                    return lookup;
+                    return lookup
                 }
             }
         }
-
         if (INFO.NAME != null) {
-            int baseID = INFO.NAME.getFormID();
-            assert baseID != formID;
-            String baseName = this.getName(baseID, strings);
+            val baseID = INFO.NAME.formID
+            assert(baseID != formID)
+            val baseName = getName(baseID, strings)
             if (null != baseName) {
-                return baseName;
+                return baseName
             }
         }
-
-        if (null != INFO.EDID) {
-            return INFO.EDID.getValue();
-        }
-
-        return null;
+        return if (null != INFO.EDID) {
+            INFO.EDID.value
+        } else null
     }
 
     /**
-     * @see Object#toString()
+     * @see Object.toString
      * @return
      */
-    @Override
-    public String toString() {
-        return this.ESPNAME.toString();
+    override fun toString(): String {
+        return ESPNAME.toString()
     }
 
     /**
      * The actual mapping.
      */
-    final private Map<Integer, Info> MAP;
+    private val MAP: MutableMap<Int, Info>
 
     /**
      * The name of the map.
      */
-    final private Plugin ESPNAME;
-
+    private val ESPNAME: Plugin
+    /**
+     * @return The size of the plugin's script data.
+     */
     /**
      * Size of the script data.
      */
-    private long scriptDataSize;
-    
+    var scriptDataSize: Long
+        private set
+
     /**
      * Stores ID information.
      */
-    static final private class Info {
+    private class Info(fields: FieldList) {
+        val FULL: FieldFull?
+        val NAME: FieldName?
+        val EDID: FieldEDID?
 
-        public Info(FieldList fields) {
-            FieldEDID edid = null;
-            FieldName name = null;
-            FieldFull full = null;
-            
-            for (Field field : fields) {
-                if (field instanceof FieldFull) {
-                    full = (FieldFull) field;
-                } else if (field instanceof FieldName) {
-                    name = (FieldName) field;
-                } else if (field instanceof FieldEDID) {
-                    edid = (FieldEDID) field;
+        init {
+            var edid: FieldEDID? = null
+            var name: FieldName? = null
+            var full: FieldFull? = null
+            for (field in fields) {
+                if (field is FieldFull) {
+                    full = field
+                } else if (field is FieldName) {
+                    name = field
+                } else if (field is FieldEDID) {
+                    edid = field
                 }
             }
-            
-            this.EDID = edid;
-            this.NAME = name;
-            this.FULL = full;
+            EDID = edid
+            NAME = name
+            FULL = full
         }
+    }
 
-        final public FieldFull FULL;
-        final public FieldName NAME;
-        final public FieldEDID EDID;
+    /**
+     * Creates a new `ESPInfo`.
+     * Not threadsafe.
+     *
+     * @param plugin The name of the ESP.
+     */
+    init {
+        MAP = HashMap()
+        ESPNAME = plugin
+        scriptDataSize = 0
     }
 }

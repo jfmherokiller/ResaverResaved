@@ -13,68 +13,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import resaver.IString;
+import mf.BufferUtil
+import resaver.IString
+import java.nio.ByteBuffer
 
 /**
  * Describes a property entry in a VMAD's scripts.
  *
  * @author Mark Fairchild
  */
-final public class Property implements Entry {
-
+class Property(input: ByteBuffer, ctx: ESPContext) : Entry {
     /**
-     * Creates a new Property by reading it from a LittleEndianInput.
-     *
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param ctx
-     */
-    public Property(ByteBuffer input, ESPContext ctx) {
-        this.NAME = IString.get(mf.BufferUtil.getWString(input));
-        ctx.pushContext("prop:" + this.NAME);
-
-        this.TYPE = input.get();
-        this.STATUS = input.get();
-        
-        try {
-            this.DATA = PropertyData.readPropertyData(this.TYPE, input, ctx);
-        } finally {
-            ctx.popContext();
-        }
-    }
-
-    /**
-     * @see Entry#write(transposer.ByteBuffer)
+     * @see Entry.write
      * @param output The ByteBuffer.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.NAME.getUTF8());
-        output.put(this.TYPE);
-        output.put(this.STATUS);
-        this.DATA.write(output);
+    override fun write(output: ByteBuffer) {
+        output.put(NAME.utF8)
+        output.put(TYPE)
+        output.put(STATUS)
+        DATA!!.write(output)
     }
 
     /**
      * @return The calculated size of the Script.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 4 + this.NAME.length() + this.DATA.calculateSize();
-        return sum;
+    override fun calculateSize(): Int {
+        return 4 + NAME.length + DATA!!.calculateSize()
     }
 
-    @Override
-    public String toString() {
-        return String.format("%s: %d (%02x): %s", this.NAME, this.TYPE, this.STATUS, this.DATA);
+    override fun toString(): String {
+        return String.format("%s: %d (%02x): %s", NAME, TYPE, STATUS, DATA)
     }
 
-    private final IString NAME;
-    private final byte TYPE;
-    private final byte STATUS;
-    private final PropertyData DATA;
+    private val NAME: IString
+    private val TYPE: Byte
+    private val STATUS: Byte
+    private var DATA: PropertyData? = null
 
+    /**
+     * Creates a new Property by reading it from a LittleEndianInput.
+     *
+     * @param input The `ByteBuffer` to read.
+     * @param ctx
+     */
+    init {
+        NAME = IString.get(BufferUtil.getWString(input))
+        ctx.pushContext("prop:$NAME")
+        TYPE = input.get()
+        STATUS = input.get()
+        try {
+            DATA = PropertyData.readPropertyData(TYPE, input, ctx)
+        } finally {
+            ctx.popContext()
+        }
+    }
 }
