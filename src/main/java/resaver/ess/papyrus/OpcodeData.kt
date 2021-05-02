@@ -13,155 +13,142 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.nio.BufferUnderflowException;
-import resaver.ListException;
-import java.util.List;
-import java.util.Objects;
-import java.nio.ByteBuffer;
-import java.util.LinkedList;
-import resaver.pex.Opcode;
+import resaver.ListException
+import resaver.pex.Opcode
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.function.Consumer
 
 /**
  * Describes a script member in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class OpcodeData implements PapyrusElement {
-
+class OpcodeData : PapyrusElement {
     /**
-     * A reusable instance of the NOP instruction.
-     */
-    static final public OpcodeData NOP = new OpcodeData();
-
-    /**
-     * Creates a new <code>OpcodeData</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
+     * Creates a new `OpcodeData` by reading from a
+     * `ByteBuffer`. No error handling is performed.
      *
      * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
+     * @param context The `PapyrusContext` info.
      * @throws PapyrusFormatException
      * @throws ListException
      */
-    public OpcodeData(ByteBuffer input, PapyrusContext context) throws ListException, PapyrusFormatException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-
-        int code = input.get();
-        if (code < 0 || code >= OPCODES.length) {
-            throw new PapyrusFormatException("Invalid opcode: " + code);
+    constructor(input: ByteBuffer, context: PapyrusContext?) {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(context)
+        val code = input.get().toInt()
+        if (code < 0 || code >= OPCODES.size) {
+            throw PapyrusFormatException("Invalid opcode: $code")
         }
-
-        this.OPCODE = OPCODES[code];
-        this.PARAMETERS = new LinkedList<>();
-        int fixedCount = OPCODE.getFixedCount();
-
-        for (int i = 0; i < fixedCount; i++) {
+        opcode = OPCODES[code]
+        PARAMETERS = LinkedList()
+        val fixedCount = opcode.fixedCount
+        for (i in 0 until fixedCount) {
             try {
-                Parameter var = Parameter.read(input, context);
-                this.PARAMETERS.add(var);
-            } catch (PapyrusFormatException | BufferUnderflowException ex) {
-                throw new ListException(i, fixedCount, ex);
+                val `var` = Parameter.read(input, context)
+                PARAMETERS.add(`var`)
+            } catch (ex: PapyrusFormatException) {
+                throw ListException(i, fixedCount, ex)
+            } catch (ex: BufferUnderflowException) {
+                throw ListException(i, fixedCount, ex)
             }
         }
-
-        if (this.OPCODE.hasExtraTerms()) {
-            int extraCount = this.PARAMETERS.getLast().getIntValue();
-
-            for (int i = 0; i < extraCount; i++) {
+        if (opcode.hasExtraTerms()) {
+            val extraCount = PARAMETERS.last.intValue
+            for (i in 0 until extraCount) {
                 try {
-                    Parameter var = Parameter.read(input, context);
-                    this.PARAMETERS.add(var);
-                } catch (PapyrusFormatException | BufferUnderflowException ex) {
-                    throw new ListException(i + fixedCount, extraCount + fixedCount, ex);
+                    val `var` = Parameter.read(input, context)
+                    PARAMETERS.add(`var`)
+                } catch (ex: PapyrusFormatException) {
+                    throw ListException(i + fixedCount, extraCount + fixedCount, ex)
+                } catch (ex: BufferUnderflowException) {
+                    throw ListException(i + fixedCount, extraCount + fixedCount, ex)
                 }
             }
         }
     }
 
     /**
-     * Creates a new <code>OpcodeData</code> for the NOP instruction.
+     * Creates a new `OpcodeData` for the NOP instruction.
      */
-    private OpcodeData() {
-        this.OPCODE = Opcode.NOP;
-        this.PARAMETERS = new LinkedList<>();
+    private constructor() {
+        opcode = Opcode.NOP
+        PARAMETERS = LinkedList()
     }
 
     /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put((byte) this.OPCODE.ordinal());
-        this.PARAMETERS.forEach(var -> var.write(output));
+    override fun write(output: ByteBuffer) {
+        output.put(opcode.ordinal.toByte())
+        PARAMETERS.forEach(Consumer { `var`: Parameter -> `var`.write(output) })
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 1;
-        sum += this.PARAMETERS.stream().mapToInt(var -> var.calculateSize()).sum();
-        return sum;
-    }
-
-    /**
-     * @return The opcode.
-     */
-    public Opcode getOpcode() {
-        return this.OPCODE;
+    override fun calculateSize(): Int {
+        var sum = 1
+        sum += PARAMETERS.stream().mapToInt { obj: Parameter -> obj.calculateSize() }.sum()
+        return sum
     }
 
     /**
      * @return The list of instruction parameters.
      */
-    public List<Parameter> getParameters() {
-        return java.util.Collections.unmodifiableList(this.PARAMETERS);
-    }
+    val parameters: List<Parameter>
+        get() = Collections.unmodifiableList(PARAMETERS)
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append(this.OPCODE);
-        this.PARAMETERS.forEach(p -> BUILDER.append(' ').append(p.toValueString()));
-        return BUILDER.toString();
+    override fun toString(): String {
+        val BUILDER = StringBuilder()
+        BUILDER.append(opcode)
+        PARAMETERS.forEach(Consumer { p: Parameter -> BUILDER.append(' ').append(p.toValueString()) })
+        return BUILDER.toString()
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 29 * hash + Objects.hashCode(this.OPCODE);
-        hash = 29 * hash + Objects.hashCode(this.PARAMETERS);
-        return hash;
+    override fun hashCode(): Int {
+        var hash = 3
+        hash = 29 * hash + Objects.hashCode(opcode)
+        hash = 29 * hash + Objects.hashCode(PARAMETERS)
+        return hash
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
         }
         if (obj == null) {
-            return false;
+            return false
         }
-        if (getClass() != obj.getClass()) {
-            return false;
+        if (javaClass != obj.javaClass) {
+            return false
         }
-        final OpcodeData other = (OpcodeData) obj;
-        if (this.OPCODE != other.OPCODE) {
-            return false;
-        }
-        return Objects.equals(this.PARAMETERS, other.PARAMETERS);
+        val other = obj as OpcodeData
+        return if (opcode !== other.opcode) {
+            false
+        } else PARAMETERS == other.PARAMETERS
     }
 
-    final private Opcode OPCODE;
-    final private LinkedList<Parameter> PARAMETERS;
-    static final private Opcode[] OPCODES = Opcode.values();
+    /**
+     * @return The opcode.
+     */
+    val opcode: Opcode
+    private val PARAMETERS: LinkedList<Parameter>
 
+    companion object {
+        /**
+         * A reusable instance of the NOP instruction.
+         */
+        val NOP = OpcodeData()
+        private val OPCODES = Opcode.values()
+    }
 }
