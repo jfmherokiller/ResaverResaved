@@ -13,53 +13,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import resaver.IString;
+import resaver.IString
+import java.nio.ByteBuffer
 
 /**
  * FieldSimple represents a Name field.
  *
  * @author Mark Fairchild
  */
-public class FieldName extends FieldSimple {
-
-    /**
-     * Creates a new FieldSimple by reading it from a <code>ByteBuffer</code>.
-     *
-     * @param code The field code.
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param size The amount of data.
-     * @param big A flag indicating that this is a BIG field.
-     * @param ctx The mod descriptor.
-     */
-    public FieldName(IString code, ByteBuffer input, int size, boolean big, ESPContext ctx) {
-        super(code, input, size, big, ctx);
-        assert size == 4;
-        int id = super.getByteBuffer().getInt();
-        int newID = ctx.remapFormID(id);
-        this.FORMID = newID;
-    }
-
-    /**
-     * @return The formID value.
-     */
-    public int getFormID() {
-        return this.FORMID;
-    }
-
+class FieldName(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx: ESPContext) : FieldSimple(
+    code!!, input!!, size, big, ctx
+) {
     /**
      * Returns a String representation of the Field, which will just be the code
      * string.
      *
      * @return A string representation.
-     *
      */
-    @Override
-    public String toString() {
-        return this.getCode() + "=" + this.FORMID;
+    override fun toString(): String {
+        return this.code.toString() + "=" + formID
     }
 
-    final private int FORMID;
+    /**
+     * @return The formID value.
+     */
+    val formID: Int
+
+    /**
+     * Creates a new FieldSimple by reading it from a `ByteBuffer`.
+     *
+     * @param code The field code.
+     * @param input The `ByteBuffer` to read.
+     * @param size The amount of data.
+     * @param big A flag indicating that this is a BIG field.
+     * @param ctx The mod descriptor.
+     */
+    init {
+        assert(size == 4)
+        val id = super.byteBuffer.int
+        val newID = ctx.remapFormID(id)
+        formID = newID
+    }
 }

@@ -88,7 +88,7 @@ open class FieldSimple(code: IString, input: ByteBuffer, size: Int, big: Boolean
      *
      * @return The field code.
      */
-    override val code: IString
+    final override val code: IString
 
     /**
      * @return The underlying byte array.
