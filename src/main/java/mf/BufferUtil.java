@@ -24,6 +24,7 @@ import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import net.jpountz.lz4.LZ4SafeDecompressor;
+import org.jetbrains.annotations.NotNull;
 import org.mozilla.universalchardet.UniversalDetector;
 
 /**
@@ -135,7 +136,7 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    static public byte[] getZStringRaw(ByteBuffer buffer) {
+    static public byte[] getZStringRaw(@NotNull ByteBuffer buffer) {
         final int start = ((Buffer) buffer).position();
 
         //while (buffer.get() != 0);
