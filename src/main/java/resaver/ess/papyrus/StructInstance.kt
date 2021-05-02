@@ -39,7 +39,7 @@ class StructInstance
  * @param context The `PapyrusContext` info.
  * @throws PapyrusFormatException
  */
-    (input: ByteBuffer?, structs: StructMap?, context: PapyrusContext?) : GameElement(input, structs, context),
+    (input: ByteBuffer, structs: StructMap, context: PapyrusContext) : GameElement(input, structs, context),
     SeparateData, HasVariables {
     /**
      * @see resaver.ess.Element.write
@@ -83,24 +83,23 @@ class StructInstance
      * @return The name of the corresponding `Struct`.
      */
     val structName: TString
-        get() = super.getDefinitionName()
+        get() = super.definitionName
 
     /**
      * @return The corresponding `Struct`.
      */
     val struct: Struct
         get() {
-            assert(super.getDefinition() is Struct)
-            return super.getDefinition() as Struct
+            assert(super.definition is Struct)
+            return super.definition as Struct
         }
 
     /**
      * @return A flag indicating if the `StructInstance` is
      * undefined.
      */
-    override fun isUndefined(): Boolean {
-        return struct.isUndefined
-    }
+    override val isUndefined: Boolean
+        get() = struct.isUndefined
 
     /**
      * @return The flag field.
@@ -144,13 +143,13 @@ class StructInstance
      */
     override fun toHTML(target: Element): String {
         return if (null == data) {
-            Linkable.makeLink("structinstance", this.id, this.toString())
+            Linkable.makeLink("structinstance", this.iD, this.toString())
         } else if (target is Variable) {
             val index = this.variables.indexOf(target)
             if (index >= 0) {
-                Linkable.makeLink("structinstance", this.id, index, this.toString())
+                Linkable.makeLink("structinstance", this.iD, index, this.toString())
             } else {
-                Linkable.makeLink("structinstance", this.id, this.toString())
+                Linkable.makeLink("structinstance", this.iD, this.toString())
             }
         } else {
             this.variables.stream()
@@ -159,8 +158,8 @@ class StructInstance
                 .map { `var`: Variable -> this.variables.indexOf(`var`) }
                 .filter { index: Int -> index >= 0 }
                 .findFirst()
-                .map { index: Int? -> Linkable.makeLink("structinstance", this.id, index!!, this.toString()) }
-                .orElse(Linkable.makeLink("structinstance", this.id, this.toString()))
+                .map { index: Int? -> Linkable.makeLink("structinstance", this.iD, index!!, this.toString()) }
+                .orElse(Linkable.makeLink("structinstance", this.iD, this.toString()))
         }
     }
 
@@ -186,7 +185,7 @@ class StructInstance
                     BUILDER.append("</ul>");
                 }
             }
-        }*/BUILDER.append(String.format("<p>ID: %s</p>", this.id))
+        }*/BUILDER.append(String.format("<p>ID: %s</p>", this.iD))
         if (null == data) {
             BUILDER.append("<h3>DATA MISSING</h3>")
         } else {
@@ -211,7 +210,7 @@ class StructInstance
          */
         override fun write(output: ByteBuffer) {
             Objects.requireNonNull(output)
-            id.write(output)
+            iD.write(output)
             FLAG.write(output)
             output.putInt(VARIABLES!!.size)
             VARIABLES!!.forEach(Consumer { `var`: Variable -> `var`.write(output) })
@@ -224,7 +223,7 @@ class StructInstance
         override fun calculateSize(): Int {
             var sum = 4
             sum += FLAG.calculateSize()
-            sum += id.calculateSize()
+            sum += iD.calculateSize()
             sum += VARIABLES!!.stream().mapToInt { obj: Variable -> obj.calculateSize() }.sum()
             return sum
         }
@@ -233,7 +232,7 @@ class StructInstance
          * @return String representation.
          */
         override fun toString(): String {
-            return id.toString() + VARIABLES
+            return iD.toString() + VARIABLES
         }
 
         //final private EID ID;

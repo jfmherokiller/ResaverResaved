@@ -23,9 +23,9 @@ import java.nio.ByteBuffer
  * @author Mark Fairchild
  */
 class StructInstanceMap : PapyrusElementMap<StructInstance> {
-    internal constructor(input: ByteBuffer?, structs: StructMap?, context: PapyrusContext?) : super(
+    internal constructor(input: ByteBuffer, structs: StructMap, context: PapyrusContext) : super(
         input,
-        PapyrusElementReader<StructInstance> { b: ByteBuffer? -> StructInstance(b, structs, context) }) {
+        PapyrusElementReader<StructInstance> { b: ByteBuffer -> StructInstance(b, structs, context) }) {
     }
 
     internal constructor() {}

@@ -40,7 +40,7 @@ class Reference
  * @param scripts The `ScriptMap` containing the definitions.
  * @param context The `PapyrusContext` info.
  */
-internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusContext?) :
+internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusContext) :
     GameElement(input, scripts, context), SeparateData, HasVariables {
     /**
      * @see resaver.ess.Element.write
@@ -84,25 +84,25 @@ internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusCo
      * @return The name of the corresponding `Script`.
      */
     val scriptName: TString
-        get() = super.getDefinitionName()
+        get() = super.definitionName
 
     /**
      * @return The corresponding `Script`.
      */
     val script: Script?
         get() {
-            assert(super.getDefinition() is Script)
-            return super.getDefinition() as Script
+            assert(super.definition is Script)
+            return super.definition as Script
         }
 
     /**
      * @return A flag indicating if the `Reference` is undefined.
      */
-    override fun isUndefined(): Boolean {
-        return if (null != script) {
+    override val isUndefined: Boolean
+        get() = if (null != script) {
             script!!.isUndefined
         } else !NATIVE_SCRIPTS.contains(scriptName.toIString())
-    }
+
 
     /**
      * @return The type of the reference.
@@ -149,7 +149,7 @@ internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusCo
             if (target is Variable) {
                 val i = this.variables.indexOf(target)
                 if (i >= 0) {
-                    return Linkable.makeLink("reference", this.id, i, this.toString())
+                    return Linkable.makeLink("reference", this.iD, i, this.toString())
                 }
             } else {
                 val result = this.variables.stream()
@@ -159,12 +159,12 @@ internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusCo
                 if (result.isPresent) {
                     val i = this.variables.indexOf(result.get())
                     if (i >= 0) {
-                        return Linkable.makeLink("reference", this.id, i, this.toString())
+                        return Linkable.makeLink("reference", this.iD, i, this.toString())
                     }
                 }
             }
         }
-        return Linkable.makeLink("reference", this.id, this.toString())
+        return Linkable.makeLink("reference", this.iD, this.toString())
     }
 
     /**
@@ -190,7 +190,7 @@ internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusCo
                 BUILDER.append("</ul>")
             }
         }
-        BUILDER.append(String.format("<p>ID: %s</p>", this.id))
+        BUILDER.append(String.format("<p>ID: %s</p>", this.iD))
         BUILDER.append(String.format("<p>Type2: %s</p>", type))
         BUILDER.append(String.format("<p>Unknown1: %08x</p>", data!!.UNKNOWN1))
         BUILDER.append(String.format("<p>Unknown2: %08x</p>", data!!.UNKNOWN2))
@@ -226,7 +226,7 @@ internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusCo
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer) {
-            id.write(output)
+            iD.write(output)
             output.put(FLAG)
             TYPE.write(output)
             output.putInt(UNKNOWN1)
@@ -243,7 +243,7 @@ internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusCo
          */
         override fun calculateSize(): Int {
             var sum = 9
-            sum += id.calculateSize()
+            sum += iD.calculateSize()
             if ((FLAG and 0x04).toInt() != 0) {
                 sum += 4
             }
