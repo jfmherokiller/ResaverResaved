@@ -13,138 +13,131 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.lang.IllegalArgumentException
+import java.util.Arrays
+import resaver.ess.VSVal
+import java.lang.Byte
+import java.nio.ByteBuffer
+import kotlin.experimental.and
 
 /**
  * A Skyrim variable-size value.
  *
  * @author Mark Fairchild
  */
-final public class VSVal implements Element {
-
+class VSVal : Element {
     /**
-     * Creates a new <code>ChangeForm</code> from an integer.
+     * Creates a new `ChangeForm` from an integer.
      *
      * @param val The value.
      */
-    public VSVal(int val) {
-        if (val <= 0x40) {
-            val <<= 2;
-            this.DATA = new byte[1];
-            this.DATA[0] = (byte) (val);
-        } else if (val <= 0x4000) {
-            val <<= 2;
-            this.DATA = new byte[2];
-            this.DATA[0] = (byte) (val | 0x1);
-            this.DATA[1] = (byte) (val >> 8);
-        } else if (val <= 0x40000000) {
-            val <<= 2;
-            this.DATA = new byte[3];
-            this.DATA[0] = (byte) (val | 0x2);
-            this.DATA[1] = (byte) (val >> 8);
-            this.DATA[2] = (byte) (val >> 16);
-        } else {
-            throw new IllegalArgumentException("VSVal cannot stores values greater than 0x40000000: " + val);
+    constructor(`val`: Int) {
+        var `val` = `val`
+        when {
+            `val` <= 0x40 -> {
+                `val` = `val` shl 2
+                DATA = ByteArray(1)
+                DATA[0] = `val`.toByte()
+            }
+            `val` <= 0x4000 -> {
+                `val` = `val` shl 2
+                DATA = ByteArray(2)
+                DATA[0] = (`val` or 0x1).toByte()
+                DATA[1] = (`val` shr 8).toByte()
+            }
+            `val` <= 0x40000000 -> {
+                `val` = `val` shl 2
+                DATA = ByteArray(3)
+                DATA[0] = (`val` or 0x2).toByte()
+                DATA[1] = (`val` shr 8).toByte()
+                DATA[2] = (`val` shr 16).toByte()
+            }
+            else -> {
+                throw IllegalArgumentException("VSVal cannot stores values greater than 0x40000000: $`val`")
+            }
         }
     }
 
     /**
-     * Creates a new <code>ChangeForm</code> by reading from a
-     * <code>ByteBuffer</code>.
+     * Creates a new `ChangeForm` by reading from a
+     * `ByteBuffer`.
      *
      * @param input The input stream.
      */
-    public VSVal(ByteBuffer input) {
-        byte firstByte = input.get();
-        int size = firstByte & 0x3;
-
-        switch (size) {
-            case 0:
-                this.DATA = new byte[]{firstByte};
-                break;
-            case 1:
-                this.DATA = new byte[]{firstByte, input.get()};
-                break;
-            default:
-                this.DATA = new byte[]{firstByte, input.get(), input.get()};
-                break;
+    constructor(input: ByteBuffer) {
+        val firstByte = input.get()
+        val size: Int = (firstByte and 0x3).toInt()
+        when (size) {
+            0 -> DATA = byteArrayOf(firstByte)
+            1 -> DATA = byteArrayOf(firstByte, input.get())
+            else -> DATA = byteArrayOf(firstByte, input.get(), input.get())
         }
     }
 
     /**
-     * @see resaver.ess.Element#write(ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.DATA);
+    override fun write(output: ByteBuffer) {
+        output.put(DATA)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return this.DATA.length;
+    override fun calculateSize(): Int {
+        return DATA.size
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return String.format("%d", this.getValue());
+    override fun toString(): String {
+        return String.format("%d", value)
     }
 
     /**
      * @return The value stored in the VSVal.
      */
-    public int getValue() {
-        int size = this.DATA[0] & 0x3;
-
-        switch (size) {
-            case 0: {
-                int value = Byte.toUnsignedInt(this.DATA[0]) >>> 2;
-                return value;
-            }
-            case 1: {
-                int value = (Byte.toUnsignedInt(this.DATA[0])
-                        | (Byte.toUnsignedInt(this.DATA[1]) << 8)) >>> 2;
-                return value;
-            }
-            default: {
-                int value = (Byte.toUnsignedInt(this.DATA[0]) 
-                        | (Byte.toUnsignedInt(this.DATA[1]) << 8) 
-                        | (Byte.toUnsignedInt(this.DATA[2]) << 16)) >>> 2;
-                return value;
+    val value: Int
+        get() {
+            val size: Int = (DATA[0] and 0x3).toInt()
+            return when (size) {
+                0 -> {
+                    Byte.toUnsignedInt(DATA[0]) ushr 2
+                }
+                1 -> {
+                    (Byte.toUnsignedInt(DATA[0])
+                            or (Byte.toUnsignedInt(DATA[1]) shl 8)) ushr 2
+                }
+                else -> {
+                    (Byte.toUnsignedInt(DATA[0])
+                            or (Byte.toUnsignedInt(DATA[1]) shl 8)
+                            or (Byte.toUnsignedInt(DATA[2]) shl 16)) ushr 2
+                }
             }
         }
+
+    override fun hashCode(): Int {
+        return Arrays.hashCode(DATA)
     }
 
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(this.DATA);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
         }
         if (obj == null) {
-            return false;
+            return false
         }
-        if (getClass() != obj.getClass()) {
-            return false;
+        if (javaClass != obj.javaClass) {
+            return false
         }
-        final VSVal other = (VSVal) obj;
-        return Arrays.equals(this.DATA, other.DATA);
+        val other = obj as VSVal
+        return DATA.contentEquals(other.DATA)
     }
 
-    final private byte[] DATA;
-
+    private val DATA: ByteArray
 }
