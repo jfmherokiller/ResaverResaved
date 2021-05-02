@@ -42,7 +42,7 @@ public class RecordBasic extends Record {
             FIELDS.addAll(newFields);
         }
 
-        ctx.PLUGIN_INFO.addRecord(header.ID, FIELDS);
+        ctx.getPLUGIN_INFO().addRecord(header.ID, FIELDS);
     }
 
     /**

@@ -13,64 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.util.LinkedList;
-import java.util.Objects;
-import resaver.Game;
-import resaver.IString;
-import resaver.ess.Plugin;
+import resaver.Game
+import resaver.esp.RecordTes4
+import resaver.IString
+import java.util.LinkedList
+import resaver.esp.PluginData
+import resaver.ess.Plugin
+import java.util.Objects
 
 /**
  * Stores the information that ESP elements require to read and write themselves
  * to and from files.
  *
  * SAMPLE checkpointer:
-        ctx.check("Skyrim.esm", "MGEF", "0010fc14", "VMAD");
-        
- * 
+ * ctx.check("Skyrim.esm", "MGEF", "0010fc14", "VMAD");
+ *
+ *
  * @author Mark Fairchild
  */
-final public class ESPContext {
-
-    /**
-     * Create a new <code>ESSContext</code> from an ESS <code>Header</code>.
-     *
-     * @param game
-     * @param plugin
-     * @param tes4
-     */
-    public ESPContext(Game game, Plugin plugin, RecordTes4 tes4) {
-        Objects.requireNonNull(game);
-        Objects.requireNonNull(plugin);
-        this.GAME = game;
-        this.TES4 = tes4;
-        this.CONTEXT = new LinkedList<>();
-        this.PLUGIN_INFO = new PluginData(plugin);
-        pushContext(plugin.NAME);
+class ESPContext(game: Game, plugin: Plugin, tes4: RecordTes4?) {
+    fun pushContext(ctx: CharSequence) {
+        CONTEXT.addLast(IString.get(ctx.toString()))
     }
 
-    public void pushContext(CharSequence ctx) {
-        this.CONTEXT.addLast(IString.get(ctx.toString()));
+    fun popContext() {
+        CONTEXT.removeLast()
     }
 
-    public void popContext() {
-        this.CONTEXT.removeLast();
-    }
-
-    public boolean check(String... levels) {        
-        int matches = 0;
-        
-        for (String l : levels) {
-            IString level = IString.get(l);
-            if (!this.CONTEXT.contains(level)) {
-                return false;
+    fun check(vararg levels: String?): Boolean {
+        var matches = 0
+        for (l in levels) {
+            val level = IString.get(l)
+            if (!CONTEXT.contains(level)) {
+                return false
             } else {
-                matches++;
+                matches++
             }
         }
-
-        return true;
+        return true
     }
 
     /**
@@ -80,18 +62,33 @@ final public class ESPContext {
      * @param id The ID to remap.
      * @return
      */
-    public int remapFormID(int id) {
-        return null == this.TES4 ? id : this.TES4.remapFormID(id, this);
-    }
-    
-    @Override
-    public String toString() {
-        return this.CONTEXT.toString();
+    fun remapFormID(id: Int): Int {
+        return TES4?.remapFormID(id, this) ?: id
     }
 
-    final public Game GAME;
-    final public RecordTes4 TES4;
-    final private LinkedList<IString> CONTEXT;
-    final public PluginData PLUGIN_INFO;
+    override fun toString(): String {
+        return CONTEXT.toString()
+    }
 
+    val GAME: Game
+    val TES4: RecordTes4?
+    private val CONTEXT: LinkedList<IString>
+    val PLUGIN_INFO: PluginData
+
+    /**
+     * Create a new `ESSContext` from an ESS `Header`.
+     *
+     * @param game
+     * @param plugin
+     * @param tes4
+     */
+    init {
+        Objects.requireNonNull(game)
+        Objects.requireNonNull(plugin)
+        GAME = game
+        TES4 = tes4
+        CONTEXT = LinkedList()
+        PLUGIN_INFO = PluginData(plugin)
+        pushContext(plugin.NAME)
+    }
 }

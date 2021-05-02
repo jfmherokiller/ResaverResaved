@@ -13,132 +13,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.ClosedByInterruptException;
-import java.nio.channels.FileChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Objects;
-import java.util.logging.Logger;
-import resaver.Game;
-import resaver.ess.Plugin;
-import resaver.ess.PluginInfo;
+import resaver.Game
+import resaver.esp.ESP
+import resaver.ess.Plugin
+import resaver.ess.PluginInfo
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.channels.ClosedByInterruptException
+import java.nio.channels.FileChannel
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
+import java.util.*
+import java.util.function.Consumer
+import java.util.logging.Logger
 
 /**
  * Describes a Skyrim PEX script and will readFully and write it from iostreams.
  *
  * @author Mark Fairchild
  */
-final public class ESP implements Entry {
-
+class ESP(input: ByteBuffer, game: Game?, plugin: Plugin, name: String?, plugins: PluginInfo?) : Entry {
     /**
-     * Skims a mod file and extracts EDIDs and ids.
+     * Write the ESP to a `ByteBuffer`.
      *
-     * Exceptions are not handled. At all. Not even a little bit.
-     *
-     * @param path The mod file to readFully, which must exist and be readable.
-     * @param game The game whose mods are being read.
-     * @param plugin The <code>Plugin</code> corresponding to the
-     * <code>ESP</code>.
-     * @param plugins The list of plugins, for correcting FormIDs.
-     * @return The PluginData.
-     *
-     * @throws FileNotFoundException
-     * @throws IOException
-     * @throws ClosedByInterruptException
-     * @throws BufferUnderflowException
-     *
+     * @param output The `ByteBuffer` to write.
      */
-    static public PluginData skimPlugin(Path path, Game game, Plugin plugin, PluginInfo plugins) throws FileNotFoundException, IOException, ClosedByInterruptException {
-        Objects.requireNonNull(path);
-        assert Files.isReadable(path);
-        assert Files.isRegularFile(path);
-        final String NAME = path.getFileName().toString();
-
-        // Prepare input stream.
-        try (FileChannel input = FileChannel.open(path, java.nio.file.StandardOpenOption.READ)) {
-            final ByteBuffer BUFFER = ByteBuffer.allocateDirect((int) input.size());
-            input.read(BUFFER);
-            BUFFER.order(ByteOrder.LITTLE_ENDIAN);
-            ((Buffer) BUFFER).flip();
-
-            final RecordTes4 TES4 = new RecordTes4(BUFFER, plugin, plugins, new ESPContext(game, plugin, null));
-            final ESPContext CTX = new ESPContext(game, plugin, TES4);
-
-            while (BUFFER.hasRemaining()) {
-                Record.skimRecord(BUFFER, CTX);
-            }
-
-            return CTX.PLUGIN_INFO;
-
-        } catch (FileNotFoundException ex) {
-            LOG.warning(ex.getMessage());
-            throw ex;
-            
-        } catch (ClosedByInterruptException ex) {
-            throw ex;
-            
-        } catch (IOException ex) {
-            LOG.warning(ex.getMessage());
-            throw new IOException("Error reading plugin: " + NAME, ex);
-        }
-    }
-
-    /**
-     * Creates an ESP by reading from a <code>ByteBuffer</code>.
-     *
-     * @param input A <code>ByteBuffer</code> for a Skyrim PEX file.
-     * @param game The game whose mods are being read.
-     * @param plugin The <code>Plugin</code> corresponding to the
-     * <code>ESP</code>.
-     * @param name The name of the plugin.
-     * @param plugins The list of plugins, for correcting FormIDs.
-     * @throws IOException Exceptions aren't handled.
-     */
-    public ESP(ByteBuffer input, Game game, Plugin plugin, String name, PluginInfo plugins) throws IOException {
-        assert input.hasRemaining();
-        this.RECORDS = new LinkedList<>();
-
-        final RecordTes4 TES4 = new RecordTes4(input, plugin, plugins, new ESPContext(game, plugin, null));
-        final ESPContext CTX = new ESPContext(game, plugin, TES4);
-        CTX.pushContext(plugin.NAME);
-        this.RECORDS.add(TES4);
-
-        while (input.hasRemaining()) {
-            Record record = Record.readRecord(input, CTX);
-            this.RECORDS.add(record);
-        }
-
-    }
-
-    /**
-     * Write the ESP to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
-     */
-    @Override
-    public void write(ByteBuffer output) {
-        this.RECORDS.forEach(record -> record.write(output));
+    override fun write(output: ByteBuffer) {
+        RECORDS.forEach(Consumer { record: Record -> record.write(output) })
     }
 
     /**
      * @return The calculated size of the field.
-     * @see Entry#calculateSize()
+     * @see Entry.calculateSize
      */
-    @Override
-    public int calculateSize() {
-        int sum = 0;
-        sum += this.RECORDS.stream().mapToInt(v -> v.calculateSize()).sum();
-        return sum;
+    override fun calculateSize(): Int {
+        var sum = 0
+        sum += RECORDS.stream().mapToInt { obj: Record -> obj.calculateSize() }.sum()
+        return sum
     }
 
     /**
@@ -146,14 +63,88 @@ final public class ESP implements Entry {
      *
      * @return A string representation of the ESP.
      */
-    @Override
-    public String toString() {
-        final StringBuilder BUF = new StringBuilder();
-        this.RECORDS.forEach(record -> BUF.append(record.toString()));
-        return BUF.toString();
+    override fun toString(): String {
+        val BUF = StringBuilder()
+        RECORDS.forEach(Consumer { record: Record -> BUF.append(record.toString()) })
+        return BUF.toString()
     }
 
-    final private List<Record> RECORDS;
+    private val RECORDS: MutableList<Record>
 
-    static final private Logger LOG = Logger.getLogger(ESP.class.getCanonicalName());
+    companion object {
+        /**
+         * Skims a mod file and extracts EDIDs and ids.
+         *
+         * Exceptions are not handled. At all. Not even a little bit.
+         *
+         * @param path The mod file to readFully, which must exist and be readable.
+         * @param game The game whose mods are being read.
+         * @param plugin The `Plugin` corresponding to the
+         * `ESP`.
+         * @param plugins The list of plugins, for correcting FormIDs.
+         * @return The PluginData.
+         *
+         * @throws FileNotFoundException
+         * @throws IOException
+         * @throws ClosedByInterruptException
+         * @throws BufferUnderflowException
+         */
+        @Throws(FileNotFoundException::class, IOException::class, ClosedByInterruptException::class)
+        fun skimPlugin(path: Path, game: Game?, plugin: Plugin?, plugins: PluginInfo?): PluginData {
+            Objects.requireNonNull(path)
+            assert(Files.isReadable(path))
+            assert(Files.isRegularFile(path))
+            val NAME = path.fileName.toString()
+
+            // Prepare input stream.
+            try {
+                FileChannel.open(path, StandardOpenOption.READ).use { input ->
+                    val BUFFER = ByteBuffer.allocateDirect(input.size().toInt())
+                    input.read(BUFFER)
+                    BUFFER.order(ByteOrder.LITTLE_ENDIAN)
+                    (BUFFER as Buffer).flip()
+                    val TES4 = RecordTes4(BUFFER, plugin, plugins, ESPContext(game!!, plugin!!, null))
+                    val CTX = ESPContext(game, plugin, TES4)
+                    while (BUFFER.hasRemaining()) {
+                        Record.skimRecord(BUFFER, CTX)
+                    }
+                    return CTX.PLUGIN_INFO
+                }
+            } catch (ex: FileNotFoundException) {
+                LOG.warning(ex.message)
+                throw ex
+            } catch (ex: ClosedByInterruptException) {
+                throw ex
+            } catch (ex: IOException) {
+                LOG.warning(ex.message)
+                throw IOException("Error reading plugin: $NAME", ex)
+            }
+        }
+
+        private val LOG = Logger.getLogger(ESP::class.java.canonicalName)
+    }
+
+    /**
+     * Creates an ESP by reading from a `ByteBuffer`.
+     *
+     * @param input A `ByteBuffer` for a Skyrim PEX file.
+     * @param game The game whose mods are being read.
+     * @param plugin The `Plugin` corresponding to the
+     * `ESP`.
+     * @param name The name of the plugin.
+     * @param plugins The list of plugins, for correcting FormIDs.
+     * @throws IOException Exceptions aren't handled.
+     */
+    init {
+        assert(input.hasRemaining())
+        RECORDS = mutableListOf()
+        val TES4 = RecordTes4(input, plugin, plugins, ESPContext(game!!, plugin, null))
+        val CTX = ESPContext(game, plugin, TES4)
+        CTX.pushContext(plugin.NAME)
+        RECORDS.add(TES4)
+        while (input.hasRemaining()) {
+            val record = Record.readRecord(input, CTX)
+            RECORDS.add(record)
+        }
+    }
 }

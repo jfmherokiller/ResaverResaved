@@ -53,7 +53,7 @@ public class FieldVMAD implements Field {
 
         for (int i = 0; i < scriptCount; i++) {
             Script script = new Script(input, ctx);
-            ctx.PLUGIN_INFO.addScriptData(script);
+            ctx.getPLUGIN_INFO().addScriptData(script);
         }
 
         int i = 0;

@@ -38,7 +38,7 @@ public class FieldFull extends FieldSimple {
     public FieldFull(IString code, ByteBuffer input, int size, boolean big, ESPContext ctx) {
         super(code, input, size, big, ctx);
 
-        if (ctx.TES4.getHeader().isLocalized()) {
+        if (ctx.getTES4().getHeader().isLocalized()) {
             assert super.getData().length == 4;
             int val = super.getByteBuffer().getInt();
             this.IDX = val; //(ctx.TES4.PLUGIN.INDEX << 24) | val;

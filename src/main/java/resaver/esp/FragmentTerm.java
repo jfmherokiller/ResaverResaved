@@ -30,7 +30,7 @@ public class FragmentTerm extends FragmentBase {
         //input = <code>ByteBuffer</code>.debug(input);
         this.UNKNOWN = input.get();
         this.SCRIPT = new Script(input, ctx);
-        ctx.PLUGIN_INFO.addScriptData(this.SCRIPT);
+        ctx.getPLUGIN_INFO().addScriptData(this.SCRIPT);
 
         int fragCount = input.getShort();
         this.FRAGMENTS = new java.util.ArrayList<>(fragCount);

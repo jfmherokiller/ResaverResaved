@@ -186,7 +186,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
 
                 } else {
                     try {
-                        final PluginData INFO = ESP.skimPlugin(PLUGINFILEMAP.get(plugin), GAME, plugin, PLUGINS);
+                        final PluginData INFO = ESP.Companion.skimPlugin(PLUGINFILEMAP.get(plugin), GAME, plugin, PLUGINS);
                         PLUGIN_DATA.put(plugin, INFO);
 
                         LOG.info(String.format("Scanned plugin: %6d names and %5.1f kb script data from %s", INFO.getNameCount(), INFO.getScriptDataSize() / 1024.0f, plugin.indexName()));

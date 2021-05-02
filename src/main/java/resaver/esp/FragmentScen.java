@@ -31,11 +31,11 @@ public class FragmentScen extends FragmentBase {
         this.UNKNOWN = input.get();
         this.FLAGS = input.get();
 
-        if (ctx.GAME.isFO4()) {
+        if (ctx.getGAME().isFO4()) {
             ctx.pushContext("FragmentScene");
             this.FILENAME = null;
             this.SCRIPT = new Script(input, ctx);
-            ctx.PLUGIN_INFO.addScriptData(this.SCRIPT);
+            ctx.getPLUGIN_INFO().addScriptData(this.SCRIPT);
         } else {
             this.FILENAME = mf.BufferUtil.getUTF(input);
             this.SCRIPT = null;

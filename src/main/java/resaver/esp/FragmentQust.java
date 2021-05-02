@@ -32,11 +32,11 @@ public class FragmentQust extends FragmentBase {
             this.UNKNOWN = input.get();
             int fragmentCount = Short.toUnsignedInt(input.getShort());
 
-            if (ctx.GAME.isFO4()) {
+            if (ctx.getGAME().isFO4()) {
                 ctx.pushContext("FragmentQust");
                 this.FILENAME = null;
                 this.SCRIPT = new Script(input, ctx);
-                ctx.PLUGIN_INFO.addScriptData(this.SCRIPT);
+                ctx.getPLUGIN_INFO().addScriptData(this.SCRIPT);
             } else {
                 this.FILENAME = mf.BufferUtil.getUTF(input);
                 this.SCRIPT = null;
@@ -84,8 +84,8 @@ public class FragmentQust extends FragmentBase {
         int sum = 5;
         sum += (null != this.FILENAME ? 2 + this.FILENAME.length() : 0);
         sum += (null != this.SCRIPT ? this.SCRIPT.calculateSize() : 0);
-        sum += this.FRAGMENTS.stream().mapToInt(v -> v.calculateSize()).sum();
-        sum += this.ALIASES.stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.FRAGMENTS.stream().mapToInt(Fragment::calculateSize).sum();
+        sum += this.ALIASES.stream().mapToInt(Alias::calculateSize).sum();
         return sum;
     }
 
@@ -162,7 +162,7 @@ public class FragmentQust extends FragmentBase {
             for (int i = 0; i < scriptCount; i++) {
                 Script script = new Script(input, ctx);
                 this.SCRIPTS.add(script);
-                ctx.PLUGIN_INFO.addScriptData(script);
+                ctx.getPLUGIN_INFO().addScriptData(script);
             }
         }
 
@@ -178,7 +178,7 @@ public class FragmentQust extends FragmentBase {
         @Override
         public int calculateSize() {
             int sum = 14;
-            sum += this.SCRIPTS.stream().mapToInt(v -> v.calculateSize()).sum();
+            sum += this.SCRIPTS.stream().mapToInt(Script::calculateSize).sum();
             return sum;
         }
 
