@@ -49,23 +49,23 @@ public class BA2Parser extends ArchiveParser {
         HEADERBLOCK.flip();
         this.HEADER = new BA2Header(HEADERBLOCK);
         
-        this.FILES = new ArrayList<>(this.HEADER.FILE_COUNT);
-        final ByteBuffer FILERECORDS = ByteBuffer.allocate(this.HEADER.FILE_COUNT * BA2FileRecord.SIZE).order(ByteOrder.LITTLE_ENDIAN);
+        this.FILES = new ArrayList<>(this.HEADER.getFILE_COUNT());
+        final ByteBuffer FILERECORDS = ByteBuffer.allocate(this.HEADER.getFILE_COUNT() * BA2FileRecord.SIZE).order(ByteOrder.LITTLE_ENDIAN);
         channel.read(FILERECORDS);
         FILERECORDS.order(ByteOrder.LITTLE_ENDIAN).flip();
         
         // Read file records.
-        for (int i = 0; i < this.HEADER.FILE_COUNT; i++) {
+        for (int i = 0; i < this.HEADER.getFILE_COUNT(); i++) {
             BA2FileRecord file = new BA2FileRecord(FILERECORDS, this.HEADER);
             this.FILES.add(file);
         }
 
         // Read the filename table.
-        channel.position(this.HEADER.NAMETABLE_OFFSET);
+        channel.position(this.HEADER.getNAMETABLE_OFFSET());
         final ByteBuffer NAMEBUFFER = ByteBuffer.allocate(2048).order(ByteOrder.LITTLE_ENDIAN);
         channel.read(NAMEBUFFER);
 
-        for (int i = 0; i < this.HEADER.FILE_COUNT; i++) {
+        for (int i = 0; i < this.HEADER.getFILE_COUNT(); i++) {
             NAMEBUFFER.flip();
             String fileName = mf.BufferUtil.getWString(NAMEBUFFER);
             this.FILES.get(i).setName(fileName);

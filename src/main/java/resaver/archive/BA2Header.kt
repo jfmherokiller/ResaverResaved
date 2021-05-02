@@ -13,64 +13,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import resaver.archive.BA2Subtype
+import java.io.IOException
+import java.lang.IllegalArgumentException
+import java.nio.ByteBuffer
 
 /**
  * Describes a BA2 header.
  *
  * @author Mark
  */
-public class BA2Header {
+class BA2Header(input: ByteBuffer) {
+    val TYPE: Type
+    val VERSION: Int
+    val SUBTYPE: BA2Subtype
+    val MAGIC1: ByteArray = ByteArray(4)
+    val MAGIC2: ByteArray = ByteArray(4)
+    val FILE_COUNT: Int
+    val NAMETABLE_OFFSET: Long
+
+    companion object {
+        const val SIZE = 24
+    }
 
     /**
-     * Creates a new <code>BA2Header</code> by reading from a
-     * <code>ByteBuffer</code>.
-     * 
+     * Creates a new `BA2Header` by reading from a
+     * `ByteBuffer`.
+     *
      * @param input The file from which to readFully.
      * @throws IOException
      */
-    public BA2Header(ByteBuffer input) throws IOException {
-        this.MAGIC1 = new byte[4];
-        input.get(this.MAGIC1);
-        this.VERSION = input.getInt();
-        this.MAGIC2 = new byte[4];
-        input.get(this.MAGIC2);
-
-        Type type;
+    init {
+        input[MAGIC1]
+        VERSION = input.int
+        input[MAGIC2]
+        val type: Type
         try {
-            String magic = new String(this.MAGIC1);
-            type = Type.valueOf(magic);
-            if (type != Type.BTDX) {
-                throw new IOException("Invalid archive format: " + new String(this.MAGIC1));
+            val magic = String(MAGIC1)
+            type = Type.valueOf(magic)
+            if (type !== Type.BTDX) {
+                throw IOException("Invalid archive format: " + String(MAGIC1))
             }
-        } catch (IllegalArgumentException ex) {
-            throw new IOException("Invalid archive format: " + new String(this.MAGIC1), ex);
+        } catch (ex: IllegalArgumentException) {
+            throw IOException("Invalid archive format: " + String(MAGIC1), ex)
         }
-
-        BA2Subtype subtype;
-        try {
-            String magic = new String(this.MAGIC2);
-            subtype = BA2Subtype.valueOf(magic);
-        } catch (IllegalArgumentException ex) {
-            throw new IOException("Invalid archive format: " + new String(this.MAGIC2), ex);
+        val subtype: BA2Subtype = try {
+            val magic = String(MAGIC2)
+            BA2Subtype.valueOf(magic)
+        } catch (ex: IllegalArgumentException) {
+            throw IOException("Invalid archive format: " + String(MAGIC2), ex)
         }
-
-        this.TYPE = type;
-        this.SUBTYPE = subtype;
-        this.FILE_COUNT = input.getInt();
-        this.NAMETABLE_OFFSET = input.getLong();
+        TYPE = type
+        SUBTYPE = subtype
+        FILE_COUNT = input.int
+        NAMETABLE_OFFSET = input.long
     }
-
-    static final int SIZE = 24;
-    final public Type TYPE;
-    final public int VERSION;
-    final public BA2Subtype SUBTYPE;
-    final public byte[] MAGIC1;
-    final public byte[] MAGIC2;
-    final public int FILE_COUNT;
-    final public long NAMETABLE_OFFSET;
-
 }

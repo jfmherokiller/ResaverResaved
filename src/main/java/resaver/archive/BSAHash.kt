@@ -13,64 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.io.File
+import java.util.regex.Pattern
 
 /**
  * Calculates filename and directory name hashes.
  *
  * INCOMPLETE
- * 
+ *
  * @author Mark Fairchild
  */
-abstract public class BSAHash {
-
+object BSAHash {
     /**
      *
      * @param file
      * @return
      */
-    static public long genHashFile(java.io.File file) {
-        
-        long hash = 0;
-        long hash2 = 0;
-
-        final Matcher MATCHER = FILENAME_PATTERN.matcher(file.getName());
-        if (!MATCHER.matches()) {
-            throw new IllegalArgumentException("Filename does not have the form \"filename.extension\"");
+    fun genHashFile(file: File): Long {
+        var hash: Long = 0
+        var hash2: Long = 0
+        val MATCHER = FILENAME_PATTERN.matcher(file.name)
+        require(MATCHER.matches()) { "Filename does not have the form \"filename.extension\"" }
+        val fileName = if (MATCHER.matches()) MATCHER.group(1).toLowerCase() else file.name.toLowerCase()
+        val fileExt = if (MATCHER.matches()) MATCHER.group(2).toLowerCase() else ""
+        for (ch in fileExt.toCharArray()) {
+            hash *= 0x1003f
+            hash += ch.toLong()
         }
-
-        String fileName = (MATCHER.matches() ? MATCHER.group(1).toLowerCase() : file. getName().toLowerCase());
-        String fileExt = (MATCHER.matches() ? MATCHER.group(2).toLowerCase() : "");
-
-        for (char ch : fileExt.toCharArray()) {
-            hash *= 0x1003f;
-            hash += ch;
+        val len = fileName.length
+        val chars = fileName.toCharArray()
+        for (i in 1 until len - 2) {
+            hash2 *= 0x1003f
+            hash2 += chars[i].toLong()
         }
-
-        int len = fileName.length();
-        char[] chars = fileName.toCharArray();
-
-        for (int i = 1; i < len - 2; i++) {
-            hash2 *= 0x1003f;
-            hash2 += chars[i];
-        }
-
-        hash += hash2;
-        hash2 = 0;
-        hash <<= 32;
-
-        hash2 = chars[len - 1];
-        hash2 |= (len > 2 ? chars[len - 2] : 0);
-        hash2 |= ((long) len << 16);
-        hash2 |= ((long) chars[0] << 24);
-        
-        throw new UnsupportedOperationException();
+        hash += hash2
+        hash2 = 0
+        hash = hash shl 32
+        hash2 = chars[len - 1].toLong()
+        hash2 = hash2 or (if (len > 2) chars[len - 2].toLong() else 0)
+        hash2 = hash2 or (len.toLong() shl 16)
+        hash2 = hash2 or (chars[0].toLong() shl 24)
+        throw UnsupportedOperationException()
     }
 
-    static final private String FILENAME_REGEX = "^(.*)(\\.\\w+)$";
-    static final private Pattern FILENAME_PATTERN = Pattern.compile(FILENAME_REGEX);
-
+    private const val FILENAME_REGEX = "^(.*)(\\.\\w+)$"
+    private val FILENAME_PATTERN = Pattern.compile(FILENAME_REGEX)
 }
