@@ -50,8 +50,7 @@ public class ESSTest {
                 final java.util.logging.Level LEVEL = record.getLevel();
                 final String MSG = record.getMessage();
                 final String SRC = record.getSourceClassName() + "." + record.getSourceMethodName();
-                final String LOG = String.format("%s: %s: %s\n", SRC, LEVEL, MSG);
-                return LOG;
+                return String.format("%s: %s: %s\n", SRC, LEVEL, MSG);
             }
         });
 
