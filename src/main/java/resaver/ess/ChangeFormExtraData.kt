@@ -13,28 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import resaver.ess.ESS.ESSContext
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Manages an extra data field from a change form.
  *
  * @author Mark Fairchild
  */
-final public class ChangeFormExtraData extends GeneralElement {
-
+class ChangeFormExtraData(input: ByteBuffer, context: ESSContext?) : GeneralElement() {
     /**
-     * Creates a new <code>ChangeFormExtraData</code> by reading from a
-     * <code>LittleEndianDataOutput</code>. No error handling is performed.
+     * Creates a new `ChangeFormExtraData` by reading from a
+     * `LittleEndianDataOutput`. No error handling is performed.
      *
      * @param input The input stream.
-     * @param context The <code>ESSContext</code> info.
+     * @param context The `ESSContext` info.
      */
-    public ChangeFormExtraData(ByteBuffer input, ESS.ESSContext context)  {
-        Objects.requireNonNull(input);
-        super.readVSElemArray(input, "DATA", in -> new ChangeFormExtraDataData(in, context));
+    init {
+        Objects.requireNonNull(input)
+        super.readVSElemArray(input, "DATA") { `in`: ByteBuffer? -> ChangeFormExtraDataData(`in`, context) }
     }
-
 }
