@@ -102,7 +102,7 @@ class RefID internal constructor(private val DATA: Int, ess: ESS) : Element, Lin
      * @param target A target within the `Linkable`.
      * @return
      */
-    override fun toHTML(target: Element): String {
+    override fun toHTML(target: Element?): String {
         val HEX = String.format("%06x", DATA)
         return Linkable.makeLink("refid", HEX, this.toString())
     }
