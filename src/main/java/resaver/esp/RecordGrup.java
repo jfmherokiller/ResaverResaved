@@ -65,7 +65,7 @@ public class RecordGrup extends Record {
     @Override
     public int calculateSize() {
         int sum = 24;
-        sum += this.RECORDS.stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.RECORDS.stream().mapToInt(Entry::calculateSize).sum();
         return sum;
     }
 

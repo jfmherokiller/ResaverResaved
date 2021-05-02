@@ -85,7 +85,7 @@ public class RecordCompressed extends Record {
      * <code>Record</code>.
      */
     private int getUncompressedSize() {
-        return this.FIELDS.stream().mapToInt(f -> f.calculateSize()).sum();
+        return this.FIELDS.stream().mapToInt(Entry::calculateSize).sum();
     }
 
     /**
