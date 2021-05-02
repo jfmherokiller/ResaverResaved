@@ -13,325 +13,324 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import resaver.ListException;
-import resaver.ess.AnalyzableElement;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.SortedSet;
-import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.List;
-import resaver.Analysis;
-import resaver.ess.ESS;
-import resaver.ess.Element;
-import resaver.ess.Linkable;
+import resaver.Analysis
+import resaver.ListException
+import resaver.ess.AnalyzableElement
+import resaver.ess.ESS
+import resaver.ess.Element
+import resaver.ess.Linkable
+import resaver.ess.papyrus.Type.Companion.read
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.function.Consumer
 
 /**
  * Describes an array in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class ArrayInfo implements AnalyzableElement, Linkable, HasID, SeparateData, HasVariables {
-
+class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement, Linkable, HasID, SeparateData,
+    HasVariables {
     /**
-     * Creates a new <code>ArrayInfo</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     */
-    public ArrayInfo(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-
-        this.ID = context.readEID(input);
-
-        Type t = Type.Companion.read(input);
-        if (!VALID_TYPES.contains(t)) {
-            throw new PapyrusFormatException("Invalid ArrayInfo type: " + t);
-        }
-        this.TYPE = t;
-        this.REFTYPE = this.TYPE.isRefType() ? context.readTString(input) : null;
-        this.LENGTH = input.getInt();
-    }
-
-    /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        this.ID.write(output);
-        this.TYPE.write(output);
-
-        if (null != this.REFTYPE) {
-            this.REFTYPE.write(output);
-        }
-
-        output.putInt(this.LENGTH);
+    override fun write(output: ByteBuffer) {
+        ID.write(output)
+        type.write(output)
+        refType?.write(output)
+        output.putInt(length)
     }
 
     /**
-     * @see SeparateData#readData(java.nio.ByteBuffer,
-     * resaver.ess.papyrus.PapyrusContext)
+     * @see SeparateData.readData
      * @param input
      * @param context
      * @throws PapyrusElementException
      * @throws PapyrusFormatException
      */
-    @Override
-    public void readData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
-        this.data = new ArrayData(input, context);
+    @Throws(PapyrusElementException::class, PapyrusFormatException::class)
+    override fun readData(input: ByteBuffer, context: PapyrusContext) {
+        data = ArrayData(input, context)
     }
 
     /**
-     * @see SeparateData#writeData(java.nio.ByteBuffer)
+     * @see SeparateData.writeData
      * @param output
      */
-    @Override
-    public void writeData(ByteBuffer output) {
-        this.data.write(output);
+    override fun writeData(output: ByteBuffer) {
+        data!!.write(output)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 5;
-        sum += this.ID.calculateSize();
-        if (null != this.REFTYPE) {
-            sum += this.REFTYPE.calculateSize();
+    override fun calculateSize(): Int {
+        var sum = 5
+        sum += ID.calculateSize()
+        if (null != refType) {
+            sum += refType.calculateSize()
         }
-
-        sum += this.data == null ? 0 : this.data.calculateSize();
-        return sum;
+        sum += if (data == null) 0 else data!!.calculateSize()
+        return sum
     }
 
     /**
      * @return The ID of the papyrus element.
      */
-    @Override
-    public EID getID() {
-        return this.ID;
-    }
-
-    /**
-     * @return The type of the array.
-     */
-    public Type getType() {
-        return this.TYPE;
-    }
-
-    /**
-     * @return The reference type of the array.
-     */
-    public TString getRefType() {
-        return this.REFTYPE;
-    }
-
-    /**
-     * @return the length of the array.
-     */
-    public int getLength() {
-        return this.LENGTH;
+    override fun getID(): EID {
+        return ID
     }
 
     /**
      * @return Short string representation.
      */
-    public String toValueString() {
-        if (this.TYPE.isRefType()) {
-            return this.REFTYPE + "[" + this.LENGTH + "]";
-        } else if (this.TYPE == Type.NULL && 0 < this.getVariables().size()) {
-            Type t = this.getVariables().get(0).getType();
-            return t + "[" + this.LENGTH + "]";
+    fun toValueString(): String {
+        return if (type.isRefType) {
+            refType.toString() + "[" + length + "]"
+        } else if (type === Type.NULL && this.variables.isNotEmpty()) {
+            val t = this.variables[0].type
+            "$t[$length]"
         } else {
-            return this.TYPE + "[" + this.LENGTH + "]";
+            "$type[$length]"
         }
     }
 
     /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        if (null != target && null != this.data) {
-            Optional<Variable> result = this.getVariables().stream()
-                    .filter(v -> v.hasRef())
-                    .filter(v -> v.getReferent() == target)
-                    .findFirst();
-
-            if (result.isPresent()) {
-                int i = this.getVariables().indexOf(result.get());
+    override fun toHTML(target: Element): String {
+        if (null != target && null != data) {
+            val result = this.variables.stream()
+                .filter { v: Variable -> v.hasRef() }
+                .filter { v: Variable -> v.referent === target }
+                .findFirst()
+            if (result.isPresent) {
+                val i = this.variables.indexOf(result.get())
                 if (i >= 0) {
-                    return Linkable.makeLink("array", this.ID, i, this.toString());
+                    return Linkable.makeLink("array", ID, i, this.toString())
                 }
             }
         }
-
-        return Linkable.makeLink("array", this.ID, this.toString());
+        return Linkable.makeLink("array", ID, this.toString())
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return this.toValueString() + " " + this.ID;
+    override fun toString(): String {
+        return toValueString() + " " + ID
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-
-        BUILDER.append("<html><h3>ARRAY</h3>");
-
-        if (this.HOLDERS.isEmpty()) {
-            BUILDER.append("<p><em>WARNING: THIS ARRAY HAS NO OWNER.</em></p>");
+    override fun getInfo(analysis: Analysis, save: ESS): String {
+        val BUILDER = StringBuilder()
+        BUILDER.append("<html><h3>ARRAY</h3>")
+        if (HOLDERS.isEmpty()) {
+            BUILDER.append("<p><em>WARNING: THIS ARRAY HAS NO OWNER.</em></p>")
         } else {
-            BUILDER.append("<p>Owners:</p><ul>");
-
-            this.HOLDERS.stream().forEach(owner -> {
-                if (owner instanceof Linkable) {
-                    BUILDER.append(String.format("<li>%s %s", owner.getClass().getSimpleName(), ((Linkable) owner).toHTML(this)));
+            BUILDER.append("<p>Owners:</p><ul>")
+            HOLDERS.stream().forEach { owner: PapyrusElement? ->
+                if (owner is Linkable) {
+                    BUILDER.append(
+                        String.format(
+                            "<li>%s %s",
+                            owner.javaClass.simpleName,
+                            (owner as Linkable).toHTML(this)
+                        )
+                    )
                 } else if (owner != null) {
-                    BUILDER.append(String.format("<li>%s %s", owner.getClass().getSimpleName(), owner));
+                    BUILDER.append(String.format("<li>%s %s", owner.javaClass.simpleName, owner))
                 }
-            });
-
-            BUILDER.append("</ul>");
+            }
+            BUILDER.append("</ul>")
         }
-
         if (null != analysis) {
-            this.HOLDERS.forEach(owner -> {
-                if (owner instanceof ScriptInstance) {
-                    ScriptInstance instance = (ScriptInstance) owner;
-                    SortedSet<String> mods = analysis.SCRIPT_ORIGINS.get(instance.getScriptName().toIString());
+            HOLDERS.forEach(Consumer { owner: PapyrusElement? ->
+                if (owner is ScriptInstance) {
+                    val instance = owner
+                    val mods = analysis.SCRIPT_ORIGINS[instance.scriptName.toIString()]
                     if (null != mods) {
-                        String mod = mods.last();
-                        TString type = instance.getScriptName();
-                        BUILDER.append(String.format("<p>Probably created by script <a href=\"script://%s\">%s</a> which came from mod \"%s\".</p>", type, type, mod));
+                        val mod = mods.last()
+                        val type = instance.scriptName
+                        BUILDER.append(
+                            String.format(
+                                "<p>Probably created by script <a href=\"script://%s\">%s</a> which came from mod \"%s\".</p>",
+                                type,
+                                type,
+                                mod
+                            )
+                        )
                     }
                 }
-            });
+            })
         }
-
-        BUILDER.append("<p/>");
-        BUILDER.append(String.format("<p>ID: %s</p>", this.getID()));
-        BUILDER.append(String.format("<p>Content type: %s</p>", this.TYPE));
-
-        if (this.TYPE.isRefType()) {
-            final Script SCRIPT = save.getPapyrus().getScripts().get(this.REFTYPE);
+        BUILDER.append("<p/>")
+        BUILDER.append(String.format("<p>ID: %s</p>", this.id))
+        BUILDER.append(String.format("<p>Content type: %s</p>", type))
+        if (type.isRefType) {
+            val SCRIPT = save.papyrus.scripts[refType]
             if (null != SCRIPT) {
-                BUILDER.append(String.format("<p>Reference type: %s</p>", SCRIPT.toHTML(this)));
+                BUILDER.append(String.format("<p>Reference type: %s</p>", SCRIPT.toHTML(this)))
             } else {
-                BUILDER.append(String.format("<p>Reference type: %s</p>", this.REFTYPE));
+                BUILDER.append(String.format("<p>Reference type: %s</p>", refType))
             }
         }
-
-        BUILDER.append(String.format("<p>Length: %d</p>", this.getLength()));
+        BUILDER.append(String.format("<p>Length: %d</p>", length))
         //BUILDER.append("</p>");
-
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(Analysis analysis, String mod) {
-        Objects.requireNonNull(analysis);
-        Objects.requireNonNull(mod);
-        return false;
+    override fun matches(analysis: Analysis, mod: String): Boolean {
+        Objects.requireNonNull(analysis)
+        Objects.requireNonNull(mod)
+        return false
     }
 
     /**
      * @return The holder of the array, if there is exactly one. Null otherwise.
      */
-    public PapyrusElement getHolder() {
-        if (this.HOLDERS.size() == 1) {
-            return this.HOLDERS.iterator().next();
+    val holder: PapyrusElement?
+        get() = if (HOLDERS.size == 1) {
+            HOLDERS.iterator().next()
         } else {
-            return null;
+            null
         }
-    }
 
     /**
      * Adds an element as a reference holder.
      *
      * @param newHolder The new reference holder.
      */
-    public void addRefHolder(PapyrusElement newHolder) {
-        Objects.requireNonNull(newHolder);
-        this.HOLDERS.add(newHolder);
+    fun addRefHolder(newHolder: PapyrusElement) {
+        Objects.requireNonNull(newHolder)
+        HOLDERS.add(newHolder)
     }
 
     /**
-     * @see HasVariables#getVariables()
+     * @see HasVariables.getVariables
      * @return
      */
-    @Override
-    public List<Variable> getVariables() {
-        if (this.data == null) {
-            return Collections.emptyList();
-        }
-        return Collections.unmodifiableList(this.data.VARIABLES);
+    override fun getVariables(): List<Variable> {
+        return if (data == null) {
+            emptyList()
+        } else Collections.unmodifiableList(data!!.VARIABLES)
     }
 
     /**
-     * @see HasVariables#getDescriptors() 
-     * @return An empty <code>List</code>.
+     * @see HasVariables.getDescriptors
+     * @return An empty `List`.
      */
-    @Override
-    public List<MemberDesc> getDescriptors() {
-        return Collections.emptyList();
+    override fun getDescriptors(): List<MemberDesc> {
+        return emptyList()
     }
 
     /**
-     * @see HasVariables#setVariable(int, resaver.ess.papyrus.Variable) 
+     * @see HasVariables.setVariable
      * @param index
-     * @param newVar 
+     * @param newVar
      */
-    @Override
-    public void setVariable(int index, Variable newVar) {
-        if (this.data == null || this.data.VARIABLES == null) {
-            throw new NullPointerException("The variable list is missing.");
+    override fun setVariable(index: Int, newVar: Variable) {
+        if (data == null || data!!.VARIABLES == null) {
+            throw NullPointerException("The variable list is missing.")
         }
-        if (index <= 0 || index >= this.data.VARIABLES.size()) {
-            throw new IllegalArgumentException("Invalid variable index: " + index);
-        }
-        
-        this.data.VARIABLES.set(index, newVar);
+        require(!(index <= 0 || index >= data!!.VARIABLES!!.size)) { "Invalid variable index: $index" }
+        data!!.VARIABLES!![index] = newVar
     }
 
-    final private EID ID;
-    final private Type TYPE;
-    final private TString REFTYPE;
-    final private int LENGTH;
-    final private Collection<PapyrusElement> HOLDERS = new ArrayList<>(1);
-    private ArrayData data;
+    private val ID: EID
 
-    static final private List<Type> VALID_TYPES = Arrays.asList(
+    /**
+     * @return The type of the array.
+     */
+    val type: Type
+
+    /**
+     * @return The reference type of the array.
+     */
+    val refType: TString?
+
+    /**
+     * @return the length of the array.
+     */
+    val length: Int
+    private val HOLDERS: MutableCollection<PapyrusElement> = ArrayList(1)
+    private var data: ArrayData? = null
+
+    /**
+     * Describes array data in a Skyrim savegame.
+     *
+     * @author Mark Fairchild
+     */
+    private inner class ArrayData(input: ByteBuffer, context: PapyrusContext?) : PapyrusDataFor<ArrayInfo?> {
+        /**
+         * @see resaver.ess.Element.write
+         * @param output The output stream.
+         */
+        override fun write(output: ByteBuffer) {
+            ID.write(output)
+            VARIABLES!!.forEach(Consumer { `var`: Variable -> `var`.write(output) })
+        }
+
+        /**
+         * @see resaver.ess.Element.calculateSize
+         * @return The size of the `Element` in bytes.
+         */
+        override fun calculateSize(): Int {
+            var sum = ID.calculateSize()
+            sum += VARIABLES!!.stream().mapToInt { obj: Variable -> obj.calculateSize() }.sum()
+            return sum
+        }
+
+        /**
+         * @return String representation.
+         */
+        override fun toString(): String {
+            return ID.toString() + VARIABLES
+        }
+
+        //final private EID ID;
+        var VARIABLES: MutableList<Variable>? = null
+
+        /**
+         * Creates a new `ArrayData` by reading from a
+         * `ByteBuffer`. No error handling is performed.
+         *
+         * @param input The input stream.
+         * @param context The `PapyrusContext` info.
+         * @throws PapyrusElementException
+         */
+        init {
+            Objects.requireNonNull(input)
+            Objects.requireNonNull(context)
+            try {
+                val count = length
+                VARIABLES = Variable.readList(input, count, context)
+            } catch (ex: ListException) {
+                throw PapyrusElementException("Couldn't read Array variables.", ex, this)
+            }
+        }
+    }
+
+    companion object {
+        private val VALID_TYPES = listOf(
             Type.NULL,
             Type.REF,
             Type.STRING,
@@ -339,66 +338,28 @@ final public class ArrayInfo implements AnalyzableElement, Linkable, HasID, Sepa
             Type.FLOAT,
             Type.BOOLEAN,
             Type.VARIANT,
-            Type.STRUCT);
+            Type.STRUCT
+        )
+    }
 
     /**
-     * Describes array data in a Skyrim savegame.
+     * Creates a new `ArrayInfo` by reading from a
+     * `ByteBuffer`. No error handling is performed.
      *
-     * @author Mark Fairchild
+     * @param input The input stream.
+     * @param context The `PapyrusContext` info.
+     * @throws PapyrusFormatException
      */
-    final private class ArrayData implements PapyrusDataFor<ArrayInfo> {
-
-        /**
-         * Creates a new <code>ArrayData</code> by reading from a
-         * <code>ByteBuffer</code>. No error handling is performed.
-         *
-         * @param input The input stream.
-         * @param context The <code>PapyrusContext</code> info.
-         * @throws PapyrusElementException
-         */
-        public ArrayData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
-            Objects.requireNonNull(input);
-            Objects.requireNonNull(context);
-
-            try {
-                int count = ArrayInfo.this.LENGTH;
-                this.VARIABLES = Variable.readList(input, count, context);
-            } catch (ListException ex) {
-                throw new PapyrusElementException("Couldn't read Array variables.", ex, this);
-            }
+    init {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(context)
+        ID = context.readEID(input)
+        val t = read(input)
+        if (!VALID_TYPES.contains(t)) {
+            throw PapyrusFormatException("Invalid ArrayInfo type: $t")
         }
-
-        /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
-         * @param output The output stream.
-         */
-        @Override
-        public void write(ByteBuffer output) {
-            ID.write(output);
-            this.VARIABLES.forEach(var -> var.write(output));
-        }
-
-        /**
-         * @see resaver.ess.Element#calculateSize()
-         * @return The size of the <code>Element</code> in bytes.
-         */
-        @Override
-        public int calculateSize() {
-            int sum = ID.calculateSize();
-            sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
-            return sum;
-        }
-
-        /**
-         * @return String representation.
-         */
-        @Override
-        public String toString() {
-            return ID.toString() + this.VARIABLES;
-        }
-
-        //final private EID ID;
-        final private List<Variable> VARIABLES;
-
+        type = t
+        refType = if (type.isRefType) context.readTString(input) else null
+        length = input.int
     }
 }
