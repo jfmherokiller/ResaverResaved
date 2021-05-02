@@ -15,6 +15,8 @@
  */
 package resaver.ess;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -40,7 +42,7 @@ final public class ChangeFormFlags implements Element {
      * @param output The output stream.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         Objects.requireNonNull(output);
         output.putInt(this.FLAG);
         output.putShort(this.UNKNOWN);
