@@ -90,7 +90,7 @@ class ESP(input: ByteBuffer, game: Game?, plugin: Plugin, name: String?, plugins
          * @throws BufferUnderflowException
          */
         @Throws(FileNotFoundException::class, IOException::class, ClosedByInterruptException::class)
-        fun skimPlugin(path: Path, game: Game?, plugin: Plugin?, plugins: PluginInfo?): PluginData {
+        fun skimPlugin(path: Path, game: Game, plugin: Plugin, plugins: PluginInfo): PluginData {
             Objects.requireNonNull(path)
             assert(Files.isReadable(path))
             assert(Files.isRegularFile(path))
@@ -103,7 +103,7 @@ class ESP(input: ByteBuffer, game: Game?, plugin: Plugin, name: String?, plugins
                     input.read(BUFFER)
                     BUFFER.order(ByteOrder.LITTLE_ENDIAN)
                     (BUFFER as Buffer).flip()
-                    val TES4 = RecordTes4(BUFFER, plugin, plugins, ESPContext(game!!, plugin!!, null))
+                    val TES4 = RecordTes4(BUFFER, plugin, plugins, ESPContext(game, plugin, null))
                     val CTX = ESPContext(game, plugin, TES4)
                     while (BUFFER.hasRemaining()) {
                         Record.skimRecord(BUFFER, CTX)
@@ -138,7 +138,7 @@ class ESP(input: ByteBuffer, game: Game?, plugin: Plugin, name: String?, plugins
     init {
         assert(input.hasRemaining())
         RECORDS = mutableListOf()
-        val TES4 = RecordTes4(input, plugin, plugins, ESPContext(game!!, plugin, null))
+        val TES4 = RecordTes4(input, plugin, plugins!!, ESPContext(game!!, plugin, null))
         val CTX = ESPContext(game, plugin, TES4)
         CTX.pushContext(plugin.NAME)
         RECORDS.add(TES4)

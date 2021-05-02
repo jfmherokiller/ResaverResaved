@@ -13,45 +13,110 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.util.zip.DataFormatException;
-import mf.BufferUtil;
+import mf.BufferUtil
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.charset.StandardCharsets
+import java.util.function.Consumer
+import java.util.zip.DataFormatException
 
 /**
  * RecordCompressed represents all records that are compressed.
  *
  * @author Mark Fairchild
  */
-public class RecordCompressed extends Record {
+class RecordCompressed(recordCode: RecordCode, header: Header, input: ByteBuffer, ctx: ESPContext?) : Record() {
+    /**
+     *
+     * @return The total size of the uncompressed data in the
+     * `Record`.
+     */
+    private val uncompressedSize: Int
+        private get() = FIELDS.stream().mapToInt { obj: Field -> obj.calculateSize() }.sum()
 
     /**
-     * Skims a RecordCompressed by reading it from a LittleEndianInput.
-     *
-     * @param recordCode The record code.
-     * @param header The header.
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param ctx The mod descriptor.
      */
-    static public void skimRecord(RecordCode recordCode, Record.Header header, ByteBuffer input, ESPContext ctx) throws DataFormatException {
-        assert input.hasRemaining();
-
-        final int DECOMPRESSED_SIZE = input.getInt();
-        ByteBuffer uncompressed = BufferUtil.inflateZLIB(input, DECOMPRESSED_SIZE);
-        uncompressed.order(ByteOrder.LITTLE_ENDIAN);
-
-        final FieldList FIELDS = new FieldList();
-
-        while (uncompressed.hasRemaining()) {
-            FieldList newFields = Record.readField(recordCode, uncompressed, ctx);
-            FIELDS.addAll(newFields);
+    private val uncompressedData: ByteBuffer
+        private get() {
+            val DATA = ByteBuffer.allocate(uncompressedSize)
+            FIELDS.forEach(Consumer { field: Field -> field.write(DATA) })
+            return DATA
         }
 
-        ctx.getPLUGIN_INFO().addRecord(header.ID, FIELDS);
+    /**
+     * @see Entry.write
+     * @param output The ByteBuffer.
+     */
+    override fun write(output: ByteBuffer) {
+        output.put(this.code.toString().toByteArray(StandardCharsets.UTF_8))
+        val UNCOMPRESSED = uncompressedData
+        val UNCOMPRESSED_SIZE = UNCOMPRESSED.capacity()
+        (UNCOMPRESSED as Buffer).flip()
+        val COMPRESSED = BufferUtil.deflateZLIB(UNCOMPRESSED, UNCOMPRESSED_SIZE)
+        val COMPRESSED_SIZE = COMPRESSED.limit()
+        output.putInt(4 + COMPRESSED_SIZE)
+        HEADER.write(output)
+        output.putInt(UNCOMPRESSED_SIZE)
+        output.put(COMPRESSED)
+    }
+
+    /**
+     * @return The calculated size of the field.
+     * @see Entry.calculateSize
+     */
+    override fun calculateSize(): Int {
+        val UNCOMPRESSED = uncompressedData
+        val UNCOMPRESSED_SIZE = UNCOMPRESSED.capacity()
+        (UNCOMPRESSED as Buffer).flip()
+        val COMPRESSED = BufferUtil.deflateZLIB(UNCOMPRESSED, UNCOMPRESSED_SIZE)
+        val COMPRESSED_SIZE = COMPRESSED.capacity()
+        return 28 + COMPRESSED_SIZE
+    }
+
+    /**
+     * Returns a String representation of the Record, which will just be the
+     * code string.
+     *
+     * @return A string representation.
+     */
+    override fun toString(): String {
+        return this.code.toString()
+    }
+
+    /**
+     * Returns the record code.
+     *
+     * @return The record code.
+     */
+    override val code: RecordCode
+    private val HEADER: Header
+    private val FIELDS: FieldList
+
+    companion object {
+        /**
+         * Skims a RecordCompressed by reading it from a LittleEndianInput.
+         *
+         * @param recordCode The record code.
+         * @param header The header.
+         * @param input The `ByteBuffer` to read.
+         * @param ctx The mod descriptor.
+         */
+        @Throws(DataFormatException::class)
+        fun skimRecord(recordCode: RecordCode?, header: Header, input: ByteBuffer, ctx: ESPContext) {
+            assert(input.hasRemaining())
+            val DECOMPRESSED_SIZE = input.int
+            val uncompressed = BufferUtil.inflateZLIB(input, DECOMPRESSED_SIZE)
+            uncompressed.order(ByteOrder.LITTLE_ENDIAN)
+            val FIELDS = FieldList()
+            while (uncompressed.hasRemaining()) {
+                val newFields = readField(recordCode!!, uncompressed, ctx)
+                FIELDS.addAll(newFields)
+            }
+            ctx.PLUGIN_INFO.addRecord(header.ID, FIELDS)
+        }
     }
 
     /**
@@ -63,99 +128,17 @@ public class RecordCompressed extends Record {
      * @param ctx The mod descriptor.
      * @throws java.util.zip.DataFormatException
      */
-    public RecordCompressed(RecordCode recordCode, Record.Header header, ByteBuffer input, ESPContext ctx) throws DataFormatException {
-        assert input.hasRemaining();
-        this.CODE = recordCode;
-        this.HEADER = header;
-        this.FIELDS = new FieldList();
-
-        final int DECOMPRESSED_SIZE = input.getInt();
-        ByteBuffer uncompressed = BufferUtil.inflateZLIB(input, DECOMPRESSED_SIZE);
-        uncompressed.order(ByteOrder.LITTLE_ENDIAN);
-
+    init {
+        assert(input.hasRemaining())
+        this.code = recordCode
+        HEADER = header
+        FIELDS = FieldList()
+        val DECOMPRESSED_SIZE = input.int
+        val uncompressed = BufferUtil.inflateZLIB(input, DECOMPRESSED_SIZE)
+        uncompressed.order(ByteOrder.LITTLE_ENDIAN)
         while (uncompressed.hasRemaining()) {
-            FieldList newFields = Record.readField(recordCode, uncompressed, ctx);
-            FIELDS.addAll(newFields);
+            val newFields = readField(recordCode, uncompressed, ctx!!)
+            FIELDS.addAll(newFields)
         }
     }
-
-    /**
-     *
-     * @return The total size of the uncompressed data in the
-     * <code>Record</code>.
-     */
-    private int getUncompressedSize() {
-        return this.FIELDS.stream().mapToInt(Entry::calculateSize).sum();
-    }
-
-    /**
-     */
-    private ByteBuffer getUncompressedData() {
-        final ByteBuffer DATA = ByteBuffer.allocate(this.getUncompressedSize());
-        this.FIELDS.forEach(field -> field.write(DATA));
-        return DATA;
-    }
-
-    /**
-     * @see Entry#write(transposer.ByteBuffer)
-     * @param output The ByteBuffer.
-     */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.CODE.toString().getBytes(UTF_8));
-
-        final ByteBuffer UNCOMPRESSED = this.getUncompressedData();
-        final int UNCOMPRESSED_SIZE = UNCOMPRESSED.capacity();
-        ((Buffer) UNCOMPRESSED).flip();
-        ByteBuffer COMPRESSED = BufferUtil.deflateZLIB(UNCOMPRESSED, UNCOMPRESSED_SIZE);
-
-        final int COMPRESSED_SIZE = COMPRESSED.limit();
-        output.putInt(4 + COMPRESSED_SIZE);
-        this.HEADER.write(output);
-        output.putInt(UNCOMPRESSED_SIZE);
-        output.put(COMPRESSED);
-    }
-
-    /**
-     * @return The calculated size of the field.
-     * @see Entry#calculateSize()
-     */
-    @Override
-    public int calculateSize() {
-        final ByteBuffer UNCOMPRESSED = this.getUncompressedData();
-        final int UNCOMPRESSED_SIZE = UNCOMPRESSED.capacity();
-
-        ((Buffer) UNCOMPRESSED).flip();
-        ByteBuffer COMPRESSED = BufferUtil.deflateZLIB(UNCOMPRESSED, UNCOMPRESSED_SIZE);
-        final int COMPRESSED_SIZE = COMPRESSED.capacity();
-
-        return 28 + COMPRESSED_SIZE;
-    }
-
-    /**
-     * Returns the record code.
-     *
-     * @return The record code.
-     */
-    @Override
-    public RecordCode getCode() {
-        return this.CODE;
-    }
-
-    /**
-     * Returns a String representation of the Record, which will just be the
-     * code string.
-     *
-     * @return A string representation.
-     *
-     */
-    @Override
-    public String toString() {
-        return this.getCode().toString();
-    }
-
-    final private RecordCode CODE;
-    final private Record.Header HEADER;
-    final private FieldList FIELDS;
-
 }

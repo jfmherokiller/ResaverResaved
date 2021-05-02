@@ -37,24 +37,23 @@ public class Script implements Entry {
         if (this.NAME.isEmpty()) {
             this.PROPERTIES = null;
             this.STATUS = 0;
-            return;
-        }
+        } else {
+            ctx.pushContext("script:" + this.NAME);
 
-        ctx.pushContext("script:" + this.NAME);
+            this.STATUS = input.get();
 
-        this.STATUS = input.get();
+            int propertyCount = Short.toUnsignedInt(input.getShort());
+            this.PROPERTIES = new java.util.ArrayList<>(propertyCount);
 
-        int propertyCount = Short.toUnsignedInt(input.getShort());
-        this.PROPERTIES = new java.util.ArrayList<>(propertyCount);
+            try {
+                for (int i = 0; i < propertyCount; i++) {
+                    Property prop = new Property(input, ctx);
+                    this.PROPERTIES.add(prop);
+                }
 
-        try {
-            for (int i = 0; i < propertyCount; i++) {
-                Property prop = new Property(input, ctx);
-                this.PROPERTIES.add(prop);
+            } finally {
+                ctx.popContext();
             }
-
-        } finally {
-            ctx.popContext();
         }
     }
 
