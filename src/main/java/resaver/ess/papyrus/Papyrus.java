@@ -279,7 +279,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                         throw new ListException(i, functionMessageCount, ex);
                     }
                 }
-                SUM.click(4 + this.FUNCTIONMESSAGES.parallelStream().mapToInt(v -> v.calculateSize()).sum());
+                SUM.click(4 + this.FUNCTIONMESSAGES.parallelStream().mapToInt(FunctionMessage::calculateSize).sum());
             } catch (ListException ex) {
                 throw new PapyrusException("Failed to read FunctionMessage table.", ex, this);
             }
@@ -668,7 +668,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     public Set<PapyrusElement> removeUnattachedInstances() {
         final Set<ScriptInstance> UNATTACHED = this.getScriptInstances().values()
                 .stream()
-                .filter(v -> v.isUnattached())
+                .filter(ScriptInstance::isUnattached)
                 .collect(Collectors.toSet());
 
         return this.removeElements(UNATTACHED);
@@ -712,7 +712,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 .filter(v -> v.isUndefined() && !v.isTerminated())
                 .collect(Collectors.toSet());
 
-        TERMINATED.forEach(v -> v.zero());
+        TERMINATED.forEach(ActiveScript::zero);
         return TERMINATED;
     }
 
