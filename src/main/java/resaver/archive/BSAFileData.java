@@ -44,7 +44,7 @@ public class BSAFileData {
 
             // If the filename is embedded, readFully it from the data block.
             // Otherwise retrieve it from the file record.
-            if (header.EMBED_FILENAME) {
+            if (header.getEMBED_FILENAME()) {
                 byte b = buffer.get();
                 buffer.position(b + 2);
             }
@@ -57,7 +57,7 @@ public class BSAFileData {
                 int uncompressedSize = buffer.getInt();
                 ByteBuffer uncompressedData; // = ByteBuffer.allocate(uncompressedSize);
 
-                switch (header.VERSION) {
+                switch (header.getVERSION()) {
                     case 104:
                         uncompressedData = BufferUtil.inflateZLIB(buffer, uncompressedSize, record.FILESIZE);
                         break;
@@ -65,7 +65,7 @@ public class BSAFileData {
                         uncompressedData = BufferUtil.inflateLZ4(buffer, uncompressedSize);
                         break;
                     default:
-                        throw new IOException("Unknown version " + header.VERSION);
+                        throw new IOException("Unknown version " + header.getVERSION());
                 }
 
                 uncompressedData.order(ByteOrder.LITTLE_ENDIAN);

@@ -45,7 +45,7 @@ class BSAFileRecord {
 
         this.FILESIZE = size & ~BIT30;
         this.OFFSET = input.getInt();
-        this.ISCOMPRESSED = header.ISCOMPRESSED ^ compressToggle;
+        this.ISCOMPRESSED = header.getISCOMPRESSED() ^ compressToggle;
         this.NAME = names.get();
     }
 

@@ -57,20 +57,20 @@ public class BSAParser extends ArchiveParser {
             this.HEADER = new BSAHeader(HEADERBLOCK, path.getFileName().toString());
 
             // Read the filename table indirectly.
-            final Supplier<String> NAMES = this.HEADER.INCLUDE_FILENAMES
+            final Supplier<String> NAMES = this.HEADER.getINCLUDE_FILENAMES()
                     ? this.getNames(channel)
                     : () -> null;
 
             // Allocate storage for the folder records and file records.
-            this.FOLDERRECORDS = new ArrayList<>(this.HEADER.FOLDER_COUNT);
+            this.FOLDERRECORDS = new ArrayList<>(this.HEADER.getFOLDER_COUNT());
 
             // Read folder records.
-            final ByteBuffer FOLDERBLOCK = ByteBuffer.allocate(this.HEADER.FOLDER_COUNT * BSAFolderRecord.SIZE);
-            channel.read(FOLDERBLOCK, this.HEADER.FOLDER_OFFSET);
+            final ByteBuffer FOLDERBLOCK = ByteBuffer.allocate(this.HEADER.getFOLDER_COUNT() * BSAFolderRecord.SIZE);
+            channel.read(FOLDERBLOCK, this.HEADER.getFOLDER_OFFSET());
             FOLDERBLOCK.order(ByteOrder.LITTLE_ENDIAN);
             ((Buffer) FOLDERBLOCK).flip();
 
-            for (int i = 0; i < this.HEADER.FOLDER_COUNT; i++) {
+            for (int i = 0; i < this.HEADER.getFOLDER_COUNT(); i++) {
                 BSAFolderRecord folder = new BSAFolderRecord(FOLDERBLOCK, this.HEADER, channel, NAMES);
                 this.FOLDERRECORDS.add(folder);
             }
@@ -80,12 +80,12 @@ public class BSAParser extends ArchiveParser {
     }
 
     private Supplier<String> getNames(FileChannel channel) throws IOException {
-        long FILENAMES_OFFSET = this.HEADER.FOLDER_OFFSET
-                + this.HEADER.FOLDER_COUNT * BSAFolderRecord.SIZE
-                + this.HEADER.TOTAL_FOLDERNAME_LENGTH + this.HEADER.FOLDER_COUNT
-                + this.HEADER.FILE_COUNT * BSAFileRecord.SIZE;
+        long FILENAMES_OFFSET = this.HEADER.getFOLDER_OFFSET()
+                + this.HEADER.getFOLDER_COUNT() * BSAFolderRecord.SIZE
+                + this.HEADER.getTOTAL_FOLDERNAME_LENGTH() + this.HEADER.getFOLDER_COUNT()
+                + this.HEADER.getFILE_COUNT() * BSAFileRecord.SIZE;
 
-        final ByteBuffer FILENAMESBLOCK = ByteBuffer.allocate(this.HEADER.TOTAL_FILENAME_LENGTH);
+        final ByteBuffer FILENAMESBLOCK = ByteBuffer.allocate(this.HEADER.getTOTAL_FILENAME_LENGTH());
         channel.read(FILENAMESBLOCK, FILENAMES_OFFSET);
         FILENAMESBLOCK.order(ByteOrder.LITTLE_ENDIAN);
         ((Buffer) FILENAMESBLOCK).flip();

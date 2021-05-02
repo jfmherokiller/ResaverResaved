@@ -47,7 +47,7 @@ final class BSAFolderRecord {
         this.NAMEHASH = input.getLong();
         this.COUNT = input.getInt();
 
-        switch (header.VERSION) {
+        switch (header.getVERSION()) {
             case 103:
             case 104:
                 this.PADDING = 0;
@@ -58,15 +58,15 @@ final class BSAFolderRecord {
                 this.OFFSET = input.getLong();
                 break;
             default:
-                throw new IOException("Unknown header version " + header.VERSION);
+                throw new IOException("Unknown header version " + header.getVERSION());
         }
 
         final ByteBuffer BLOCK = ByteBuffer.allocate(1024 + this.COUNT * BSAFileRecord.SIZE);
-        channel.read(BLOCK, this.OFFSET - header.TOTAL_FILENAME_LENGTH);
+        channel.read(BLOCK, this.OFFSET - header.getTOTAL_FILENAME_LENGTH());
         BLOCK.order(ByteOrder.LITTLE_ENDIAN);
         ((Buffer) BLOCK).flip();
 
-        if (header.INCLUDE_DIRECTORYNAMES) {
+        if (header.getINCLUDE_DIRECTORYNAMES()) {
             final int NAMELEN = Byte.toUnsignedInt(BLOCK.get());
             this.NAME = mf.BufferUtil.getZString(BLOCK);
         } else {
