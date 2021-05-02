@@ -80,7 +80,7 @@ public class FragmentPerk extends FragmentBase {
     @Override
     public String toString() {
         if (null != this.SCRIPT) {
-            return String.format("Perk: %s (%d, %d frags)", this.SCRIPT.NAME, this.UNKNOWN, this.FRAGMENTS.size());
+            return String.format("Perk: %s (%d, %d frags)", this.SCRIPT.getNAME(), this.UNKNOWN, this.FRAGMENTS.size());
         } else if (null != this.FILENAME) {
             return String.format("Perk: %s (%d, %d frags)", this.FILENAME, this.UNKNOWN, this.FRAGMENTS.size());
         } else {

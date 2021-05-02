@@ -77,7 +77,7 @@ public class FragmentInfoPack extends FragmentBase {
     @Override
     public String toString() {
         if (null != this.SCRIPT) {
-            return String.format("InfoPack: %s (%d, %d, %d frags)", this.SCRIPT.NAME, this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size());
+            return String.format("InfoPack: %s (%d, %d, %d frags)", this.SCRIPT.getNAME(), this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size());
         } else if (null != this.FILENAME) {
             return String.format("InfoPack: %s (%d, %d, %d frags)", this.FILENAME, this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size());
         } else {

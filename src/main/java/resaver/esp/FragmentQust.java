@@ -92,7 +92,7 @@ public class FragmentQust extends FragmentBase {
     @Override
     public String toString() {
         if (null != this.SCRIPT) {
-            return String.format("Quest: %s (%d, %d frags, %d aliases)", this.SCRIPT.NAME, this.UNKNOWN, this.FRAGMENTS.size(), this.ALIASES.size());
+            return String.format("Quest: %s (%d, %d frags, %d aliases)", this.SCRIPT.getNAME(), this.UNKNOWN, this.FRAGMENTS.size(), this.ALIASES.size());
         } else if (null != this.FILENAME) {
             return String.format("Quest: %s (%d, %d frags, %d aliases)", this.FILENAME, this.UNKNOWN, this.FRAGMENTS.size(), this.ALIASES.size());
         } else {

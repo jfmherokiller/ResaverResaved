@@ -60,7 +60,7 @@ public class FragmentTerm extends FragmentBase {
 
     @Override
     public String toString() {
-        return String.format("Term: %s (%d, %d fragments)", this.SCRIPT.NAME, this.UNKNOWN, this.FRAGMENTS.size());
+        return String.format("Term: %s (%d, %d fragments)", this.SCRIPT.getNAME(), this.UNKNOWN, this.FRAGMENTS.size());
     }
 
     final private byte UNKNOWN;

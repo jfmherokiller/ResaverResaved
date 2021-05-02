@@ -87,7 +87,7 @@ public class FragmentScen extends FragmentBase {
     @Override
     public String toString() {
         if (null != this.SCRIPT) {
-            return String.format("Scene: %s (%d, %d, %d frags, %d phases)", this.SCRIPT.NAME, this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size(), this.PHASES.size());
+            return String.format("Scene: %s (%d, %d, %d frags, %d phases)", this.SCRIPT.getNAME(), this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size(), this.PHASES.size());
         } else if (null != this.FILENAME) {
             return String.format("Scene: %s (%d, %d, %d frags, %d phases)", this.FILENAME, this.FLAGS, this.UNKNOWN, this.FRAGMENTS.size(), this.PHASES.size());
         } else {
