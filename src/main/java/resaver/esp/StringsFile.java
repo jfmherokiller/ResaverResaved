@@ -208,14 +208,12 @@ public class StringsFile {
         DETECTOR.reset();
 
         final Charset CHARSET = (null == ENCODING ? UTF_8 : Charset.forName(ENCODING));
-        assert null != CHARSET;
 
         if (CHARSET_LOG.add(CHARSET)) {
             LOG.info(String.format("Detected a new character encoding: %s.", CHARSET));
         }
 
-        final String STR = new String(bytes, CHARSET);
-        return STR;
+        return new String(bytes, CHARSET);
     }
 
 }

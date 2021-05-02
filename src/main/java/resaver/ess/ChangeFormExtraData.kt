@@ -34,6 +34,6 @@ class ChangeFormExtraData(input: ByteBuffer, context: ESSContext?) : GeneralElem
      */
     init {
         Objects.requireNonNull(input)
-        super.readVSElemArray(input, "DATA") { `in`: ByteBuffer? -> ChangeFormExtraDataData(`in`, context) }
+        super.readVSElemArray(input, "DATA") { `in`: ByteBuffer? -> ChangeFormExtraDataData(`in`!!, context!!) }
     }
 }
