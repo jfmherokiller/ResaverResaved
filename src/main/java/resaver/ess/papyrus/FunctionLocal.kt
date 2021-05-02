@@ -13,34 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Describes a function local variable in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class FunctionLocal extends MemberDesc {
-
-    /**
-     * @see MemberDesc#MemberData(resaver.ByteBuffer,
-     * resaver.ess.papyrus.StringTable)
-     * @param input The input stream.
-     * @param strtab The StringTable.
-     * @throws PapyrusFormatException
-     */
-    public FunctionLocal(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
-        super(input, context);
-    }
-
+class FunctionLocal
+/**
+ * @see MemberDesc.MemberData
+ * @param input The input stream.
+ * @param strtab The StringTable.
+ * @throws PapyrusFormatException
+ */
+    (input: ByteBuffer?, context: PapyrusContext?) : MemberDesc(input, context!!) {
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return "(local) " + super.toString();
+    override fun toString(): String {
+        return "(local) ${super.toString()}"
     }
-
 }
