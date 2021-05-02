@@ -255,10 +255,7 @@ public abstract class Parameter implements PapyrusElement {
                 return true;
             } else if (obj == null) {
                 return false;
-            } else if (getClass() != obj.getClass()) {
-                return false;
-            }
-            return true;
+            } else return getClass() == obj.getClass();
         }
 
     }
