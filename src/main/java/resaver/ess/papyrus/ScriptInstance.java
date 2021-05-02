@@ -210,14 +210,14 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      */
     @Override
     public List<Variable> getVariables() {
-        return this.data == null 
-                ? Collections.emptyList() 
+        return this.data == null
+                ? Collections.emptyList()
                 : Collections.unmodifiableList(this.data.VARIABLES);
     }
 
     /**
-     * @see HasVariables#getDescriptors() 
-     * @return 
+     * @see HasVariables#getDescriptors()
+     * @return
      */
     @Override
     public List<MemberDesc> getDescriptors() {
@@ -225,9 +225,9 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
     }
 
     /**
-     * @see HasVariables#setVariable(int, resaver.ess.papyrus.Variable) 
+     * @see HasVariables#setVariable(int, resaver.ess.papyrus.Variable)
      * @param index
-     * @param newVar 
+     * @param newVar
      */
     @Override
     public void setVariable(int index, Variable newVar) {
@@ -237,7 +237,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
         if (index <= 0 || index >= this.data.VARIABLES.size()) {
             throw new IllegalArgumentException("Invalid variable index: " + index);
         }
-        
+
         this.data.VARIABLES.set(index, newVar);
     }
 
