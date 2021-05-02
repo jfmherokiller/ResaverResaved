@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.papyrus.MemberDesc
 
 /**
  * Stores a variable as well as it's descriptor.
  *
  * @author Mark Fairchild
  */
-final public class Member {
-
-    /**
-     * Creates a new <code>Member</code>.
-     *
-     * @param desc The member's descriptor.
-     * @param var The member's variable.
-     */
-    public Member(MemberDesc desc, Variable var) {
-        this.DESC = desc;
-        this.VAR = var;
-    }
-
+class Member
+/**
+ * Creates a new `Member`.
+ *
+ * @param desc The member's descriptor.
+ * @param var The member's variable.
+ */(
+    val DESC: MemberDesc?, //static final private IString[] _PLAYER_REFS = new IString[]{
+    val VAR: Variable?
+) {
     /**
      * @return A flag indicating whether this member stores a player reference.
      */
@@ -44,14 +43,8 @@ final public class Member {
      *
      * @return A flag indicating whether this member stores invalid data.
      */
-    public boolean isInvalid() {
-        return this.DESC == null || this.VAR == null;
-    }
-
-    final public MemberDesc DESC;
-    final public Variable VAR;
-
-    //static final private IString[] _PLAYER_REFS = new IString[]{
+    val isInvalid: Boolean
+        get() = DESC == null || VAR == null
     //IString.get("player"),
     //IString.get("playerref"),
     //IString.get("::player_var"),
