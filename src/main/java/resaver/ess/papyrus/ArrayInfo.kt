@@ -81,9 +81,9 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
     /**
      * @return The ID of the papyrus element.
      */
-    override fun getID(): EID {
-        return ID
-    }
+    override val iD: EID
+        get() = ID
+
 
     /**
      * @return Short string representation.
@@ -167,7 +167,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
             })
         }
         BUILDER.append("<p/>")
-        BUILDER.append("<p>ID: ${this.id}</p>")
+        BUILDER.append("<p>ID: ${this.iD}</p>")
         BUILDER.append("<p>Content type: $type</p>")
         if (type.isRefType) {
             val SCRIPT = save.papyrus.scripts[refType]

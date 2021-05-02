@@ -56,9 +56,9 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
     /**
      * @return The ID of the papyrus element.
      */
-    override fun getID(): EID {
-        return ID
-    }
+    override val iD: EID
+        get() = ID
+
 
     /**
      * @return The message field.
@@ -91,11 +91,11 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
             if (result.isPresent) {
                 val i = message!!.variables.indexOf(result.get())
                 if (i >= 0) {
-                    return Linkable.makeLink("suspended", this.id, i, this.toString())
+                    return Linkable.makeLink("suspended", this.iD, i, this.toString())
                 }
             }
         }
-        return Linkable.makeLink("suspended", this.id, this.toString())
+        return Linkable.makeLink("suspended", this.iD, this.toString())
     }
 
     /**
