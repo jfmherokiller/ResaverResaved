@@ -82,7 +82,7 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
      * @param target A target within the `Linkable`.
      * @return
      */
-    override fun toHTML(target: Element): String {
+    override fun toHTML(target: Element?): String {
         if (null != target && hasMessage()) {
             val result = message!!.variables.stream()
                 .filter { obj: Variable -> obj.hasRef() }

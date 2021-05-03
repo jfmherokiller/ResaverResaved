@@ -173,10 +173,7 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
 
         if (number.intValue() >= 0 && number.intValue() < this.PAPYRUS.getStringTable().size()) {
             TString s = this.PAPYRUS.getStringTable().get(number.intValue());
-            Linkable r4 = this.findAny(s);
-            if (r4 != null) {
-                return r4;
-            }
+            return this.findAny(s);
         }
 
         return null;
