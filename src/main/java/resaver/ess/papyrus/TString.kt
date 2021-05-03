@@ -13,22 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
-
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import resaver.Analysis;
-import resaver.IString;
-import resaver.ess.AnalyzableElement;
-import resaver.ess.ESS;
-import resaver.ess.Element;
-import resaver.ess.Linkable;
-import resaver.ess.WStringElement;
+import org.jetbrains.annotations.Contract
+import resaver.Analysis
+import resaver.IString
+import resaver.ess.*
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.function.Consumer
+import java.util.function.Predicate
+import java.util.stream.Stream
 
 /**
  * A case-insensitive string with value semantics that reads and writes as an
@@ -36,143 +31,105 @@ import resaver.ess.WStringElement;
  *
  * @author Mark Fairchild
  */
-abstract public class TString implements PapyrusElement, AnalyzableElement, Linkable {
-
+abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
     /**
-     * Creates a new <code>TString</code> that is unindexed not part of a table.
-     * It can only be used for comparisons.
-     *
-     * @param cs The contents for the new <code>TString</code>.
-     * @return A new <code>TString</code>. It can't be used for anything except
-     * comparison.
-     */
-    @NotNull
-    @Contract("_ -> new")
-    static public TString makeUnindexed(CharSequence cs) {
-        return new TString(cs) {
-            @Override
-            public boolean matches(@NotNull Analysis analysis, @NotNull String mod) {
-                return false;
-            }
-
-            @Override
-            public void write(@NotNull ByteBuffer output) {
-                throw new UnsupportedOperationException("Not supported.");
-            }
-
-            @Override
-            public int calculateSize() {
-                throw new UnsupportedOperationException("Not supported.");
-            }
-        };
-    }
-
-    /**
-     * Creates a new <code>TString</code> from a <code>WStringElement</code> and an
+     * Creates a new `TString` from a `WStringElement` and an
      * index.
      *
-     * @param wstr The <code>WStringElement</code>.
-     * @param index The index of the <code>TString</code>.
+     * @param wstr The `WStringElement`.
+     * @param index The index of the `TString`.
      */
-    protected TString(WStringElement wstr, int index) {
-        if (index < 0) {
-            throw new IllegalArgumentException("Illegal index: " + index);
-        }
-
-        this.WSTR = Objects.requireNonNull(wstr);
-        this.INDEX = index;
+    protected constructor(wstr: WStringElement?, index: Int) {
+        require(index >= 0) { "Illegal index: $index" }
+        WSTR = Objects.requireNonNull(wstr)!!
+        INDEX = index
     }
 
     /**
-     * Creates a new <code>TString</code> from a character sequence and an
+     * Creates a new `TString` from a character sequence and an
      * index.
      *
-     * @param cs The <code>CharSequence</code>.
-     * @param index The index of the <code>TString</code>.
+     * @param cs The `CharSequence`.
+     * @param index The index of the `TString`.
      */
-    protected TString(CharSequence cs, int index) {
-        this(new WStringElement(cs), index);
-    }
+    protected constructor(cs: CharSequence?, index: Int) : this(WStringElement(cs!!), index) {}
 
     /**
-     * Creates a new unindexed <code>TString</code> from a character sequence.
+     * Creates a new unindexed `TString` from a character sequence.
      *
-     * @param cs The <code>CharSequence</code>.
+     * @param cs The `CharSequence`.
      */
-    protected TString(CharSequence cs) {
-        this.WSTR = new WStringElement(cs);
-        this.INDEX = -1;
+    protected constructor(cs: CharSequence?) {
+        WSTR = WStringElement(cs!!)
+        INDEX = -1
     }
 
     /**
-     * @see WStringElement#write(resaver.ByteBuffer)
+     * @see WStringElement.write
      * @param output The output stream.
      */
-    public void writeFull(ByteBuffer output) {
-        this.WSTR.write(output);
+    fun writeFull(output: ByteBuffer?) {
+        WSTR.write(output!!)
     }
 
     /**
-     * @see WStringElement#calculateFullSizecalculateFullSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see WStringElement.calculateFullSizecalculateFullSize
+     * @return The size of the `Element` in bytes.
      */
-    public int calculateFullSize() {
-        return this.WSTR.calculateSize();
+    fun calculateFullSize(): Int {
+        return WSTR.calculateSize()
     }
 
     /**
-     * @see IString#hashCode()
+     * @see IString.hashCode
      * @return
      */
-    @Override
-    public int hashCode() {
-        return this.WSTR.hashCode();
+    override fun hashCode(): Int {
+        return WSTR.hashCode()
     }
 
     /**
      * Tests for case-insensitive value-equality with another
-     * <code>TString</code>, <code>IString</code>, or <code>String</code>.
+     * `TString`, `IString`, or `String`.
      *
      * @param obj The object to which to compare.
-     * @see java.lang.String#equalsIgnoreCase(java.lang.String)
+     * @see java.lang.String.equalsIgnoreCase
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj instanceof TString) {
-            TString other = (TString) obj;
-            return this.INDEX == other.INDEX;
+    override fun equals(obj: Any?): Boolean {
+        return if (this === obj) {
+            true
+        } else if (obj is TString) {
+            INDEX == obj.INDEX
         } else {
-            return this.WSTR.equals(obj);
+            WSTR == obj
         }
     }
 
     /**
-     * Tests for case-insensitive value-equality with a <code>String</code>.
+     * Tests for case-insensitive value-equality with a `String`.
      *
      * @param obj The object to which to compare.
-     * @see java.lang.String#equalsIgnoreCase(java.lang.String)
+     * @see java.lang.String.equalsIgnoreCase
      * @return
      */
-    public boolean equals(String obj) {
-        return this.WSTR.equals(obj);
+    fun equals(obj: String?): Boolean {
+        return WSTR.equals(obj)
     }
 
     /**
      * Tests for case-insensitive value-equality with another
-     * <code>TString</code>.
+     * `TString`.
      *
-     * @param other The <code>TString</code> to which to compare.
+     * @param other The `TString` to which to compare.
      * @return True if the strings have the same index, false otherwise.
-     * @see java.lang.String#equalsIgnoreCase(java.lang.String)
+     * @see java.lang.String.equalsIgnoreCase
      */
-    public boolean equals(TString other) {
-        Objects.requireNonNull(other);
-        if (this.INDEX < 0 || other.INDEX < 0) {
-            return this.WSTR.equals(other.WSTR);
+    fun equals(other: TString): Boolean {
+        Objects.requireNonNull(other)
+        return if (INDEX < 0 || other.INDEX < 0) {
+            WSTR.equals(other.WSTR)
         } else {
-            return this.INDEX == other.INDEX;
+            INDEX == other.INDEX
         }
     }
 
@@ -181,35 +138,31 @@ abstract public class TString implements PapyrusElement, AnalyzableElement, Link
      *
      * @return
      */
-    public int getIndex() {
-        assert this.INDEX >= 0;
-        return INDEX;
-    }
+    val index: Int
+        get() {
+            assert(INDEX >= 0)
+            return INDEX
+        }
 
     /**
-     * @see java.lang.String#isEmpty()
+     * @see java.lang.String.isEmpty
      * @return
      */
-    public boolean isEmpty() {
-        return this.WSTR.isEmpty();
-    }
+    val isEmpty: Boolean
+        get() = WSTR.isEmpty()
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @NotNull
-    @Override
-    public String getInfo(@NotNull resaver.Analysis analysis, ESS save) {
-        Objects.requireNonNull(save);
-
-        final StringBuilder BUILDER = new StringBuilder();
-
-        BUILDER.append("<html><h3>STRING</h3>");
-        BUILDER.append(String.format("<p>Value: \"%s\".</p>", this));
-        BUILDER.append(String.format("<p>Length: %d</p>", this.WSTR.length()));
+    override fun getInfo(analysis: Analysis, save: ESS): String {
+        Objects.requireNonNull(save)
+        val BUILDER = StringBuilder()
+        BUILDER.append("<html><h3>STRING</h3>")
+        BUILDER.append(String.format("<p>Value: \"%s\".</p>", this))
+        BUILDER.append(String.format("<p>Length: %d</p>", WSTR.length))
 
         /*if (null != analysis) {
             final Map<String, Integer> OWNERS = analysis.STRING_ORIGINS.get(this.toIString());
@@ -225,21 +178,21 @@ abstract public class TString implements PapyrusElement, AnalyzableElement, Link
                 BUILDER.append("<p>String origin could not be determined.</p>");
             }
         }*/
-        final Papyrus PAPYRUS = save.getPapyrus();
-        final List<String> LINKS = new java.util.LinkedList<>();
+        val PAPYRUS = save.papyrus
+        val LINKS: MutableList<String> = LinkedList()
 
         // Check definitions (Scripts and Structs).
         Stream.concat(
-                PAPYRUS.getScripts().values().stream(),
-                PAPYRUS.getStructs().values().stream()).parallel().forEach(def -> {
-
-            if (this == def.getName()) {
-                LINKS.add(def.toHTML(null));
+            PAPYRUS.scripts.values.stream(),
+            PAPYRUS.structs.values.stream()
+        ).parallel().forEach { def: Definition ->
+            if (this === def.name) {
+                LINKS.add(def.toHTML(null))
             }
-            def.getMembers().stream()
-                    .filter(member -> this.equals(member.getName()))
-                    .forEach(member -> LINKS.add(def.toHTML(member)));
-        });
+            def.members!!.stream()
+                .filter(Predicate { member: MemberDesc? -> this == member?.name })
+                .forEach(Consumer { member: MemberDesc? -> LINKS.add(def.toHTML(member)) })
+        }
 
         /*
         // Check function messages.
@@ -318,72 +271,94 @@ abstract public class TString implements PapyrusElement, AnalyzableElement, Link
         MESSAGES
                 .filter(p -> Objects.equals(p.B.getEvent(), this))
                 .forEach(p -> HOLDERS.add(Pair.make(p.A, p.B)));
-         */
-        if (!LINKS.isEmpty()) {
-            BUILDER.append(String.format("<p>This string occurs %d times in this save.</p>", LINKS.size()));
-            LINKS.forEach(link -> BUILDER.append(link).append("<br/>"));
+         */if (!LINKS.isEmpty()) {
+            BUILDER.append(String.format("<p>This string occurs %d times in this save.</p>", LINKS.size))
+            LINKS.forEach(Consumer { link: String? -> BUILDER.append(link).append("<br/>") })
         }
-
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @return The <code>WStringElement</code> that that the <code>TString</code>
+     * @return The `WStringElement` that that the `TString`
      * points to.
      */
-    public WStringElement toWString() {
-        return this.WSTR;
+    fun toWString(): WStringElement {
+        return WSTR
     }
 
     /**
-     * @return The <code>WStringElement</code> that that the <code>TString</code>
+     * @return The `WStringElement` that that the `TString`
      * points to.
      */
-    public IString toIString() {
-        return this.WSTR;
+    fun toIString(): IString {
+        return WSTR
     }
 
     /**
-     * @return The length of the <code>TString</code>.
-     * @see java.lang.String#length()
+     * @return The length of the `TString`.
+     * @see java.lang.String.length
      */
-    public int length() {
-        return this.WSTR.length();
+    fun length(): Int {
+        return WSTR.length
     }
 
     /**
      *
      * @Override
      */
-    @Override
-    public String toString() {
-        return this.WSTR.toString();
+    override fun toString(): String {
+        return WSTR.toString()
     }
 
     /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        return Linkable.makeLink("string", this.INDEX, this.toString());
+    override fun toHTML(target: Element): String {
+        return Linkable.makeLink("string", INDEX, this.toString())
     }
 
-    /**
-     *
-     * @param s1
-     * @param s2
-     * @return
-     */
-    static public int compare(TString s1, TString s2) {
-        final WStringElement W1 = s1 != null ? s1.WSTR : null;
-        final WStringElement W2 = s2 != null ? s2.WSTR : null;
-        return WStringElement.compare(W1, W2);
+    private val INDEX: Int
+    private val WSTR: WStringElement
+
+    companion object {
+        /**
+         * Creates a new `TString` that is unindexed not part of a table.
+         * It can only be used for comparisons.
+         *
+         * @param cs The contents for the new `TString`.
+         * @return A new `TString`. It can't be used for anything except
+         * comparison.
+         */
+        @Contract("_ -> new")
+        fun makeUnindexed(cs: CharSequence?): TString {
+            return object : TString(cs) {
+                override fun matches(analysis: Analysis, mod: String): Boolean {
+                    return false
+                }
+
+                override fun write(output: ByteBuffer) {
+                    throw UnsupportedOperationException("Not supported.")
+                }
+
+                override fun calculateSize(): Int {
+                    throw UnsupportedOperationException("Not supported.")
+                }
+            }
+        }
+
+        /**
+         *
+         * @param s1
+         * @param s2
+         * @return
+         */
+        fun compare(s1: TString?, s2: TString?): Int {
+            val W1 = s1?.WSTR
+            val W2 = s2?.WSTR
+            return compareValues(W1,W2)
+        }
     }
-
-    final private int INDEX;
-    final private WStringElement WSTR;
-
 }
