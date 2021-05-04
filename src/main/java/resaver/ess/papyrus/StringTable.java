@@ -21,6 +21,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
+
+import org.jetbrains.annotations.Nullable;
+import resaver.Analysis;
 import resaver.ess.ESS;
 import resaver.ess.WStringElement;
 
@@ -332,12 +335,16 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             return (this.getIndex() > 0xFFF0 && !STBCORRECTION ? 6 : 2);
         }
 
+        @Override
+        public boolean matches(@Nullable Analysis analysis, @Nullable String mod) {
+            return false;
+        }
     }
 
     /**
      * TString implementation for 32 bit TStrings.
      */
-    final private class TString32 extends TString {
+    static final private class TString32 extends TString {
 
         /**
          * Creates a new <code>TString32</code> from a <code>WStringElement</code> and
@@ -380,5 +387,9 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             return 4;
         }
 
+        @Override
+        public boolean matches(@Nullable Analysis analysis, @Nullable String mod) {
+            return false;
+        }
     }
 }

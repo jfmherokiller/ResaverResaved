@@ -13,145 +13,129 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Objects;
-import resaver.ess.papyrus.Papyrus;
-import resaver.ess.papyrus.PapyrusException;
+import resaver.ess.ESS.ESSContext
+import resaver.ess.papyrus.Papyrus
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.*
 
 /**
  * Describes 3-byte formIDs from Skyrim savegames.
  *
  * @author Mark Fairchild
  */
-final public class GlobalData implements Element {
-
+class GlobalData(input: ByteBuffer, context: ESSContext?, model: ModelBuilder?) : Element {
     /**
-     * Creates a new <code>GlobalData</code> by reading from a
-     * <code>LittleEndianDataOutput</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The <code>ESSContext</code> info.
-     * @param model A <code>ModelBuilder</code>.
-     * @throws PapyrusException
-     */
-    public GlobalData(ByteBuffer input, ESS.ESSContext context, ModelBuilder model) throws PapyrusException {
-        this.TYPE = input.getInt();
-        int blockSize = input.getInt();
-        final ByteBuffer subSection = input.slice().order(ByteOrder.LITTLE_ENDIAN);
-        ((Buffer) subSection).limit(blockSize);
-        ((Buffer) input).position(((Buffer) input).position() + blockSize);
-
-        switch (this.TYPE) {
-            case 3:
-                this.BLOCK = new GlobalVariableTable(subSection, context);
-                break;
-            case 1001:
-                this.BLOCK = new Papyrus(subSection, context, model);
-                break;
-            default:
-                final byte[] DATA = new byte[blockSize];
-                subSection.get(DATA);
-                this.BLOCK = new DefaultGlobalDataBlock(DATA);
-                break;
-        }
-
-        long calculatedSize = this.calculateSize() - 8;
-        
-        if (calculatedSize != blockSize) {
-            throw new IllegalStateException(String.format("Missing data for table %d, calculated size is %d but block size is %d.", this.TYPE, calculatedSize, blockSize));
-        }
-    }
-
-    /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.putInt(this.TYPE);
-        output.putInt(this.BLOCK.calculateSize());
-        this.BLOCK.write(output);
+    override fun write(output: ByteBuffer?) {
+        output!!.putInt(type)
+        output.putInt(dataBlock!!.calculateSize())
+        dataBlock!!.write(output)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return 8 + this.BLOCK.calculateSize();
+    override fun calculateSize(): Int {
+        return 8 + dataBlock!!.calculateSize()
+    }/*if (!(this.TYPE == 1001 && this.BLOCK instanceof Papyrus)) {
+            throw new IllegalStateException("Not a papyrus block.");
+        }*/
+
+    /**
+     *
+     * @return
+     */
+    val papyrus: Papyrus?
+        get() =/*if (!(this.TYPE == 1001 && this.BLOCK instanceof Papyrus)) {
+            throw new IllegalStateException("Not a papyrus block.");
+        }*/
+            dataBlock as Papyrus?
+
+    /**
+     * @see Object.toString
+     * @return
+     */
+    override fun toString(): String {
+        return super.toString() + ": type " + Integer.toString(type)
+    }
+
+    /**
+     * @see Object.hashCode
+     * @return
+     */
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 89 * hash + Objects.hashCode(dataBlock)
+        return hash
+    }
+
+    /**
+     * @see Object.equals
+     * @return
+     */
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
+        }
+        if (obj == null) {
+            return false
+        }
+        if (javaClass != obj.javaClass) {
+            return false
+        }
+        val other = obj as GlobalData
+        return dataBlock == other.dataBlock
     }
 
     /**
      * @return The value of the type field.
      */
-    public int getType() {
-        return this.TYPE;
-    }
+    val type: Int
 
     /**
      * @return The data block.
      */
-    public GlobalDataBlock getDataBlock() {
-        return this.BLOCK;
-    }
+    var dataBlock: GlobalDataBlock? = null
 
     /**
+     * Creates a new `GlobalData` by reading from a
+     * `LittleEndianDataOutput`. No error handling is performed.
      *
-     * @return
+     * @param input The input stream.
+     * @param context The `ESSContext` info.
+     * @param model A `ModelBuilder`.
+     * @throws PapyrusException
      */
-    public Papyrus getPapyrus() {
-        /*if (!(this.TYPE == 1001 && this.BLOCK instanceof Papyrus)) {
-            throw new IllegalStateException("Not a papyrus block.");
-        }*/
-
-        return (Papyrus) this.BLOCK;
-    }
-
-    /**
-     * @see Object#toString()
-     * @return
-     */
-    @Override
-    public String toString() {
-        return super.toString() + ": type " + Integer.toString(this.TYPE);
-    }
-
-    /**
-     * @see Object#hashCode()
-     * @return
-     */
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 89 * hash + Objects.hashCode(this.BLOCK);
-        return hash;
-    }
-
-    /**
-     * @see Object#equals(java.lang.Object)
-     * @return
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    init {
+        type = input.int
+        val blockSize = input.int
+        val subSection = input.slice().order(ByteOrder.LITTLE_ENDIAN)
+        (subSection as Buffer).limit(blockSize)
+        (input as Buffer).position((input as Buffer).position() + blockSize)
+        when (type) {
+            3 -> dataBlock = GlobalVariableTable(subSection, context)
+            1001 -> dataBlock = Papyrus(subSection, context, model)
+            else -> {
+                val DATA = ByteArray(blockSize)
+                subSection[DATA]
+                dataBlock = DefaultGlobalDataBlock(DATA)
+            }
         }
-        if (obj == null) {
-            return false;
+        val calculatedSize = (calculateSize() - 8).toLong()
+        check(calculatedSize == blockSize.toLong()) {
+            String.format(
+                "Missing data for table %d, calculated size is %d but block size is %d.",
+                type,
+                calculatedSize,
+                blockSize
+            )
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final GlobalData other = (GlobalData) obj;
-        return Objects.equals(this.BLOCK, other.BLOCK);
     }
-
-    final private int TYPE;
-    final private GlobalDataBlock BLOCK;
-
 }
