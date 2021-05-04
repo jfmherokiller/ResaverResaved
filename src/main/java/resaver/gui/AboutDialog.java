@@ -44,9 +44,9 @@ public class AboutDialog {
         final ImageIcon ICON = AboutDialog.getLogo();
 
         if (ICON == null) {
-            JOptionPane.showMessageDialog(window, BUF.toString(), "About", 0);
+            JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(window, BUF.toString(), "About", 0, ICON);
+            JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE, ICON);
         }
     }
 

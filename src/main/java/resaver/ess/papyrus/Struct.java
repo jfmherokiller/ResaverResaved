@@ -104,7 +104,7 @@ final public class Struct extends Definition {
      */
     @Override
     public String toHTML(Element target) {
-        if (null != target && target instanceof MemberDesc) {
+        if (target instanceof MemberDesc) {
             int i = this.getMembers().indexOf(target);
             if (i >= 0) {
                 return Linkable.makeLink("struct", this.NAME, i, this.NAME.toString());

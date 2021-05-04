@@ -100,7 +100,7 @@ final class StructOrder {
      */
     @Override
     public String toString() {
-        return String.format("%s.%s []", this.OBJECTNAME, this.ORDERNAME, this.NAMES.toString());
+        return String.format("%s.%s [%s]", this.OBJECTNAME, this.ORDERNAME, this.NAMES.toString());
     }
 
     final private TString OBJECTNAME;

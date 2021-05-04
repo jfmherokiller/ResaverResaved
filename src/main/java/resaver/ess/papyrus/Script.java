@@ -140,7 +140,7 @@ final public class Script extends Definition {
      */
     @Override
     public String toHTML(Element target) {
-        if (null != target && target instanceof MemberDesc) {
+        if (target instanceof MemberDesc) {
             int i = this.getExtendedMembers().indexOf(target);
             if (i >= 0) {
                 return Linkable.makeLink("script", this.NAME, i, this.NAME.toString());

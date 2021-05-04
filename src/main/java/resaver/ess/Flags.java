@@ -163,7 +163,7 @@ abstract public class Flags implements Element {
 
         @Override
         public boolean equals(Object obj) {
-            return obj != null && obj instanceof Byte && ((Byte) obj).FLAGS == this.FLAGS;
+            return obj instanceof Byte && ((Byte) obj).FLAGS == this.FLAGS;
         }
 
         final public byte FLAGS;
@@ -223,7 +223,7 @@ abstract public class Flags implements Element {
 
         @Override
         public boolean equals(Object obj) {
-            return obj != null && obj instanceof Short && ((Short) obj).FLAGS == this.FLAGS;
+            return obj instanceof Short && ((Short) obj).FLAGS == this.FLAGS;
         }
 
         final public short FLAGS;
@@ -282,7 +282,7 @@ abstract public class Flags implements Element {
 
         @Override
         public boolean equals(Object obj) {
-            return obj != null && obj instanceof Int && ((Int) obj).FLAGS == this.FLAGS;
+            return obj instanceof Int && ((Int) obj).FLAGS == this.FLAGS;
         }
 
         final public int FLAGS;

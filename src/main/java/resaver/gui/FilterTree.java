@@ -175,7 +175,7 @@ final public class FilterTree extends JTree {
                 } else if (element instanceof StackFrame) {
                     StackFrame frame = (StackFrame) element;
                     Variable owner = frame.getOwner();
-                    if (null != owner && owner instanceof Variable.Ref) {
+                    if (owner instanceof Variable.Ref) {
                         Variable.Ref ref = (Variable.Ref) frame.getOwner();
                         this.findHandler.accept(ref.getReferent());
                     }

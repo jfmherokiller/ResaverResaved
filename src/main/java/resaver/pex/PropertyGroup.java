@@ -105,7 +105,7 @@ final class PropertyGroup {
      */
     @Override
     public String toString() {
-        return String.format("%s.%s []", this.OBJECTNAME, this.GROUPNAME, this.PROPERTIES.toString());
+        return String.format("%s.%s [%s]", this.OBJECTNAME, this.GROUPNAME, this.PROPERTIES.toString());
     }
 
     final private TString OBJECTNAME;

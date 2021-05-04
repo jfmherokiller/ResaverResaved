@@ -113,7 +113,7 @@ public class GeneralElement implements Element {
     final public Element getElement(String name) {
         Objects.requireNonNull(name);
         Object val = this.getVal(name);
-        if (null != val && val instanceof Element) {
+        if (val instanceof Element) {
             return (Element) val;
         }
         return null;
@@ -129,7 +129,7 @@ public class GeneralElement implements Element {
     final public GeneralElement getGeneralElement(String name) {
         Objects.requireNonNull(name);
         Object val = this.getVal(name);
-        if (null != val && val instanceof GeneralElement) {
+        if (val instanceof GeneralElement) {
             return (GeneralElement) val;
         }
         return null;

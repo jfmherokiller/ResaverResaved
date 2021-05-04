@@ -314,7 +314,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
 
         BUILDER.append("<p>");
         BUILDER.append(String.format("ID: %s<br/>", this.getID()));
-        BUILDER.append(String.format("Type: %02x<br/>", this.TYPE, this.TYPE));
+        BUILDER.append(String.format("Type: %02x<br/>", this.TYPE));
 
         if (null == this.data) {
             BUILDER.append("<h3>DATA MISSING</h3>");
