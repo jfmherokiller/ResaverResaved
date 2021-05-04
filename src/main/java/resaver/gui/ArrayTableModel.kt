@@ -13,117 +13,88 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.util.List;
-import java.util.Objects;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import resaver.ess.papyrus.*;
-
+import resaver.ess.papyrus.ArrayInfo
+import resaver.ess.papyrus.Type
+import resaver.ess.papyrus.Variable
+import javax.swing.event.TableModelEvent
+import javax.swing.event.TableModelListener
+import javax.swing.table.TableModel
 
 /**
- * A table model for <code>ArrayInfo</code>.
- * 
+ * A table model for `ArrayInfo`.
+ *
  * @author Mark Fairchild
  */
-public class ArrayTableModel implements javax.swing.table.TableModel {
-
-    /**
-     * Creates a new <code>VariableTableModel</code>.
-     * @param data The instance of <code>HasVariables</code>.
-     */
-    public ArrayTableModel(ArrayInfo data) {
-        this.DATA = Objects.requireNonNull(data);
-        this.LISTENERS = new java.util.LinkedList<>();
+class ArrayTableModel(data: ArrayInfo?) : TableModel {
+    override fun getRowCount(): Int {
+        return DATA.variables.size
     }
 
-    @Override
-    public int getRowCount() {
-        return this.DATA.getVariables().size();
+    override fun getColumnCount(): Int {
+        return 3
     }
 
-    @Override
-    public int getColumnCount() {
-        return 3;
-    }
-
-    @Override
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        assert 0 <= rowIndex && rowIndex < this.getRowCount();
-
-        switch (columnIndex) {
-            case 0:
-                return rowIndex;
-            case 1:
-                return this.DATA.getVariables().get(rowIndex).toTypeString();
-            case 2:
-                return this.DATA.getVariables().get(rowIndex);
-            default:
-                throw new IllegalStateException();
+    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
+        assert(0 <= rowIndex && rowIndex < this.rowCount)
+        return when (columnIndex) {
+            0 -> rowIndex
+            1 -> DATA.variables[rowIndex].toTypeString()
+            2 -> DATA.variables[rowIndex]
+            else -> throw IllegalStateException()
         }
     }
 
-    @Override
-    public String getColumnName(int columnIndex) {
-        return COLUMNNAMES[columnIndex];
+    override fun getColumnName(columnIndex: Int): String {
+        return COLUMNNAMES[columnIndex]
     }
 
-    @Override
-    public Class<?> getColumnClass(int columnIndex) {
-        return COLUMNTYPES[columnIndex];
+    override fun getColumnClass(columnIndex: Int): Class<*> {
+        return COLUMNTYPES[columnIndex]
     }
 
-    @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
+    override fun isCellEditable(rowIndex: Int, columnIndex: Int): Boolean {
         if (columnIndex != 2) {
-            return false;
+            return false
         }
-
-        assert 0 <= rowIndex && rowIndex < this.getRowCount();
-        Variable var = this.DATA.getVariables().get(rowIndex);
-
-        switch (var.getType()) {
-            case STRING:
-            case INTEGER:
-            case FLOAT:
-            case BOOLEAN:
-            case REF:
-                return true;
-            default:
-                return false;
+        assert(0 <= rowIndex && rowIndex < this.rowCount)
+        val `var` = DATA.variables[rowIndex]
+        return when (`var`.type) {
+            Type.STRING, Type.INTEGER, Type.FLOAT, Type.BOOLEAN, Type.REF -> true
+            else -> false
         }
     }
 
-    @Override
-    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        if (!this.isCellEditable(rowIndex, columnIndex)) {
-            throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
-        } else if (!(aValue instanceof Variable)) {
-            throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
+    override fun setValueAt(aValue: Any, rowIndex: Int, columnIndex: Int) {
+        if (!isCellEditable(rowIndex, columnIndex)) {
+            throw UnsupportedOperationException("Not supported.") //To change body of generated methods, choose Tools | Templates.
+        } else if (aValue !is Variable) {
+            throw UnsupportedOperationException("Not supported.") //To change body of generated methods, choose Tools | Templates.
         }
-
-        this.DATA.setVariable(rowIndex, (Variable) aValue);
-        this.fireTableCellUpdate(rowIndex, columnIndex);
+        DATA.setVariable(rowIndex, aValue)
+        fireTableCellUpdate(rowIndex, columnIndex)
     }
 
-    public void fireTableCellUpdate(int row, int column) {
-        TableModelEvent event = new TableModelEvent(this, row, row, column, TableModelEvent.UPDATE);
-        this.LISTENERS.forEach(l -> l.tableChanged(event));
+    fun fireTableCellUpdate(row: Int, column: Int) {
+        val event = TableModelEvent(this, row, row, column, TableModelEvent.UPDATE)
+        LISTENERS.forEach { l: TableModelListener -> l.tableChanged(event) }
     }
 
-    @Override
-    public void addTableModelListener(TableModelListener l) {
-        this.LISTENERS.add(l);
+    override fun addTableModelListener(l: TableModelListener) {
+        LISTENERS.add(l)
     }
 
-    @Override
-    public void removeTableModelListener(TableModelListener l) {
-        this.LISTENERS.remove(l);
+    override fun removeTableModelListener(l: TableModelListener) {
+        LISTENERS.remove(l)
     }
 
-    final private List<TableModelListener> LISTENERS;
-    final private ArrayInfo DATA;
-    final private String[] COLUMNNAMES = new String[]{"#", "Type", "Value"};
-    static final private Class<?>[] COLUMNTYPES = new Class<?>[]{Integer.class, String.class, Variable.class};
+    private val LISTENERS: MutableList<TableModelListener> = mutableListOf()
+    private val DATA: ArrayInfo = data!!
+    private val COLUMNNAMES = arrayOf("#", "Type", "Value")
+
+    companion object {
+        private val COLUMNTYPES = arrayOf(Int::class.java, String::class.java, Variable::class.java)
+    }
+
 }
