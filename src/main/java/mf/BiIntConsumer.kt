@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mf;
+package mf
 
 /**
- *
  * @author Mark Fairchild
  */
-@FunctionalInterface
-public interface BiIntConsumer {
-    
-    public void consume(int a, int b);
-    
+fun interface BiIntConsumer {
+    fun consume(a: Int, b: Int)
 }
