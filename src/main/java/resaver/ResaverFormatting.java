@@ -30,9 +30,7 @@ abstract public class ResaverFormatting {
                 .append(String.format(msg, items.size()))
                 .append("<ol>");
 
-        items.stream().limit(limit).map(namer).forEach(item -> {
-            BUF.append("<li>").append(item).append("</li>");
-        });
+        items.stream().limit(limit).map(namer).forEach(item -> BUF.append("<li>").append(item).append("</li>"));
         BUF.append("</ol>");
         
         int excess = items.size() - limit;
@@ -48,9 +46,7 @@ abstract public class ResaverFormatting {
         final StringBuilder BUF = new StringBuilder();
         BUF.append(String.format(msg, items.size()));
 
-        items.stream().limit(limit).map(namer).forEach(item -> {
-            BUF.append(NLDOT).append(item);
-        });
+        items.stream().limit(limit).map(namer).forEach(item -> BUF.append(NLDOT).append(item));
 
         int excess = items.size() - limit;
         if (excess > 0) {

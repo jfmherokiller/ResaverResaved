@@ -13,223 +13,221 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
-import java.util.WeakHashMap;
-import java.util.regex.Pattern;
+import java.io.Serializable
+import java.nio.charset.StandardCharsets
+import java.util.regex.Pattern
 
 /**
  * A case-insensitive version of the String class.
  *
- * IString has value semantics. It's <code>equals(obj)</code> method will return
+ * IString has value semantics. It's `equals(obj)` method will return
  * true for any String or IString that contains a matching string.
  *
  * @author Mark Fairchild
  */
-public class IString implements CharSequence, java.io.Serializable, Comparable<IString> {
-
-    static private WeakHashMap<String, IString> CACHE = new WeakHashMap<>(10000);
-
+open class IString : CharSequence, Serializable, Comparable<IString> {
     /**
-     * A re-usable blank <code>IString</code>.
-     */
-    static public final IString BLANK = new IString();
-
-    /**
-     * Creates a new <code>IString</code> with a specified value.
+     * Creates a new `IString` with a specified value.
      *
-     * @param val The value to store, as a <code>String</code>.
-     * @return The new <code>IString</code>.
+     * @param val The value to store, as a `String`.
      */
-    static public IString get(String val) {
-        //return CACHE.computeIfAbsent(val, v -> new IString(v.intern()));
-        return CACHE.computeIfAbsent(val, IString::new);
-        //return new IString(val);
+    protected constructor(`val`: String) {
+        STRING = `val`
+        HASHCODE = STRING.toLowerCase().hashCode()
     }
 
     /**
-     * Creates a new <code>IString</code> with a specified value.
+     * Creates a new `IString` with a specified value.
      *
-     * @param val The value to store, as a <code>String</code>.
+     * @param val The value to store, as a `String`.
      */
-    protected IString(String val) {
-        this.STRING = Objects.requireNonNull(val);
-        this.HASHCODE = this.STRING.toLowerCase().hashCode();
-    }
-
-    /**
-     * Creates a new <code>IString</code> with a specified value.
-     *
-     * @param val The value to store, as a <code>String</code>.
-     */
-    protected IString(CharSequence val) {
-        this.STRING = Objects.requireNonNull(val.toString());
-        this.HASHCODE = this.STRING.toLowerCase().hashCode();
+    protected constructor(`val`: CharSequence) {
+        STRING = `val`.toString()
+        HASHCODE = STRING.toLowerCase().hashCode()
     }
 
     /**
      * Copy constructor.
      *
-     * @param other The original <code>IString</code>.
+     * @param other The original `IString`.
      */
-    protected IString(IString other) {
-        Objects.requireNonNull(other);
-        this.STRING = other.STRING;
-        this.HASHCODE = other.HASHCODE;
+    protected constructor(other: IString) {
+        STRING = other.STRING
+        HASHCODE = other.HASHCODE
     }
 
     /**
-     * Creates a new blank <code>IString</code>.
+     * Creates a new blank `IString`.
      */
-    private IString() {
-        this("");
+    private constructor() : this("")
+
+    /**
+     * @see java.lang.String.isEmpty
+     * @return True if the `IString` is empty, false otherwise.
+     */
+    override fun isEmpty(): Boolean {
+        return STRING.isEmpty()
     }
 
     /**
-     * @see java.lang.String#isEmpty()
-     * @return True if the <code>IString</code> is empty, false otherwise.
+     * @return The length of the `IString`.
+     * @see java.lang.String.length
      */
-    public boolean isEmpty() {
-        return this.STRING.isEmpty();
+    override val length: Int
+        get() = STRING.length
+
+    /**
+     * @see kotlin.String.get
+     */
+    override fun get(index: Int): Char {
+        return STRING[index]
     }
 
     /**
-     * @return The length of the <code>IString</code>.
-     * @see java.lang.String#length()
+     * @see java.lang.String.subSequence
      */
-    @Override
-    public int length() {
-        return this.STRING.length();
+    override fun subSequence(startIndex: Int, endIndex: Int): IString {
+        return IString(STRING.substring(startIndex, endIndex))
     }
 
     /**
-     * @see java.lang.String#charAt(int)
+     * @see java.lang.String.getBytes
+     * @return An array of bytes representing the `IString`.
      */
-    @Override
-    public char charAt(int index) {
-        return this.STRING.charAt(index);
-    }
+    open val uTF8: ByteArray?
+        get() = STRING.toByteArray(StandardCharsets.UTF_8)
 
     /**
-     * @see java.lang.String#subSequence(int, int)
-     */
-    @Override
-    public IString subSequence(int start, int end) {
-        return new IString(this.STRING.substring(start, end));
-
-    }
-
-    /**
-     * @see java.lang.String#getBytes()
-     * @return An array of bytes representing the <code>IString</code>.
-     */
-    public byte[] getUTF8() {
-        return this.STRING.getBytes(StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Returns the <code>String</code> value of the <code>IString</code>.
+     * Returns the `String` value of the `IString`.
      *
      * @return
      */
-    @Override
-    public String toString() {
-        return this.STRING;
+    override fun toString(): String {
+        return STRING
     }
 
     /**
-     * Calculates a case-insensitive hashcode for the <code>IString</code>.
+     * Calculates a case-insensitive hashcode for the `IString`.
      *
-     * @see java.lang.String#hashCode()
+     * @see java.lang.String.hashCode
      */
-    @Override
-    public int hashCode() {
-        return this.HASHCODE;
+    override fun hashCode(): Int {
+        return HASHCODE
     }
 
     /**
      * Tests for case-insensitive value-equality with another
-     * <code>IString</code> or a <code>String</code>.
+     * `IString` or a `String`.
      *
-     * @param obj The object to which to compare.
-     * @see java.lang.String#equalsIgnoreCase(java.lang.String)
+     * @param other The object to which to compare.
+     * @see java.lang.String.equalsIgnoreCase
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj instanceof IString) {
-            return this.equals((IString) obj);
-        } else if (obj instanceof String) {
-            return this.equals((String) obj);
-        } else {
-            return super.equals(obj);
+    override fun equals(other: Any?): Boolean {
+        return when {
+            this === other -> {
+                true
+            }
+            other is IString -> {
+                this.equals(other)
+            }
+            other is String -> {
+                this.equals(other as String?)
+            }
+            else -> {
+                super.equals(other)
+            }
         }
     }
 
     /**
-     * Tests for case-insensitive value-equality with a <code>String</code>.
+     * Tests for case-insensitive value-equality with a `String`.
      *
-     * @param other The <code>String</code> to which to compare.
-     * @return 
-     * @see java.lang.String#equalsIgnoreCase(java.lang.String)
+     * @param other The `String` to which to compare.
+     * @return
+     * @see java.lang.String.equalsIgnoreCase
      */
-    public boolean equals(String other) {
-        return this.STRING.equalsIgnoreCase(other);
+    fun equals(other: String?): Boolean {
+        return STRING.equals(other, ignoreCase = true)
     }
 
     /**
-     * Tests for case-insensitive value-equality with an <code>IString</code>.
+     * Tests for case-insensitive value-equality with an `IString`.
      *
-     * @param other The <code>IString</code> to which to compare.
-     * @return 
-     * @see java.lang.String#equalsIgnoreCase(java.lang.String)
+     * @param other The `IString` to which to compare.
+     * @return
+     * @see java.lang.String.equalsIgnoreCase
      */
-    public boolean equals(IString other) {
-        return this.HASHCODE == other.hashCode() && this.STRING.equalsIgnoreCase(other.STRING);
+    fun equals(other: IString): Boolean {
+        return HASHCODE == other.hashCode() && STRING.equals(other.STRING, ignoreCase = true)
     }
 
     /**
-     * @see java.lang.Comparable#compareTo(java.lang.Object)
-     * @param o
+     * @see java.lang.Comparable.compareTo
+     * @param other
      * @return
      */
-    @Override
-    public int compareTo(IString o) {
-        return compare(this, o);
+    override fun compareTo(other: IString): Int {
+        return compare(this, other)
     }
 
     /**
      * Performs case-insensitive regular-expression matching on the
-     * <code>IString</code>.
+     * `IString`.
      *
      * @param regex The regular expression.
-     * @see java.lang.String#matches(java.lang.String)
-     * @return True if the <code>IString</code> matches the regex, false
+     * @see java.lang.String.matches
+     * @return True if the `IString` matches the regex, false
      * otherwise.
      */
-    public boolean matches(String regex) {
-        return Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(this.STRING).matches();
+    fun matches(regex: String): Boolean {
+        return Pattern.compile(regex, Pattern.CASE_INSENSITIVE).matcher(STRING).matches()
     }
 
-    /**
-     * @see java.lang.String#format(java.lang.String, java.lang.Object...)
-     * @param format The format string.
-     * @param args The arguments to the format string.
-     * @return A formatted <code>IString</code>
-     *
-     */
-    static public IString format(String format, Object... args) {
-        return new IString(String.format(format, args));
+    private var STRING: String = ""
+    private val HASHCODE: Int
+
+    companion object {
+        private val CACHE = mutableMapOf<String, IString>()
+
+        /**
+         * A re-usable blank `IString`.
+         */
+        @JvmField
+        val BLANK = IString()
+
+        /**
+         * Creates a new `IString` with a specified value.
+         *
+         * @param val The value to store, as a `String`.
+         * @return The new `IString`.
+         */
+        @JvmStatic
+        operator fun get(`val`: String): IString {
+            //return CACHE.computeIfAbsent(val, v -> new IString(v.intern()));
+            return CACHE.getOrPut(`val`) { IString(`val`) }
+            //return new IString(val);
+        }
+
+        /**
+         * @see java.lang.String.format
+         * @param format The format string.
+         * @param args The arguments to the format string.
+         * @return A formatted `IString`
+         */
+        @JvmStatic
+        fun format(format: String?, vararg args: Any?): IString {
+            return IString(String.format(format!!, *args))
+        }
+
+        @JvmStatic
+        fun compare(s1: IString, s2: IString): Int {
+            return compareValuesBy(s1.STRING, s2.STRING) {
+                s1.STRING.compareTo(
+                    s2.STRING, ignoreCase = true
+                )
+            }
+        }
     }
-
-    final private String STRING;
-    final private int HASHCODE;
-
-    static public int compare(IString s1, IString s2) {
-        return Objects.compare(s1.STRING, s2.STRING, String::compareToIgnoreCase);
-    }
-
 }

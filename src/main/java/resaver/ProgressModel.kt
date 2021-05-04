@@ -13,44 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
-import java.util.logging.Logger;
-import javax.swing.DefaultBoundedRangeModel;
-import resaver.gui.Saver;
+import kotlin.jvm.JvmOverloads
+import javax.swing.DefaultBoundedRangeModel
+import kotlin.jvm.Synchronized
+import resaver.gui.Saver
+import java.util.logging.Logger
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  *
  * @author Mark Fairchild
  */
-final public class ProgressModel extends DefaultBoundedRangeModel {
+class ProgressModel @JvmOverloads constructor(max: Int = 18) : DefaultBoundedRangeModel(0, 0, 0, max) {
+    constructor(max: Double) : this(max.roundToInt())
 
-    public ProgressModel() {
-        this(18);
-    }
-
-    public ProgressModel(int max) {
-        super(0, 0, 0, max);
-    }
-
-    public ProgressModel(double max) {
-        this((int) Math.round(max));
-    }
-
-    synchronized public void modifyValue(int delta) {
-        super.setValue(this.getValue() + delta);
+    @Synchronized
+    fun modifyValue(delta: Int) {
+        super.setValue(value + delta)
         //LOG.info(String.format("Progress: %d/%d (%d)", this.getValue(), this.getMaximum(), delta));
-
     }
 
-    synchronized public void modVSq(double delta) {
-        this.modifyValue((int) (Math.sqrt(delta)));
+    @Synchronized
+    fun modVSq(delta: Double) {
+        modifyValue(sqrt(delta).toInt())
     }
 
-    @Override
-    synchronized public void setValue(int n) {
-        super.setValue(n);
+    @Synchronized
+    override fun setValue(n: Int) {
+        super.setValue(n)
     }
 
-    static final private Logger LOG = Logger.getLogger(Saver.class.getCanonicalName());
+    companion object {
+        private val LOG = Logger.getLogger(Saver::class.java.canonicalName)
+    }
 }

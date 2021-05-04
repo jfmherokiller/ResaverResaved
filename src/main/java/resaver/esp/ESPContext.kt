@@ -31,17 +31,17 @@ import resaver.ess.Plugin
  */
 class ESPContext(game: Game, plugin: Plugin, tes4: RecordTes4?) {
     fun pushContext(ctx: CharSequence) {
-        CONTEXT.addLast(IString.get(ctx.toString()))
+        CONTEXT.addLast(IString[ctx.toString()])
     }
 
     fun popContext() {
         CONTEXT.removeLast()
     }
 
-    fun check(vararg levels: String?): Boolean {
+    fun check(vararg levels: String): Boolean {
         var matches = 0
-        for (l in levels) {
-            val level = IString.get(l)
+        for (l: String in levels) {
+            val level = IString[l]
             if (!CONTEXT.contains(level)) {
                 return false
             } else {

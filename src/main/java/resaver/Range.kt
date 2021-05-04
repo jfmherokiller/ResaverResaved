@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
 /**
  * Describes a numeric range and methods for testing inclusion/exclusion in that
@@ -21,79 +21,69 @@ package resaver;
  *
  * @param <NumType>
  * @author Mark Fairchild
- */
-abstract public class Range<NumType extends Number> {
-
-    /**
-     * Returns a double-valued <code>Range</code> of the form
-     * <code>[lower, upper)</code>.
-     *
-     * @param lower The inclusive lower bound, or null for unbounded.
-     * @param upper The exclusive upper bound, or null for unbounded.
-     * @return The <code>Range</code>.
-     */
-    static public Range create(Double lower, Double upper) {
-        return new DoubleRange(lower, upper, true, false);
-    }
-
-    /**
-     *
-     * @param lower
-     * @param upper
-     * @param closedLower
-     * @param closedUpper
-     */
-    private Range(NumType lower, NumType upper, boolean closedLower, boolean closedUpper) {
-        this.LOWER = lower;
-        this.UPPER = upper;
-        this.CLOSED_LOWER = closedLower;
-        this.CLOSED_UPPER = closedUpper;
-    }
-
-    /**
-     * Tests for inclusion in the range.
-     *
-     * @param num The <code>Number</code> to test.
-     * @return <code>true iff num ∈ range</code>.
-     */
-    final public boolean contains(Number num) {
-        return false;
-    }
-
-    abstract protected int test(Number num);
-
+</NumType> */
+abstract class Range<NumType : Number?>
+/**
+ *
+ * @param lower
+ * @param upper
+ * @param closedLower
+ * @param closedUpper
+ */ private constructor(
     /**
      * The lower limit.
      */
-    final private NumType LOWER;
-
+    private val LOWER: NumType,
     /**
      * The upper limit.
      */
-    final private NumType UPPER;
-
+    private val UPPER: NumType,
     /**
      * Is the lower limit part of the range?
      */
-    final private boolean CLOSED_LOWER;
+    private val CLOSED_LOWER: Boolean,
     /**
      * Is the upper limit part of the range?
      */
-    final private boolean CLOSED_UPPER;
+    private val CLOSED_UPPER: Boolean
+) {
+    /**
+     * Tests for inclusion in the range.
+     *
+     * @param num The `Number` to test.
+     * @return `true iff num ∈ range`.
+     */
+    operator fun contains(num: Number?): Boolean {
+        return false
+    }
+
+    protected abstract fun test(num: Number?): Int
 
     /**
      * Subclass for double-bounded ranges.
      */
-    static final private class DoubleRange extends Range<Double> {
-
-        private DoubleRange(Double lower, Double upper, boolean closedLower, boolean closedUpper) {
-            super(lower, upper, closedLower, closedUpper);
+    private class DoubleRange(
+        lower: Double,
+        upper: Double,
+        closedLower: Boolean,
+        closedUpper: Boolean
+    ) : Range<Double?>(lower, upper, closedLower, closedUpper) {
+        override fun test(num: Number?): Int {
+            return -1
         }
+    }
 
-        @Override
-        protected int test(Number num) {
-            return -1;
+    companion object {
+        /**
+         * Returns a double-valued `Range` of the form
+         * `[lower, upper)`.
+         *
+         * @param lower The inclusive lower bound, or null for unbounded.
+         * @param upper The exclusive upper bound, or null for unbounded.
+         * @return The `Range`.
+         */
+        fun create(lower: Double, upper: Double): Range<*> {
+            return DoubleRange(lower, upper, closedLower = true, closedUpper = false)
         }
-        
     }
 }

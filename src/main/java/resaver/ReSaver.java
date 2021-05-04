@@ -36,6 +36,9 @@ import resaver.gui.SaveWindow;
 @Command(name = "ReSaver", mixinStandardHelpOptions = true, version = "ReSaver 0.5.9.9", description = "")
 public class ReSaver implements Callable<Integer> {
 
+    public ReSaver() {
+    }
+
     /**
      * @param args the command line arguments
      */
