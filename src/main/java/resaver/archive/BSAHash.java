@@ -63,7 +63,11 @@ abstract public class BSAHash {
         hash <<= 32;
 
         hash2 = chars[len - 1];
-        hash2 |= (len > 2 ? chars[len - 2] : 0);
+        if (len > 2) {
+            hash2 |= chars[len - 2];
+        } else {
+            hash2 |= 0;
+        }
         hash2 |= (len << 16);
         hash2 |= (chars[0] << 24);
         
