@@ -13,273 +13,262 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.Component;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import javax.swing.AbstractCellEditor;
-import javax.swing.JComboBox;
-import javax.swing.JFormattedTextField;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.table.TableCellEditor;
-import resaver.ess.papyrus.EID;
-import resaver.ess.papyrus.PapyrusContext;
-import resaver.ess.papyrus.Variable;
+import resaver.ess.papyrus.PapyrusContext
+import javax.swing.AbstractCellEditor
+import javax.swing.table.TableCellEditor
+import javax.swing.JTable
+import java.lang.IllegalStateException
+import javax.swing.JTextField
+import javax.swing.JFormattedTextField
+import java.text.NumberFormat
+import javax.swing.JComboBox
+import resaver.ess.papyrus.EID
+import resaver.ess.papyrus.Variable
+import java.awt.Component
+import javax.swing.JFormattedTextField.AbstractFormatter
+import kotlin.Throws
+import java.lang.NumberFormatException
+import java.text.ParseException
 
 /**
- * A <code>TableCellEditor</code> implementation for table cells that contain
- * <code>Variable</code> objects.
+ * A `TableCellEditor` implementation for table cells that contain
+ * `Variable` objects.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class VariableCellEditor extends AbstractCellEditor implements TableCellEditor {
-
-    public VariableCellEditor(PapyrusContext context) {
-        this.STR = new Str();
-        this.INT = new Int();
-        this.FLT = new Flt();
-        this.BOOL = new Bool();
-        this.REF = new Ref();
-        this.subeditor = STR;
-        this.CONTEXT = context;
+class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableCellEditor {
+    override fun getCellEditorValue(): Any {
+        return subeditor.cellEditorValue
     }
 
-    @Override
-    public Object getCellEditorValue() {
-        return this.subeditor.getCellEditorValue();
-    }
-
-    @Override
-    public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-        if (value instanceof Variable.Str) {
-            this.subeditor = this.STR;
-            return this.subeditor.getTableCellEditorComponent(table, value, isSelected, row, column);
-        } else if (value instanceof Variable.Int) {
-            this.subeditor = this.INT;
-            return this.subeditor.getTableCellEditorComponent(table, value, isSelected, row, column);
-        } else if (value instanceof Variable.Flt) {
-            this.subeditor = this.FLT;
-            return this.subeditor.getTableCellEditorComponent(table, value, isSelected, row, column);
-        } else if (value instanceof Variable.Bool) {
-            this.subeditor = this.BOOL;
-            return this.subeditor.getTableCellEditorComponent(table, value, isSelected, row, column);
-        } else if (value instanceof Variable.Ref) {
-            this.subeditor = this.REF;
-            return this.subeditor.getTableCellEditorComponent(table, value, isSelected, row, column);
-        } else {
-            throw new IllegalStateException();
+    override fun getTableCellEditorComponent(
+        table: JTable,
+        value: Any,
+        isSelected: Boolean,
+        row: kotlin.Int,
+        column: kotlin.Int
+    ): Component {
+        return when (value) {
+            is Variable.Str -> {
+                subeditor = STR
+                subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
+            }
+            is Variable.Int -> {
+                subeditor = INT
+                subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
+            }
+            is Variable.Flt -> {
+                subeditor = FLT
+                subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
+            }
+            is Variable.Bool -> {
+                subeditor = BOOL
+                subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
+            }
+            is Variable.Ref -> {
+                subeditor = REF
+                subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
+            }
+            else -> {
+                throw IllegalStateException()
+            }
         }
-
     }
 
-    final private Str STR;
-    final private Int INT;
-    final private Flt FLT;
-    final private Bool BOOL;
-    final private Ref REF;
-    private TableCellEditor subeditor;
-    final private PapyrusContext CONTEXT;
+    private val STR: Str
+    private val INT: Int
+    private val FLT: Flt
+    private val BOOL: Bool
+    private val REF: Ref
+    private var subeditor: TableCellEditor
+    private val CONTEXT: PapyrusContext
 
     /**
      * Subclass that handles strings.
      */
-    @SuppressWarnings("serial")
-    final private class Str extends AbstractCellEditor implements TableCellEditor {
-
-        public Str() {
-            this.EDITER = new JTextField(10);
+    private inner class Str : AbstractCellEditor(), TableCellEditor {
+        override fun getCellEditorValue(): Variable.Str {
+            val text = EDITER.text
+            return Variable.Str(text, CONTEXT)
         }
 
-        @Override
-        public Variable.Str getCellEditorValue() {
-            String text = this.EDITER.getText();
-            return new Variable.Str(text, CONTEXT);
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            if (!(value instanceof Variable.Str)) {
-                return null;
+        override fun getTableCellEditorComponent(
+            table: JTable,
+            value: Any,
+            isSelected: Boolean,
+            row: kotlin.Int,
+            column: kotlin.Int
+        ): Component? {
+            if (value !is Variable.Str) {
+                return null
             }
-
-            this.var = (Variable.Str) value;
-            this.EDITER.setText(var.getValue().toString());
-            return this.EDITER;
+            `var` = value
+            EDITER.text = `var`!!.value.toString()
+            return EDITER
         }
 
-        private Variable.Str var;
-        final private JTextField EDITER;
+        private var `var`: Variable.Str? = null
+        private val EDITER: JTextField = JTextField(10)
+
     }
 
     /**
      * Subclass that handles integers.
      */
-    @SuppressWarnings("serial")
-    final private class Int extends AbstractCellEditor implements TableCellEditor {
-
-        public Int() {
-            this.EDITER = new JFormattedTextField(NumberFormat.getIntegerInstance());
-            this.EDITER.setColumns(5);
+    private inner class Int : AbstractCellEditor(), TableCellEditor {
+        override fun getCellEditorValue(): Variable.Int {
+            val value = EDITER.value as Number
+            return Variable.Int(value.toInt())
         }
 
-        @Override
-        public Variable.Int getCellEditorValue() {
-            Number value = (Number) this.EDITER.getValue();
-            if (null != value) {
-                return new Variable.Int(value.intValue());
-            } else {
-                return null;
+        override fun getTableCellEditorComponent(
+            table: JTable,
+            value: Any,
+            isSelected: Boolean,
+            row: kotlin.Int,
+            column: kotlin.Int
+        ): Component? {
+            if (value is Variable.Int) {
+                EDITER.value = value.value
+                return EDITER
             }
+            return null
         }
 
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            if (value instanceof Variable.Int) {
-                Variable.Int var = (Variable.Int) value;
-                this.EDITER.setValue(var.getValue());
-                return this.EDITER;
-            }
+        private val EDITER: JFormattedTextField = JFormattedTextField(NumberFormat.getIntegerInstance())
 
-            return null;
+        init {
+            EDITER.columns = 5
         }
-
-        final private JFormattedTextField EDITER;
     }
 
     /**
      * Subclass that handles floats.
      */
-    @SuppressWarnings("serial")
-    final private class Flt extends AbstractCellEditor implements TableCellEditor {
-
-        public Flt() {
-            this.EDITER = new JFormattedTextField(NumberFormat.getNumberInstance());
-            this.EDITER.setColumns(5);
+    private inner class Flt : AbstractCellEditor(), TableCellEditor {
+        override fun getCellEditorValue(): Variable.Flt {
+            val value = EDITER.value as Number
+            return Variable.Flt(value.toFloat())
         }
 
-        @Override
-        public Variable.Flt getCellEditorValue() {
-            Number value = (Number) this.EDITER.getValue();
-            if (null != value) {
-                return new Variable.Flt(value.floatValue());
-            } else {
-                return null;
+        override fun getTableCellEditorComponent(
+            table: JTable,
+            value: Any,
+            isSelected: Boolean,
+            row: kotlin.Int,
+            column: kotlin.Int
+        ): Component? {
+            if (value !is Variable.Flt) {
+                return null
             }
+            EDITER.value = value.value
+            return EDITER
         }
 
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            if (!(value instanceof Variable.Flt)) {
-                return null;
-            }
+        private val EDITER: JFormattedTextField = JFormattedTextField(NumberFormat.getNumberInstance())
 
-            Variable.Flt var = (Variable.Flt) value;
-            this.EDITER.setValue(var.getValue());
-            return this.EDITER;
+        init {
+            EDITER.columns = 5
         }
-
-        final private JFormattedTextField EDITER;
     }
 
     /**
      * Subclass that handles booleans.
      */
-    @SuppressWarnings("serial")
-    final private class Bool extends AbstractCellEditor implements TableCellEditor {
-
-        public Bool() {
-            this.EDITER = new JComboBox<>(new Boolean[]{Boolean.TRUE, Boolean.FALSE});
-            this.EDITER.setPrototypeDisplayValue(Boolean.FALSE);
+    private inner class Bool : AbstractCellEditor(), TableCellEditor {
+        override fun getCellEditorValue(): Variable.Bool {
+            val value = EDITER.selectedItem as Boolean
+            return Variable.Bool(value)
         }
 
-        @Override
-        public Variable.Bool getCellEditorValue() {
-            Boolean value = (Boolean) this.EDITER.getSelectedItem();
-            if (null != value) {
-                return new Variable.Bool(value);
-            } else {
-                return null;
+        override fun getTableCellEditorComponent(
+            table: JTable,
+            value: Any,
+            isSelected: Boolean,
+            row: kotlin.Int,
+            column: kotlin.Int
+        ): Component? {
+            if (value !is Variable.Bool) {
+                return null
             }
+            EDITER.selectedItem = value.value
+            return EDITER
         }
 
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            if (!(value instanceof Variable.Bool)) {
-                return null;
-            }
+        private val EDITER: JComboBox<Boolean> = JComboBox(arrayOf(java.lang.Boolean.TRUE, java.lang.Boolean.FALSE))
 
-            Variable.Bool var = (Variable.Bool) value;
-            this.EDITER.setSelectedItem(var.getValue());
-            return this.EDITER;
+        init {
+            EDITER.prototypeDisplayValue = java.lang.Boolean.FALSE
         }
-
-        final private JComboBox<Boolean> EDITER;
     }
 
     /**
      * Subclass that handles integers.
      */
-    @SuppressWarnings("serial")
-    final private class Ref extends AbstractCellEditor implements TableCellEditor {
-
-        public Ref() {
-            this.EDITER = new JFormattedTextField(FORMATTER);
-            this.EDITER.setColumns(16);
+    private inner class Ref : AbstractCellEditor(), TableCellEditor {
+        override fun getCellEditorValue(): Variable.Ref {
+            val v = EDITER.value as Long
+            return original!!.derive(v, CONTEXT)
         }
 
-        @Override
-        public Variable.Ref getCellEditorValue() {
-            Long v = (Long) this.EDITER.getValue();
-            Variable.Ref ref = this.original.derive(v, CONTEXT);
-            return ref;
-        }
-
-        @Override
-        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            if (value instanceof Variable.Ref) {
-                this.original = (Variable.Ref) value;
-                this.eid = this.original.getRef();
-                this.EDITER.setValue(this.eid.longValue());
-                return this.EDITER;
+        override fun getTableCellEditorComponent(
+            table: JTable,
+            value: Any,
+            isSelected: Boolean,
+            row: kotlin.Int,
+            column: kotlin.Int
+        ): Component? {
+            if (value is Variable.Ref) {
+                original = value
+                eid = original!!.ref
+                EDITER.value = eid!!.longValue()
+                return EDITER
             }
-
-            return null;
+            return null
         }
 
-        final private JFormattedTextField EDITER;
-        private Variable.Ref original;
-        private EID eid;
-
-        final private JFormattedTextField.AbstractFormatter FORMATTER = new JFormattedTextField.AbstractFormatter() {
-            @Override
-            public Object stringToValue(String text) throws ParseException {
-                try {
-                    return Long.parseUnsignedLong(text, 16);
-                } catch (NumberFormatException ex) {
-                    throw new ParseException(text, 0);
+        private val EDITER: JFormattedTextField
+        private var original: Variable.Ref? = null
+        private var eid: EID? = null
+        private val FORMATTER: AbstractFormatter = object : AbstractFormatter() {
+            @Throws(ParseException::class)
+            override fun stringToValue(text: String): Any {
+                return try {
+                    java.lang.Long.parseUnsignedLong(text, 16)
+                } catch (ex: NumberFormatException) {
+                    throw ParseException(text, 0)
                 }
             }
 
-            @Override
-            public String valueToString(Object value) throws ParseException {
-                if (null == value) {
-                    return "";
-                } else if (value instanceof Number) {
-                    Number num = (Number) value;
-                    if (eid.is4Byte()) {
-                        return Integer.toHexString(num.intValue());
+            @Throws(ParseException::class)
+            override fun valueToString(value: Any): String {
+                return if (value is Number) {
+                    if (eid!!.is4Byte) {
+                        Integer.toHexString(value.toInt())
                     } else {
-                        return Long.toHexString(num.longValue());
+                        java.lang.Long.toHexString(value.toLong())
                     }
                 } else {
-                    throw new ParseException(value.toString(), 0);
+                    throw ParseException(value.toString(), 0)
                 }
             }
-        };
+        }
 
+        init {
+            EDITER = JFormattedTextField(FORMATTER)
+            EDITER.columns = 16
+        }
     }
 
+    init {
+        STR = Str()
+        INT = Int()
+        FLT = Flt()
+        BOOL = Bool()
+        REF = Ref()
+        subeditor = STR
+        CONTEXT = context
+    }
 }
