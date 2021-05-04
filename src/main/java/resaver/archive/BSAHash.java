@@ -22,7 +22,7 @@ import java.util.regex.Matcher;
  * Calculates filename and directory name hashes.
  *
  * INCOMPLETE
- * 
+ *
  * @author Mark Fairchild
  */
 abstract public class BSAHash {
@@ -33,7 +33,7 @@ abstract public class BSAHash {
      * @return
      */
     static public long genHashFile(java.io.File file) {
-        
+
         long hash = 0;
         long hash2 = 0;
 
@@ -68,9 +68,9 @@ abstract public class BSAHash {
         } else {
             hash2 |= 0;
         }
-        hash2 |= (len << 16);
-        hash2 |= (chars[0] << 24);
-        
+        hash2 |= ((long) len << 16);
+        hash2 |= ((long) chars[0] << 24);
+
         throw new UnsupportedOperationException();
     }
 

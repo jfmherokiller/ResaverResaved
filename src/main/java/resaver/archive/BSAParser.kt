@@ -34,7 +34,7 @@ import java.util.stream.Collectors
  */
 class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel) {
     @Throws(IOException::class)
-    private fun getNames(channel: FileChannel): Supplier<String> {
+    private fun getNames(channel: FileChannel): Supplier<String?> {
         val FILENAMES_OFFSET = (HEADER!!.FOLDER_OFFSET
                 + HEADER!!.FOLDER_COUNT.toLong() * BSAFolderRecord.SIZE + HEADER!!.TOTAL_FOLDERNAME_LENGTH + HEADER!!.FOLDER_COUNT
                 + HEADER!!.FILE_COUNT.toLong() * BSAFileRecord.SIZE)
@@ -56,8 +56,8 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
             .filter { rec: BSAFileRecord -> matcher!!.matches(rec.path) }
             .collect(
                 Collectors.toMap(
-                    { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path) },
-                    { record: BSAFileRecord? -> BSAFileData.getData(super.CHANNEL, record, HEADER) })
+                    { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path!!) },
+                    { record: BSAFileRecord? -> BSAFileData.getData(super.CHANNEL, record!!, HEADER!!) })
             )
     }
 
@@ -72,7 +72,7 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
             .filter { rec: BSAFileRecord -> matcher!!.matches(rec.path) }
             .collect(
                 Collectors.toMap(
-                    { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path) },
+                    { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path!!) },
                     { obj: BSAFileRecord -> obj.path })
             )
     }
@@ -102,7 +102,7 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
             HEADER = BSAHeader(HEADERBLOCK, path?.fileName.toString())
 
             // Read the filename table indirectly.
-            val NAMES: Supplier<String> = if (HEADER!!.INCLUDE_FILENAMES) getNames(channel) else Supplier { null.toString() }
+            val NAMES: Supplier<String?> = if (HEADER!!.INCLUDE_FILENAMES) getNames(channel) else Supplier { null.toString() }
 
             // Allocate storage for the folder records and file records.
             FOLDERRECORDS = mutableListOf()
@@ -113,7 +113,7 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
             FOLDERBLOCK.order(ByteOrder.LITTLE_ENDIAN)
             (FOLDERBLOCK as Buffer).flip()
             for (i in 0 until HEADER!!.FOLDER_COUNT) {
-                val folder = BSAFolderRecord(FOLDERBLOCK, HEADER, channel, NAMES)
+                val folder = BSAFolderRecord(FOLDERBLOCK, HEADER!!, channel, NAMES)
                 FOLDERRECORDS!!.add(folder)
             }
         } catch (ex: IOException) {

@@ -13,102 +13,93 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
-import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Supplier;
+import mf.BufferUtil
+import resaver.archive.BSAHeader
+import java.nio.channels.FileChannel
+import java.util.function.Supplier
+import resaver.archive.BSAFileRecord
+import java.io.IOException
+import java.nio.Buffer
+import java.nio.ByteOrder
+import java.nio.file.Paths
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
+import java.nio.file.Path
+import java.util.ArrayList
 
 /**
  * Describes a BSA folder record.
  *
  * @author Mark Fairchild
  */
-final class BSAFolderRecord {
+internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: FileChannel, names: Supplier<String?>) {
+    override fun toString(): String {
+        return NAME!!
+    }
 
     /**
-     * Creates a new <code>BSAFolder</code> by reading from a
-     * <code>LittleEndianDataInput</code>.
+     * A 64bit hash of the folder NAME.
+     */
+    val NAMEHASH: Long
+
+    /**
+     * The number of files in the folder.
+     */
+    val COUNT: Int
+    var PADDING = 0
+    var OFFSET: Long = 0
+    var NAME: String? = null
+    val PATH: Path
+    val FILERECORDS: MutableList<BSAFileRecord> //final public BSAFileRecordBlock FILERECORDBLOCK;
+
+    companion object {
+        const val SIZE = 24
+    }
+
+    /**
+     * Creates a new `BSAFolder` by reading from a
+     * `LittleEndianDataInput`.
      *
      * @param input The file from which to read.
      * @param header
      * @param channel
      * @param names
-     *
      */
-    public BSAFolderRecord(ByteBuffer input, BSAHeader header, FileChannel channel, Supplier<String> names) throws IOException {
-        this.NAMEHASH = input.getLong();
-        this.COUNT = input.getInt();
-
-        switch (header.VERSION) {
-            case 103:
-            case 104:
-                this.PADDING = 0;
-                this.OFFSET = input.getInt();
-                break;
-            case 105:
-                this.PADDING = input.getInt();
-                this.OFFSET = input.getLong();
-                break;
-            default:
-                throw new IOException("Unknown header version " + header.VERSION);
+    init {
+        NAMEHASH = input.long
+        COUNT = input.int
+        when (header.VERSION) {
+            103, 104 -> {
+                PADDING = 0
+                OFFSET = input.int.toLong()
+            }
+            105 -> {
+                PADDING = input.int
+                OFFSET = input.long
+            }
+            else -> throw IOException("Unknown header version " + header.VERSION)
         }
-
-        final ByteBuffer BLOCK = ByteBuffer.allocate(1024 + this.COUNT * BSAFileRecord.SIZE);
-        channel.read(BLOCK, this.OFFSET - header.TOTAL_FILENAME_LENGTH);
-        BLOCK.order(ByteOrder.LITTLE_ENDIAN);
-        ((Buffer) BLOCK).flip();
-
+        val BLOCK = ByteBuffer.allocate(1024 + COUNT * BSAFileRecord.SIZE)
+        channel.read(BLOCK, OFFSET - header.TOTAL_FILENAME_LENGTH)
+        BLOCK.order(ByteOrder.LITTLE_ENDIAN)
+        (BLOCK as Buffer).flip()
         if (header.INCLUDE_DIRECTORYNAMES) {
-            final int NAMELEN = Byte.toUnsignedInt(BLOCK.get());
-            this.NAME = mf.BufferUtil.getZString(BLOCK);
+            val NAMELEN = java.lang.Byte.toUnsignedInt(BLOCK.get())
+            NAME = BufferUtil.getZString(BLOCK)
         } else {
-            this.NAME = null;
+            NAME = null
         }
-
-        this.PATH = Paths.get(this.NAME);
-        this.FILERECORDS = new ArrayList<>(this.COUNT);
-
-        for (int i = 0; i < this.COUNT; i++) {
+        PATH = Paths.get(NAME!!)
+        FILERECORDS = mutableListOf()
+        for (i in 0 until COUNT) {
             try {
-                BSAFileRecord file = new BSAFileRecord(BLOCK, header, names);
-                this.FILERECORDS.add(file);
-            } catch (java.nio.BufferUnderflowException ex) {
-                throw new IOException(String.format("Buffer underflow while reading file %d/%d in %s.", i, this.COUNT, this.NAME));
+                val file = BSAFileRecord(BLOCK, header, names)
+                FILERECORDS.add(file)
+            } catch (ex: BufferUnderflowException) {
+                throw IOException(String.format("Buffer underflow while reading file %d/%d in %s.", i, COUNT, NAME))
             }
         }
     }
-
-    @Override
-    public String toString() {
-        return this.NAME;
-    }
-
-    static final int SIZE = 24;
-
-    /**
-     * A 64bit hash of the folder NAME.
-     */
-    final public long NAMEHASH;
-
-    /**
-     * The number of files in the folder.
-     */
-    final public int COUNT;
-
-    final public int PADDING;
-    final public long OFFSET;
-
-    final public String NAME;
-    final public Path PATH;
-    final List<BSAFileRecord> FILERECORDS;
-
-    //final public BSAFileRecordBlock FILERECORDBLOCK;
 }
