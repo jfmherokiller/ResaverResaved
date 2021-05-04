@@ -49,7 +49,7 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
      * @see ArchiveParser.getFiles
      */
     @Throws(IOException::class)
-    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer?>?>? {
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer>>? {
         return FOLDERRECORDS!!.stream()
             .filter { block: BSAFolderRecord -> dir == null || dir == block.PATH }
             .flatMap { block: BSAFolderRecord -> block.FILERECORDS.stream() }

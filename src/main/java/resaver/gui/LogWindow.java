@@ -48,7 +48,7 @@ public class LogWindow extends JScrollPane {
         super.setViewportView(this.TEXT);
         this.TEXT.setFont(this.TEXT.getFont().deriveFont(12.0f));
         //super.add(SCROLLER);
-        //super.setPreferredSize(new java.awt.Dimension(600, 400));
+        super.setPreferredSize(new java.awt.Dimension(600, 400));
     }
 
     /**

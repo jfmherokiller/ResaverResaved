@@ -35,13 +35,13 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
      * @see ArchiveParser.getFiles
      */
     @Throws(IOException::class)
-    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer?>?>? {
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): MutableMap<Path?, Optional<ByteBuffer>>? {
         return FILES.stream()
-            .filter { file: BA2FileRecord -> dir == null || file.path.startsWith(dir) }
+            .filter { file: BA2FileRecord -> dir == null || file.path!!.startsWith(dir) }
             .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }
             .collect(
                 Collectors.toMap(
-                    { file: BA2FileRecord -> super.PATH.resolve(file.path) },
+                    { file: BA2FileRecord -> super.PATH.resolve(file.path!!) },
                     { file: BA2FileRecord -> file.getData(CHANNEL) })
             )
     }
@@ -52,11 +52,11 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
     @Throws(IOException::class)
     override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?>? {
         return FILES.stream()
-            .filter { file: BA2FileRecord -> dir == null || file.path.startsWith(dir) }
+            .filter { file: BA2FileRecord -> dir == null || file.path!!.startsWith(dir) }
             .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }
             .collect(
                 Collectors.toMap(
-                    { record: BA2FileRecord -> super.PATH.fileName.resolve(record.path) },
+                    { record: BA2FileRecord -> super.PATH.fileName.resolve(record.path!!) },
                     { obj: BA2FileRecord -> obj.path })
             )
     }
