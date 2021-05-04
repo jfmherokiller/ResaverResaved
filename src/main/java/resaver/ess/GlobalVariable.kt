@@ -103,6 +103,6 @@ class GlobalVariable(input: ByteBuffer?, context: ESSContext) : Element {
      */
     init {
         REFID = context.readRefID(input!!)
-        value = input.float ?: 0.0f
+        value = input.float
     }
 }

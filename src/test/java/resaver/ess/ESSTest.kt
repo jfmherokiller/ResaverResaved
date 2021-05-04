@@ -82,7 +82,7 @@ class ESSTest {
             if (ORIGINAL.isTruncated || ORIGINAL.papyrus.stringTable.hasSTB()) {
                 return
             }
-            val EXT = "." + ORIGINAL.header.GAME.SAVE_EXT
+            val EXT = "." + (ORIGINAL.header.GAME?.SAVE_EXT ?: "ess")
             val F2 = Files.createTempFile("ess_test", EXT)
             ESS.writeESS(ORIGINAL, F2)
             val MODEL_RESAVE = ModelBuilder(ProgressModel(1))
