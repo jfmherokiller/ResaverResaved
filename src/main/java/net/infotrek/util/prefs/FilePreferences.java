@@ -76,12 +76,12 @@ public class FilePreferences extends AbstractPreferences
  
   protected String[] keysSpi() throws BackingStoreException
   {
-    return root.keySet().toArray(new String[root.keySet().size()]);
+    return root.keySet().toArray(new String[0]);
   }
  
   protected String[] childrenNamesSpi() throws BackingStoreException
   {
-    return children.keySet().toArray(new String[children.keySet().size()]);
+    return children.keySet().toArray(new String[0]);
   }
  
   protected FilePreferences childSpi(String name)

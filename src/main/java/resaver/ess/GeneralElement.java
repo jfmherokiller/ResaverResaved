@@ -1075,22 +1075,18 @@ public class GeneralElement implements Element {
     final private Map<IString, Object> DATA;
 
     static final private Set<Class<?>> SUPPORTED = new HashSet<>(Arrays.asList(
-            new Class<?>[]{
-                Element.class,
-                 Byte.class,
-                 Short.class,
-                 Integer.class,
-                 Float.class,
-                 String.class,
-                 byte[].class,
-                 short[].class,
-                 int[].class,
-                 long[].class,
-                 float[].class,
-                 Object[].class
-
-            }
-    ));
+            Element.class,
+            Byte.class,
+            Short.class,
+            Integer.class,
+            Float.class,
+            String.class,
+            byte[].class,
+            short[].class,
+            int[].class,
+            long[].class,
+            float[].class,
+            Object[].class));
 
     @FunctionalInterface
     static public interface ElementReader<T extends Element> {

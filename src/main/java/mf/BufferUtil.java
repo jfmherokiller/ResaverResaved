@@ -135,7 +135,7 @@ public class BufferUtil {
      * @return The raw byte data, excluding the terminus (if any).
      */
     static public byte[] getZStringRaw(ByteBuffer buffer) {
-        final int start = ((Buffer) buffer).position();
+        final int start = buffer.position();
 
         //while (buffer.get() != 0);
         byte b = buffer.get();
@@ -143,7 +143,7 @@ public class BufferUtil {
             b = buffer.get();
         }
 
-        final int LENGTH = ((Buffer) buffer).position() - start;
+        final int LENGTH = buffer.position() - start;
         ((Buffer) buffer).position(start);
         
         if (LENGTH <= 0) {
@@ -275,7 +275,7 @@ public class BufferUtil {
      * @throws java.util.zip.DataFormatException
      */
     static public ByteBuffer inflateZLIB(ByteBuffer compressed, int uncompressedSize) throws java.util.zip.DataFormatException {
-        int compressedSize = ((Buffer) compressed).limit() - ((Buffer) compressed).position();
+        int compressedSize = compressed.limit() - compressed.position();
         return inflateZLIB(compressed, uncompressedSize, compressedSize);
     }
 

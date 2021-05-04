@@ -77,15 +77,11 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
         }
 
         if (this.length1 < 0) {
-            final StringBuilder MSG = new StringBuilder();
-            MSG.append(String.format("Invalid data size: l1 = %d, l2 = %d, %s, %s", this.length1, this.length2, this.TYPE, this.REFID));
-            throw new IllegalStateException(MSG.toString());
+            throw new IllegalStateException(String.format("Invalid data size: l1 = %d, l2 = %d, %s, %s", this.length1, this.length2, this.TYPE, this.REFID));
         }
 
         if (this.length2 < 0) {
-            final StringBuilder MSG = new StringBuilder();
-            MSG.append(String.format("Invalid data size: l1 = %d, l2 = %d, %s, %s", this.length1, this.length2, this.TYPE, this.REFID));
-            throw new IllegalStateException(MSG.toString());
+            throw new IllegalStateException(String.format("Invalid data size: l1 = %d, l2 = %d, %s, %s", this.length1, this.length2, this.TYPE, this.REFID));
         }
 
         // Read the changeform's data.
@@ -655,7 +651,7 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
         } else if (cf1.isCompressed() != cf2.isCompressed()) {
             throw new IllegalStateException(String.format("RefID mismatch: %s vs %s.", cf1.isCompressed(), cf2.isCompressed()));
         } else if (cf1.getDataLength() != cf2.getDataLength()) {
-            throw new IllegalStateException(String.format("Data length mismatch: %d vs %d.", cf1.getDataLength(), cf2.getDataLength()));
+            throw new IllegalStateException(String.format("Data length mismatch: %s vs %s.", cf1.getDataLength().toString(), cf2.getDataLength().toString()));
         } else if (!Objects.equals(cf1.getBodyData(), cf2.getBodyData())) {
             throw new IllegalStateException(String.format("RefID mismatch: %s vs %s.", cf1.getBodyData(), cf2.getBodyData()));
         }

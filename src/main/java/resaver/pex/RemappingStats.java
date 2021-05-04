@@ -187,18 +187,16 @@ final public class RemappingStats {
      */
     @Override
     public String toString() {
-        final StringBuilder BUF = new StringBuilder();
-        
-        BUF.append(String.format("Processed %d scripts.\n", this.getScripts()));
-        BUF.append(String.format("Renamed %d object variables.\n", this.getObjectVariables() - this.getConditionals()));
-        BUF.append(String.format("%d of them were property autovariables.\n", this.getAutovars() - this.getConditionals()));
-        BUF.append(String.format("Skipped %d conditional autovariables.\n", this.getConditionals()));
-        BUF.append(String.format("Processed %d functions.\n", this.getFunctions()));
-        BUF.append(String.format("Renamed %d function local variables.\n", this.getLocalVariables()));
-        BUF.append(String.format("Renamed %d function parameters.\n", this.getParameters()));
-        BUF.append(String.format("Stripped %d docstrings.\n", this.getDocStrings()));
-        
-        return BUF.toString();
+
+        String BUF = String.format("Processed %d scripts.\n", this.getScripts()) +
+                String.format("Renamed %d object variables.\n", this.getObjectVariables() - this.getConditionals()) +
+                String.format("%d of them were property autovariables.\n", this.getAutovars() - this.getConditionals()) +
+                String.format("Skipped %d conditional autovariables.\n", this.getConditionals()) +
+                String.format("Processed %d functions.\n", this.getFunctions()) +
+                String.format("Renamed %d function local variables.\n", this.getLocalVariables()) +
+                String.format("Renamed %d function parameters.\n", this.getParameters()) +
+                String.format("Stripped %d docstrings.\n", this.getDocStrings());
+        return BUF;
     }
     
     final private java.util.Map<Key, Integer> COUNTS;

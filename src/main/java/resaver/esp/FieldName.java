@@ -58,9 +58,7 @@ public class FieldName extends FieldSimple {
      */
     @Override
     public String toString() {
-        final StringBuilder BUF = new StringBuilder();
-        BUF.append(this.getCode()).append("=").append(this.FORMID);
-        return BUF.toString();
+        return this.getCode() + "=" + this.FORMID;
     }
 
     final private int FORMID;

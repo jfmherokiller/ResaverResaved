@@ -1116,7 +1116,7 @@ final public class Pex {
             }
 
             final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(this.USERFLAGS);
-            FLAGOBJS.forEach(flag -> S.append(" " + flag.toString()));
+            FLAGOBJS.forEach(flag -> S.append(" ").append(flag.toString()));
 
             if (this.isGlobal()) {
                 S.append(" GLOBAL");

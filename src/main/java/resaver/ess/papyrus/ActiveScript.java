@@ -369,7 +369,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
         if (this.hasStack()) {
             Variable ref = this.getStackFrames().get(0).getOwner();
             if (ref instanceof Variable.Ref) {
-                this.owner = ((Variable.Ref) ref).getReferent();
+                this.owner = ref.getReferent();
             } else if (ref instanceof Variable.Null) {
                 this.owner = null;
             }

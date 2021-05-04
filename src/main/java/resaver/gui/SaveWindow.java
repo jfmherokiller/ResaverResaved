@@ -331,7 +331,7 @@ final public class SaveWindow extends JFrame {
         this.BTN_CLEAR_FILTER.setToolTipText("Clear all filters.");
         this.MI_ABOUT.setToolTipText("Shows version information, system information, and an original colour photograph of cats.");
         this.MI_SHOWLOG.setToolTipText("Show ReSaver's internal log. For development purposes only.");
-        this.MI_ANALYZE_ARRAYS.setToolTipText("Displays the dataAnalyzer for the \'Arrays\' section, which hasn't been fully decoded yet. For development purposes only.");
+        this.MI_ANALYZE_ARRAYS.setToolTipText("Displays the dataAnalyzer for the 'Arrays' section, which hasn't been fully decoded yet. For development purposes only.");
         this.MI_COMPARETO.setToolTipText("Compare the current savefile to another one. For development purposes only.");
 
         this.MI_CHANGEFILTER.setToolTipText("Sets a ChangeFlag filter. ChangeFlags describe what kind of changes are present in ChangeForms.");

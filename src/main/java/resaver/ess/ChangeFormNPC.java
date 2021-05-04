@@ -223,7 +223,7 @@ public class ChangeFormNPC extends GeneralElement implements ChangeFormData {
 
         @Override
         public String toString() {
-            return String.format("Rank %d with %s", this.getVal("RANK"), this.getVal("FACTION"));
+            return String.format("Rank %s with %s", this.getVal("RANK").toString(), this.getVal("FACTION"));
         }
     }
 

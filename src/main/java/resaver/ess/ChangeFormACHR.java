@@ -135,12 +135,11 @@ public class ChangeFormACHR extends GeneralElement implements ChangeFormData {
      */
     @Override
     public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append("<hr/>");
-        BUILDER.append("<pre><code>");
-        BUILDER.append(super.toString("REFR", 0));
-        BUILDER.append("</code></pre>");
-        return BUILDER.toString();
+        String BUILDER = "<hr/>" +
+                "<pre><code>" +
+                super.toString("REFR", 0) +
+                "</code></pre>";
+        return BUILDER;
     }
 
     // The change flags.

@@ -84,7 +84,7 @@ public class IString implements CharSequence, java.io.Serializable, Comparable<I
      * Creates a new blank <code>IString</code>.
      */
     private IString() {
-        this("".intern());
+        this("");
     }
 
     /**
