@@ -123,7 +123,7 @@ public class Watcher {
             List<Path> watchDirectories = null != watchDir
                     ? Collections.singletonList(watchDir)
                     : Game.VALUES.stream()
-                            .map(game -> Configurator.getSaveDirectory(game))
+                            .map(Configurator::getSaveDirectory)
                             .filter(Files::exists)
                             .collect(Collectors.toList());
 
