@@ -13,101 +13,80 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.Objects;
-import javax.swing.*;
-import javax.swing.table.*;
-import resaver.ess.AnalyzableElement;
-import resaver.ess.papyrus.*;
+import javax.swing.JTable
+import javax.swing.ListSelectionModel
+import javax.swing.event.TableModelEvent
+import javax.swing.JViewport
+import resaver.ess.AnalyzableElement
+import resaver.ess.papyrus.*
+import javax.swing.table.DefaultTableModel
+import java.awt.event.*
+import javax.swing.JPopupMenu
+import javax.swing.JMenuItem
+import java.util.Objects
 
 /**
  * Describes a JTable specialized for displaying variable tables.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-public class VariableTable extends JTable {
-
-    /**
-     * Creates a new <code>VariableTable</code>.
-     *
-     * @param window
-     */
-    public VariableTable(SaveWindow window) {
-        this.WINDOW = Objects.requireNonNull(window);
-        this.MI_FIND = new JMenuItem("Find", KeyEvent.VK_F);
-        this.TABLE_POPUP_MENU = new JPopupMenu("Table");
-        this.initComponent();
-    }
-
+class VariableTable(window: SaveWindow?) : JTable() {
     /**
      * Initializes the table's components.
      */
-    private void initComponent() {
-        this.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        this.getModel().addTableModelListener(e -> this.WINDOW.setModified());
-        this.TABLE_POPUP_MENU.add(this.MI_FIND);
-
-        this.MI_FIND.addActionListener(e -> {
-            int viewRow = getSelectedRow();
-            int modelRow = convertRowIndexToModel(viewRow);
-            int column = getModel().getColumnCount() - 1;
-            Object o = getModel().getValueAt(modelRow, column);
-            assert o instanceof Variable;
-            Variable var = (Variable) o;
-
-            if (var.hasRef() && !var.getRef().isZero()) {
-                this.WINDOW.findElement(var.getReferent());
+    private fun initComponent() {
+        setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
+        this.model.addTableModelListener { e: TableModelEvent? -> WINDOW.setModified() }
+        TABLE_POPUP_MENU.add(MI_FIND)
+        MI_FIND.addActionListener { e: ActionEvent? ->
+            val viewRow = selectedRow
+            val modelRow = convertRowIndexToModel(viewRow)
+            val column = model.columnCount - 1
+            val o = model.getValueAt(modelRow, column)
+            assert(o is Variable)
+            val `var` = o as Variable
+            if (`var`.hasRef() && !`var`.ref.isZero) {
+                WINDOW.findElement(`var`.referent)
             }
-        });
-
-        this.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (e.isPopupTrigger()) {
-                    int row = rowAtPoint(e.getPoint());
-                    int col = columnAtPoint(e.getPoint());
-                    setRowSelectionInterval(row, row);
-
-                    int modelRow = convertRowIndexToModel(row);
-                    int column = getModel().getColumnCount() - 1;
-                    Object o = getModel().getValueAt(modelRow, column);
-                    assert o instanceof Variable;
-                    Variable var = (Variable) o;
-
-                    if (var.hasRef() && !var.getRef().isZero()) {
-                        TABLE_POPUP_MENU.show(e.getComponent(), e.getX(), e.getY());
+        }
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseReleased(e: MouseEvent) {
+                if (e.isPopupTrigger) {
+                    val row = rowAtPoint(e.point)
+                    val col = columnAtPoint(e.point)
+                    setRowSelectionInterval(row, row)
+                    val modelRow = convertRowIndexToModel(row)
+                    val column = model.columnCount - 1
+                    val o = model.getValueAt(modelRow, column)
+                    assert(o is Variable)
+                    val `var` = o as Variable
+                    if (`var`.hasRef() && !`var`.ref.isZero) {
+                        TABLE_POPUP_MENU.show(e.component, e.x, e.y)
                     }
                 }
             }
-        });
+        })
     }
 
     /**
      *
      * @param index
      */
-    public void scrollSelectionToVisible(int index) {
+    fun scrollSelectionToVisible(index: Int) {
         if (index < 0) {
-            return;
+            return
         }
-
-        this.getSelectionModel().setSelectionInterval(index, index);
-        if (!(this.getParent() instanceof JViewport)) {
-            return;
+        getSelectionModel().setSelectionInterval(index, index)
+        if (parent !is JViewport) {
+            return
         }
-
-        final JViewport PARENT = (JViewport) this.getParent();
-        final Rectangle CELL_RECTANGLE = this.getCellRect(index, 0, true);
-        final Point POINT = PARENT.getViewPosition();
-        CELL_RECTANGLE.setLocation(CELL_RECTANGLE.x - POINT.x, CELL_RECTANGLE.y - POINT.y);
-        this.scrollRectToVisible(CELL_RECTANGLE);
+        val PARENT = parent as JViewport
+        val CELL_RECTANGLE = getCellRect(index, 0, true)
+        val POINT = PARENT.viewPosition
+        CELL_RECTANGLE.setLocation(CELL_RECTANGLE.x - POINT.x, CELL_RECTANGLE.y - POINT.y)
+        scrollRectToVisible(CELL_RECTANGLE)
     }
 
     /**
@@ -115,111 +94,113 @@ public class VariableTable extends JTable {
      * @param element
      * @return
      */
-    public boolean isSupported(AnalyzableElement element) {
-        return element instanceof ScriptInstance
-                || element instanceof StructInstance
-                || element instanceof Struct
-                || element instanceof StackFrame
-                || element instanceof ArrayInfo
-                || element instanceof FunctionMessageData
-                || element instanceof SuspendedStack
-                || element instanceof FunctionMessage
-                || element instanceof Reference;
+    fun isSupported(element: AnalyzableElement?): Boolean {
+        return (element is ScriptInstance
+                || element is StructInstance
+                || element is Struct
+                || element is StackFrame
+                || element is ArrayInfo
+                || element is FunctionMessageData
+                || element is SuspendedStack
+                || element is FunctionMessage
+                || element is Reference)
     }
 
     /**
      * Clears the table.
      */
-    public void clearTable() {
-        this.setModel(new DefaultTableModel());
+    fun clearTable() {
+        this.model = DefaultTableModel()
     }
 
     /**
-     * Displays a <code>AnalyzableElement</code> using an appropriate model.
+     * Displays a `AnalyzableElement` using an appropriate model.
      *
-     * @param element The <code>PapyrusElement</code> to display.
-     * @param context The <code>PapyrusContext</code> info.
+     * @param element The `PapyrusElement` to display.
+     * @param context The `PapyrusContext` info.
      */
-    public void displayElement(AnalyzableElement element, PapyrusContext context) {
-        if (element instanceof ArrayInfo) {
-            this.displayArray((ArrayInfo) element, context);
-
-        } else if (element instanceof HasVariables) {
-            this.displayVariableTable((HasVariables) element, context);
-
-        } else if (element instanceof Definition) {
-            this.displayDefinition((Definition) element, context);
-
-        } else if (element instanceof FunctionMessageData) {
-            this.displayVariableTable((FunctionMessageData) element, context);
-
-        } else if (element instanceof SuspendedStack) {
-            SuspendedStack stack = (SuspendedStack) element;
-            if (stack.hasMessage()) {
-                this.displayVariableTable(stack.getMessage(), context);
+    fun displayElement(element: AnalyzableElement?, context: PapyrusContext) {
+        if (element is ArrayInfo) {
+            displayArray(element, context)
+        } else if (element is HasVariables) {
+            displayVariableTable(element as HasVariables, context)
+        } else if (element is Definition) {
+            displayDefinition(element, context)
+        } else if (element is FunctionMessageData) {
+            displayVariableTable(element, context)
+        } else if (element is SuspendedStack) {
+            if (element.hasMessage()) {
+                displayVariableTable(element.message, context)
             } else {
-                this.clearTable();
+                clearTable()
             }
-        } else if (element instanceof FunctionMessage) {
-            FunctionMessage fn = (FunctionMessage) element;
-            if (fn.hasMessage()) {
-                this.displayVariableTable(fn.getMessage(), context);
+        } else if (element is FunctionMessage) {
+            if (element.hasMessage()) {
+                displayVariableTable(element.message, context)
             } else {
-                this.clearTable();
+                clearTable()
             }
         } else {
-            this.clearTable();
+            clearTable()
         }
     }
 
     /**
-     * Displays a <code>Definition</code> using an appropriate model.
+     * Displays a `Definition` using an appropriate model.
      *
-     * @param def The <code>Definition</code> to display.
-     * @param context The <code>PapyrusContext</code> info.
+     * @param def The `Definition` to display.
+     * @param context The `PapyrusContext` info.
      */
-    private void displayDefinition(Definition def, PapyrusContext context) {
-        this.setDefaultRenderer(Variable.class, new VariableCellRenderer());
-        this.setDefaultEditor(Variable.class, new VariableCellEditor(context));
-        this.setModel(new DefinitionTableModel(def));
-        this.getColumn(this.getColumnName(0)).setMinWidth(25);
-        this.getColumn(this.getColumnName(0)).setMaxWidth(25);
+    private fun displayDefinition(def: Definition, context: PapyrusContext) {
+        setDefaultRenderer(Variable::class.java, VariableCellRenderer())
+        setDefaultEditor(Variable::class.java, VariableCellEditor(context))
+        this.model = DefinitionTableModel(def)
+        getColumn(getColumnName(0)).minWidth = 25
+        getColumn(getColumnName(0)).maxWidth = 25
     }
 
     /**
-     * Displays a <code>ScriptInstance</code> using an appropriate model.
+     * Displays a `ScriptInstance` using an appropriate model.
      *
-     * @param instance The <code>PapyrusElement</code> to display.
-     * @param context The <code>PapyrusContext</code> info.
+     * @param instance The `PapyrusElement` to display.
+     * @param context The `PapyrusContext` info.
      */
-    private void displayVariableTable(HasVariables instance, PapyrusContext context) {
-        this.setDefaultRenderer(Variable.class, new VariableCellRenderer());
-        this.setDefaultEditor(Variable.class, new VariableCellEditor(context));
-        this.setModel(new VariableTableModel(instance));
-        this.getColumn(this.getColumnName(0)).setMinWidth(25);
-        this.getColumn(this.getColumnName(0)).setMaxWidth(25);
-        this.getColumn(this.getColumnName(1)).setMinWidth(120);
-        this.getColumn(this.getColumnName(1)).setMaxWidth(120);
+    private fun displayVariableTable(instance: HasVariables, context: PapyrusContext) {
+        setDefaultRenderer(Variable::class.java, VariableCellRenderer())
+        setDefaultEditor(Variable::class.java, VariableCellEditor(context))
+        this.model = VariableTableModel(instance)
+        getColumn(getColumnName(0)).minWidth = 25
+        getColumn(getColumnName(0)).maxWidth = 25
+        getColumn(getColumnName(1)).minWidth = 120
+        getColumn(getColumnName(1)).maxWidth = 120
     }
 
     /**
-     * Displays an <code>ArrayInfo</code> using an appropriate model.
+     * Displays an `ArrayInfo` using an appropriate model.
      *
-     * @param array The <code>PapyrusElement</code> to display.
-     * @param context The <code>PapyrusContext</code> info.
+     * @param array The `PapyrusElement` to display.
+     * @param context The `PapyrusContext` info.
      */
-    private void displayArray(ArrayInfo array, PapyrusContext context) {
-        this.setDefaultRenderer(Variable.class, new VariableCellRenderer());
-        this.setDefaultEditor(Variable.class, new VariableCellEditor(context));
-        this.setModel(new ArrayTableModel(array));
-        this.getColumn(this.getColumnName(0)).setMinWidth(25);
-        this.getColumn(this.getColumnName(0)).setMaxWidth(25);
-        this.getColumn(this.getColumnName(1)).setMinWidth(120);
-        this.getColumn(this.getColumnName(1)).setMaxWidth(120);
+    private fun displayArray(array: ArrayInfo, context: PapyrusContext) {
+        setDefaultRenderer(Variable::class.java, VariableCellRenderer())
+        setDefaultEditor(Variable::class.java, VariableCellEditor(context))
+        this.model = ArrayTableModel(array)
+        getColumn(getColumnName(0)).minWidth = 25
+        getColumn(getColumnName(0)).maxWidth = 25
+        getColumn(getColumnName(1)).minWidth = 120
+        getColumn(getColumnName(1)).maxWidth = 120
     }
 
-    final private JPopupMenu TABLE_POPUP_MENU;
-    final private JMenuItem MI_FIND;
-    final private SaveWindow WINDOW;
+    private val TABLE_POPUP_MENU: JPopupMenu = JPopupMenu("Table")
+    private val MI_FIND: JMenuItem = JMenuItem("Find", KeyEvent.VK_F)
+    private val WINDOW: SaveWindow = Objects.requireNonNull(window)!!
 
+    /**
+     * Creates a new `VariableTable`.
+     *
+     * @param window
+     */
+    init {
+        initComponent()
+    }
 }
