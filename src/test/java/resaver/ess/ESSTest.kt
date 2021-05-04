@@ -13,66 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.Test;
-import resaver.Game;
-import resaver.ProgressModel;
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import resaver.Game.Companion.FILTER_ALL
+import resaver.ProgressModel
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.logging.Formatter
+import java.util.logging.Level
+import java.util.logging.LogRecord
+import java.util.logging.Logger
+import java.util.stream.Collectors
 
 /**
- * Tests the read and write methods of the <code>ESS</code> class.
+ * Tests the read and write methods of the `ESS` class.
  *
  * @author Mark Fairchild
  */
-public class ESSTest {
-
-    final static public Path WORK_DIR = Paths.get(System.getProperty("user.dir"));
-    final static public Path TESTSAVES_DIR = WORK_DIR.resolve("src/test/resources/TestSaves");
-    static final private Logger LOG = Logger.getLogger(ESSTest.class.getCanonicalName());
-    final private java.util.List<Path> PATHS;
-    
-
-    public ESSTest() {
-        // Set up logging stuff.
-        LOG.getParent().getHandlers()[0].setFormatter(new java.util.logging.Formatter() {
-            @Override
-            public String format(LogRecord record) {
-                final java.util.logging.Level LEVEL = record.getLevel();
-                final String MSG = record.getMessage();
-                final String SRC = record.getSourceClassName() + "." + record.getSourceMethodName();
-                final String LOG = String.format("%s: %s: %s\n", SRC, LEVEL, MSG);
-                return LOG;
-            }
-        });
-
-        LOG.getParent().getHandlers()[0].setLevel(Level.INFO);
-
-        java.util.List<Path> paths;
-
-        try {
-            paths = Files.walk(TESTSAVES_DIR)
-                    .filter(p -> Game.Companion.getFILTER_ALL().accept(p.toFile()))
-                    .filter(Files::isReadable)
-                    .filter(Files::isRegularFile)
-                    .collect(Collectors.toList());
-        } catch (IOException ex) {
-            System.out.println("Error while reading test files.");
-            System.err.println(ex.getMessage());
-            paths = Collections.emptyList();
-        }
-
-        this.PATHS = paths;
-    }
+class ESSTest {
+    private val PATHS: List<Path>
 
     /*static public Stream<Path> pathProvider() {
         java.util.List<Path> paths;
@@ -92,19 +55,17 @@ public class ESSTest {
 
         return paths.stream();
     }*/
-
     @Test
-    public void testReadESS() {
-        int index = 0;
-        final int COUNT = this.PATHS.size();
-        
-        for (Path path : this.PATHS) {
-            System.out.println(String.format("Test save %d / %d : %s", index, COUNT, path));
-            testReadESS(path);
-            index++;
+    fun testReadESS() {
+        var index = 0
+        val COUNT = PATHS.size
+        for (path in PATHS) {
+            println(String.format("Test save %d / %d : %s", index, COUNT, path))
+            testReadESS(path)
+            index++
         }
     }
-    
+
     /**
      * Test of readESS and writeESS methods, of class ESS.
      *
@@ -112,34 +73,82 @@ public class ESSTest {
      */
     //@ParameterizedTest
     //@MethodSource("pathProvider")    
-    public void testReadESS(Path path) {
+    fun testReadESS(path: Path) {
         //System.out.printf("readESS (%s)\n", WORK_DIR.relativize(path));
         try {
-            ModelBuilder MODEL_ORIGINAL = new ModelBuilder(new ProgressModel(1));
-            final ESS.Result IN_RESULT = ESS.readESS(path, MODEL_ORIGINAL);
-            final ESS ORIGINAL = IN_RESULT.ESS;
-
-            if (ORIGINAL.isTruncated() || ORIGINAL.getPapyrus().getStringTable().hasSTB()) {                
-                return;
+            val MODEL_ORIGINAL = ModelBuilder(ProgressModel(1))
+            val IN_RESULT = ESS.readESS(path, MODEL_ORIGINAL)
+            val ORIGINAL = IN_RESULT.ESS
+            if (ORIGINAL.isTruncated || ORIGINAL.papyrus.stringTable.hasSTB()) {
+                return
             }
-            
-            final String EXT = "." + ORIGINAL.getHeader().GAME.getSAVE_EXT();
-
-            final Path F2 = Files.createTempFile("ess_test", EXT);
-            ESS.writeESS(ORIGINAL, F2);
-
-            ModelBuilder MODEL_RESAVE = new ModelBuilder(new ProgressModel(1));
-            final ESS.Result OUT_RESULT = ESS.readESS(F2, MODEL_RESAVE);
-            final ESS REWRITE = OUT_RESULT.ESS;
-
-            assertEquals(ORIGINAL.getDigest(), REWRITE.getDigest(), "Verify that digests match for " + path);
-            ESS.verifyIdentical(ORIGINAL, REWRITE);
-
-        } catch (RuntimeException | AssertionError | IOException ex) {
-            System.err.println("Problem with " + path.getFileName() + "\n" + ex.getMessage());
-            ex.printStackTrace(System.err);
-            fail(path.getFileName().toString());
+            val EXT = "." + ORIGINAL.header.GAME.SAVE_EXT
+            val F2 = Files.createTempFile("ess_test", EXT)
+            ESS.writeESS(ORIGINAL, F2)
+            val MODEL_RESAVE = ModelBuilder(ProgressModel(1))
+            val OUT_RESULT = ESS.readESS(F2, MODEL_RESAVE)
+            val REWRITE = OUT_RESULT.ESS
+            Assertions.assertEquals(ORIGINAL.digest, REWRITE.digest, "Verify that digests match for $path")
+            ESS.verifyIdentical(ORIGINAL, REWRITE)
+        } catch (ex: RuntimeException) {
+            System.err.println(
+                """
+                    Problem with ${path.fileName}
+                    ${ex.message}
+                    """.trimIndent()
+            )
+            ex.printStackTrace(System.err)
+            Assertions.fail<Any>(path.fileName.toString())
+        } catch (ex: AssertionError) {
+            System.err.println(
+                """
+                    Problem with ${path.fileName}
+                    ${ex.message}
+                    """.trimIndent()
+            )
+            ex.printStackTrace(System.err)
+            Assertions.fail<Any>(path.fileName.toString())
+        } catch (ex: IOException) {
+            System.err.println(
+                """
+                    Problem with ${path.fileName}
+                    ${ex.message}
+                    """.trimIndent()
+            )
+            ex.printStackTrace(System.err)
+            Assertions.fail<Any>(path.fileName.toString())
         }
     }
 
+    companion object {
+        val WORK_DIR = Paths.get(System.getProperty("user.dir"))
+        val TESTSAVES_DIR = WORK_DIR.resolve("src/test/resources/TestSaves")
+        private val LOG = Logger.getLogger(ESSTest::class.java.canonicalName)
+    }
+
+    init {
+        // Set up logging stuff.
+        LOG.parent.handlers[0].formatter = object : Formatter() {
+            override fun format(record: LogRecord): String {
+                val LEVEL = record.level
+                val MSG = record.message
+                val SRC = record.sourceClassName + "." + record.sourceMethodName
+                return String.format("%s: %s: %s\n", SRC, LEVEL, MSG)
+            }
+        }
+        LOG.parent.handlers[0].level = Level.INFO
+        val paths: List<Path>
+        paths = try {
+            Files.walk(TESTSAVES_DIR)
+                .filter { p: Path -> FILTER_ALL.accept(p.toFile()) }
+                .filter { path: Path? -> Files.isReadable(path) }
+                .filter { path: Path? -> Files.isRegularFile(path) }
+                .collect(Collectors.toList())
+        } catch (ex: IOException) {
+            println("Error while reading test files.")
+            System.err.println(ex.message)
+            emptyList()
+        }
+        PATHS = paths
+    }
 }
