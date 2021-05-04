@@ -378,7 +378,7 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
         } else if (this.REFID.getType() == RefID.Type.FORMIDX) {
             int k = 0;
         }
-        BUF.append(" refid=").append(this.REFID.toString());
+        BUF.append(" refid=").append(this.REFID);
 
         if (parsedData != null && this.parsedData instanceof GeneralElement) {
             GeneralElement gen = (GeneralElement) this.parsedData;
@@ -431,10 +431,8 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
         } else {
             BUILDER.append(String.format("<p>%d attached instances:</p><ul>", HOLDERS.size()));
             HOLDERS.forEach(owner -> {
-                if (owner instanceof Linkable) {
+                if (owner != null) {
                     BUILDER.append(String.format("<li>%s - %s", owner.getClass().getSimpleName(), ((Linkable) owner).toHTML(this)));
-                } else if (owner != null) {
-                    BUILDER.append(String.format("<li>%s - %s", owner.getClass().getSimpleName(), owner));
                 }
             });
             BUILDER.append("</ul>");
@@ -487,7 +485,7 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
      * For compressed changeForms, length1 represents the size of the compressed
      * data.
      */
-    private int length1;
+    private final int length1;
 
     /**
      * For compressed changeForms, length2 represents the size of the
