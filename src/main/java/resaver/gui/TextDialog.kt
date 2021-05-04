@@ -13,34 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-
-import java.awt.Dimension;
-import javax.swing.JScrollPane;
+import javax.swing.JScrollPane
+import resaver.gui.InfoPane
+import java.awt.Dimension
 
 /**
  *
  * @author Mark
  */
-@SuppressWarnings("serial")
-public class TextDialog extends JScrollPane { 
+class TextDialog(newText: String?) : JScrollPane() {
+    private val TEXT: InfoPane = InfoPane(newText, null)
 
     /**
-     * Creates a new <code>TextDialog</code> with a default preferred size of
+     * Creates a new `TextDialog` with a default preferred size of
      * 600x400 and a block of HTML formatted text to display.
-     * 
+     *
      * @param newText HTML formatted text.
      */
-    public TextDialog(String newText) {
-        this.TEXT = new InfoPane(newText, null);
-        this.TEXT.setText(newText);
-        super.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        super.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        super.setViewportView(this.TEXT);
-        super.setPreferredSize(new Dimension(600, 400));
+    init {
+        TEXT.text = newText
+        super.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED)
+        super.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS)
+        super.setViewportView(TEXT)
+        super.setPreferredSize(Dimension(600, 400))
     }
- 
-    final private InfoPane TEXT;
-    
 }
