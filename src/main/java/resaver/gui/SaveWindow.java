@@ -102,7 +102,7 @@ final public class SaveWindow extends JFrame {
         this.TREEHISTORY = new JTreeHistory(this.TREE);
 
         this.TABLE = new VariableTable(this);
-        this.INFOPANE = new InfoPane(null, this::hyperlinkUpdate);
+        this.INFOPANE = new InfoPane(null, e -> this.hyperlinkUpdate(e));
 
         this.DATASCROLLER = new JScrollPane(this.TABLE);
         this.INFOSCROLLER = new JScrollPane(this.INFOPANE);
@@ -333,7 +333,7 @@ final public class SaveWindow extends JFrame {
         this.BTN_CLEAR_FILTER.setToolTipText("Clear all filters.");
         this.MI_ABOUT.setToolTipText("Shows version information, system information, and an original colour photograph of cats.");
         this.MI_SHOWLOG.setToolTipText("Show ReSaver's internal log. For development purposes only.");
-        this.MI_ANALYZE_ARRAYS.setToolTipText("Displays the dataAnalyzer for the 'Arrays' section, which hasn't been fully decoded yet. For development purposes only.");
+        this.MI_ANALYZE_ARRAYS.setToolTipText("Displays the dataAnalyzer for the \'Arrays\' section, which hasn't been fully decoded yet. For development purposes only.");
         this.MI_COMPARETO.setToolTipText("Compare the current savefile to another one. For development purposes only.");
 
         this.MI_CHANGEFILTER.setToolTipText("Sets a ChangeFlag filter. ChangeFlags describe what kind of changes are present in ChangeForms.");
@@ -404,16 +404,16 @@ final public class SaveWindow extends JFrame {
         }
         this.MODCOMBO.addItemListener(e -> updateFilters(false));
         this.PLUGINCOMBO.addItemListener(e -> updateFilters(false));
-        this.TREE.setDeleteHandler(this::deletePaths);
-        this.TREE.setEditHandler(this::editElement);
+        this.TREE.setDeleteHandler(paths -> deletePaths(paths));
+        this.TREE.setEditHandler(element -> editElement(element));
         this.TREE.setPurgeHandler(plugins -> purgePlugins(plugins, true, true));
         this.TREE.setDeleteFormsHandler((plugin) -> purgePlugins(Collections.singleton(plugin), false, true));
         this.TREE.setDeleteInstancesHandler((plugin) -> purgePlugins(Collections.singleton(plugin), true, false));
-        this.TREE.setFilterPluginsHandler(PLUGINCOMBO::setSelectedItem);
-        this.TREE.setZeroThreadHandler(this::zeroThreads);
-        this.TREE.setFindHandler(this::findElement);
-        this.TREE.setCleanseFLSTHandler(this::cleanseFormList);
-        this.TREE.setCompressionHandler(this::setCompressionType);
+        this.TREE.setFilterPluginsHandler(plugin -> PLUGINCOMBO.setSelectedItem(plugin));
+        this.TREE.setZeroThreadHandler(threads -> zeroThreads(threads));
+        this.TREE.setFindHandler(element -> this.findElement(element));
+        this.TREE.setCleanseFLSTHandler(flst -> this.cleanseFormList(flst));
+        this.TREE.setCompressionHandler(ct -> this.setCompressionType(ct));
         this.LBL_MEMORY.initialize();
     }
 
@@ -652,11 +652,12 @@ final public class SaveWindow extends JFrame {
         if (null == mainfilter) {
             this.filter = null;
             model.removeFilter();
+            return true;
         } else {
             this.filter = mainfilter;
             model.setFilter(this.filter);
+            return true;
         }
-        return true;
     }
 
     /**
@@ -740,7 +741,7 @@ final public class SaveWindow extends JFrame {
                     MODEL.setValue(9);
 
                     if (null != path) {
-                        LOG.info(String.format("Updating filter: restoring path = %s", path));
+                        LOG.info(String.format("Updating filter: restoring path = %s", path.toString()));
 
                         if (path.getLastPathComponent() == null) {
                             this.TREE.clearSelection();
@@ -795,7 +796,7 @@ final public class SaveWindow extends JFrame {
                     return;
 
                 case JOptionPane.YES_OPTION:
-                    this.save(false, this::exit);
+                    this.save(false, () -> this.exit());
                     break;
 
                 case JOptionPane.NO_OPTION:
@@ -871,7 +872,7 @@ final public class SaveWindow extends JFrame {
             int result = JOptionPane.showConfirmDialog(this, "Do you want to save the current file first?", "Save First?", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             switch (result) {
                 case JOptionPane.YES_OPTION:
-                    this.save(false, this::open);
+                    this.save(false, () -> this.open());
                     break;
 
                 case JOptionPane.NO_OPTION:
@@ -894,7 +895,7 @@ final public class SaveWindow extends JFrame {
         final Path SAVEFILE = Configurator.choosePathModal(this,
                 null,
                 () -> Configurator.selectSaveFile(this),
-                Configurator::validateSavegame,
+                path -> Configurator.validateSavegame(path),
                 true);
 
         if (SAVEFILE != null) {
@@ -923,7 +924,7 @@ final public class SaveWindow extends JFrame {
 
         } else if (Mod.GLOB_SCRIPT.matches(path)) {
             try {
-                final PexFile SCRIPT = PexFile.Companion.readScript(path);
+                final PexFile SCRIPT = PexFile.readScript(path);
                 final java.util.List<String> SOURCE = new java.util.LinkedList<>();
                 SCRIPT.disassemble(SOURCE, AssemblyLevel.FULL);
                 final TextDialog TEXT = new TextDialog(SOURCE.stream().collect(Collectors.joining("<br/>", "<pre>", "</pre>")));
@@ -971,7 +972,7 @@ final public class SaveWindow extends JFrame {
                 : null;
 
         if (GAME_DIR != null) {
-            this.scanner = new Scanner(this, this.save, GAME_DIR, MO2_INI, () -> setScanning(false), this::updateScan);
+            this.scanner = new Scanner(this, this.save, GAME_DIR, MO2_INI, () -> setScanning(false), s -> updateScan(s));
             this.scanner.execute();
             this.setScanning(true);
         }
@@ -994,7 +995,7 @@ final public class SaveWindow extends JFrame {
         final Path EXPORT = Configurator.choosePathModal(this,
                 null,
                 () -> Configurator.selectPluginsExport(this, this.save.getOriginalFile()),
-                Configurator::validWrite,
+                path -> Configurator.validWrite(path),
                 true);
 
         if (null == EXPORT) {
@@ -1007,7 +1008,7 @@ final public class SaveWindow extends JFrame {
                 out.write('\n');
             }
 
-            final String MSG = "Plugins list exported.";
+            final String MSG = String.format("Plugins list exported.");
             JOptionPane.showMessageDialog(SaveWindow.this, MSG, "Success", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (IOException ex) {
@@ -1075,7 +1076,7 @@ final public class SaveWindow extends JFrame {
         final Path otherPath = Configurator.choosePathModal(this,
                 null,
                 () -> Configurator.selectSaveFile(this),
-                Configurator::validateSavegame,
+                path -> Configurator.validateSavegame(path),
                 true);
 
         if (null == otherPath) {
@@ -1262,7 +1263,7 @@ final public class SaveWindow extends JFrame {
                 return;
             }
 
-            LOG.info("Removing nonexistent created forms.");
+            LOG.info(String.format("Removing nonexistent created forms."));
             final Set<PapyrusElement> REMOVED = this.save.removeNonexistentCreated();
 
             if (!REMOVED.isEmpty()) {
@@ -1272,7 +1273,7 @@ final public class SaveWindow extends JFrame {
                 JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
             } else {
                 this.setModified();
-                final String MSG = String.format("%d instances were removed.", 0);
+                final String MSG = String.format("%d instances were removed.", REMOVED.size());
                 final String TITLE = "Instances removed.";
                 LOG.info(MSG);
                 JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
@@ -1427,11 +1428,11 @@ final public class SaveWindow extends JFrame {
     private void setChangeFlagFilter() {
         Duad<Integer> pair = this.MI_CHANGEFILTER.getValue();
         if (null == pair) {
-            pair = Duad.Companion.make(0, 0);
+            pair = Duad.make(0, 0);
         }
 
-        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.getA(), pair.getB(), (m, f) -> {
-            Duad<Integer> newPair = Duad.Companion.make(m, f);
+        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.A, pair.B, (m, f) -> {
+            Duad<Integer> newPair = Duad.make(m, f);
             this.MI_CHANGEFILTER.setValue(newPair);
             this.updateFilters(false);
         });
@@ -1447,11 +1448,11 @@ final public class SaveWindow extends JFrame {
     private void setChangeFormFlagFilter() {
         Duad<Integer> pair = this.MI_CHANGEFORMFILTER.getValue();
         if (null == pair) {
-            pair = Duad.Companion.make(0, 0);
+            pair = Duad.make(0, 0);
         }
 
-        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.getA(), pair.getB(), (m, f) -> {
-            Duad<Integer> newPair = Duad.Companion.make(m, f);
+        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.A, pair.B, (m, f) -> {
+            Duad<Integer> newPair = Duad.make(m, f);
             this.MI_CHANGEFORMFILTER.setValue(newPair);
             this.updateFilters(false);
         });
@@ -1482,6 +1483,9 @@ final public class SaveWindow extends JFrame {
      */
     void findElement(Element element) {
         Objects.requireNonNull(element);
+        if (null == element) {
+            return;
+        }
 
         TreePath path = this.TREE.findPath(element);
 
@@ -1503,7 +1507,9 @@ final public class SaveWindow extends JFrame {
     private void findElement(Variable var) {
         Objects.requireNonNull(var);
 
-        if (var instanceof Variable.Array) {
+        if (var == null) {
+
+        } else if (var instanceof Variable.Array) {
             Variable.Array arrayVar = (Variable.Array) var;
             final EID ID = arrayVar.getArrayID();
             if (ID.isZero()) {
@@ -1592,7 +1598,7 @@ final public class SaveWindow extends JFrame {
             final String MSG = String.format(FORMAT, NUM_FORMS, plugins.size());
             JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
 
-        } else if (NUM_INSTANCES > 0) {
+        } else if (NUM_INSTANCES > 0 && NUM_FORMS > 0) {
             final String FORMAT = "Deleted %d script instances and %d changeforms from %d plugins.";
             final String MSG = String.format(FORMAT, NUM_INSTANCES, NUM_FORMS, plugins.size());
             JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
@@ -1625,7 +1631,7 @@ final public class SaveWindow extends JFrame {
         }
 
         this.setModified();
-        threads.forEach(ActiveScript::zero);
+        threads.forEach(t -> t.zero());
         this.refreshTree();
 
         final String MSG = threads.size() > 1
@@ -1666,7 +1672,7 @@ final public class SaveWindow extends JFrame {
             } else if (ESS.DELETABLE.test(ELEMENT)) {
                 WARNING = String.format("Are you sure you want to delete this element?\n%s", ELEMENT);
             } else if (ELEMENT instanceof SuspendedStack) {
-                WARNING = String.format("Element \"%s\" is a Suspended Stack. Deleting it could make your savefile impossible to load. Are you sure you want to proceed?", ELEMENT);
+                WARNING = String.format("Element \"%s\" is a Suspended Stack. Deleting it could make your savefile impossible to load. Are you sure you want to proceed?", ELEMENT.toString());
             } else {
                 return;
             }
@@ -1755,7 +1761,7 @@ final public class SaveWindow extends JFrame {
             }
 
             final Set<Element> REMOVED = this.save.removeElements(DELETABLE);
-            THREADS.forEach(ActiveScript::zero);
+            THREADS.forEach(v -> v.zero());
             if (deleteThreads) {
                 REMOVED.addAll(this.save.getPapyrus().removeElements(THREADS));
             }
@@ -1967,7 +1973,7 @@ final public class SaveWindow extends JFrame {
                     this.save.getPluginInfo().stream()
                             .filter(v -> v.NAME.equalsIgnoreCase(ADDRESS))
                             .findAny()
-                            .ifPresent(this::findElement);
+                            .ifPresent(plugin -> this.findElement(plugin));
                     break;
 
                 case "refid":

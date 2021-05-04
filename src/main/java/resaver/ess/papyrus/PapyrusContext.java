@@ -84,7 +84,7 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
      * @return The <code>EID</code>.
      */
     public EID readEID32(ByteBuffer input) {
-        return EID.Companion.read4byte(input, this.PAPYRUS);
+        return EID.read4byte(input, this.PAPYRUS);
     }
 
     /**
@@ -94,7 +94,7 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
      * @return The <code>EID</code>.
      */
     public EID readEID64(ByteBuffer input) {
-        return EID.Companion.read8byte(input, this.PAPYRUS);
+        return EID.read8byte(input, this.PAPYRUS);
     }
 
     /**
@@ -104,7 +104,7 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
      * @return The <code>EID</code>.
      */
     public EID makeEID32(int val) {
-        return EID.Companion.make4byte(val, this.PAPYRUS);
+        return EID.make4byte(val, this.PAPYRUS);
     }
 
     /**
@@ -114,7 +114,7 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
      * @return The <code>EID</code>.
      */
     public EID makeEID64(long val) {
-        return EID.Companion.make8Byte(val, this.PAPYRUS);
+        return EID.make8Byte(val, this.PAPYRUS);
     }
 
     /**
@@ -173,7 +173,10 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
 
         if (number.intValue() >= 0 && number.intValue() < this.PAPYRUS.getStringTable().size()) {
             TString s = this.PAPYRUS.getStringTable().get(number.intValue());
-            return this.findAny(s);
+            Linkable r4 = this.findAny(s);
+            if (r4 != null) {
+                return r4;
+            }
         }
 
         return null;
@@ -203,8 +206,10 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
             return this.PAPYRUS.getSuspendedStacks1().get(id);
         } else if (this.PAPYRUS.getSuspendedStacks2().containsKey(id)) {
             return this.PAPYRUS.getSuspendedStacks2().get(id);
+        } else if (this.PAPYRUS.getUnbinds().containsKey(id)) {
+            return this.PAPYRUS.getUnbinds().get(id);
         } else {
-            return this.PAPYRUS.getUnbinds().getOrDefault(id, null);
+            return null;
         }
     }
 

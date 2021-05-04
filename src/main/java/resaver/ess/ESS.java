@@ -17,9 +17,6 @@ package resaver.ess;
 
 import java.nio.ByteBuffer;
 import java.nio.file.StandardCopyOption;
-
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
 import resaver.Game;
 import java.io.IOException;
 import java.nio.Buffer;
@@ -73,10 +70,10 @@ final public class ESS implements Element {
         Objects.requireNonNull(model);
 
         // Timer, for analyzing stuff.
-        final Timer TIMER = Timer.Companion.startNew("reading savefile");
+        final Timer TIMER = Timer.startNew("reading savefile");
 
         // Doublecheck that the savefile has a correct extension.
-        if (!Game.Companion.getFILTER_ALL().accept(saveFile.toFile())) {
+        if (!Game.FILTER_ALL.accept(saveFile.toFile())) {
             throw new IOException(String.format("Filename extension not recognized: %s", saveFile));
         }
 
@@ -125,7 +122,7 @@ final public class ESS implements Element {
             throw new IOException(String.format("%s is truncated and can't be saved.", ess.getOriginalFile().getFileName()));
         }
 
-        final Timer TIMER = Timer.Companion.startNew("writing savefile");
+        final Timer TIMER = Timer.startNew("writing savefile");
         final Game GAME = ess.getHeader().GAME;
         Path backup = null;
 
@@ -135,7 +132,7 @@ final public class ESS implements Element {
 
         if (ess.COSAVE != null) {
             String filename = saveFile.getFileName().toString();
-            String cosaveName = filename.replaceAll(GAME.getSAVE_EXT() + "$", GAME.getCOSAVE_EXT());
+            String cosaveName = filename.replaceAll(GAME.SAVE_EXT + "$", GAME.COSAVE_EXT);
             final Path COSAVE_FILE = saveFile.resolveSibling(cosaveName);
             if (Files.exists(COSAVE_FILE)) {
                 makeBackupFile(COSAVE_FILE);
@@ -178,12 +175,12 @@ final public class ESS implements Element {
 
         // Determine the filename of the co-save.
         String filename = saveFile.getFileName().toString();
-        String cosaveName = filename.replaceAll(GAME.getSAVE_EXT() + "$", GAME.getCOSAVE_EXT());
+        String cosaveName = filename.replaceAll(GAME.SAVE_EXT + "$", GAME.COSAVE_EXT);
         Path cosaveFile = saveFile.resolveSibling(cosaveName);
         this.COSAVE = Files.exists(cosaveFile) ? Files.readAllBytes(cosaveFile) : null;
 
         // Store the offset where the header ends and the body begins.
-        int startingOffset = buffer.position();
+        int startingOffset = ((Buffer) buffer).position();
 
         // This is the stream that will be used for the remainder of the 
         // constructor.
@@ -248,8 +245,8 @@ final public class ESS implements Element {
 
         final mf.Counter SUM = new mf.Counter(buffer.capacity());
         SUM.addCountListener(sum -> {
-            if (this.truncated || sum != INPUT.position()) {
-                throw new IllegalStateException(String.format("Position mismatch; counted %d but actual %d in %s.", sum, INPUT.position(), saveFile.getFileName()));
+            if (this.truncated || sum != ((Buffer) INPUT).position()) {
+                throw new IllegalStateException(String.format("Position mismatch; counted %d but actual %d in %s.", sum, ((Buffer) INPUT).position(), saveFile.getFileName()));
             }
         });
 
@@ -350,7 +347,7 @@ final public class ESS implements Element {
             }
         }
 
-        SUM.click(this.TABLE1.stream().mapToInt(GlobalData::calculateSize).sum());
+        SUM.click(this.TABLE1.stream().mapToInt(t -> t.calculateSize()).sum());
         LOG.fine("Reading savegame: read GlobalDataTable #1.");
 
         for (int tableIndex = 0; tableIndex < this.FLT.TABLE2COUNT; tableIndex++) {
@@ -368,7 +365,7 @@ final public class ESS implements Element {
             }
         }
 
-        SUM.click(this.TABLE2.stream().mapToInt(GlobalData::calculateSize).sum());
+        SUM.click(this.TABLE2.stream().mapToInt(t -> t.calculateSize()).sum());
         LOG.fine("Reading savegame: read GlobalDataTable #2.");
 
         // Get the GlobalVariableTable.
@@ -390,7 +387,7 @@ final public class ESS implements Element {
 
         model.addChangeForms(this.CHANGEFORMS);
 
-        SUM.click(this.CHANGEFORMS.values().stream().mapToInt(ChangeForm::calculateSize).sum());
+        SUM.click(this.CHANGEFORMS.values().stream().mapToInt(t -> t.calculateSize()).sum());
         LOG.fine("Reading savegame: read changeform table.");
 
         // Read the third set of data tables.
@@ -428,7 +425,7 @@ final public class ESS implements Element {
                 .findAny().orElse(new AnimObjects());
         model.addAnimations(this.ANIMATIONS);
 
-        SUM.click(this.TABLE3.stream().mapToInt(GlobalData::calculateSize).sum());
+        SUM.click(this.TABLE3.stream().mapToInt(t -> t.calculateSize()).sum());
         LOG.fine("Reading savegame: read GlobalDataTable #3.");
 
         // Try to readRefID the visited worldspaces block.
@@ -456,13 +453,13 @@ final public class ESS implements Element {
         }
 
         // Read whatever is left.
-        final int U3SIZE = INPUT.limit() - INPUT.position();
+        final int U3SIZE = INPUT.limit() - ((Buffer) INPUT).position();
         LOG.fine(String.format("Reading savegame: read unknown block. %d bytes present.", U3SIZE));
         this.UNKNOWN3 = new byte[U3SIZE];
         INPUT.get(this.UNKNOWN3);
 
         long calculatedBodySize = this.calculateBodySize();
-        long bodyPosition = INPUT.position();
+        long bodyPosition = ((Buffer) INPUT).position();
         if (calculatedBodySize != bodyPosition) {
             throw new IllegalStateException(String.format("Missing data, calculated body size is %d but actual body size is %d.", calculatedBodySize, bodyPosition));
         }
@@ -513,8 +510,8 @@ final public class ESS implements Element {
                     throw new IOException("Unknown compression type: " + COMPRESSION);
             }
 
-            headerBlock.putInt(UNCOMPRESSED.limit());
-            headerBlock.putInt(COMPRESSED.limit());
+            headerBlock.putInt(((Buffer) UNCOMPRESSED).limit());
+            headerBlock.putInt(((Buffer) COMPRESSED).limit());
             ((Buffer) headerBlock).flip();
             channel.write(headerBlock);
             channel.write(COMPRESSED);
@@ -533,7 +530,7 @@ final public class ESS implements Element {
     @Override
     public void write(ByteBuffer output) {
         // Write the form version.
-        Objects.requireNonNull(output).put(this.FORMVERSION);
+        output.put(this.FORMVERSION);
 
         // Write the version string.
         if (null != this.VERSION_STRING) {
@@ -627,10 +624,10 @@ final public class ESS implements Element {
         sum += this.PLUGINS.calculateSize();
         sum += this.FLT.calculateSize();
 
-        sum += this.TABLE1.parallelStream().mapToInt(GlobalData::calculateSize).sum();
-        sum += this.TABLE2.parallelStream().mapToInt(GlobalData::calculateSize).sum();
-        sum += this.CHANGEFORMS.values().stream().mapToInt(ChangeForm::calculateSize).sum();
-        sum += this.TABLE3.parallelStream().mapToInt(GlobalData::calculateSize).sum();
+        sum += this.TABLE1.parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.TABLE2.parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.CHANGEFORMS.values().stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.TABLE3.parallelStream().mapToInt(v -> v.calculateSize()).sum();
 
         sum += 4;
         sum += this.FORMIDARRAY == null ? 0 : 4 * this.FORMIDARRAY.length;
@@ -777,7 +774,6 @@ final public class ESS implements Element {
      *
      * @return The elements that were removed.
      */
-    @NotNull
     public Set<PapyrusElement> removeNonexistentCreated() {
         final Set<PapyrusElement> NONEXISTENT = this.PAPYRUS.getScriptInstances()
                 .values()
@@ -796,7 +792,6 @@ final public class ESS implements Element {
      * @return The elements that were removed.
      *
      */
-    @NotNull
     public java.util.Set<Element> removeElements(java.util.Collection<? extends Element> elements) {
         final Set<ChangeForm> ELEM1 = elements.stream()
                 .filter(v -> v instanceof ChangeForm)
@@ -821,8 +816,6 @@ final public class ESS implements Element {
      * @return The number of elements removed.
      *
      */
-    @NotNull
-    @Contract("null -> fail")
     public Set<ChangeForm> removeChangeForms(java.util.Collection<? extends ChangeForm> forms) {
         if (null == forms || forms.contains(null)) {
             throw new NullPointerException("The set of forms to be removed must not be null and must not contain null.");
@@ -916,7 +909,6 @@ final public class ESS implements Element {
      * @param analysis
      * @return
      */
-    @NotNull
     public String getInfo(resaver.Analysis analysis) {
         final StringBuilder BUILDER = new StringBuilder();
         BUILDER.append(String.format("<h3>%s</h3>", this.ORIGINAL_FILE.getFileName()));
@@ -941,7 +933,7 @@ final public class ESS implements Element {
 
         float actualSize = this.calculateSize() / 1048576.0f;
         float papyrusSize = this.PAPYRUS.calculateSize() / 1048576.0f;
-        float changeFormsSize = this.CHANGEFORMS.values().parallelStream().mapToInt(ChangeForm::calculateSize).sum() / 1048576.0f;
+        float changeFormsSize = this.CHANGEFORMS.values().parallelStream().mapToInt(cf -> cf.calculateSize()).sum() / 1048576.0f;
 
         if (this.HEADER.getCompression().isCompressed()) {
             try {
@@ -1011,7 +1003,7 @@ final public class ESS implements Element {
      */
     @Override
     public String toString() {
-        return this.HEADER.GAME.getNAME();
+        return this.HEADER.GAME.NAME;
         /*if (null != this.ORIGINAL_FILE) {
             return this.ORIGINAL_FILE.getFileName().toString();
         } else {

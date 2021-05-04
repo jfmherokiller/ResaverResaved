@@ -72,10 +72,10 @@ public final class FileLocationTable implements Element {
         this.UNUSED = new int[15];
         Arrays.fill(this.UNUSED, 0);
 
-        int table1Size = ess.getTable1().stream().mapToInt(GlobalData::calculateSize).sum();
-        int table2Size = ess.getTable2().stream().mapToInt(GlobalData::calculateSize).sum();
-        int table3Size = ess.getTable3().stream().mapToInt(GlobalData::calculateSize).sum();
-        int changeFormsSize = ess.getChangeForms().values().parallelStream().mapToInt(ChangeForm::calculateSize).sum();
+        int table1Size = ess.getTable1().stream().mapToInt(v -> v.calculateSize()).sum();
+        int table2Size = ess.getTable2().stream().mapToInt(v -> v.calculateSize()).sum();
+        int table3Size = ess.getTable3().stream().mapToInt(v -> v.calculateSize()).sum();
+        int changeFormsSize = ess.getChangeForms().values().parallelStream().mapToInt(v -> v.calculateSize()).sum();
 
         this.table1Offset = 0;
         this.table1Offset += ess.getHeader().calculateSize();
@@ -103,10 +103,10 @@ public final class FileLocationTable implements Element {
      * @param ess The <code>ESS</code> to rebuild for.
      */
     public void rebuild(ESS ess) {
-        int table1Size = ess.getTable1().stream().mapToInt(GlobalData::calculateSize).sum();
-        int table2Size = ess.getTable2().stream().mapToInt(GlobalData::calculateSize).sum();
-        int table3Size = ess.getTable3().stream().mapToInt(GlobalData::calculateSize).sum();
-        int changeFormsSize = ess.getChangeForms().values().parallelStream().mapToInt(ChangeForm::calculateSize).sum();
+        int table1Size = ess.getTable1().stream().mapToInt(v -> v.calculateSize()).sum();
+        int table2Size = ess.getTable2().stream().mapToInt(v -> v.calculateSize()).sum();
+        int table3Size = ess.getTable3().stream().mapToInt(v -> v.calculateSize()).sum();
+        int changeFormsSize = ess.getChangeForms().values().parallelStream().mapToInt(v -> v.calculateSize()).sum();
         
         this.table1Offset = 0;
         this.table1Offset += ess.getHeader().calculateSize();

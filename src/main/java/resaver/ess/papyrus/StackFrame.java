@@ -67,7 +67,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
 
         this.THREAD = thread;
         this.FLAG = new Flags.Byte(input);
-        this.FN_TYPE = Type.Companion.read(input);
+        this.FN_TYPE = Type.read(input);
         this.SCRIPTNAME = context.readTString(input);
         this.SCRIPT = context.findScript(this.SCRIPTNAME);
 
@@ -181,27 +181,27 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         sum += this.SCRIPTNAME.calculateSize();
         sum += this.BASENAME.calculateSize();
         sum += this.EVENT.calculateSize();
-        sum += this.STATUS.map(TString::calculateSize).orElse(0);
+        sum += this.STATUS.map(s -> s.calculateSize()).orElse(0);
         sum += 2;
         sum += this.RETURNTYPE.calculateSize();
         sum += this.FN_DOCSTRING.calculateSize();
         sum += 5;
 
         sum += 2;
-        sum += this.FN_PARAMS.parallelStream().mapToInt(FunctionParam::calculateSize).sum();
+        sum += this.FN_PARAMS.parallelStream().mapToInt(param -> param.calculateSize()).sum();
 
         sum += 2;
-        sum += this.FN_LOCALS.parallelStream().mapToInt(FunctionLocal::calculateSize).sum();
+        sum += this.FN_LOCALS.parallelStream().mapToInt(local -> local.calculateSize()).sum();
 
         sum += 2;
-        sum += this.CODE.parallelStream().mapToInt(OpcodeData::calculateSize).sum();
+        sum += this.CODE.parallelStream().mapToInt(opcode -> opcode.calculateSize()).sum();
 
         sum += 4;
 
         sum += (null != this.OWNERFIELD ? this.OWNERFIELD.calculateSize() : 0);
 
         sum += 4;
-        sum += this.VARIABLES.stream().mapToInt(Variable::calculateSize).sum();
+        sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
 
         return sum;
     }
@@ -211,7 +211,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      */
     void zero() {
         for (int i = 0; i < this.CODE.size(); i++) {
-            this.CODE.set(i, OpcodeData.Companion.getNOP());
+            this.CODE.set(i, OpcodeData.NOP);
         }
     }
 
@@ -341,7 +341,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * static method.
      */
     public boolean isStatic() {
-        return (null != this.FN_FLAGS && this.FN_FLAGS.getFlag(0));
+        return (null != this.FN_FLAGS ? this.FN_FLAGS.getFlag(0) : false);
     }
 
     /**
@@ -349,7 +349,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * native method.
      */
     public boolean isNative() {
-        return (null != this.FN_FLAGS && this.FN_FLAGS.getFlag(1));
+        return (null != this.FN_FLAGS ? this.FN_FLAGS.getFlag(1) : false);
     }
 
     /**
@@ -358,7 +358,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      */
     public boolean isZeroed() {
         return !this.isNative() && null != this.CODE && !this.CODE.isEmpty()
-                && this.CODE.stream().allMatch(op -> OpcodeData.Companion.getNOP().equals(op));
+                && this.CODE.stream().allMatch(op -> OpcodeData.NOP.equals(op));
     }
 
     /**
@@ -383,7 +383,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
 
             } else {
                 Optional<Variable> result = this.VARIABLES.stream()
-                        .filter(Variable::hasRef)
+                        .filter(v -> v.hasRef())
                         .filter(v -> v.getReferent() == target)
                         .findFirst();
 
@@ -623,13 +623,6 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 return processTerm(args, terms, 0, term);
 
             case RETURN:
-
-            case PROPSET:
-
-            case ARR_SET:
-
-            case JMPT:
-            case JMPF:
                 replaceVariables(args, terms, -1);
                 return false;
 
@@ -640,7 +633,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 subArgs = args
                         .subList(3, args.size())
                         .stream()
-                        .map(Parameter::paren)
+                        .map(v -> v.paren())
                         .collect(Collectors.toList());
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
@@ -651,7 +644,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 subArgs = args
                         .subList(3, args.size())
                         .stream()
-                        .map(Parameter::paren)
+                        .map(v -> v.paren())
                         .collect(Collectors.toList());
                 term = String.format("parent.%s%s", method, paramList(subArgs));
                 return processTerm(args, terms, 1, term);
@@ -663,7 +656,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 subArgs = args
                         .subList(3, args.size())
                         .stream()
-                        .map(Parameter::paren)
+                        .map(v -> v.paren())
                         .collect(Collectors.toList());
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
@@ -703,6 +696,10 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 prop = args.get(0).toValueString();
                 term = String.format("%s.%s", obj, prop);
                 return processTerm(args, terms, 2, term);
+
+            case PROPSET:
+                replaceVariables(args, terms, -1);
+                return false;
 
             case CMP_EQ:
                 replaceVariables(args, terms, 0);
@@ -758,6 +755,15 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 operand2 = args.get(1).toValueString();
                 term = String.format("%s[%s]", operand2, operand1);
                 return processTerm(args, terms, 0, term);
+
+            case ARR_SET:
+                replaceVariables(args, terms, -1);
+                return false;
+
+            case JMPT:
+            case JMPF:
+                replaceVariables(args, terms, -1);
+                return false;
 
             case JMP:
             case ARR_FIND:
@@ -820,7 +826,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      */
     static <T> String paramList(List<T> params) {
         return params.stream()
-                .map(Object::toString)
+                .map(p -> p.toString())
                 .collect(Collectors.joining(", ", "(", ")"));
     }
 

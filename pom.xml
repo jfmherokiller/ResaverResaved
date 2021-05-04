@@ -188,7 +188,11 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <useIrBackend>true</useIrBackend>
                     <jvmTarget>1.8</jvmTarget>
+                    <args>
+                        <arg>-Xuse-ir</arg>
+                    </args>
                 </configuration>
             </plugin>
             <plugin>

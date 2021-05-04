@@ -19,8 +19,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import org.jetbrains.annotations.NotNull;
 import resaver.Analysis;
 import static resaver.ess.ChangeFlagConstantsRef.*;
 
@@ -64,7 +62,7 @@ final public class ChangeFormLVLN implements ChangeFormData {
      * @param output The output stream.
      */
     @Override
-    public void write(@NotNull ByteBuffer output) {
+    public void write(ByteBuffer output) {
         Objects.requireNonNull(output);
 
         if (null != this.FLAGS) {

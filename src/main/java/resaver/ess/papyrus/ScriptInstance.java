@@ -210,14 +210,14 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      */
     @Override
     public List<Variable> getVariables() {
-        return this.data == null
-                ? Collections.emptyList()
+        return this.data == null 
+                ? Collections.emptyList() 
                 : Collections.unmodifiableList(this.data.VARIABLES);
     }
 
     /**
-     * @see HasVariables#getDescriptors()
-     * @return
+     * @see HasVariables#getDescriptors() 
+     * @return 
      */
     @Override
     public List<MemberDesc> getDescriptors() {
@@ -225,9 +225,9 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
     }
 
     /**
-     * @see HasVariables#setVariable(int, resaver.ess.papyrus.Variable)
+     * @see HasVariables#setVariable(int, resaver.ess.papyrus.Variable) 
      * @param index
-     * @param newVar
+     * @param newVar 
      */
     @Override
     public void setVariable(int index, Variable newVar) {
@@ -237,7 +237,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
         if (index <= 0 || index >= this.data.VARIABLES.size()) {
             throw new IllegalArgumentException("Invalid variable index: " + index);
         }
-
+        
         this.data.VARIABLES.set(index, newVar);
     }
 
@@ -261,7 +261,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
 
         } else {
             return this.getVariables().stream()
-                    .filter(Variable::hasRef)
+                    .filter(var -> var.hasRef())
                     .filter(var -> var.getReferent() == target)
                     .map(var -> this.getVariables().indexOf(var))
                     .filter(index -> index >= 0)
@@ -308,7 +308,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
             BUILDER.append(String.format("<html><h3>INSTANCE of %s</h3>", this.getScriptName()));
         }
 
-        final Plugin PLUGIN = this.REFID.getPLUGIN();
+        final Plugin PLUGIN = this.REFID.PLUGIN;
         if (PLUGIN != null) {
             BUILDER.append(String.format("<p>This instance is attached to an object from %s.</p>", PLUGIN.toHTML(this)));
         } else if (this.REFID.getType() == RefID.Type.CREATED) {
@@ -421,7 +421,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
         if (null != this.getScript()) {
             return this.getScript().isUndefined();
         } else {
-            return !Script.Companion.getNATIVE_SCRIPTS().contains(this.getScriptName().toIString());
+            return !Script.NATIVE_SCRIPTS.contains(this.getScriptName().toIString());
         }
     }
 
@@ -497,7 +497,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
             sum += getID().calculateSize();
             sum += ((this.FLAG & 0x04) != 0 ? 4 : 0);
             sum += this.TYPE.calculateSize();
-            sum += this.VARIABLES.stream().mapToInt(Variable::calculateSize).sum();
+            sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
             return sum;
         }
 

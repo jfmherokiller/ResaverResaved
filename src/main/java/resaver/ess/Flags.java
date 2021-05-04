@@ -15,9 +15,6 @@
  */
 package resaver.ess;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -37,7 +34,7 @@ abstract public class Flags implements Element {
         final int BITS = 8 * this.calculateSize();
         final StringBuilder BUF = new StringBuilder();
 
-        //BUF.append("<p style=\"display:inline-table;\">");
+        //BUF.append("<p style=\"display:inline-table;\">");        
         //BUF.append("</p>");
         BUF.append("<code><table cellspacing=0 cellpadding=1 border=0.5 style=\"display:inline-table;\">");
         BUF.append("<tr align=center>");
@@ -69,8 +66,6 @@ abstract public class Flags implements Element {
      * @param input The input stream.
      * @return The <code>Byte</code> .
      */
-    @NotNull
-    @Contract("_ -> new")
     static public Byte readByteFlags(ByteBuffer input) {
         return new Byte(input);
     }
@@ -82,8 +77,6 @@ abstract public class Flags implements Element {
      * @param input The input stream.
      * @return The <code>Short</code> .
      */
-    @NotNull
-    @Contract("_ -> new")
     static public Short readShortFlags(ByteBuffer input) {
         return new Short(input);
     }
@@ -95,8 +88,6 @@ abstract public class Flags implements Element {
      * @param input The input stream.
      * @return The <code>Int</code> .
      */
-    @NotNull
-    @Contract("_ -> new")
     static public Int readIntFlags(ByteBuffer input) {
         return new Int(input);
     }
@@ -115,7 +106,7 @@ abstract public class Flags implements Element {
      * @param flag The ChangeFlagConstants.
      * @return A boolean value representing the flag.
      */
-    public boolean getFlag(@NotNull ChangeFlagConstants flag) {
+    public boolean getFlag(ChangeFlagConstants flag) {
         return this.getFlag(flag.getPosition());
     }
 
@@ -124,7 +115,7 @@ abstract public class Flags implements Element {
      */
     static public class Byte extends Flags {
 
-        public Byte(@NotNull ByteBuffer input) {
+        public Byte(ByteBuffer input) {
             this.FLAGS = input.get();
         }
 
@@ -133,7 +124,7 @@ abstract public class Flags implements Element {
         }
 
         @Override
-        public void write(@NotNull ByteBuffer output) {
+        public void write(ByteBuffer output) {
             output.put(this.FLAGS);
         }
 
@@ -172,7 +163,7 @@ abstract public class Flags implements Element {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Byte && ((Byte) obj).FLAGS == this.FLAGS;
+            return obj != null && obj instanceof Byte && ((Byte) obj).FLAGS == this.FLAGS;
         }
 
         final public byte FLAGS;
@@ -199,7 +190,7 @@ abstract public class Flags implements Element {
         }
 
         @Override
-        public void write(@NotNull ByteBuffer output) {
+        public void write(ByteBuffer output) {
             output.putShort(this.FLAGS);
         }
 
@@ -232,7 +223,7 @@ abstract public class Flags implements Element {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Short && ((Short) obj).FLAGS == this.FLAGS;
+            return obj != null && obj instanceof Short && ((Short) obj).FLAGS == this.FLAGS;
         }
 
         final public short FLAGS;
@@ -259,7 +250,7 @@ abstract public class Flags implements Element {
         }
 
         @Override
-        public void write(@NotNull ByteBuffer output) {
+        public void write(ByteBuffer output) {
             output.putInt(this.FLAGS);
         }
 
@@ -291,7 +282,7 @@ abstract public class Flags implements Element {
 
         @Override
         public boolean equals(Object obj) {
-            return obj instanceof Int && ((Int) obj).FLAGS == this.FLAGS;
+            return obj != null && obj instanceof Int && ((Int) obj).FLAGS == this.FLAGS;
         }
 
         final public int FLAGS;
@@ -300,8 +291,6 @@ abstract public class Flags implements Element {
 
     static final private String[] ZEROS = makeZeros();
 
-    @NotNull
-    @Contract(pure = true)
     static private String[] makeZeros() {
         String[] zeros = new String[32];
         zeros[0] = "";

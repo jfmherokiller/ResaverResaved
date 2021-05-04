@@ -95,7 +95,7 @@ final public class Mod implements java.io.Serializable {
 
         // Check if the parent directory is the game directory.
         final Path PARENT = dir.getParent();
-        if (Files.list(PARENT).map(Path::getFileName).anyMatch(GLOB_EXE::matches)) {
+        if (Files.list(PARENT).map(p -> p.getFileName()).anyMatch(GLOB_EXE::matches)) {
             this.MODNAME = PARENT.getFileName().toString();
         } else {
             this.MODNAME = dir.getFileName().toString();
@@ -295,7 +295,7 @@ final public class Mod implements java.io.Serializable {
 
         this.ARCHIVE_FILES.forEach(archivePath -> {
             try (FileChannel channel = FileChannel.open(archivePath, StandardOpenOption.READ);
-                    final ArchiveParser PARSER = ArchiveParser.Companion.createParser(archivePath, channel)) {
+                    final ArchiveParser PARSER = ArchiveParser.createParser(archivePath, channel)) {
 
                 final List<StringsFile> ARCHIVE_STRINGSFILES = new LinkedList<>();
 
@@ -304,7 +304,7 @@ final public class Mod implements java.io.Serializable {
                         final Plugin PLUGIN = this.getStringsFilePlugin(path, language, plugins);
                         if (PLUGIN != null) {
                             try {
-                                final StringsFile STRINGSFILE = StringsFile.Companion.readStringsFile(path, PLUGIN, input.get());
+                                final StringsFile STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN, input.get());
                                 ARCHIVE_STRINGSFILES.add(STRINGSFILE);
                             } catch (java.nio.BufferUnderflowException ex) {
                                 STRINGSFILE_ERRORS.add(archivePath.getFileName());
@@ -320,7 +320,7 @@ final public class Mod implements java.io.Serializable {
                 SCRIPT_ORIGINS.putAll(ARCHIVE_SCRIPTS);
                 STRINGSFILES.addAll(ARCHIVE_STRINGSFILES);
 
-                int stringsCount = ARCHIVE_STRINGSFILES.stream().mapToInt(s -> s.getTABLE().size()).sum();
+                int stringsCount = ARCHIVE_STRINGSFILES.stream().mapToInt(s -> s.TABLE.size()).sum();
                 int scriptsCount = ARCHIVE_SCRIPTS.size();
 
                 if (stringsCount > 0 || scriptsCount > 0) {
@@ -341,7 +341,7 @@ final public class Mod implements java.io.Serializable {
                     try {
                         final Plugin PLUGIN = this.getStringsFilePlugin(path, language, plugins);
                         if (PLUGIN != null) {
-                            final StringsFile STRINGSFILE = StringsFile.Companion.readStringsFile(path, PLUGIN);
+                            final StringsFile STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN);
                             return STRINGSFILE;
                         } else {
                             return null;
@@ -356,10 +356,10 @@ final public class Mod implements java.io.Serializable {
         // Read the loose stringtable files.
         final Map<Path, Path> LOOSE_SCRIPTS = this.SCRIPT_FILES.stream()
                 .filter(GLOB_SCRIPT::matches)
-                .collect(Collectors.toMap(p -> p, Path::getFileName));
+                .collect(Collectors.toMap(p -> p, p -> p.getFileName()));
         SCRIPT_ORIGINS.putAll(LOOSE_SCRIPTS);
 
-        int stringsCount = LOOSE_STRINGSFILES.stream().mapToInt(s -> s.getTABLE().size()).sum();
+        int stringsCount = LOOSE_STRINGSFILES.stream().mapToInt(s -> s.TABLE.size()).sum();
         int scriptsCount = LOOSE_SCRIPTS.size();
 
         if (stringsCount > 0 || scriptsCount > 0) {
@@ -573,8 +573,9 @@ final public class Mod implements java.io.Serializable {
         }
 
         public Stream<Path> getErrorFiles() {
-            return Stream.of(ARCHIVE_ERRORS, SCRIPT_ERRORS, STRINGS_ERRORS)
-                    .flatMap(Collection::stream);
+            return Arrays.asList(ARCHIVE_ERRORS, SCRIPT_ERRORS, STRINGS_ERRORS)
+                    .stream()
+                    .flatMap(v -> v.stream());
         }
 
         final public Mod MOD;

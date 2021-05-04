@@ -68,13 +68,13 @@ public class GlobalVariable implements Element {
 
         BUF.append(" (");
 
-        if (this.REFID.getPLUGIN() != null) {
-            BUF.append(this.REFID.getPLUGIN().NAME);
+        if (this.REFID.PLUGIN != null) {
+            BUF.append(this.REFID.PLUGIN.NAME);
             BUF.append(":");
         }
 
         if (this.REFID.getType() == RefID.Type.FORMIDX) {
-            BUF.append(EID.Companion.pad8(this.REFID.getFORMID()));
+            BUF.append(EID.pad8(this.REFID.FORMID));
         } else {
             BUF.append(this.REFID.toString());
         }

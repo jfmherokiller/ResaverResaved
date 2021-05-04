@@ -99,9 +99,9 @@ public class FilePreferences extends AbstractPreferences
   {
     if (isRemoved()) return;
  
-    final File file = FilePreferencesFactory.Companion.getPreferencesFile();
+    final File file = FilePreferencesFactory.getPreferencesFile();
  
-    if (!Objects.requireNonNull(file).exists()) return;
+    if (!file.exists()) return;
  
     synchronized (file) {
       Properties p = new Properties();
@@ -141,7 +141,7 @@ public class FilePreferences extends AbstractPreferences
  
   protected void flushSpi() throws BackingStoreException
   {
-    final File file = FilePreferencesFactory.Companion.getPreferencesFile();
+    final File file = FilePreferencesFactory.getPreferencesFile();
  
     synchronized (file) {
       Properties p = new Properties();

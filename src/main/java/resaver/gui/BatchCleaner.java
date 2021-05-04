@@ -122,7 +122,7 @@ public class BatchCleaner extends SwingWorker<Boolean, Double> {
 
                 // Retrieve group 1, the definition name.
                 final String NAME = MATCHER.group(1).trim();
-                final Definition DEF = this.CONTEXT.findAny(TString.Companion.makeUnindexed(NAME));
+                final Definition DEF = this.CONTEXT.findAny(TString.makeUnindexed(NAME));
 
                 if (DEF != null) {
                     // Group 2 is an optional deletion prompt.

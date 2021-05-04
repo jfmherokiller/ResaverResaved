@@ -15,12 +15,9 @@
  */
 package resaver.gui;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.awt.Window;
 import java.io.IOException;
 import java.net.JarURLConnection;
-import java.util.Objects;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
@@ -47,9 +44,9 @@ public class AboutDialog {
         final ImageIcon ICON = AboutDialog.getLogo();
 
         if (ICON == null) {
-            JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(window, BUF.toString(), "About", 0);
         } else {
-            JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE, ICON);
+            JOptionPane.showMessageDialog(window, BUF.toString(), "About", 0, ICON);
         }
     }
 
@@ -60,12 +57,13 @@ public class AboutDialog {
                 LOG.warning("Couldn't get " + ICON_FILENAME + " resource URL.");
             }
 
-            final java.awt.image.BufferedImage IMAGE = javax.imageio.ImageIO.read(Objects.requireNonNull(URL));
+            final java.awt.image.BufferedImage IMAGE = javax.imageio.ImageIO.read(URL);
             if (IMAGE == null) {
                 LOG.warning("Couldn't load " + ICON_FILENAME + " into a BufferedImage.");
             }
 
-            return new ImageIcon(Objects.requireNonNull(IMAGE));
+            final ImageIcon ICON = new ImageIcon(IMAGE);
+            return ICON;
 
         } catch (IOException | IllegalArgumentException | NullPointerException ex) {
             return null;
@@ -73,11 +71,10 @@ public class AboutDialog {
 
     }
 
-    @NotNull
     static public CharSequence getVersion() {
         try {
             final java.net.URL RES = SaveWindow.class.getResource(SaveWindow.class.getSimpleName() + ".class");
-            final java.net.JarURLConnection CONN = (JarURLConnection) Objects.requireNonNull(RES).openConnection();
+            final java.net.JarURLConnection CONN = (JarURLConnection) RES.openConnection();
             final java.util.jar.Manifest MANIFEST = CONN.getManifest();
             final java.util.jar.Attributes ATTR = MANIFEST.getMainAttributes();
             return new StringBuilder()

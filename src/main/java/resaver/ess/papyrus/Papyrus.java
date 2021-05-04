@@ -48,7 +48,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * readRefID.
      *
      */
-    public Papyrus(ByteBuffer input, ESS.ESSContext context, ModelBuilder model) throws PapyrusException, PapyrusElementException {
+    public Papyrus(ByteBuffer input, ESS.ESSContext context, ModelBuilder model) throws PapyrusException {
         final mf.Counter SUM = new mf.Counter(input.capacity());
         SUM.addCountListener(sum -> {
             if (this.truncated || sum != ((Buffer)input).position()) {
@@ -91,6 +91,9 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ScriptMap scriptMap = null;
             try {
                 scriptMap = new ScriptMap(scriptCount, input, CONTEXT);
+            } catch (PapyrusElementException ex) {
+                scriptMap = (ScriptMap) ex.getPartial();
+                throw new PapyrusException("Error reading Scripts.", ex, this);
             } finally {
                 this.SCRIPTS = scriptMap;
                 this.SCRIPTS.values().forEach(script -> script.resolveParent(this.SCRIPTS));
@@ -105,6 +108,9 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 StructMap structMap = null;
                 try {
                     structMap = new StructMap(structCount, input, CONTEXT);
+                } catch (PapyrusElementException ex) {
+                    structMap = (StructMap) ex.getPartial();
+                    throw new PapyrusException("Error reading Structs.", ex, this);
                 } finally {
                     this.STRUCTS = structMap;
                     model.addStructs(this.STRUCTS);
@@ -128,6 +134,9 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ReferenceMap referenceMap = null;
             try {
                 referenceMap = new ReferenceMap(input, this.SCRIPTS, CONTEXT);
+            } catch (PapyrusElementException ex) {
+                referenceMap = (ReferenceMap) ex.getPartial();
+                throw new PapyrusException("Error reading References.", ex, this);
             } finally {
                 this.REFERENCES = referenceMap;
                 SUM.click(this.REFERENCES.calculateSize());
@@ -140,6 +149,9 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 StructInstanceMap structInstanceMap = null;
                 try {
                     structInstanceMap = new StructInstanceMap(input, this.STRUCTS, CONTEXT);
+                } catch (PapyrusElementException ex) {
+                    structInstanceMap = (StructInstanceMap) ex.getPartial();
+                    throw new PapyrusException("Error reading StructInstances.", ex, this);
                 } finally {
                     this.STRUCT_INSTANCES = structInstanceMap;
                     SUM.click(this.STRUCT_INSTANCES.calculateSize());
@@ -150,6 +162,9 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ArrayMap arrayMap = null;
             try {
                 arrayMap = new ArrayMap(input, CONTEXT);
+            } catch (PapyrusElementException ex) {
+                arrayMap = (ArrayMap) ex.getPartial();
+                throw new PapyrusException("Error reading ArrayInfos.", ex, this);
             } finally {
                 this.ARRAYS = arrayMap;
                 SUM.click(this.ARRAYS.calculateSize());
@@ -162,6 +177,9 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ActiveScriptMap activeScriptMap = null;
             try {
                 activeScriptMap = new ActiveScriptMap(input, CONTEXT);
+            } catch (PapyrusElementException ex) {
+                activeScriptMap = (ActiveScriptMap) ex.getPartial();
+                throw new PapyrusException("Error reading ActiveScripts.", ex, this);
             } finally {
                 this.ACTIVESCRIPTS = activeScriptMap;
                 SUM.click(this.ACTIVESCRIPTS.calculateSize());
@@ -272,10 +290,14 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             this.FUNCTIONMESSAGES = new ArrayList<>(functionMessageCount);
             try {
                 for (int i = 0; i < functionMessageCount; i++) {
-                    FunctionMessage message = new FunctionMessage(input, CONTEXT);
-                    this.FUNCTIONMESSAGES.add(message);
+                    try {
+                        FunctionMessage message = new FunctionMessage(input, CONTEXT);
+                        this.FUNCTIONMESSAGES.add(message);
+                    } catch (PapyrusElementException ex) {
+                        throw new ListException(i, functionMessageCount, ex);
+                    }
                 }
-                SUM.click(4 + this.FUNCTIONMESSAGES.parallelStream().mapToInt(FunctionMessage::calculateSize).sum());
+                SUM.click(4 + this.FUNCTIONMESSAGES.parallelStream().mapToInt(v -> v.calculateSize()).sum());
             } catch (ListException ex) {
                 throw new PapyrusException("Failed to read FunctionMessage table.", ex, this);
             }
@@ -284,6 +306,9 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             SuspendedStackMap suspendStacks1 = null;
             try {
                 suspendStacks1 = new SuspendedStackMap(input, CONTEXT);
+            } catch (PapyrusElementException ex) {
+                suspendStacks1 = (SuspendedStackMap) ex.getPartial();
+                throw new PapyrusException("Error reading SuspendedStacks1.", ex, this);
             } finally {
                 this.SUSPENDEDSTACKS1 = suspendStacks1;
                 SUM.click(this.SUSPENDEDSTACKS1.calculateSize());
@@ -293,6 +318,9 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             SuspendedStackMap suspendStacks2 = null;
             try {
                 suspendStacks2 = new SuspendedStackMap(input, CONTEXT);
+            } catch (PapyrusElementException ex) {
+                suspendStacks2 = (SuspendedStackMap) ex.getPartial();
+                throw new PapyrusException("Error reading SuspendedStacks2.", ex, this);
             } finally {
                 this.SUSPENDEDSTACKS2 = suspendStacks2;
                 SUM.click(this.SUSPENDEDSTACKS2.calculateSize());
@@ -317,7 +345,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             }
 
             model.addUnknownIDList(this.UNKS);
-            SUM.click(4 + this.UNKS.parallelStream().mapToInt(EID::calculateSize).sum());
+            SUM.click(4 + this.UNKS.parallelStream().mapToInt(v -> v.calculateSize()).sum());
 
             UnbindMap unbinds = null;
             try {
@@ -355,7 +383,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 ARRAYSBUFFER.order(ByteOrder.LITTLE_ENDIAN);
 
                 other = new OtherData(input, CONTEXT);
-            } catch (BufferUnderflowException ex) {
+            } catch (PapyrusFormatException | BufferUnderflowException ex) {
 
             } finally {
                 this.OTHER = other;
@@ -426,7 +454,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
 
         // Write the "unknown" fields.
         output.putInt(this.UNK1);
-        this.UNK2.ifPresent(output::putInt);
+        this.UNK2.ifPresent(v -> output.putInt(v));
         output.putInt(this.UNKS.size());
         this.UNKS.forEach(id -> id.write(output));
 
@@ -434,7 +462,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         this.UNBINDMAP.write(output);
 
         // Write the save file version field, if present.
-        this.SAVE_FILE_VERSION.ifPresent(output::putShort);
+        this.SAVE_FILE_VERSION.ifPresent(v -> output.putShort(v));
 
         // Write the remaining data.
         output.put(this.ARRAYSBLOCK);
@@ -460,12 +488,12 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         sum += this.getArrays().calculateSize();
         sum += this.PAPYRUS_RUNTIME == null ? 0 : this.PAPYRUS_RUNTIME.calculateSize();
         sum += this.getActiveScripts().calculateSize();
-        sum += 4 + this.getFunctionMessages().parallelStream().mapToInt(FunctionMessage::calculateSize).sum();
+        sum += 4 + this.getFunctionMessages().parallelStream().mapToInt(v -> v.calculateSize()).sum();
         sum += this.getSuspendedStacks1().calculateSize();
         sum += this.getSuspendedStacks2().calculateSize();
         sum += 4; // UNK1
         sum += this.UNK2 != null && this.UNK2.isPresent() ? 4 : 0;
-        sum += 4 + this.getUnknownIDList().parallelStream().mapToInt(EID::calculateSize).sum();
+        sum += 4 + this.getUnknownIDList().parallelStream().mapToInt(v -> v.calculateSize()).sum();
         sum += this.getUnbinds().calculateSize();
         sum += this.SAVE_FILE_VERSION != null && this.SAVE_FILE_VERSION.isPresent() ? 2 : 0;
         sum += this.ARRAYSBLOCK == null ? 0 : this.ARRAYSBLOCK.length;
@@ -634,7 +662,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @return The number of unattached instances.
      */
     public int countUnattachedInstances() {
-        return (int) this.getScriptInstances().values().stream().filter(ScriptInstance::isUnattached).count();
+        return (int) this.getScriptInstances().values().stream().filter(v -> v.isUnattached()).count();
     }
 
     /**
@@ -647,11 +675,11 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         int count = 0;
         int threads = 0;
 
-        count += this.getScripts().values().stream().filter(Script::isUndefined).count();
-        count += this.getScriptInstances().values().parallelStream().filter(ScriptInstance::isUndefined).count();
-        count += this.getReferences().values().stream().filter(Reference::isUndefined).count();
-        count += this.getStructs().values().stream().filter(Struct::isUndefined).count();
-        count += this.getStructInstances().values().stream().filter(StructInstance::isUndefined).count();
+        count += this.getScripts().values().stream().filter(v -> v.isUndefined()).count();
+        count += this.getScriptInstances().values().parallelStream().filter(v -> v.isUndefined()).count();
+        count += this.getReferences().values().stream().filter(v -> v.isUndefined()).count();
+        count += this.getStructs().values().stream().filter(v -> v.isUndefined()).count();
+        count += this.getStructInstances().values().stream().filter(v -> v.isUndefined()).count();
         threads += this.getActiveScripts().values().stream().filter(v -> v.isUndefined() && !v.isTerminated()).count();
         return new int[]{count, threads};
     }
@@ -664,7 +692,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     public Set<PapyrusElement> removeUnattachedInstances() {
         final Set<ScriptInstance> UNATTACHED = this.getScriptInstances().values()
                 .stream()
-                .filter(ScriptInstance::isUnattached)
+                .filter(v -> v.isUnattached())
                 .collect(Collectors.toSet());
 
         return this.removeElements(UNATTACHED);
@@ -680,11 +708,11 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     public Set<PapyrusElement> removeUndefinedElements() {
         final java.util.Set<PapyrusElement> REMOVED = new java.util.HashSet<>();
 
-        REMOVED.addAll(this.removeElements(this.getScripts().values().stream().filter(Script::isUndefined).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getStructs().values().stream().filter(Struct::isUndefined).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getScriptInstances().values().stream().filter(ScriptInstance::isUndefined).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getReferences().values().stream().filter(Reference::isUndefined).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getStructInstances().values().stream().filter(StructInstance::isUndefined).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getScripts().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getStructs().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getScriptInstances().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getReferences().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
+        REMOVED.addAll(this.removeElements(this.getStructInstances().values().stream().filter(v -> v.isUndefined()).collect(Collectors.toSet())));
 
         this.getActiveScripts().values().stream()
                 .filter(v -> v.isUndefined() && !v.isTerminated())
@@ -708,7 +736,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 .filter(v -> v.isUndefined() && !v.isTerminated())
                 .collect(Collectors.toSet());
 
-        TERMINATED.forEach(ActiveScript::zero);
+        TERMINATED.forEach(v -> v.zero());
         return TERMINATED;
     }
 
@@ -860,13 +888,14 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
 
     /**
      * Helper for printReferrents.
-     *  @param builder
+     *
+     * @param builder
      * @param ls
      * @param myname
      * @param lname
      * @param relationship
      */
-    static private void referrentsPrint(Element ref, StringBuilder builder, Set<? extends Linkable> ls, String myname, String lname, String relationship) {
+    static private void referrentsPrint(Element ref, StringBuilder builder, Set<Linkable> ls, String myname, String lname, String relationship) {
         if (null == ls) {
             return;
         }

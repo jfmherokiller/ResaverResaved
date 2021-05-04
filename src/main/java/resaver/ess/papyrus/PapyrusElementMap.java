@@ -47,7 +47,7 @@ public class PapyrusElementMap<T extends HasID> extends java.util.LinkedHashMap<
 
     @Override
     public int calculateSize() {
-        return 4 + this.values().parallelStream().mapToInt(T::calculateSize).sum();
+        return 4 + this.values().parallelStream().mapToInt(v -> v.calculateSize()).sum();
     }
 
     @Override

@@ -98,11 +98,11 @@ final public class Header implements Element {
         }
 
         this.SAVENUMBER = input.getInt();
-        this.NAME = WStringElement.Companion.read(input);
+        this.NAME = WStringElement.read(input);
         this.LEVEL = input.getInt();
-        this.LOCATION = WStringElement.Companion.read(input);
-        this.GAMEDATE = WStringElement.Companion.read(input);
-        this.RACEID = WStringElement.Companion.read(input);
+        this.LOCATION = WStringElement.read(input);
+        this.GAMEDATE = WStringElement.read(input);
+        this.RACEID = WStringElement.read(input);
         this.SEX = input.getShort();
         this.CURRENT_XP = input.getFloat();
         this.NEEDED_XP = input.getFloat();

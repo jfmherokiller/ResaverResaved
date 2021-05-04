@@ -92,13 +92,13 @@ public class FilterMaker {
             else if (node.getElement() instanceof ScriptInstance) {
                 ScriptInstance instance = (ScriptInstance) node.getElement();
                 RefID refID = instance.getRefID();
-                return null != refID && refID.getPLUGIN() != null && plugins.contains(refID.getPLUGIN());
+                return null != refID && refID.PLUGIN != null && plugins.contains(refID.PLUGIN);
 
             } // Check if the element is a ChangeForm with a matching refid.
             else if (node.getElement() instanceof ChangeForm) {
                 ChangeForm form = (ChangeForm) node.getElement();
                 RefID refID = form.getRefID();
-                return null != refID && refID.getPLUGIN() != null && plugins.contains(refID.getPLUGIN());
+                return null != refID && refID.PLUGIN != null && plugins.contains(refID.PLUGIN);
 
             } // If the element is not an instance, it automatically fails.
             return false;
@@ -304,7 +304,7 @@ public class FilterMaker {
             }
 
             final RefID REF = (RefID) MOVECELL;
-            return REF.getFORMID() == 0xFFFFFFFF;
+            return REF.FORMID == 0xFFFFFFFF;
 
         };
     }
@@ -582,12 +582,12 @@ public class FilterMaker {
 
         // Setup a changeflag setFilter.
         if (null != changeFlags) {
-            FILTERS.add(createChangeFlagFilter(changeFlags.getA(), changeFlags.getB()));
+            FILTERS.add(createChangeFlagFilter(changeFlags.A, changeFlags.B));
         }
 
         // Setup a changeformflag setFilter.
         if (null != changeFormFlags) {
-            FILTERS.add(createChangeFormFlagFilter(context, changeFormFlags.getA(), changeFormFlags.getB()));
+            FILTERS.add(createChangeFormFlagFilter(context, changeFormFlags.A, changeFormFlags.B));
         }
         // Filter undefined.
         if (undefined) {
@@ -637,12 +637,12 @@ public class FilterMaker {
         // Combine the filters.
         // OR the subfilters together.
         SUBFILTERS.stream()
-                .reduce(Predicate::or)
-                .ifPresent(FILTERS::add);
+                .reduce((a, b) -> a.or(b))
+                .ifPresent(f -> FILTERS.add(f));
 
         // AND the main filters together.
         return FILTERS.stream()
-                .reduce(Predicate::and)
+                .reduce((a, b) -> a.and(b))
                 .orElse(null);
     }
 

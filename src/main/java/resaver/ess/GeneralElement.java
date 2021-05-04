@@ -24,9 +24,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import resaver.IString;
 import resaver.ess.papyrus.EID;
 import resaver.ess.papyrus.PapyrusContext;
@@ -113,11 +110,10 @@ public class GeneralElement implements Element {
      * @return Retrieves the value associated with the specified name, or null
      * if there is no match or the match is not an <code>Element</code>.
      */
-    @Nullable
     final public Element getElement(String name) {
         Objects.requireNonNull(name);
         Object val = this.getVal(name);
-        if (val instanceof Element) {
+        if (null != val && val instanceof Element) {
             return (Element) val;
         }
         return null;
@@ -133,7 +129,7 @@ public class GeneralElement implements Element {
     final public GeneralElement getGeneralElement(String name) {
         Objects.requireNonNull(name);
         Object val = this.getVal(name);
-        if (val instanceof GeneralElement) {
+        if (null != val && val instanceof GeneralElement) {
             return (GeneralElement) val;
         }
         return null;
@@ -147,7 +143,7 @@ public class GeneralElement implements Element {
      * @return Retrieves the value associated with the specified name, or null
      * if there is no match or the match is not a <code>GeneralElement</code>.
      */
-    final public Element getElement(@NotNull Enum<?> name) {
+    final public Element getElement(Enum<?> name) {
         return this.getElement(Objects.requireNonNull(name.toString()));
     }
 
@@ -245,7 +241,7 @@ public class GeneralElement implements Element {
      * @return The element.
      *
      */
-    final public <T extends Element> T readElement(ByteBuffer input, @NotNull Enum<?> name, ElementReader<T> reader) {
+    final public <T extends Element> T readElement(ByteBuffer input, Enum<?> name, ElementReader<T> reader) {
         return this.readElement(input, Objects.requireNonNull(name.toString()), reader);
     }
 
@@ -259,7 +255,7 @@ public class GeneralElement implements Element {
      * @return The element.
      *
      */
-    final public <T extends Element> T readElement(ByteBuffer input, String name, @NotNull ElementReader<T> reader) {
+    final public <T extends Element> T readElement(ByteBuffer input, String name, ElementReader<T> reader) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         T element = reader.read(input);
@@ -739,7 +735,7 @@ public class GeneralElement implements Element {
             } else if (v instanceof float[]) {
                 sum += 4 * ((float[]) v).length;
             } else if (v instanceof Element[]) {
-                sum += Arrays.stream((Element[]) v).mapToInt(Element::calculateSize).sum();
+                sum += Arrays.stream((Element[]) v).mapToInt(w -> w.calculateSize()).sum();
             } else if (v == null) {
                 throw new IllegalStateException("Null element!");
             } else {

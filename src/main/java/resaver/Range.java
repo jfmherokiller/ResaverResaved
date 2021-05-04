@@ -15,9 +15,6 @@
  */
 package resaver;
 
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-
 /**
  * Describes a numeric range and methods for testing inclusion/exclusion in that
  * range.
@@ -35,8 +32,6 @@ abstract public class Range<NumType extends Number> {
      * @param upper The exclusive upper bound, or null for unbounded.
      * @return The <code>Range</code>.
      */
-    @NotNull
-    @Contract("_, _ -> new")
     static public Range create(Double lower, Double upper) {
         return new DoubleRange(lower, upper, true, false);
     }
@@ -99,6 +94,6 @@ abstract public class Range<NumType extends Number> {
         protected int test(Number num) {
             return -1;
         }
-
+        
     }
 }

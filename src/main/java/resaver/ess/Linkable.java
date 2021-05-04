@@ -35,19 +35,19 @@ public interface Linkable {
      * @param type
      * @param address
      * @param text
-     * @return
+     * @return 
      */
     static public String makeLink(String type, Object address, String text) {
         return String.format("<a href=\"%s://%s\">%s</a>", type, address, text);
     }
-
+    
     /**
      * Makes a link url in a standard way, with a target.
      * @param type
      * @param address
      * @param target
      * @param text
-     * @return
+     * @return 
      */
     static public String makeLink(String type, Object address, int target, String text) {
         return String.format("<a href=\"%s://%s[%d]\">%s</a>", type, address, target, text);
@@ -60,7 +60,7 @@ public interface Linkable {
      * @param target1
      * @param target2
      * @param text
-     * @return
+     * @return 
      */
     static public String makeLink(String type, Object address, int target1, int target2, String text) {
         return String.format("<a href=\"%s://%s[%d][%d]\">%s</a>", type, address, target1, target2, text);

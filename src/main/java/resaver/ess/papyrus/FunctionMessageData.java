@@ -87,7 +87,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
         sum += this.EVENT.calculateSize();
         sum += this.UNKNOWNVAR.calculateSize();
         sum += 4;
-        sum += this.VARIABLES.stream().mapToInt(Variable::calculateSize).sum();
+        sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
         return sum;
     }
 
@@ -249,7 +249,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
             return this.SCRIPT.isUndefined();
         }
 
-        return !Script.Companion.getNATIVE_SCRIPTS().contains(this.SCRIPTNAME.toWString());
+        return !Script.NATIVE_SCRIPTS.contains(this.SCRIPTNAME.toWString());
     }
 
     final private byte UNKNOWN;

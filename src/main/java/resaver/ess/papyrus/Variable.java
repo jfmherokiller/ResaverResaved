@@ -15,7 +15,6 @@
  */
 package resaver.ess.papyrus;
 
-import org.jetbrains.annotations.NotNull;
 import resaver.ListException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -67,7 +66,7 @@ abstract public class Variable implements PapyrusElement, Linkable {
         Objects.requireNonNull(input);
         Objects.requireNonNull(context);
 
-        final Type TYPE = Type.Companion.read(input);
+        final Type TYPE = Type.read(input);
 
         switch (TYPE) {
             case NULL:
@@ -180,7 +179,7 @@ abstract public class Variable implements PapyrusElement, Linkable {
         }
 
         @Override
-        public void write(@NotNull ByteBuffer output) {
+        public void write(ByteBuffer output) {
             this.getType().write(output);
             output.putInt(this.VALUE);
         }
@@ -350,7 +349,7 @@ abstract public class Variable implements PapyrusElement, Linkable {
         }
 
         @Override
-        public void write(@NotNull ByteBuffer output) {
+        public void write(ByteBuffer output) {
             this.getType().write(output);
             this.VALUE.write(output);
         }

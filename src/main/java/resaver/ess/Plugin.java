@@ -25,8 +25,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import org.jetbrains.annotations.NotNull;
 import resaver.Analysis;
 import resaver.ess.papyrus.ScriptInstance;
 
@@ -95,7 +93,7 @@ final public class Plugin implements Element, AnalyzableElement, Linkable, Compa
      * @param output The output stream.
      */
     @Override
-    public void write(@NotNull ByteBuffer output) {
+    public void write(ByteBuffer output) {
         mf.BufferUtil.putWString(output, this.NAME);
     }
 
@@ -143,7 +141,7 @@ final public class Plugin implements Element, AnalyzableElement, Linkable, Compa
      */
     public Set<ChangeForm> getChangeForms(ESS save) {
         final Set<ChangeForm> FORMS = save.getChangeForms().values().stream()
-                .filter(form -> form.getRefID().getPLUGIN() == this)
+                .filter(form -> form.getRefID().PLUGIN == this)
                 .collect(Collectors.toSet());
 
         return FORMS;
@@ -158,7 +156,7 @@ final public class Plugin implements Element, AnalyzableElement, Linkable, Compa
     public Set<ScriptInstance> getInstances(ESS save) {
         final Set<ScriptInstance> INSTANCES = save.getPapyrus().getScriptInstances().values().stream()
                 .filter(instance -> instance.getRefID() != null)
-                .filter(instance -> instance.getRefID().getPLUGIN() == this)
+                .filter(instance -> instance.getRefID().PLUGIN == this)
                 .collect(Collectors.toSet());
 
         return INSTANCES;
@@ -170,9 +168,8 @@ final public class Plugin implements Element, AnalyzableElement, Linkable, Compa
      * @param save
      * @return
      */
-    @NotNull
     @Override
-    public String getInfo(@NotNull resaver.Analysis analysis, @NotNull ESS save) {
+    public String getInfo(resaver.Analysis analysis, ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
 
         if (this.LIGHTWEIGHT) {
@@ -202,26 +199,28 @@ final public class Plugin implements Element, AnalyzableElement, Linkable, Compa
             BUILDER.append("</ul>");
         }
 
-        final List<String> PROVIDERS = new ArrayList<>();
+        if (null != analysis) {
+            final List<String> PROVIDERS = new ArrayList<>();
 
-        Predicate<String> espFilter = esp -> esp.equalsIgnoreCase(NAME);
-        analysis.ESPS.forEach((mod, esps) -> {
-            esps.stream().filter(espFilter).forEach(esp -> PROVIDERS.add(mod));
-        });
+            Predicate<String> espFilter = esp -> esp.equalsIgnoreCase(NAME);
+            analysis.ESPS.forEach((mod, esps) -> {
+                esps.stream().filter(espFilter).forEach(esp -> PROVIDERS.add(mod));
+            });
 
-        if (!PROVIDERS.isEmpty()) {
-            String probableProvider = PROVIDERS.get(PROVIDERS.size() - 1);
+            if (!PROVIDERS.isEmpty()) {
+                String probableProvider = PROVIDERS.get(PROVIDERS.size() - 1);
 
-            Predicate<SortedSet<String>> modFilter = e -> e.contains(probableProvider);
-            int numScripts = (int) analysis.SCRIPT_ORIGINS.values().stream().filter(modFilter).count();
+                Predicate<SortedSet<String>> modFilter = e -> e.contains(probableProvider);
+                int numScripts = (int) analysis.SCRIPT_ORIGINS.values().stream().filter(modFilter).count();
 
-            BUILDER.append(String.format("<p>%d scripts.</p>", numScripts));
-            BUILDER.append(String.format("<p>The plugin probably came from mod \"%s\".</p>", probableProvider));
+                BUILDER.append(String.format("<p>%d scripts.</p>", numScripts));
+                BUILDER.append(String.format("<p>The plugin probably came from mod \"%s\".</p>", probableProvider));
 
-            if (PROVIDERS.size() > 1) {
-                BUILDER.append("<p>Full list of providers:</p><ul>");
-                PROVIDERS.forEach(mod -> BUILDER.append(String.format("<li>%s", mod)));
-                BUILDER.append("</ul>");
+                if (PROVIDERS.size() > 1) {
+                    BUILDER.append("<p>Full list of providers:</p><ul>");
+                    PROVIDERS.forEach(mod -> BUILDER.append(String.format("<li>%s", mod)));
+                    BUILDER.append("</ul>");
+                }
             }
         }
 

@@ -21,9 +21,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
-
-import org.jetbrains.annotations.NotNull;
-import resaver.Analysis;
 import resaver.ess.ESS;
 import resaver.ess.WStringElement;
 
@@ -66,7 +63,8 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             throw new PapyrusFormatException(String.format("Invalid TString index: %d / %d", index, this.size()));
         }
 
-        return this.get(index);
+        TString newString = this.get(index);
+        return newString;
     }
 
     /**
@@ -115,7 +113,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             this.ensureCapacity(strCount);
             for (int i = 0; i < strCount; i++) {
                 try {
-                    final WStringElement WSTR = WStringElement.Companion.read(input);
+                    final WStringElement WSTR = WStringElement.read(input);
                     final TString TSTR = this.STR32
                             ? new TString32(WSTR, i)
                             : new TString16(WSTR, i);
@@ -192,7 +190,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             sum += 2;
         }
 
-        sum += this.parallelStream().mapToInt(TString::calculateFullSize).sum();
+        sum += this.parallelStream().mapToInt(v -> v.calculateFullSize()).sum();
         return sum;
     }
 
@@ -334,16 +332,12 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             return (this.getIndex() > 0xFFF0 && !STBCORRECTION ? 6 : 2);
         }
 
-        @Override
-        public boolean matches(@NotNull Analysis analysis, @NotNull String mod) {
-            return false;
-        }
     }
 
     /**
      * TString implementation for 32 bit TStrings.
      */
-    static final private class TString32 extends TString {
+    final private class TString32 extends TString {
 
         /**
          * Creates a new <code>TString32</code> from a <code>WStringElement</code> and
@@ -386,9 +380,5 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             return 4;
         }
 
-        @Override
-        public boolean matches(@NotNull Analysis analysis, @NotNull String mod) {
-            return false;
-        }
     }
 }

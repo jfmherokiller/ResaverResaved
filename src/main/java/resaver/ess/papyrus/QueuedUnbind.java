@@ -112,7 +112,7 @@ final public class QueuedUnbind implements PapyrusElement, AnalyzableElement, Li
             BUILDER.append(String.format("<p>Instance: %s</p>", this.INSTANCE.toHTML(this)));
         }
 
-        BUILDER.append(String.format("<p>Unknown: %s</p>", EID.Companion.pad8(this.UNKNOWN)));
+        BUILDER.append(String.format("<p>Unknown: %s</p>", EID.pad8(this.UNKNOWN)));
 
         Linkable UNK = save.getPapyrus().getContext().broadSpectrumSearch(this.UNKNOWN);
         if (null != UNK) {
@@ -177,9 +177,9 @@ final public class QueuedUnbind implements PapyrusElement, AnalyzableElement, Li
     @Override
     public String toString() {
         if (null == this.INSTANCE) {
-            return this.ID + ": " + EID.Companion.pad8(this.UNKNOWN) + " (MISSING INSTANCE)";
+            return this.ID + ": " + EID.pad8(this.UNKNOWN) + " (MISSING INSTANCE)";
         } else {
-            return this.ID + ": " + EID.Companion.pad8(this.UNKNOWN) + " (" + INSTANCE.getScriptName() + ")";
+            return this.ID + ": " + EID.pad8(this.UNKNOWN) + " (" + INSTANCE.getScriptName() + ")";
         }
     }
 

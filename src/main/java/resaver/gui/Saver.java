@@ -88,7 +88,7 @@ public class Saver extends SwingWorker<ESS, Double> {
                 MSG.append(String.format("\nBackup written to %s.", RESULT.BACKUP_FILE));
             }
             if (RESULT.ESS.hasCosave()) {
-                MSG.append(String.format("\n%s co-save was copied.", RESULT.GAME.getCOSAVE_EXT().toUpperCase()));
+                MSG.append(String.format("\n%s co-save was copied.", RESULT.GAME.COSAVE_EXT.toUpperCase()));
             }
 
             final String TITLE = "Save Written";
@@ -100,6 +100,12 @@ public class Saver extends SwingWorker<ESS, Double> {
             }
             
             return this.SAVE;
+
+        } catch (IOException ex) {
+            final String MSG = String.format("Error while writing file \"%s\".\n%s", this.SAVEFILE.getFileName(), ex.getMessage());
+            LOG.log(Level.SEVERE, MSG, ex);
+            JOptionPane.showMessageDialog(this.WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE);
+            return null;
 
         } catch (Exception | Error ex) {
             final String MSG = String.format("Error while writing file \"%s\".\n%s", this.SAVEFILE.getFileName(), ex.getMessage());

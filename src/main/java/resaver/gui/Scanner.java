@@ -35,8 +35,6 @@ import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-
-import mf.Timer;
 import resaver.Game;
 import resaver.Mod;
 import resaver.ResaverFormatting;
@@ -77,7 +75,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
      */
     @Override
     protected resaver.Analysis doInBackground() throws Exception {
-        final mf.Timer TIMER = Timer.Companion.startNew("Load Plugins");
+        final mf.Timer TIMER = mf.Timer.startNew("Load Plugins");
         final Game GAME = this.SAVE.getHeader().GAME;
         this.WINDOW.addWindowListener(this.LISTENER);
         this.PROGRESS.accept("Initializing");
@@ -115,15 +113,15 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
                     .collect(Collectors.toMap(
                             path -> PLUGINS.getPaths().get(path.getFileName()),
                             path -> mod)))
-                    .forEach(PLUGIN_MOD_MAP::putAll);
+                    .forEach(map -> PLUGIN_MOD_MAP.putAll(map));
 
             // The language. Eventually make this selectable?
             final String LANGUAGE = (GAME.isSkyrim() ? "english" : "en");
 
             // Analyze scripts from mods. 
             final Mod.Analysis PROFILEANALYSIS = MODS.stream()
-                    .map(Mod::getAnalysis)
-                    .reduce(new Mod.Analysis(), Mod.Analysis::merge);
+                    .map(mod -> mod.getAnalysis())
+                    .reduce(new Mod.Analysis(), (a1, a2) -> a1.merge(a2));
 
             final List<Path> ERR_ARCHIVE = new LinkedList<>();
             final List<Path> ERR_SCRIPTS = new LinkedList<>();
@@ -138,7 +136,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
             for (Mod mod : MODS) {
                 if (mod == CORE) {
                     COUNTER.click();
-                    this.PROGRESS.accept(String.format("Reading %s's data", GAME.getNAME()));
+                    this.PROGRESS.accept(String.format("Reading %s's data", GAME.NAME));
                 } else {
                     this.PROGRESS.accept(String.format("Reading %s: mod data for %s", COUNTER.eval(), mod.getShortName()));
                 }
@@ -161,7 +159,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
 
             // Map plugins to their stringsfiles.
             Map<Plugin, List<StringsFile>> PLUGIN_STRINGS = STRINGSFILES.stream()
-                    .collect(Collectors.groupingBy(StringsFile::getPLUGIN));
+                    .collect(Collectors.groupingBy(stringsFile -> stringsFile.PLUGIN));
 
             // The master stringtable.
             final resaver.esp.StringTable STRINGTABLE = new resaver.esp.StringTable();
@@ -186,7 +184,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
 
                 } else {
                     try {
-                        final PluginData INFO = ESP.Companion.skimPlugin(PLUGINFILEMAP.get(plugin), GAME, plugin, PLUGINS);
+                        final PluginData INFO = ESP.skimPlugin(PLUGINFILEMAP.get(plugin), GAME, plugin, PLUGINS);
                         PLUGIN_DATA.put(plugin, INFO);
 
                         LOG.info(String.format("Scanned plugin: %6d names and %5.1f kb script data from %s", INFO.getNameCount(), INFO.getScriptDataSize() / 1024.0f, plugin.indexName()));
@@ -217,7 +215,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
             // Find the worst offenders for script data size.
             final List<Plugin> OFFENDERS = SIZES.entrySet().stream()
                     .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
-                    .map(Map.Entry::getKey)
+                    .map(entry -> entry.getKey())
                     .limit(3).collect(Collectors.toList());
 
             final StringBuilder BUF = new StringBuilder();

@@ -50,7 +50,8 @@ public class ESSTest {
                 final java.util.logging.Level LEVEL = record.getLevel();
                 final String MSG = record.getMessage();
                 final String SRC = record.getSourceClassName() + "." + record.getSourceMethodName();
-                return String.format("%s: %s: %s\n", SRC, LEVEL, MSG);
+                final String LOG = String.format("%s: %s: %s\n", SRC, LEVEL, MSG);
+                return LOG;
             }
         });
 
@@ -60,7 +61,7 @@ public class ESSTest {
 
         try {
             paths = Files.walk(TESTSAVES_DIR)
-                    .filter(p -> Game.Companion.getFILTER_ALL().accept(p.toFile()))
+                    .filter(p -> Game.FILTER_ALL.accept(p.toFile()))
                     .filter(Files::isReadable)
                     .filter(Files::isRegularFile)
                     .collect(Collectors.toList());
@@ -98,7 +99,7 @@ public class ESSTest {
         final int COUNT = this.PATHS.size();
         
         for (Path path : this.PATHS) {
-            System.out.printf("Test save %d / %d : %s%n", index, COUNT, path);
+            System.out.println(String.format("Test save %d / %d : %s", index, COUNT, path));
             testReadESS(path);
             index++;
         }
@@ -107,7 +108,7 @@ public class ESSTest {
     /**
      * Test of readESS and writeESS methods, of class ESS.
      *
-     * @param path ess path
+     * @param path
      */
     //@ParameterizedTest
     //@MethodSource("pathProvider")    
@@ -122,7 +123,7 @@ public class ESSTest {
                 return;
             }
             
-            final String EXT = "." + ORIGINAL.getHeader().GAME.getSAVE_EXT();
+            final String EXT = "." + ORIGINAL.getHeader().GAME.SAVE_EXT;
 
             final Path F2 = Files.createTempFile("ess_test", EXT);
             ESS.writeESS(ORIGINAL, F2);

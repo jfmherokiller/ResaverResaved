@@ -41,7 +41,7 @@ public class ChangeFormNPC extends GeneralElement implements ChangeFormData {
         Objects.requireNonNull(input);
 
         if (flags.getFlag(CHANGE_FORM_FLAGS)) {
-            this.CHANGEFORMFLAGS = super.readElement(input, CHANGE_FORM_FLAGS, ChangeFormFlags::new);
+            this.CHANGEFORMFLAGS = super.readElement(input, CHANGE_FORM_FLAGS, in -> new ChangeFormFlags(in));
         } else {
             this.CHANGEFORMFLAGS = null;
         }
@@ -66,7 +66,7 @@ public class ChangeFormNPC extends GeneralElement implements ChangeFormData {
             }
 
             if (flags.getFlag(CHANGE_ACTOR_BASE_FULLNAME)) {
-                super.readElement(input, "FULLNAME", WStringElement.Companion::read);
+                super.readElement(input, "FULLNAME", WStringElement::read);
             }
 
             if (flags.getFlag(CHANGE_NPC_SKILLS)) {
@@ -223,7 +223,7 @@ public class ChangeFormNPC extends GeneralElement implements ChangeFormData {
 
         @Override
         public String toString() {
-            return String.format("Rank %s with %s", this.getVal("RANK"), this.getVal("FACTION"));
+            return String.format("Rank %d with %s", this.getVal("RANK"), this.getVal("FACTION"));
         }
     }
 
@@ -239,7 +239,7 @@ public class ChangeFormNPC extends GeneralElement implements ChangeFormData {
                 super.readRefID(input, "HAIRCOLOR", context);
                 super.readInt(input, "SKINTONE");
                 super.readRefID(input, "SKIN", context);
-                super.readVSElemArray(input, "HEADPARTS", context::readRefID);
+                super.readVSElemArray(input, "HEADPARTS", in -> context.readRefID(in));
                 byte faceDataPrsent = super.readByte(input, "FACEDATAPRESENT");
                 
                 if (faceDataPrsent != 0) {

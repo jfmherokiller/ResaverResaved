@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 import mf.BufferUtil;
-import org.jetbrains.annotations.NotNull;
 import resaver.Analysis;
 import resaver.Game;
 import resaver.ess.papyrus.ScriptInstance;
@@ -45,7 +44,7 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
      * @param input The input stream.
      * @param context The <code>ESSContext</code> info.
      */
-    public ChangeForm(ByteBuffer input, @NotNull ESS.ESSContext context) {
+    public ChangeForm(ByteBuffer input, ESS.ESSContext context) {
         Objects.requireNonNull(input);
         this.REFID = context.readRefID(input);
         this.CHANGEFLAGS = Flags.readIntFlags(input);
@@ -377,8 +376,8 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
         final StringBuilder BUF = new StringBuilder();
         BUF.append(this.TYPE);
 
-        if (null != this.REFID.getPLUGIN()) {
-            BUF.append(" (").append(this.REFID.getPLUGIN()).append(")");
+        if (null != this.REFID.PLUGIN) {
+            BUF.append(" (").append(this.REFID.PLUGIN).append(")");
         } else if (this.REFID.getType() == RefID.Type.FORMIDX) {
             int k = 0;
         }

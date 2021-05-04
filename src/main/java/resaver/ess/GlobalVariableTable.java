@@ -15,8 +15,6 @@
  */
 package resaver.ess;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.Objects;
@@ -57,7 +55,7 @@ final public class GlobalVariableTable implements Element, GlobalDataBlock {
      * @param output The output stream.
      */
     @Override
-    public void write(@NotNull ByteBuffer output) {
+    public void write(ByteBuffer output) {
         this.COUNT.write(output);
         this.VARIABLES.forEach(var -> var.write(output));
     }

@@ -107,10 +107,10 @@ public class ReSaverSettings extends JDialog {
 
         }
 
-        Game.Companion.getVALUES().forEach((game) -> {
+        Game.VALUES.forEach((game) -> {
             JPanel TAB = new JPanel();
             TAB.setLayout(new BoxLayout(TAB, BoxLayout.PAGE_AXIS));
-            PANE.add(game.getNAME(), TAB);
+            PANE.add(game.NAME, TAB);
 
             {
                 final JLabel LABEL = new JLabel("Game directory:");
@@ -168,7 +168,7 @@ public class ReSaverSettings extends JDialog {
         });
 
         if (currentGame != null) {
-            PANE.setSelectedIndex(Game.Companion.getVALUES().indexOf(currentGame));
+            PANE.setSelectedIndex(Game.VALUES.indexOf(currentGame));
         }
     }
 
