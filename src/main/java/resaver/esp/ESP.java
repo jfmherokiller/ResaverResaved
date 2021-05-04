@@ -137,7 +137,7 @@ final public class ESP implements Entry {
     @Override
     public int calculateSize() {
         int sum = 0;
-        sum += this.RECORDS.stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.RECORDS.stream().mapToInt(Entry::calculateSize).sum();
         return sum;
     }
 
