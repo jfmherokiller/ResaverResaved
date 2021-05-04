@@ -13,96 +13,93 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.util.*;
-import java.util.stream.Collectors;
+import mf.BufferUtil
+import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.channels.FileChannel
+import java.nio.file.Path
+import java.nio.file.PathMatcher
+import java.util.*
+import java.util.stream.Collectors
 
 /**
  * Handles the job of reading scripts out of BSA files.
  *
  * @author Mark Fairchild
  */
-public class BA2Parser extends ArchiveParser {
+class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, channel) {
+    /**
+     * @see ArchiveParser.getFiles
+     */
+    @Throws(IOException::class)
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer?>?>? {
+        return FILES.stream()
+            .filter { file: BA2FileRecord -> dir == null || file.path.startsWith(dir) }
+            .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }
+            .collect(
+                Collectors.toMap(
+                    { file: BA2FileRecord -> super.PATH.resolve(file.path) },
+                    { file: BA2FileRecord -> file.getData(CHANNEL) })
+            )
+    }
 
     /**
-     * Creates a new <code>BA2Parser</code>.
+     * @see ArchiveParser.getFilenames
+     */
+    @Throws(IOException::class)
+    override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?>? {
+        return FILES.stream()
+            .filter { file: BA2FileRecord -> dir == null || file.path.startsWith(dir) }
+            .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }
+            .collect(
+                Collectors.toMap(
+                    { record: BA2FileRecord -> super.PATH.fileName.resolve(record.path) },
+                    { obj: BA2FileRecord -> obj.path })
+            )
+    }
+
+    val HEADER: BA2Header
+    private val FILES: MutableList<BA2FileRecord>
+
+    /**
+     * Creates a new `BA2Parser`.
      *
      * @param path
      * @param channel
      * @throws IOException
-     * @see ArchiveParser#ArchiveParser(java.lang.String,
-     * resaver.LittleEndianRAF)
+     * @see ArchiveParser.ArchiveParser
      */
-    protected BA2Parser(Path path, FileChannel channel) throws IOException {
-        super(path, channel);
+    init {
 
         // Read the header.
-        final ByteBuffer HEADERBLOCK = ByteBuffer.allocate(BA2Header.SIZE).order(ByteOrder.LITTLE_ENDIAN);
-        channel.read(HEADERBLOCK);
-        HEADERBLOCK.flip();
-        this.HEADER = new BA2Header(HEADERBLOCK);
-        
-        this.FILES = new ArrayList<>(this.HEADER.FILE_COUNT);
-        final ByteBuffer FILERECORDS = ByteBuffer.allocate(this.HEADER.FILE_COUNT * BA2FileRecord.SIZE).order(ByteOrder.LITTLE_ENDIAN);
-        channel.read(FILERECORDS);
-        FILERECORDS.order(ByteOrder.LITTLE_ENDIAN).flip();
-        
+        val HEADERBLOCK = ByteBuffer.allocate(BA2Header.SIZE).order(ByteOrder.LITTLE_ENDIAN)
+        channel.read(HEADERBLOCK)
+        HEADERBLOCK.flip()
+        HEADER = BA2Header(HEADERBLOCK)
+        FILES = ArrayList(HEADER.FILE_COUNT)
+        val FILERECORDS = ByteBuffer.allocate(HEADER.FILE_COUNT * BA2FileRecord.SIZE).order(ByteOrder.LITTLE_ENDIAN)
+        channel.read(FILERECORDS)
+        FILERECORDS.order(ByteOrder.LITTLE_ENDIAN).flip()
+
         // Read file records.
-        for (int i = 0; i < this.HEADER.FILE_COUNT; i++) {
-            BA2FileRecord file = new BA2FileRecord(FILERECORDS, this.HEADER);
-            this.FILES.add(file);
+        for (i in 0 until HEADER.FILE_COUNT) {
+            val file = BA2FileRecord(FILERECORDS, HEADER)
+            FILES.add(file)
         }
 
         // Read the filename table.
-        channel.position(this.HEADER.NAMETABLE_OFFSET);
-        final ByteBuffer NAMEBUFFER = ByteBuffer.allocate(2048).order(ByteOrder.LITTLE_ENDIAN);
-        channel.read(NAMEBUFFER);
-
-        for (int i = 0; i < this.HEADER.FILE_COUNT; i++) {
-            NAMEBUFFER.flip();
-            String fileName = mf.BufferUtil.getWString(NAMEBUFFER);
-            this.FILES.get(i).setName(fileName);
-            NAMEBUFFER.compact();
-            channel.read(NAMEBUFFER);
+        channel.position(HEADER.NAMETABLE_OFFSET)
+        val NAMEBUFFER = ByteBuffer.allocate(2048).order(ByteOrder.LITTLE_ENDIAN)
+        channel.read(NAMEBUFFER)
+        for (i in 0 until HEADER.FILE_COUNT) {
+            NAMEBUFFER.flip()
+            val fileName = BufferUtil.getWString(NAMEBUFFER)
+            FILES[i].name = fileName
+            NAMEBUFFER.compact()
+            channel.read(NAMEBUFFER)
         }
-        
     }
-
-    /**
-     * @see ArchiveParser#getFiles(java.nio.file.Path,
-     * java.nio.file.PathMatcher)
-     */
-    @Override
-    public Map<Path, Optional<ByteBuffer>> getFiles(Path dir, PathMatcher matcher) throws IOException {
-        return this.FILES.stream()
-                .filter(file -> dir == null || file.getPath().startsWith(dir))
-                .filter(file -> matcher.matches(file.getPath()))
-                .collect(Collectors.toMap(
-                        file -> super.PATH.resolve(file.getPath()),                        
-                        file -> file.getData(CHANNEL)));
-    }
-
-    /**
-     * @see ArchiveParser#getFilenames(java.nio.file.Path, java.nio.file.PathMatcher) 
-     */
-    @Override
-    public Map<Path, Path> getFilenames(Path dir, PathMatcher matcher) throws IOException {
-        return this.FILES.stream()
-                .filter(file -> dir == null || file.getPath().startsWith(dir))
-                .filter(file -> matcher.matches(file.getPath()))
-                .collect(Collectors.toMap(
-                        record -> super.PATH.getFileName().resolve(record.getPath()),
-                        BA2FileRecord::getPath));
-    }
-
-    final BA2Header HEADER;
-    final List<BA2FileRecord> FILES;
-
 }

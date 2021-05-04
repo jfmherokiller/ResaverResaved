@@ -13,122 +13,111 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.archive;
+package resaver.archive
 
-import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import mf.BufferUtil
+import java.io.IOException
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.channels.FileChannel
+import java.nio.file.Path
+import java.nio.file.PathMatcher
+import java.util.*
+import java.util.function.Supplier
+import java.util.stream.Collectors
 
 /**
  * Handles the job of reading scripts out of BSA files.
  *
  * @author Mark Fairchild
  */
-public class BSAParser extends ArchiveParser {
+class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel) {
+    @Throws(IOException::class)
+    private fun getNames(channel: FileChannel): Supplier<String> {
+        val FILENAMES_OFFSET = (HEADER!!.FOLDER_OFFSET
+                + HEADER!!.FOLDER_COUNT.toLong() * BSAFolderRecord.SIZE + HEADER!!.TOTAL_FOLDERNAME_LENGTH + HEADER!!.FOLDER_COUNT
+                + HEADER!!.FILE_COUNT.toLong() * BSAFileRecord.SIZE)
+        val FILENAMESBLOCK = ByteBuffer.allocate(HEADER!!.TOTAL_FILENAME_LENGTH)
+        channel.read(FILENAMESBLOCK, FILENAMES_OFFSET)
+        FILENAMESBLOCK.order(ByteOrder.LITTLE_ENDIAN)
+        (FILENAMESBLOCK as Buffer).flip()
+        return Supplier { BufferUtil.getZString(FILENAMESBLOCK) }
+    }
 
     /**
-     * Creates a new <code>BSAParser</code>.
+     * @see ArchiveParser.getFiles
+     */
+    @Throws(IOException::class)
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer?>?>? {
+        return FOLDERRECORDS!!.stream()
+            .filter { block: BSAFolderRecord -> dir == null || dir == block.PATH }
+            .flatMap { block: BSAFolderRecord -> block.FILERECORDS.stream() }
+            .filter { rec: BSAFileRecord -> matcher!!.matches(rec.path) }
+            .collect(
+                Collectors.toMap(
+                    { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path) },
+                    { record: BSAFileRecord? -> BSAFileData.getData(super.CHANNEL, record, HEADER) })
+            )
+    }
+
+    /**
+     * @see ArchiveParser.getFilenames
+     */
+    @Throws(IOException::class)
+    override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?>? {
+        return FOLDERRECORDS!!.stream()
+            .filter { block: BSAFolderRecord -> dir == null || dir == block.PATH }
+            .flatMap { block: BSAFolderRecord -> block.FILERECORDS.stream() }
+            .filter { rec: BSAFileRecord -> matcher!!.matches(rec.path) }
+            .collect(
+                Collectors.toMap(
+                    { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path) },
+                    { obj: BSAFileRecord -> obj.path })
+            )
+    }
+
+    override fun toString(): String {
+        return NAME
+    }
+
+    var HEADER: BSAHeader? = null
+    private var FOLDERRECORDS: MutableList<BSAFolderRecord>? = null
+
+    /**
+     * Creates a new `BSAParser`.
      *
      * @param path
      * @param channel
      * @throws IOException
-     * @see ArchiveParser#ArchiveParser(java.nio.file.Path,
-     * java.nio.channels.FileChannel)
+     * @see ArchiveParser.ArchiveParser
      */
-    public BSAParser(Path path, FileChannel channel) throws IOException {
-        super(path, channel);
-
+    init {
         try {
             // Read the header.
-            final ByteBuffer HEADERBLOCK = ByteBuffer.allocate(BSAHeader.SIZE);
-            channel.read(HEADERBLOCK);
-            HEADERBLOCK.order(ByteOrder.LITTLE_ENDIAN);
-            ((Buffer) HEADERBLOCK).flip();
-            this.HEADER = new BSAHeader(HEADERBLOCK, path.getFileName().toString());
+            val HEADERBLOCK = ByteBuffer.allocate(BSAHeader.SIZE)
+            channel.read(HEADERBLOCK)
+            HEADERBLOCK.order(ByteOrder.LITTLE_ENDIAN)
+            (HEADERBLOCK as Buffer).flip()
+            HEADER = BSAHeader(HEADERBLOCK, path?.fileName.toString())
 
             // Read the filename table indirectly.
-            final Supplier<String> NAMES = this.HEADER.INCLUDE_FILENAMES
-                    ? this.getNames(channel)
-                    : () -> null;
+            val NAMES: Supplier<String> = if (HEADER!!.INCLUDE_FILENAMES) getNames(channel) else Supplier { null.toString() }
 
             // Allocate storage for the folder records and file records.
-            this.FOLDERRECORDS = new ArrayList<>(this.HEADER.FOLDER_COUNT);
+            FOLDERRECORDS = mutableListOf()
 
             // Read folder records.
-            final ByteBuffer FOLDERBLOCK = ByteBuffer.allocate(this.HEADER.FOLDER_COUNT * BSAFolderRecord.SIZE);
-            channel.read(FOLDERBLOCK, this.HEADER.FOLDER_OFFSET);
-            FOLDERBLOCK.order(ByteOrder.LITTLE_ENDIAN);
-            ((Buffer) FOLDERBLOCK).flip();
-
-            for (int i = 0; i < this.HEADER.FOLDER_COUNT; i++) {
-                BSAFolderRecord folder = new BSAFolderRecord(FOLDERBLOCK, this.HEADER, channel, NAMES);
-                this.FOLDERRECORDS.add(folder);
+            val FOLDERBLOCK = ByteBuffer.allocate(HEADER!!.FOLDER_COUNT * BSAFolderRecord.SIZE)
+            channel.read(FOLDERBLOCK, HEADER!!.FOLDER_OFFSET.toLong())
+            FOLDERBLOCK.order(ByteOrder.LITTLE_ENDIAN)
+            (FOLDERBLOCK as Buffer).flip()
+            for (i in 0 until HEADER!!.FOLDER_COUNT) {
+                val folder = BSAFolderRecord(FOLDERBLOCK, HEADER, channel, NAMES)
+                FOLDERRECORDS!!.add(folder)
             }
-        } catch (IOException ex) {
-            throw new IOException("Failed to parse " + path, ex);
+        } catch (ex: IOException) {
+            throw IOException("Failed to parse $path", ex)
         }
     }
-
-    private Supplier<String> getNames(FileChannel channel) throws IOException {
-        long FILENAMES_OFFSET = this.HEADER.FOLDER_OFFSET
-                + this.HEADER.FOLDER_COUNT * BSAFolderRecord.SIZE
-                + this.HEADER.TOTAL_FOLDERNAME_LENGTH + this.HEADER.FOLDER_COUNT
-                + this.HEADER.FILE_COUNT * BSAFileRecord.SIZE;
-
-        final ByteBuffer FILENAMESBLOCK = ByteBuffer.allocate(this.HEADER.TOTAL_FILENAME_LENGTH);
-        channel.read(FILENAMESBLOCK, FILENAMES_OFFSET);
-        FILENAMESBLOCK.order(ByteOrder.LITTLE_ENDIAN);
-        ((Buffer) FILENAMESBLOCK).flip();
-
-        return () -> mf.BufferUtil.getZString(FILENAMESBLOCK);
-    }
-
-    /**
-     * @see ArchiveParser#getFiles(java.nio.file.Path,
-     * java.nio.file.PathMatcher)
-     */
-    @Override
-    public Map<Path, Optional<ByteBuffer>> getFiles(Path dir, PathMatcher matcher) throws IOException {
-        return this.FOLDERRECORDS.stream()
-                .filter(block -> dir == null || dir.equals(block.PATH))
-                .flatMap(block -> block.FILERECORDS.stream())
-                .filter(rec -> matcher.matches(rec.getPath()))
-                .collect(Collectors.toMap(
-                        record -> super.PATH.getFileName().resolve(record.getPath()),
-                        record -> BSAFileData.getData(super.CHANNEL, record, HEADER)));
-    }
-
-    /**
-     * @see ArchiveParser#getFilenames(java.nio.file.Path,
-     * java.nio.file.PathMatcher)
-     */
-    @Override
-    public Map<Path, Path> getFilenames(Path dir, PathMatcher matcher) throws IOException {
-        return this.FOLDERRECORDS.stream()
-                .filter(block -> dir == null || dir.equals(block.PATH))
-                .flatMap(block -> block.FILERECORDS.stream())
-                .filter(rec -> matcher.matches(rec.getPath()))
-                .collect(Collectors.toMap(
-                        record -> super.PATH.getFileName().resolve(record.getPath()),
-                        BSAFileRecord::getPath));
-    }
-
-    @Override
-    public String toString() {
-        return this.NAME;
-    }
-
-    final BSAHeader HEADER;
-    final List<BSAFolderRecord> FOLDERRECORDS;
-
 }

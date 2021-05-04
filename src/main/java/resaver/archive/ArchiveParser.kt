@@ -27,7 +27,7 @@ import java.util.*
  *
  * @author Mark
  */
-abstract class ArchiveParser protected constructor(path: Path, channel: FileChannel) : Closeable {
+abstract class ArchiveParser protected constructor(path: Path?, channel: FileChannel) : Closeable {
     @Throws(IOException::class)
     override fun close() {
         CHANNEL.close()
@@ -38,7 +38,7 @@ abstract class ArchiveParser protected constructor(path: Path, channel: FileChan
     @JvmField
     protected val NAME: String
     @JvmField
-    protected val PATH: Path
+    protected var PATH: Path = Path.of("")
 
     /**
      * Creates a `Map` pairing `Path` and `ByteBuffer`.
@@ -102,8 +102,10 @@ abstract class ArchiveParser protected constructor(path: Path, channel: FileChan
     init {
         Objects.requireNonNull(path)
         Objects.requireNonNull(channel)
-        PATH = path
-        NAME = path.fileName.toString()
+        if (path != null) {
+            PATH = path
+        }
+        NAME = path?.fileName.toString()
         CHANNEL = channel
     }
 }
