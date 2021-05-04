@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
 /**
  * Describes the level of disassembly for the disassembler.
- * 
+ *
  * @author Mark Fairchild
- * 
  */
-public enum AssemblyLevel {
-    BYTECODE,
-    STRIPPED,
-    FULL;   
+enum class AssemblyLevel {
+    BYTECODE, STRIPPED, FULL
 }
