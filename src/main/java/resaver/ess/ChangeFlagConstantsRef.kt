@@ -13,60 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
+
+import resaver.ess.ChangeFlagConstants
 
 /**
  *
  * @author Mark
  */
-public enum ChangeFlagConstantsRef implements ChangeFlagConstants {
-
-    CHANGE_FORM_FLAGS(0),
-    CHANGE_REFR_MOVE(1),
-    CHANGE_REFR_HAVOK_MOVE(2),
-    CHANGE_REFR_CELL_CHANGED(3),
-    CHANGE_REFR_SCALE(4),
-    CHANGE_REFR_INVENTORY(5),
-    CHANGE_REFR_EXTRA_OWNERSHIP(6),
-    CHANGE_REFR_BASEOBJECT(7),
-    UNK8(8),
-    UNK9(9),
-    CHANGE_OBJECT_EXTRA_ITEM_DATA(10),
-    CHANGE_OBJECT_EXTRA_AMMO(11),
-    CHANGE_OBJECT_EXTRA_LOCK(12),
-    UNK13(13),
-    UNK14(14),
-    UNK15(15),
-    UNK16(16),
-    CHANGE_DOOR_EXTRA_TELEPORT(17),
-    UNK18(18),
-    UNK19(19),
-    UNK20(20),
-    CHANGE_OBJECT_EMPTY(21),
-    CHANGE_OBJECT_OPEN_DEFAULT_STATE(22),
-    CHANGE_OBJECT_OPEN_STATE(23),
-    UNK24(24),
-    CHANGE_REFR_PROMOTED(25),
-    CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN(26),
-    CHANGE_REFR_LEVELED_INVENTORY(27),
-    CHANGE_REFR_ANIMATION(28),
-    CHANGE_REFR_EXTRA_ENCOUNTER_ZONE(29),
-    UNK30(30),
-    CHANGE_REFR_EXTRA_GAME_ONLY(31);
-
+enum class ChangeFlagConstantsRef(
     /**
      * Returns the flag position.
      *
      * @return
      */
-    @Override
-    public int getPosition() {
-        return this.VAL;
-    }
+    override val position: Int
+) : ChangeFlagConstants {
+    CHANGE_FORM_FLAGS(0), CHANGE_REFR_MOVE(1), CHANGE_REFR_HAVOK_MOVE(2), CHANGE_REFR_CELL_CHANGED(3), CHANGE_REFR_SCALE(4),
+    CHANGE_REFR_INVENTORY(5), CHANGE_REFR_EXTRA_OWNERSHIP(6), CHANGE_REFR_BASEOBJECT(7), UNK8(8), UNK9(9), CHANGE_OBJECT_EXTRA_ITEM_DATA(10),
+    CHANGE_OBJECT_EXTRA_AMMO(11), CHANGE_OBJECT_EXTRA_LOCK(12), UNK13(13), UNK14(14), UNK15(15), UNK16(16), CHANGE_DOOR_EXTRA_TELEPORT(17),
+    UNK18(18), UNK19(19), UNK20(20), CHANGE_OBJECT_EMPTY(21), CHANGE_OBJECT_OPEN_DEFAULT_STATE(22), CHANGE_OBJECT_OPEN_STATE(23),
+    UNK24(24), CHANGE_REFR_PROMOTED(25), CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN(26), CHANGE_REFR_LEVELED_INVENTORY(27), CHANGE_REFR_ANIMATION(28),
+    CHANGE_REFR_EXTRA_ENCOUNTER_ZONE(29), UNK30(30), CHANGE_REFR_EXTRA_GAME_ONLY(31);
 
-    private ChangeFlagConstantsRef(int n) {
-        this.VAL = n;
-    }
-
-    final private int VAL;
 }

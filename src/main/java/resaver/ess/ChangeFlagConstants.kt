@@ -13,14 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
 /**
  *
  * @author Mark
  */
-public interface ChangeFlagConstants {
-    
-    public int getPosition();
-
+interface ChangeFlagConstants {
+    val position: Int
 }
