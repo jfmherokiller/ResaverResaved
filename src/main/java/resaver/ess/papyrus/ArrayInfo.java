@@ -207,7 +207,7 @@ final public class ArrayInfo implements AnalyzableElement, Linkable, HasID, Sepa
         } else {
             BUILDER.append("<p>Owners:</p><ul>");
 
-            this.HOLDERS.stream().forEach(owner -> {
+            this.HOLDERS.forEach(owner -> {
                 if (owner instanceof Linkable) {
                     BUILDER.append(String.format("<li>%s %s", owner.getClass().getSimpleName(), ((Linkable) owner).toHTML(this)));
                 } else if (owner != null) {

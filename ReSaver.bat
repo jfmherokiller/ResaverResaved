@@ -1,1 +1,1 @@
-javaw -d64 -Xms512m -Xmx4g -jar target\ReSaver.jar %1
+java -d64 -Xms512m -Xmx4g -jar target\ReSaver.jar %1

@@ -54,7 +54,7 @@ public class FilterMaker {
         final String MODNAME = mod.getName();
 
         final Set<Plugin> PLUGINS = new HashSet<>();
-        mod.getESPNames().stream().forEach(espName -> plugins.getFullPlugins()
+        mod.getESPNames().forEach(espName -> plugins.getFullPlugins()
                 .stream()
                 .filter(p -> p.NAME.equalsIgnoreCase(espName))
                 .findAny()

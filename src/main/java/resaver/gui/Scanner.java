@@ -226,7 +226,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
                         .append(String.format("%1.2f", scriptDataSize))
                         .append("mb.\nHighest data usage:\n");
 
-                OFFENDERS.stream().forEach(plugin -> {
+                OFFENDERS.forEach(plugin -> {
                     final double SIZE = SIZES.get(plugin) / 1048576.0;
                     BUF.append(String.format("%3.2f mb for %s.\n", SIZE, plugin));
                 });
