@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
+import resaver.Analysis
 
 /**
  * An abstract base class for adding functionality to instances of
- * <code>Element</code>.
+ * `Element`.
  *
  * @author Mark Fairchild
  */
-public interface AnalyzableElement extends Element {
-    
+interface AnalyzableElement : Element {
     /**
      * Generates some information about the element.
      *
@@ -31,19 +31,18 @@ public interface AnalyzableElement extends Element {
      * @param save The full set of savegame papyrus data.
      * @return A string to show users about the element.
      */
-    public String getInfo(resaver.Analysis analysis, ESS save);
+    fun getInfo(analysis: Analysis?, save: ESS?): String?
 
     /**
      * Evaluates whether the element could have originated from the specified
-     * <code>Mod</code>.
+     * `Mod`.
      *
      * @param analysis Analysis of mods, from a profile.
-     * @param mod The <code>Mod</code> to check for.
+     * @param mod The `Mod` to check for.
      * @return A flag indicating if the element could plausibly have originated
-     * in the specified <code>Mod</code>.
+     * in the specified `Mod`.
      */
-    default public boolean matches(resaver.Analysis analysis, String mod) {
-        return false;
+    fun matches(analysis: Analysis?, mod: String?): Boolean {
+        return false
     }
-
 }

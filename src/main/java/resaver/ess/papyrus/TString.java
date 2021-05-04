@@ -19,6 +19,9 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
+
+import org.jetbrains.annotations.Nullable;
+import resaver.Analysis;
 import resaver.IString;
 import resaver.ess.AnalyzableElement;
 import resaver.ess.ESS;
@@ -44,6 +47,11 @@ abstract public class TString implements PapyrusElement, AnalyzableElement, Link
      */
     static public TString makeUnindexed(CharSequence cs) {
         return new TString(cs) {
+            @Override
+            public boolean matches(@Nullable Analysis analysis, @Nullable String mod) {
+                return false;
+            }
+
             @Override
             public void write(ByteBuffer output) {
                 throw new UnsupportedOperationException("Not supported.");
