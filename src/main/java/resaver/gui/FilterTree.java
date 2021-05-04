@@ -253,7 +253,7 @@ final public class FilterTree extends JTree {
                             }
                         } else if (ELEMENT instanceof GlobalVariable) {
                             if (null != editHandler) {
-                                editHandler.accept((GlobalVariable) ELEMENT);
+                                editHandler.accept(ELEMENT);
                             }
 
                         } else if (ELEMENT instanceof Plugin) {
@@ -417,7 +417,6 @@ final public class FilterTree extends JTree {
      * @param newHandler The new handler.
      */
     public void setCleanseFLSTHandler(Consumer<ChangeFormFLST> newHandler) {
-        this.cleanFLSTHandler = newHandler;
     }
 
     /**
@@ -475,8 +474,7 @@ final public class FilterTree extends JTree {
     private Consumer<Plugin> deleteInstancesHandler;
     private Consumer<Collection<Plugin>> purgeHandler;
     private Consumer<Element> findHandler;
-    private Consumer<ChangeFormFLST> cleanFLSTHandler;
     private Consumer<CompressionType> compressionHandler;
-    
+
 
 }

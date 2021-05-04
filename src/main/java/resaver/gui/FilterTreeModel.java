@@ -48,17 +48,17 @@ final public class FilterTreeModel implements TreeModel {
     }
 
     /**
-     * 
-     * @param elements 
+     *
+     * @param elements
      */
     public void deleteElements(Set<? extends Element> elements) {
         this.deleteElements(this.root, elements);
     }
 
     /**
-     * 
+     *
      * @param node
-     * @param elements 
+     * @param elements
      */
     private void deleteElements(Node node, Set<? extends Element> elements) {
         assert !node.isLeaf();
@@ -309,7 +309,7 @@ final public class FilterTreeModel implements TreeModel {
 
         this.root.getChildren().parallelStream().forEach(node -> this.setFilter(node, filter));
         this.root.countLeaves();
-        
+
         this.LISTENERS.forEach(l -> l.treeStructureChanged(new TreeModelEvent(this.root, this.getPath(this.root))));
     }
 
@@ -324,7 +324,7 @@ final public class FilterTreeModel implements TreeModel {
         Objects.requireNonNull(filter);
 
         // Determine if the node itself would be filtered out.
-        // Never setFilter the root!            
+        // Never setFilter the root!
         boolean nodeVisible = filter.test(node);
 
         if (node.isLeaf()) {
@@ -332,8 +332,8 @@ final public class FilterTreeModel implements TreeModel {
             node.setVisible(nodeVisible);
 
         } else if (node.hasElement() && nodeVisible) {
-            // For Elements that contain other elements, don't setFilter 
-            // children at all unless the Element itself is filtered. 
+            // For Elements that contain other elements, don't setFilter
+            // children at all unless the Element itself is filtered.
             // Don't apply this to the root!
             node.setVisible(nodeVisible);
 

@@ -93,6 +93,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
                 this.PROGRESS.accept("Analyzing MO2");
                 LOG.info("Checking Mod Organizer 2.");
                 final java.util.List<Mod> MOMODS = Configurator.analyzeModOrganizer2(GAME, this.MO2_INI);
+                assert MOMODS != null;
                 MODS.addAll(MOMODS);
             }
 
@@ -113,15 +114,16 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
                     .collect(Collectors.toMap(
                             path -> PLUGINS.getPaths().get(path.getFileName()),
                             path -> mod)))
-                    .forEach(map -> PLUGIN_MOD_MAP.putAll(map));
+                    .forEach(PLUGIN_MOD_MAP::putAll);
 
             // The language. Eventually make this selectable?
+            assert GAME != null;
             final String LANGUAGE = (GAME.isSkyrim() ? "english" : "en");
 
-            // Analyze scripts from mods. 
+            // Analyze scripts from mods.
             final Mod.Analysis PROFILEANALYSIS = MODS.stream()
-                    .map(mod -> mod.getAnalysis())
-                    .reduce(new Mod.Analysis(), (a1, a2) -> a1.merge(a2));
+                    .map(Mod::getAnalysis)
+                    .reduce(new Mod.Analysis(), Mod.Analysis::merge);
 
             final List<Path> ERR_ARCHIVE = new LinkedList<>();
             final List<Path> ERR_SCRIPTS = new LinkedList<>();
@@ -188,7 +190,6 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
                         PLUGIN_DATA.put(plugin, INFO);
 
                         LOG.info(String.format("Scanned plugin: %6d names and %5.1f kb script data from %s", INFO.getNameCount(), INFO.getScriptDataSize() / 1024.0f, plugin.indexName()));
-                        assert plugin != null;
                         assert INFO.getScriptDataSize() >= 0;
                         SIZES.put(plugin, INFO.getScriptDataSize());
 
@@ -205,9 +206,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
             this.PROGRESS.accept("Creating analysis");
 
             final resaver.Analysis ANALYSIS = new resaver.Analysis(PROFILEANALYSIS, PLUGIN_DATA, STRINGTABLE);
-            if (null != this.SAVE) {
-                this.WINDOW.setAnalysis(ANALYSIS);
-            }
+            this.WINDOW.setAnalysis(ANALYSIS);
 
             TIMER.stop();
             LOG.info(String.format("Plugin scanning completed, took %s", TIMER.getFormattedTime()));
@@ -215,7 +214,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
             // Find the worst offenders for script data size.
             final List<Plugin> OFFENDERS = SIZES.entrySet().stream()
                     .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
-                    .map(entry -> entry.getKey())
+                    .map(Map.Entry::getKey)
                     .limit(3).collect(Collectors.toList());
 
             final StringBuilder BUF = new StringBuilder();

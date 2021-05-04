@@ -15,15 +15,15 @@
  */
 package resaver.gui;
 
-import java.awt.Frame;
+import resaver.Game;
+import resaver.Mod;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +37,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import resaver.Mod;
-import resaver.Game;
 
 /**
  * Displays dialog boxes for configuring <code>ModChooser</code> and
