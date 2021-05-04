@@ -13,32 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
+
+import java.lang.RuntimeException
 
 /**
  *
  * @author Mark
  */
-public class ElementException extends RuntimeException {
-
-    /**
-     * Constructs an instance of <code>ElementException</code> with the
-     * specified detail message, cause, and a partial <code>Element</code>.
-     * structure.
-     *
-     * @param msg the detail message.
-     * @param cause
-     * @param partial
-     *
-     */
-    public ElementException(String msg, Throwable cause, Element partial) {
-        super(msg, cause);
-        this.PARTIAL = partial;
-    }
-
-    public Element getPartial() {
-        return this.PARTIAL;
-    }
-
-    final private Element PARTIAL;
-}
+class ElementException
+/**
+ * Constructs an instance of `ElementException` with the
+ * specified detail message, cause, and a partial `Element`.
+ * structure.
+ *
+ * @param msg the detail message.
+ * @param cause
+ * @param partial
+ */(msg: String?, cause: Throwable?, val partial: Element) : RuntimeException(msg, cause)

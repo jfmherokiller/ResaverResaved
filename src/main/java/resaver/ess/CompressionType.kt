@@ -13,41 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
+import resaver.ess.CompressionType
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
-public enum CompressionType implements Element {
-    UNCOMPRESSED,
-    ZLIB,
-    LZ4;
+enum class CompressionType : Element {
+    UNCOMPRESSED, ZLIB, LZ4;
 
-    static CompressionType read(ByteBuffer input) {
-        return CompressionType.values()[input.getShort()];
+    override fun write(output: ByteBuffer?) {
+        output?.putShort(VALUE)
     }
 
-    private CompressionType() {
-        this.VALUE = (short) super.ordinal();
+    override fun calculateSize(): Int {
+        return 2
     }
 
-    @Override
-    public void write(ByteBuffer output) {
-        output.putShort(this.VALUE);
-    }
+    val isCompressed: Boolean
+        get() = this != UNCOMPRESSED
+    private val VALUE: Short = super.ordinal.toShort()
 
-    @Override
-    public int calculateSize() {
-        return 2;
+    companion object {
+        @JvmStatic
+        fun read(input: ByteBuffer): CompressionType {
+            return values()[input.short.toInt()]
+        }
     }
-
-    public boolean isCompressed() {
-        return this != UNCOMPRESSED;
-    }
-
-    private final short VALUE;
 
 }

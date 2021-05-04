@@ -13,26 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Describes a component of a Skyrim savegame.
- * 
+ *
  * @author Mark Fairchild
  */
-public interface Element {
-
+interface Element {
     /**
-     * Write the <code>Element</code> to an output stream.
+     * Write the `Element` to an output stream.
      * @param output The output stream.
      */
-    public void write(ByteBuffer output);
+    fun write(output: ByteBuffer?)
 
     /**
-     * @return The size of the <code>Element</code> in bytes.
+     * @return The size of the `Element` in bytes.
      */
-    public int calculateSize();
-    
+    fun calculateSize(): Int
 }
