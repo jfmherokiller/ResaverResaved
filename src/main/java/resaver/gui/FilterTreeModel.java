@@ -693,7 +693,7 @@ final public class FilterTreeModel implements TreeModel {
          */
         public ContainerNode(CharSequence name, Collection<? extends Element> elements) {
             this.NAME = Objects.requireNonNull(name).toString();
-            this.CHILDREN = new ArrayList<>(elements.stream().map(e -> new ElementNode<>(e)).collect(Collectors.toList()));
+            this.CHILDREN = elements.stream().map(ElementNode::new).collect(Collectors.toList());
             this.CHILDREN.forEach(child -> child.setParent(this));
             this.countLeaves();
         }

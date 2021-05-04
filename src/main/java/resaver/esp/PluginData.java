@@ -91,10 +91,9 @@ final public class PluginData {
      * @return
      */
     public Set<Integer> getID(String searchTerm, StringTable strings) {
-        Set<Integer> matches = new TreeSet<>(this.MAP.keySet()
+        Set<Integer> matches = this.MAP.keySet()
                 .stream()
-                .filter(id -> searchTerm.equalsIgnoreCase(this.getName(id, strings)))
-                .collect(Collectors.toSet()));
+                .filter(id -> searchTerm.equalsIgnoreCase(this.getName(id, strings))).collect(Collectors.toCollection(TreeSet::new));
 
         return matches;
     }

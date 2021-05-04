@@ -341,7 +341,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * static method.
      */
     public boolean isStatic() {
-        return (null != this.FN_FLAGS ? this.FN_FLAGS.getFlag(0) : false);
+        return (null != this.FN_FLAGS && this.FN_FLAGS.getFlag(0));
     }
 
     /**
@@ -349,7 +349,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * native method.
      */
     public boolean isNative() {
-        return (null != this.FN_FLAGS ? this.FN_FLAGS.getFlag(1) : false);
+        return (null != this.FN_FLAGS && this.FN_FLAGS.getFlag(1));
     }
 
     /**
@@ -358,7 +358,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      */
     public boolean isZeroed() {
         return !this.isNative() && null != this.CODE && !this.CODE.isEmpty()
-                && this.CODE.stream().allMatch(op -> OpcodeData.NOP.equals(op));
+                && this.CODE.stream().allMatch(OpcodeData.NOP::equals);
     }
 
     /**
@@ -383,7 +383,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
 
             } else {
                 Optional<Variable> result = this.VARIABLES.stream()
-                        .filter(v -> v.hasRef())
+                        .filter(Variable::hasRef)
                         .filter(v -> v.getReferent() == target)
                         .findFirst();
 

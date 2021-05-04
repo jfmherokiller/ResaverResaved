@@ -77,7 +77,7 @@ final public class Struct extends Definition {
     public int calculateSize() {
         int sum = 4;
         sum += this.NAME.calculateSize();
-        sum += this.MEMBERS.stream().mapToInt(member -> member.calculateSize()).sum();
+        sum += this.MEMBERS.stream().mapToInt(MemberDesc::calculateSize).sum();
         return sum;
     }
 
