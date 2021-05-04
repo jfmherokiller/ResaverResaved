@@ -17,7 +17,7 @@ package resaver.ess
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import resaver.Game.Companion.FILTER_ALL
+import resaver.Game.FILTER_ALL
 import resaver.ProgressModel
 import java.io.IOException
 import java.nio.file.Files

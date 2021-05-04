@@ -113,15 +113,15 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
                     .collect(Collectors.toMap(
                             path -> PLUGINS.getPaths().get(path.getFileName()),
                             path -> mod)))
-                    .forEach(PLUGIN_MOD_MAP::putAll);
+                    .forEach(map -> PLUGIN_MOD_MAP.putAll(map));
 
             // The language. Eventually make this selectable?
             final String LANGUAGE = (GAME.isSkyrim() ? "english" : "en");
 
             // Analyze scripts from mods. 
             final Mod.Analysis PROFILEANALYSIS = MODS.stream()
-                    .map(Mod::getAnalysis)
-                    .reduce(new Mod.Analysis(), Mod.Analysis::merge);
+                    .map(mod -> mod.getAnalysis())
+                    .reduce(new Mod.Analysis(), (a1, a2) -> a1.merge(a2));
 
             final List<Path> ERR_ARCHIVE = new LinkedList<>();
             final List<Path> ERR_SCRIPTS = new LinkedList<>();
@@ -136,7 +136,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
             for (Mod mod : MODS) {
                 if (mod == CORE) {
                     COUNTER.click();
-                    this.PROGRESS.accept(String.format("Reading %s's data", GAME.getNAME()));
+                    this.PROGRESS.accept(String.format("Reading %s's data", GAME.NAME));
                 } else {
                     this.PROGRESS.accept(String.format("Reading %s: mod data for %s", COUNTER.eval(), mod.getShortName()));
                 }
@@ -215,7 +215,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
             // Find the worst offenders for script data size.
             final List<Plugin> OFFENDERS = SIZES.entrySet().stream()
                     .sorted((e1, e2) -> Long.compare(e2.getValue(), e1.getValue()))
-                    .map(Map.Entry::getKey)
+                    .map(entry -> entry.getKey())
                     .limit(3).collect(Collectors.toList());
 
             final StringBuilder BUF = new StringBuilder();

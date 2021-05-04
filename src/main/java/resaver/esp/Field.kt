@@ -13,22 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import resaver.IString;
+import resaver.IString
 
 /**
  * Base class for the fields of an ESP file.
  *
  * @author Mark Fairchild
  */
-public interface Field extends Entry {
-
+interface Field : Entry {
     /**
      * Returns the field code.
      *
      * @return The field code.
      */
-    public IString getCode();
-
+    val code: IString?
 }

@@ -122,8 +122,8 @@ public class Watcher {
         synchronized protected Path doInBackground() throws Exception {
             List<Path> watchDirectories = null != watchDir
                     ? Collections.singletonList(watchDir)
-                    : Game.Companion.getVALUES().stream()
-                            .map(Configurator::getSaveDirectory)
+                    : Game.VALUES.stream()
+                            .map(game -> Configurator.getSaveDirectory(game))
                             .filter(Files::exists)
                             .collect(Collectors.toList());
 

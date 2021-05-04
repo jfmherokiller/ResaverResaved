@@ -48,8 +48,7 @@ public interface Entry {
         ((java.nio.Buffer) newSlice).limit(newLimit);
 
         // Advance the original.
-        java.nio.Buffer buffer2 = buffer;
-        buffer2.position(buffer2.position() + newLimit);
+        ((java.nio.Buffer) buffer).position(buffer.position() + newLimit);
         
         return newSlice;
     }

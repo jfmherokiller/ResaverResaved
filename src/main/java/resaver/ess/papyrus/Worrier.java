@@ -17,7 +17,10 @@ package resaver.ess.papyrus;
 
 import java.nio.file.FileSystems;
 import java.nio.file.PathMatcher;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -92,7 +95,7 @@ final public class Worrier {
         BUF.append("<p>The savefile was successfully loaded.<ul>");
         BUF.append(String.format("<li>Read %1.1f mb in %1.1f seconds.</li>", size, time));
         if (result.ESS.hasCosave()) {
-            BUF.append(String.format("<li>%s co-save was loaded.</li>", result.GAME.getCOSAVE_EXT().toUpperCase()));
+            BUF.append(String.format("<li>%s co-save was loaded.</li>", result.GAME.COSAVE_EXT.toUpperCase()));
         } else {
             BUF.append("<li>No co-save was found.</li>");
         }
@@ -128,16 +131,16 @@ final public class Worrier {
         int numStacks = result.ESS.getPapyrus().getActiveScripts().size();
 
         Stream<Script> active = result.ESS.getPapyrus().getActiveScripts().values().parallelStream()
-                .filter(ActiveScript::hasStack)
+                .filter(as -> as.hasStack())
                 .flatMap(as -> as.getStackFrames().stream())
-                .map(StackFrame::getScript);
+                .map(f -> f.getScript());
 
         Stream<Script> suspended = result.ESS.getPapyrus().getSuspendedStacks().values().parallelStream()
-                .map(SuspendedStack::getScript)
-                .filter(Objects::nonNull);
+                .filter(ss -> ss.getScript() != null)
+                .map(ss -> ss.getScript());
 
         Map<Script, Long> frameCounts = Stream.concat(active, suspended)
-                .filter(Objects::nonNull)
+                .filter(s -> s != null)
                 .collect(Collectors.groupingBy(f -> f, Collectors.counting()));
 
         List<Script> frames = new ArrayList<>(frameCounts.keySet());
@@ -162,7 +165,9 @@ final public class Worrier {
             }
 
             List<ActiveScript> deep = result.ESS.getPapyrus().getActiveScripts().values().stream()
-                    .filter(thread -> thread.getStackFrames().size() >= 100).sorted((a1, a2) -> Integer.compare(a2.getStackFrames().size(), a1.getStackFrames().size())).collect(Collectors.toList());
+                    .filter(thread -> thread.getStackFrames().size() >= 100)
+                    .collect(Collectors.toList());
+            deep.sort((a1, a2) -> Integer.compare(a2.getStackFrames().size(), a1.getStackFrames().size()));
 
             if (!deep.isEmpty()) {
                 ActiveScript deepest = deep.get(0);
@@ -181,8 +186,8 @@ final public class Worrier {
 
         Map<Script, Integer> currentCanaries = result.ESS.getPapyrus().getScriptInstances().values()
                 .parallelStream()
-                .filter(ScriptInstance::hasCanary)
-                .collect(Collectors.toMap(ScriptInstance::getScript, ScriptInstance::getCanary));
+                .filter(instance -> instance.hasCanary())
+                .collect(Collectors.toMap(instance -> instance.getScript(), instance -> instance.getCanary()));
 
         if (previousESS != null) {
             Header H1 = previousESS.getHeader();
@@ -202,7 +207,7 @@ final public class Worrier {
             List<String> missingNamespaces = this.previousNamespaces.keySet().stream()
                     .filter(namespace -> !currentNamespaces.containsKey(namespace))
                     .filter(namespace -> this.previousNamespaces.get(namespace).stream()
-                    .map(ScriptInstance::getRefID)
+                    .map(instance -> instance.getRefID())
                     .filter(refID -> !refID.isZero())
                     .anyMatch(refID -> result.ESS.getChangeForms().containsKey(refID)))
                     .collect(Collectors.toList());
@@ -214,7 +219,7 @@ final public class Worrier {
             }
 
             List<Script> canaryErrors = this.previousCanaries.keySet().stream()
-                    .filter(currentCanaries::containsKey)
+                    .filter(script -> currentCanaries.containsKey(script))
                     .filter(script -> previousCanaries.get(script) != 0)
                     .filter(script -> currentCanaries.get(script) == 0)
                     .collect(Collectors.toList());
@@ -228,7 +233,7 @@ final public class Worrier {
 
         List<ScriptInstance> memberless = result.ESS.getPapyrus().getScriptInstances().values()
                 .parallelStream()
-                .filter(ScriptInstance::hasMemberlessError)
+                .filter(instance -> instance.hasMemberlessError())
                 .collect(Collectors.toList());
 
         if (!memberless.isEmpty()) {
@@ -239,7 +244,7 @@ final public class Worrier {
 
         List<ScriptInstance> definitionErrors = result.ESS.getPapyrus().getScriptInstances().values()
                 .parallelStream()
-                .filter(ScriptInstance::hasDefinitionError)
+                .filter(instance -> instance.hasDefinitionError())
                 .collect(Collectors.toList());
 
         if (!definitionErrors.isEmpty()) {

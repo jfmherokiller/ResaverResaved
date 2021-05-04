@@ -16,7 +16,7 @@
 package resaver.ess;
 
 import java.nio.ByteBuffer;
-
+import java.nio.file.StandardCopyOption;
 import resaver.Game;
 import java.io.IOException;
 import java.nio.Buffer;
@@ -73,7 +73,7 @@ final public class ESS implements Element {
         final Timer TIMER = Timer.startNew("reading savefile");
 
         // Doublecheck that the savefile has a correct extension.
-        if (!Game.Companion.getFILTER_ALL().accept(saveFile.toFile())) {
+        if (!Game.FILTER_ALL.accept(saveFile.toFile())) {
             throw new IOException(String.format("Filename extension not recognized: %s", saveFile));
         }
 
@@ -132,7 +132,7 @@ final public class ESS implements Element {
 
         if (ess.COSAVE != null) {
             String filename = saveFile.getFileName().toString();
-            String cosaveName = filename.replaceAll(GAME.getSAVE_EXT() + "$", GAME.getCOSAVE_EXT());
+            String cosaveName = filename.replaceAll(GAME.SAVE_EXT + "$", GAME.COSAVE_EXT);
             final Path COSAVE_FILE = saveFile.resolveSibling(cosaveName);
             if (Files.exists(COSAVE_FILE)) {
                 makeBackupFile(COSAVE_FILE);
@@ -175,7 +175,7 @@ final public class ESS implements Element {
 
         // Determine the filename of the co-save.
         String filename = saveFile.getFileName().toString();
-        String cosaveName = filename.replaceAll(GAME.getSAVE_EXT() + "$", GAME.getCOSAVE_EXT());
+        String cosaveName = filename.replaceAll(GAME.SAVE_EXT + "$", GAME.COSAVE_EXT);
         Path cosaveFile = saveFile.resolveSibling(cosaveName);
         this.COSAVE = Files.exists(cosaveFile) ? Files.readAllBytes(cosaveFile) : null;
 
@@ -347,7 +347,7 @@ final public class ESS implements Element {
             }
         }
 
-        SUM.click(this.TABLE1.stream().mapToInt(GlobalData::calculateSize).sum());
+        SUM.click(this.TABLE1.stream().mapToInt(t -> t.calculateSize()).sum());
         LOG.fine("Reading savegame: read GlobalDataTable #1.");
 
         for (int tableIndex = 0; tableIndex < this.FLT.TABLE2COUNT; tableIndex++) {
@@ -365,7 +365,7 @@ final public class ESS implements Element {
             }
         }
 
-        SUM.click(this.TABLE2.stream().mapToInt(GlobalData::calculateSize).sum());
+        SUM.click(this.TABLE2.stream().mapToInt(t -> t.calculateSize()).sum());
         LOG.fine("Reading savegame: read GlobalDataTable #2.");
 
         // Get the GlobalVariableTable.
@@ -387,7 +387,7 @@ final public class ESS implements Element {
 
         model.addChangeForms(this.CHANGEFORMS);
 
-        SUM.click(this.CHANGEFORMS.values().stream().mapToInt(ChangeForm::calculateSize).sum());
+        SUM.click(this.CHANGEFORMS.values().stream().mapToInt(t -> t.calculateSize()).sum());
         LOG.fine("Reading savegame: read changeform table.");
 
         // Read the third set of data tables.
@@ -425,7 +425,7 @@ final public class ESS implements Element {
                 .findAny().orElse(new AnimObjects());
         model.addAnimations(this.ANIMATIONS);
 
-        SUM.click(this.TABLE3.stream().mapToInt(GlobalData::calculateSize).sum());
+        SUM.click(this.TABLE3.stream().mapToInt(t -> t.calculateSize()).sum());
         LOG.fine("Reading savegame: read GlobalDataTable #3.");
 
         // Try to readRefID the visited worldspaces block.
@@ -624,10 +624,10 @@ final public class ESS implements Element {
         sum += this.PLUGINS.calculateSize();
         sum += this.FLT.calculateSize();
 
-        sum += this.TABLE1.parallelStream().mapToInt(GlobalData::calculateSize).sum();
-        sum += this.TABLE2.parallelStream().mapToInt(GlobalData::calculateSize).sum();
-        sum += this.CHANGEFORMS.values().stream().mapToInt(ChangeForm::calculateSize).sum();
-        sum += this.TABLE3.parallelStream().mapToInt(GlobalData::calculateSize).sum();
+        sum += this.TABLE1.parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.TABLE2.parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.CHANGEFORMS.values().stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.TABLE3.parallelStream().mapToInt(v -> v.calculateSize()).sum();
 
         sum += 4;
         sum += this.FORMIDARRAY == null ? 0 : 4 * this.FORMIDARRAY.length;
@@ -933,7 +933,7 @@ final public class ESS implements Element {
 
         float actualSize = this.calculateSize() / 1048576.0f;
         float papyrusSize = this.PAPYRUS.calculateSize() / 1048576.0f;
-        float changeFormsSize = this.CHANGEFORMS.values().parallelStream().mapToInt(ChangeForm::calculateSize).sum() / 1048576.0f;
+        float changeFormsSize = this.CHANGEFORMS.values().parallelStream().mapToInt(cf -> cf.calculateSize()).sum() / 1048576.0f;
 
         if (this.HEADER.getCompression().isCompressed()) {
             try {
@@ -1003,7 +1003,7 @@ final public class ESS implements Element {
      */
     @Override
     public String toString() {
-        return this.HEADER.GAME.getNAME();
+        return this.HEADER.GAME.NAME;
         /*if (null != this.ORIGINAL_FILE) {
             return this.ORIGINAL_FILE.getFileName().toString();
         } else {

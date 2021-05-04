@@ -20,7 +20,6 @@ import java.awt.Font;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Objects;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -108,10 +107,10 @@ public class ReSaverSettings extends JDialog {
 
         }
 
-        Game.Companion.getVALUES().forEach((game) -> {
+        Game.VALUES.forEach((game) -> {
             JPanel TAB = new JPanel();
             TAB.setLayout(new BoxLayout(TAB, BoxLayout.PAGE_AXIS));
-            PANE.add(game.getNAME(), TAB);
+            PANE.add(game.NAME, TAB);
 
             {
                 final JLabel LABEL = new JLabel("Game directory:");
@@ -169,7 +168,7 @@ public class ReSaverSettings extends JDialog {
         });
 
         if (currentGame != null) {
-            PANE.setSelectedIndex(Game.Companion.getVALUES().indexOf(currentGame));
+            PANE.setSelectedIndex(Game.VALUES.indexOf(currentGame));
         }
     }
 
@@ -179,7 +178,7 @@ public class ReSaverSettings extends JDialog {
      * @return
      */
     static public Path getFirst(Path... items) {
-        return Arrays.stream(items).filter(Objects::nonNull).findFirst().orElse(null);
+        return Arrays.stream(items).filter(i -> i != null).findFirst().orElse(null);
     }
 
     static private final Path HOME = Paths.get(System.getProperty("user.home"), "appData", "local", "ModOrganizer");
