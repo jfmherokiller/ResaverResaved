@@ -136,7 +136,7 @@ public class Scanner extends SwingWorker<resaver.Analysis, Double> {
             for (Mod mod : MODS) {
                 if (mod == CORE) {
                     COUNTER.click();
-                    this.PROGRESS.accept(String.format("Reading %s's data", GAME.NAME));
+                    this.PROGRESS.accept(String.format("Reading %s's data", GAME.getNAME()));
                 } else {
                     this.PROGRESS.accept(String.format("Reading %s: mod data for %s", COUNTER.eval(), mod.getShortName()));
                 }

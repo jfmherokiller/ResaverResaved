@@ -88,7 +88,7 @@ public class Saver extends SwingWorker<ESS, Double> {
                 MSG.append(String.format("\nBackup written to %s.", RESULT.BACKUP_FILE));
             }
             if (RESULT.ESS.hasCosave()) {
-                MSG.append(String.format("\n%s co-save was copied.", RESULT.GAME.COSAVE_EXT.toUpperCase()));
+                MSG.append(String.format("\n%s co-save was copied.", RESULT.GAME.getCOSAVE_EXT().toUpperCase()));
             }
 
             final String TITLE = "Save Written";

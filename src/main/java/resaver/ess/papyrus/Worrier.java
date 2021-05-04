@@ -95,7 +95,7 @@ final public class Worrier {
         BUF.append("<p>The savefile was successfully loaded.<ul>");
         BUF.append(String.format("<li>Read %1.1f mb in %1.1f seconds.</li>", size, time));
         if (result.ESS.hasCosave()) {
-            BUF.append(String.format("<li>%s co-save was loaded.</li>", result.GAME.COSAVE_EXT.toUpperCase()));
+            BUF.append(String.format("<li>%s co-save was loaded.</li>", result.GAME.getCOSAVE_EXT().toUpperCase()));
         } else {
             BUF.append("<li>No co-save was found.</li>");
         }
