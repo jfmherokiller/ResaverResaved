@@ -15,8 +15,6 @@
  */
 package resaver.ess
 
-import resaver.ess.AnalyzableElement
-
 /**
  * Contains the data for a changeform.
  *
