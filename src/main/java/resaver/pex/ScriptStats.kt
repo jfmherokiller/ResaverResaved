@@ -13,34 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*
 
 /**
  * Stores stats about a script or group of scripts.
  *
  * @author Mark Fairchild
  */
-final public class ScriptStats {
-
-    /**
-     * Creates a new <code>ModStats</code> with all counters set to zero.
-     */
-    public ScriptStats() {
-        this.COUNTS = java.util.Collections.synchronizedMap(new java.util.EnumMap<>(Key.class));
-    }
-
+class ScriptStats {
     /**
      * Returns the number of transient strings that can potentially be saved by
      * restringing.
      *
      * @return The number of local variables and function parameters.
      */
-    public int getTransientStrings() {
-        return this.getLocalVariables() + this.getParameters();
-    }
+    val transientStrings: Int
+        get() = localVariables + parameters
 
     /**
      * Returns the number of permanent strings that can potentially be saved by
@@ -48,9 +38,8 @@ final public class ScriptStats {
      *
      * @return The number of non-conditional object variables.
      */
-    public int getPermanentStrings() {
-        return this.getObjectVariables() - this.getConditionals();
-    }
+    val permanentStrings: Int
+        get() = objectVariables - conditionals
 
     /**
      * Returns the value of the object variables counter.
@@ -58,9 +47,8 @@ final public class ScriptStats {
      * @return Value of the counter or zero if the counter has never been
      * incremented.
      */
-    public int getObjectVariables() {
-        return this.COUNTS.getOrDefault(Key.OBJECT_VARIABLE, 0);
-    }
+    val objectVariables: Int
+        get() = COUNTS.getOrDefault(Key.OBJECT_VARIABLE, 0)
 
     /**
      * Returns the value of the autovars counter.
@@ -68,9 +56,8 @@ final public class ScriptStats {
      * @return Value of the counter or zero if the counter has never been
      * incremented.
      */
-    public int getAutovars() {
-        return this.COUNTS.getOrDefault(Key.AUTOVAR_VARIABLE, 0);
-    }
+    val autovars: Int
+        get() = COUNTS.getOrDefault(Key.AUTOVAR_VARIABLE, 0)
 
     /**
      * Returns the value of the conditional variables counter.
@@ -78,9 +65,8 @@ final public class ScriptStats {
      * @return Value of the counter or zero if the counter has never been
      * incremented.
      */
-    public int getConditionals() {
-        return this.COUNTS.getOrDefault(Key.CONDITIONAL_VARIABLE, 0);
-    }
+    val conditionals: Int
+        get() = COUNTS.getOrDefault(Key.CONDITIONAL_VARIABLE, 0)
 
     /**
      * Returns the value of the local variables counter.
@@ -88,9 +74,8 @@ final public class ScriptStats {
      * @return Value of the counter or zero if the counter has never been
      * incremented.
      */
-    public int getLocalVariables() {
-        return this.COUNTS.getOrDefault(Key.LOCAL_VARIABLE, 0);
-    }
+    val localVariables: Int
+        get() = COUNTS.getOrDefault(Key.LOCAL_VARIABLE, 0)
 
     /**
      * Returns the value of the parameters counter.
@@ -98,9 +83,8 @@ final public class ScriptStats {
      * @return Value of the counter or zero if the counter has never been
      * incremented.
      */
-    public int getParameters() {
-        return this.COUNTS.getOrDefault(Key.PARAMETERS, 0);
-    }
+    val parameters: Int
+        get() = COUNTS.getOrDefault(Key.PARAMETERS, 0)
 
     /**
      * Returns the value of the docstrings counter.
@@ -108,19 +92,18 @@ final public class ScriptStats {
      * @return Value of the counter or zero if the counter has never been
      * incremented.
      */
-    public int getDocStrings() {
-        return this.COUNTS.getOrDefault(Key.DOCSTRING, 0);
-    }
+    val docStrings: Int
+        get() = COUNTS.getOrDefault(Key.DOCSTRING, 0)
 
     /**
      * Modifies the number of object variables.
      *
      * @param delta The change to the stat.
      */
-    public void modObjectVariables(int delta) {
-        int val = this.COUNTS.getOrDefault(Key.OBJECT_VARIABLE, 0);
-        val += delta;
-        this.COUNTS.put(Key.OBJECT_VARIABLE, val);
+    fun modObjectVariables(delta: Int) {
+        var `val` = COUNTS.getOrDefault(Key.OBJECT_VARIABLE, 0)
+        `val` += delta
+        COUNTS[Key.OBJECT_VARIABLE] = `val`
     }
 
     /**
@@ -128,10 +111,10 @@ final public class ScriptStats {
      *
      * @param delta The change to the stat.
      */
-    public void modAutoVariables(int delta) {
-        int val = this.COUNTS.getOrDefault(Key.AUTOVAR_VARIABLE, 0);
-        val += delta;
-        this.COUNTS.put(Key.AUTOVAR_VARIABLE, val);
+    fun modAutoVariables(delta: Int) {
+        var `val` = COUNTS.getOrDefault(Key.AUTOVAR_VARIABLE, 0)
+        `val` += delta
+        COUNTS[Key.AUTOVAR_VARIABLE] = `val`
     }
 
     /**
@@ -139,10 +122,10 @@ final public class ScriptStats {
      *
      * @param delta The change to the stat.
      */
-    public void modConditionals(int delta) {
-        int val = this.COUNTS.getOrDefault(Key.CONDITIONAL_VARIABLE, 0);
-        val += delta;
-        this.COUNTS.put(Key.CONDITIONAL_VARIABLE, val);
+    fun modConditionals(delta: Int) {
+        var `val` = COUNTS.getOrDefault(Key.CONDITIONAL_VARIABLE, 0)
+        `val` += delta
+        COUNTS[Key.CONDITIONAL_VARIABLE] = `val`
     }
 
     /**
@@ -150,10 +133,10 @@ final public class ScriptStats {
      *
      * @param delta The change to the stat.
      */
-    public void modLocalVariables(int delta) {
-        int val = this.COUNTS.getOrDefault(Key.LOCAL_VARIABLE, 0);
-        val += delta;
-        this.COUNTS.put(Key.LOCAL_VARIABLE, val);
+    fun modLocalVariables(delta: Int) {
+        var `val` = COUNTS.getOrDefault(Key.LOCAL_VARIABLE, 0)
+        `val` += delta
+        COUNTS[Key.LOCAL_VARIABLE] = `val`
     }
 
     /**
@@ -161,10 +144,10 @@ final public class ScriptStats {
      *
      * @param delta The change to the stat.
      */
-    public void modParameters(int delta) {
-        int val = this.COUNTS.getOrDefault(Key.PARAMETERS, 0);
-        val += delta;
-        this.COUNTS.put(Key.PARAMETERS, val);
+    fun modParameters(delta: Int) {
+        var `val` = COUNTS.getOrDefault(Key.PARAMETERS, 0)
+        `val` += delta
+        COUNTS[Key.PARAMETERS] = `val`
     }
 
     /**
@@ -172,31 +155,31 @@ final public class ScriptStats {
      *
      * @param delta The change to the stat.
      */
-    public void modDocStrings(int delta) {
-        int val = this.COUNTS.getOrDefault(Key.DOCSTRING, 0);
-        val += delta;
-        this.COUNTS.put(Key.DOCSTRING, val);
+    fun modDocStrings(delta: Int) {
+        var `val` = COUNTS.getOrDefault(Key.DOCSTRING, 0)
+        `val` += delta
+        COUNTS[Key.DOCSTRING] = `val`
     }
 
     /**
      * Clears the stats.
      */
-    public void clear() {
-        this.COUNTS.clear();
+    fun clear() {
+        COUNTS.clear()
     }
 
     /**
-     * Adds the counts from one <code>ScriptStats</code> to another.
+     * Adds the counts from one `ScriptStats` to another.
      *
      * @param other The counts to add.
      */
-    public void add(ScriptStats other) {
-        this.modAutoVariables(other.getAutovars());
-        this.modConditionals(other.getConditionals());
-        this.modDocStrings(other.getDocStrings());
-        this.modLocalVariables(other.getLocalVariables());
-        this.modObjectVariables(other.getObjectVariables());
-        this.modParameters(other.getParameters());
+    fun add(other: ScriptStats) {
+        modAutoVariables(other.autovars)
+        modConditionals(other.conditionals)
+        modDocStrings(other.docStrings)
+        modLocalVariables(other.localVariables)
+        modObjectVariables(other.objectVariables)
+        modParameters(other.parameters)
     }
 
     /**
@@ -218,37 +201,39 @@ final public class ScriptStats {
         
         return BUF.toString();
     }*/
-    final private java.util.Map<Key, Integer> COUNTS;
+    private val COUNTS: MutableMap<Key, Int>
 
-    static private enum Key {
-        OBJECT_VARIABLE,
-        AUTOVAR_VARIABLE,
-        CONDITIONAL_VARIABLE,
-        LOCAL_VARIABLE,
-        PARAMETERS,
-        DOCSTRING;
+    private enum class Key {
+        OBJECT_VARIABLE, AUTOVAR_VARIABLE, CONDITIONAL_VARIABLE, LOCAL_VARIABLE, PARAMETERS, DOCSTRING
+    }
+
+    companion object {
+        /**
+         * Combines a `Collection` of `ScripStat> objects.
+         *
+         * @param statsGroup A `Collection` of stats.
+         * @return A combined `ScriptStats` object containing the sum of
+         * all the individual stats.
+        ` */
+        fun combine(statsGroup: Collection<ScriptStats>): ScriptStats {
+            Objects.requireNonNull(statsGroup)
+            val COMBINED = ScriptStats()
+            for (stats in statsGroup) {
+                COMBINED.modAutoVariables(stats.autovars)
+                COMBINED.modConditionals(stats.conditionals)
+                COMBINED.modDocStrings(stats.docStrings)
+                COMBINED.modLocalVariables(stats.localVariables)
+                COMBINED.modObjectVariables(stats.objectVariables)
+                COMBINED.modParameters(stats.parameters)
+            }
+            return COMBINED
+        }
     }
 
     /**
-     * Combines a <code>Collection</code> of <code>ScripStat> objects.
-     *
-     * @param statsGroup A <code>Collection</code> of stats.
-     * @return A combined <code>ScriptStats</code> object containing the sum of
-     * all the individual stats.
+     * Creates a new `ModStats` with all counters set to zero.
      */
-    static public ScriptStats combine(Collection<ScriptStats> statsGroup) {
-        Objects.requireNonNull(statsGroup);
-        final ScriptStats COMBINED = new ScriptStats();
-
-        for (ScriptStats stats : statsGroup) {
-            COMBINED.modAutoVariables(stats.getAutovars());
-            COMBINED.modConditionals(stats.getConditionals());
-            COMBINED.modDocStrings(stats.getDocStrings());
-            COMBINED.modLocalVariables(stats.getLocalVariables());
-            COMBINED.modObjectVariables(stats.getObjectVariables());
-            COMBINED.modParameters(stats.getParameters());
-        }
-
-        return COMBINED;
+    init {
+        COUNTS = Collections.synchronizedMap(EnumMap(Key::class.java))
     }
 }

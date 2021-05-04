@@ -13,56 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import resaver.IString;
+import resaver.IString
+import resaver.IString.Companion.format
 
 /**
- * Generates a sequence of identifiers. Every <code>TokenGenerator</code>
+ * Generates a sequence of identifiers. Every `TokenGenerator`
  * generates the same sequence.
- * 
+ *
  * @author Mark Fairchild
  */
-final public class TokenGenerator implements Cloneable {
-
+class TokenGenerator
+/**
+ * Creates a new `TokenGenerator`.
+ *
+ */
+    : Cloneable {
     /**
-     * Creates a new <code>TokenGenerator</code>.
-     * 
-     */
-    public TokenGenerator() {
-        this.index = 0;
-    }
-
-    /**
-     * Creates a copy of the <code>TokenGenerator</code>; it will return
+     * Creates a copy of the `TokenGenerator`; it will return
      * the same sequence of identifiers as the original.
-     * 
-     * @return A copy of the <code>TokenGenerator</code>.
+     *
+     * @return A copy of the `TokenGenerator`.
      */
-    @Override
-    public TokenGenerator clone() {
-        TokenGenerator copy = new TokenGenerator();
-        copy.index = this.index;
-        return copy;
+    public override fun clone(): TokenGenerator {
+        val copy = TokenGenerator()
+        copy.index = index
+        return copy
     }
 
     /**
      * Produces the next identifier in the sequence.
      * @return An identifier string.
      */
-    public IString next() {
-        return IString.format("%s%03d", PREFIX, this.index++);
+    operator fun next(): IString {
+        return format("%s%03d", PREFIX, index++)
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return String.format("TokenGenerator(%s) %d", PREFIX, this.index);
+    override fun toString(): String {
+        return String.format("TokenGenerator(%s) %d", PREFIX, index)
     }
-    
-    static final private String PREFIX = "QQZQQ";
-    private int index;
 
+    private var index = 0
+
+    companion object {
+        private const val PREFIX = "QQZQQ"
+    }
 }

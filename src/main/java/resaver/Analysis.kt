@@ -24,9 +24,9 @@ import kotlin.streams.toList
  *
  * @author Mark Fairchild
  */
-class Analysis(profileAnalysis: Mod.Analysis, espInfos: MutableMap<Plugin, PluginData>, strings: StringTable) :
+class Analysis(profileAnalysis: Mod.Analysis, espInfos: MutableMap<Plugin?, PluginData>, strings: StringTable) :
     Mod.Analysis() {
-    fun getName(plugin: Plugin, formID: Int): String? {
+    fun getName(plugin: Plugin?, formID: Int): String? {
         return if (ESP_INFOS.containsKey(plugin)) ESP_INFOS[plugin]!!.getName(formID, STRINGS) else null
     }
 
@@ -39,7 +39,7 @@ class Analysis(profileAnalysis: Mod.Analysis, espInfos: MutableMap<Plugin, Plugi
 
     val scriptDataSize: Long
         get() = ESP_INFOS.values.stream().mapToLong { obj: PluginData -> obj.scriptDataSize }.sum()
-    val ESP_INFOS: MutableMap<Plugin, PluginData> = espInfos
+    val ESP_INFOS: MutableMap<Plugin?, PluginData> = espInfos
     val STRINGS: StringTable = strings
 
     companion object {

@@ -13,31 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
+
+import java.util.*
 
 /**
  * Keeps stats on what is done during remapping.
  *
  * @author Mark Fairchild
  */
-final public class RemappingStats {
-
-    /**
-     * Creates a new <code>RemappingStats</code> with all counters set to zero.
-     */
-    public RemappingStats() {
-        this.COUNTS = java.util.Collections.synchronizedMap(new java.util.EnumMap<>(Key.class));
-    }
-
+class RemappingStats {
     /**
      * Returns the value of the script counter.
      *
      * @return Value of the counter or zero if the counter has
      * never been incremented.
      */
-    public int getScripts() {
-        return this.COUNTS.getOrDefault(Key.SCRIPT, 0);
-    }
+    val scripts: Int
+        get() = COUNTS.getOrDefault(Key.SCRIPT, 0)
 
     /**
      * Returns the value of the object variables counter.
@@ -45,9 +38,8 @@ final public class RemappingStats {
      * @return Value of the counter or zero if the counter has
      * never been incremented.
      */
-    public int getObjectVariables() {
-        return this.COUNTS.getOrDefault(Key.OBJECT_VARIABLE, 0);
-    }
+    val objectVariables: Int
+        get() = COUNTS.getOrDefault(Key.OBJECT_VARIABLE, 0)
 
     /**
      * Returns the value of the autovars counter.
@@ -55,9 +47,8 @@ final public class RemappingStats {
      * @return Value of the counter or zero if the counter has
      * never been incremented.
      */
-    public int getAutovars() {
-        return this.COUNTS.getOrDefault(Key.AUTOVAR_VARIABLE, 0);
-    }
+    val autovars: Int
+        get() = COUNTS.getOrDefault(Key.AUTOVAR_VARIABLE, 0)
 
     /**
      * Returns the value of the conditional variables counter.
@@ -65,9 +56,8 @@ final public class RemappingStats {
      * @return Value of the counter or zero if the counter has
      * never been incremented.
      */
-    public int getConditionals() {
-        return this.COUNTS.getOrDefault(Key.CONDITIONAL_VARIABLE, 0);
-    }
+    val conditionals: Int
+        get() = COUNTS.getOrDefault(Key.CONDITIONAL_VARIABLE, 0)
 
     /**
      * Returns the value of the functions counter.
@@ -75,9 +65,8 @@ final public class RemappingStats {
      * @return Value of the counter or zero if the counter has
      * never been incremented.
      */
-    public int getFunctions() {
-        return this.COUNTS.getOrDefault(Key.FUNCTIONS, 0);
-    }
+    val functions: Int
+        get() = COUNTS.getOrDefault(Key.FUNCTIONS, 0)
 
     /**
      * Returns the value of the local variables counter.
@@ -85,9 +74,8 @@ final public class RemappingStats {
      * @return Value of the counter or zero if the counter has
      * never been incremented.
      */
-    public int getLocalVariables() {
-        return this.COUNTS.getOrDefault(Key.LOCAL_VARIABLE, 0);
-    }
+    val localVariables: Int
+        get() = COUNTS.getOrDefault(Key.LOCAL_VARIABLE, 0)
 
     /**
      * Returns the value of the parameters counter.
@@ -95,9 +83,8 @@ final public class RemappingStats {
      * @return Value of the counter or zero if the counter has
      * never been incremented.
      */
-    public int getParameters() {
-        return this.COUNTS.getOrDefault(Key.PARAMETERS, 0);
-    }
+    val parameters: Int
+        get() = COUNTS.getOrDefault(Key.PARAMETERS, 0)
 
     /**
      * Returns the value of the docstrings counter.
@@ -105,110 +92,117 @@ final public class RemappingStats {
      * @return Value of the counter or zero if the counter has
      * never been incremented.
      */
-    public int getDocStrings() {
-        return this.COUNTS.getOrDefault(Key.DOCSTRING, 0);
-    }
+    val docStrings: Int
+        get() = COUNTS.getOrDefault(Key.DOCSTRING, 0)
 
     /**
      * Increments the number of scripts.
      */
-    public void incScripts() {
-        int val = this.COUNTS.getOrDefault(Key.SCRIPT, 0);
-        val++;
-        this.COUNTS.put(Key.SCRIPT, val);
+    fun incScripts() {
+        var `val` = COUNTS.getOrDefault(Key.SCRIPT, 0)
+        `val`++
+        COUNTS[Key.SCRIPT] = `val`
     }
 
     /**
      * Increments the number of object variables.
      */
-    public void incObjectVariables() {
-        int val = this.COUNTS.getOrDefault(Key.OBJECT_VARIABLE, 0);
-        val++;
-        this.COUNTS.put(Key.OBJECT_VARIABLE, val);
+    fun incObjectVariables() {
+        var `val` = COUNTS.getOrDefault(Key.OBJECT_VARIABLE, 0)
+        `val`++
+        COUNTS[Key.OBJECT_VARIABLE] = `val`
     }
 
     /**
      * Increments the number of autovars.
      */
-    public void incAutoVariables() {
-        int val = this.COUNTS.getOrDefault(Key.AUTOVAR_VARIABLE, 0);
-        val++;
-        this.COUNTS.put(Key.AUTOVAR_VARIABLE, val);
+    fun incAutoVariables() {
+        var `val` = COUNTS.getOrDefault(Key.AUTOVAR_VARIABLE, 0)
+        `val`++
+        COUNTS[Key.AUTOVAR_VARIABLE] = `val`
     }
 
     /**
      * Increments the number of conditional autovars.
      */
-    public void incConditionals() {
-        int val = this.COUNTS.getOrDefault(Key.CONDITIONAL_VARIABLE, 0);
-        val++;
-        this.COUNTS.put(Key.CONDITIONAL_VARIABLE, val);
+    fun incConditionals() {
+        var `val` = COUNTS.getOrDefault(Key.CONDITIONAL_VARIABLE, 0)
+        `val`++
+        COUNTS[Key.CONDITIONAL_VARIABLE] = `val`
     }
 
     /**
      * Increments the number of functions.
      */
-    public void incFunctions() {
-        int val = this.COUNTS.getOrDefault(Key.FUNCTIONS, 0);
-        val++;
-        this.COUNTS.put(Key.FUNCTIONS, val);
+    fun incFunctions() {
+        var `val` = COUNTS.getOrDefault(Key.FUNCTIONS, 0)
+        `val`++
+        COUNTS[Key.FUNCTIONS] = `val`
     }
 
     /**
      * Increments the number of local variables.
      */
-    public void incLocalVariables() {
-        int val = this.COUNTS.getOrDefault(Key.LOCAL_VARIABLE, 0);
-        val++;
-        this.COUNTS.put(Key.LOCAL_VARIABLE, val);
+    fun incLocalVariables() {
+        var `val` = COUNTS.getOrDefault(Key.LOCAL_VARIABLE, 0)
+        `val`++
+        COUNTS[Key.LOCAL_VARIABLE] = `val`
     }
 
     /**
      * Increments the number of parameters.
      */
-    public void incParameters() {
-        int val = this.COUNTS.getOrDefault(Key.PARAMETERS, 0);
-        val++;
-        this.COUNTS.put(Key.PARAMETERS, val);
+    fun incParameters() {
+        var `val` = COUNTS.getOrDefault(Key.PARAMETERS, 0)
+        `val`++
+        COUNTS[Key.PARAMETERS] = `val`
     }
 
     /**
      * Increments the number of docstrings.
      */
-    public void incDocStrings() {
-        int val = this.COUNTS.getOrDefault(Key.DOCSTRING, 0);
-        val++;
-        this.COUNTS.put(Key.DOCSTRING, val);
+    fun incDocStrings() {
+        var `val` = COUNTS.getOrDefault(Key.DOCSTRING, 0)
+        `val`++
+        COUNTS[Key.DOCSTRING] = `val`
     }
 
     /**
-     * 
-     * @return 
+     *
+     * @return
      */
-    @Override
-    public String toString() {
-
-        String BUF = String.format("Processed %d scripts.\n", this.getScripts()) +
-                String.format("Renamed %d object variables.\n", this.getObjectVariables() - this.getConditionals()) +
-                String.format("%d of them were property autovariables.\n", this.getAutovars() - this.getConditionals()) +
-                String.format("Skipped %d conditional autovariables.\n", this.getConditionals()) +
-                String.format("Processed %d functions.\n", this.getFunctions()) +
-                String.format("Renamed %d function local variables.\n", this.getLocalVariables()) +
-                String.format("Renamed %d function parameters.\n", this.getParameters()) +
-                String.format("Stripped %d docstrings.\n", this.getDocStrings());
-        return BUF;
+    override fun toString(): String {
+        return String.format("Processed %d scripts.\n", scripts) + String.format(
+            "Renamed %d object variables.\n",
+            objectVariables - conditionals
+        ) + String.format(
+            "%d of them were property autovariables.\n",
+            autovars - conditionals
+        ) + String.format(
+            "Skipped %d conditional autovariables.\n",
+            conditionals
+        ) + String.format(
+            "Processed %d functions.\n",
+            functions
+        ) + String.format(
+            "Renamed %d function local variables.\n",
+            localVariables
+        ) + String.format("Renamed %d function parameters.\n", parameters) + String.format(
+            "Stripped %d docstrings.\n",
+            docStrings
+        )
     }
-    
-    final private java.util.Map<Key, Integer> COUNTS;
 
-    static private enum Key {
-        SCRIPT,
-        OBJECT_VARIABLE,
-        AUTOVAR_VARIABLE,
-        CONDITIONAL_VARIABLE,
-        FUNCTIONS,
-        LOCAL_VARIABLE,
-        PARAMETERS,
-        DOCSTRING;
+    private val COUNTS: MutableMap<Key, Int>
+
+    private enum class Key {
+        SCRIPT, OBJECT_VARIABLE, AUTOVAR_VARIABLE, CONDITIONAL_VARIABLE, FUNCTIONS, LOCAL_VARIABLE, PARAMETERS, DOCSTRING
+    }
+
+    /**
+     * Creates a new `RemappingStats` with all counters set to zero.
+     */
+    init {
+        COUNTS = Collections.synchronizedMap(EnumMap(Key::class.java))
     }
 }
