@@ -13,64 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import resaver.esp.PluginData;
-import resaver.esp.StringTable;
-import resaver.ess.Plugin;
-
+import resaver.esp.PluginData
+import resaver.esp.StringTable
+import resaver.ess.Plugin
+import kotlin.streams.toList
 /**
  * Combines the results of script analysis and ESP analysis.
  *
  * @author Mark Fairchild
  */
-final public class Analysis extends Mod.Analysis {
+class Analysis(profileAnalysis: Mod.Analysis, espInfos: MutableMap<Plugin, PluginData>, strings: StringTable) :
+    Mod.Analysis() {
+    fun getName(plugin: Plugin, formID: Int): String? {
+        return if (ESP_INFOS.containsKey(plugin)) ESP_INFOS[plugin]!!.getName(formID, STRINGS) else null
+    }
+
+    fun find(searchTerm: String?): Set<Int> {
+        return ESP_INFOS.values.stream()
+            .map { v: PluginData -> v.getID(searchTerm, STRINGS) }
+            .filter { obj: Set<Int>? -> obj.isNullOrEmpty() }
+            .flatMap { obj: Set<Int> -> obj.stream() }.toList().toSet()
+    }
+
+    val scriptDataSize: Long
+        get() = ESP_INFOS.values.stream().mapToLong { obj: PluginData -> obj.scriptDataSize }.sum()
+    val ESP_INFOS: MutableMap<Plugin, PluginData> = espInfos
+    val STRINGS: StringTable = strings
+
+    companion object {
+        /**
+         * For serialization.
+         */
+        private const val serialVersionUID = 0x171f2b1L
+    }
 
     /**
-     * Creates a new <code>Analysis</code>.
+     * Creates a new `Analysis`.
      *
      * @param profileAnalysis
      * @param espInfos
      * @param strings
      */
-    public Analysis(Mod.Analysis profileAnalysis, Map<Plugin, PluginData> espInfos, StringTable strings) {
-        this.ESP_INFOS = Objects.requireNonNull(espInfos);
-        this.STRINGS = Objects.requireNonNull(strings);
-        this.MODS.addAll(profileAnalysis.MODS);
-        this.SCRIPTS.putAll(profileAnalysis.SCRIPTS);
-        this.ESPS.putAll(profileAnalysis.ESPS);
-        this.SCRIPT_ORIGINS.putAll(profileAnalysis.SCRIPT_ORIGINS);
+    init {
+        MODS.addAll(profileAnalysis.MODS)
+        SCRIPTS.putAll(profileAnalysis.SCRIPTS)
+        ESPS.putAll(profileAnalysis.ESPS)
+        SCRIPT_ORIGINS.putAll(profileAnalysis.SCRIPT_ORIGINS)
     }
-
-    public String getName(Plugin plugin, int formID) {
-        return this.ESP_INFOS.containsKey(plugin)
-                ? this.ESP_INFOS.get(plugin).getName(formID, this.STRINGS)
-                : null;
-    }
-
-    public Set<Integer> find(String searchTerm) {
-        return this.ESP_INFOS.values().stream()
-                .map(v -> v.getID(searchTerm, this.STRINGS))
-                .filter(Objects::nonNull)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-    }
-
-    public long getScriptDataSize() {
-        return this.ESP_INFOS.values().stream().mapToLong(PluginData::getScriptDataSize).sum();
-    }
-
-    final public Map<Plugin, PluginData> ESP_INFOS;
-    final public StringTable STRINGS;
-    
-    /**
-     * For serialization.
-     */
-    private static final long serialVersionUID = 0x171f2b1L;
-
 }
