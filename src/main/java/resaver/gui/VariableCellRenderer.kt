@@ -13,63 +13,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableCellRenderer;
-import resaver.ess.papyrus.Variable;
+import resaver.ess.papyrus.Variable
+import java.awt.Color
+import java.awt.Component
+import java.awt.Font
+import javax.swing.table.DefaultTableCellRenderer
+import javax.swing.JTable
 
 /**
  * Renderer for cells showing variables, to allow hot-linking of references.
  *
  * @author Mark Fairchld
  */
-@SuppressWarnings("serial")
-final class VariableCellRenderer extends DefaultTableCellRenderer {
-
-    public VariableCellRenderer() {
-        this.DEFAULT_COLOR = super.getForeground();
-        this.INVALID_COLOR = Color.RED;
-        this.NULL_COLOR = Color.BLUE;
-        this.DEFAULT_FONT = super.getFont();
-        this.INVALID_FONT = super.getFont().deriveFont(Font.ITALIC);
-    }
-
-    @Override
-    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-        if (value instanceof Variable) {
-            final Variable VAR = (Variable) value;
-            final String STR = ((Variable) value).toValueString();
-            final Component C = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            C.setForeground(this.DEFAULT_COLOR);
-            C.setFont(this.DEFAULT_FONT);
-
-            if (VAR instanceof Variable.Ref) {
-                Variable.Ref REF = (Variable.Ref) VAR;
-                if (REF.isNull()) {
-                    C.setForeground(this.NULL_COLOR);
-                } else if (null == REF.getReferent()) {
-                    C.setForeground(this.INVALID_COLOR);
-                    C.setFont(this.INVALID_FONT);
+internal class VariableCellRenderer : DefaultTableCellRenderer() {
+    override fun getTableCellRendererComponent(
+        table: JTable,
+        value: Any,
+        isSelected: Boolean,
+        hasFocus: Boolean,
+        row: Int,
+        column: Int
+    ): Component {
+        return if (value is Variable) {
+            val VAR = value
+            val STR = value.toValueString()
+            val C = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+            C.foreground = DEFAULT_COLOR
+            C.font = DEFAULT_FONT
+            if (VAR is Variable.Ref) {
+                val REF = VAR
+                if (REF.isNull) {
+                    C.foreground = NULL_COLOR
+                } else if (null == REF.referent) {
+                    C.foreground = INVALID_COLOR
+                    C.font = INVALID_FONT
                 }
             }
-
-            return C;
-
+            C
         } else {
-            final Component C = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            C.setForeground(this.DEFAULT_COLOR);
-            C.setFont(this.DEFAULT_FONT);
-            return C;
+            val C = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+            C.foreground = DEFAULT_COLOR
+            C.font = DEFAULT_FONT
+            C
         }
     }
 
-    final private Color DEFAULT_COLOR;
-    final private Color INVALID_COLOR;
-    final private Color NULL_COLOR;
-    final private Font DEFAULT_FONT;
-    final private Font INVALID_FONT;
+    private val DEFAULT_COLOR: Color = super.getForeground()
+    private val INVALID_COLOR: Color = Color.RED
+    private val NULL_COLOR: Color = Color.BLUE
+    private val DEFAULT_FONT: Font = super.getFont()
+    private val INVALID_FONT: Font = super.getFont().deriveFont(Font.ITALIC)
+
 }
