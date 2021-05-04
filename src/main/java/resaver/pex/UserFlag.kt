@@ -13,42 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.util.Set;
-import resaver.pex.StringTable.TString;
+import kotlin.Throws
+import java.io.IOException
+import java.nio.ByteBuffer
 
 /**
  * Describes a user flag from a PEX file.
  *
  * @author Mark Fairchild
  */
-final public class UserFlag {
-
+class UserFlag internal constructor(input: ByteBuffer, strings: StringTable) {
     /**
-     * Creates a UserFlag by reading from a DataInput.
+     * Write the object to a `ByteBuffer`.
      *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-     * @throws IOException Exceptions aren't handled.
-     */
-    UserFlag(ByteBuffer input, StringTable strings) throws IOException {
-        this.NAME = strings.read(input);
-        this.FLAGINDEX = input.get();
-    }
-
-    /**
-     * Write the object to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      * @throws IOException IO errors aren't handled at all, they are simply
      * passed on.
      */
-    void write(ByteBuffer output) throws IOException {
-        this.NAME.write(output);
-        output.put(this.FLAGINDEX);
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer) {
+        NAME.write(output)
+        output.put(FLAGINDEX)
     }
 
     /**
@@ -56,8 +43,8 @@ final public class UserFlag {
      *
      * @param strings The set of strings.
      */
-    public void collectStrings(Set<TString> strings) {
-        strings.add(this.NAME);
+    fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        strings.add(NAME)
     }
 
     /**
@@ -66,30 +53,28 @@ final public class UserFlag {
      * @param userFlags A userFlags field.
      * @return True if the field includes this UserFlag, false otherwise.
      */
-    public boolean matches(int userFlags) {
-        return ((userFlags >>> this.FLAGINDEX) & 1) != 0;
+    fun matches(userFlags: Int): Boolean {
+        return userFlags ushr FLAGINDEX.toInt() and 1 != 0
     }
 
     /**
-     * @return The size of the <code>UserFlag</code>, in bytes.
-     *
+     * @return The size of the `UserFlag`, in bytes.
      */
-    public int calculateSize() {
-        return 3;
+    fun calculateSize(): Int {
+        return 3
     }
-    
+
     /**
      * Pretty-prints the UserFlag.
      *
      * @return A string representation of the UserFlag.
      */
-    @Override
-    public String toString() {
-        final String FORMAT = "%s";
-        return String.format(FORMAT, this.NAME);
+    override fun toString(): String {
+        val FORMAT = "%s"
+        return String.format(FORMAT, NAME)
     }
 
-    final private TString NAME;
-    final private byte FLAGINDEX;
+    private val NAME: StringTable.TString = strings.read(input)
+    private val FLAGINDEX: Byte = input.get()
 
 }
