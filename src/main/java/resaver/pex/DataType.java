@@ -40,12 +40,12 @@ public enum DataType {
      */
     static DataType read(ByteBuffer input) throws IOException {
         Objects.requireNonNull(input);
-        
+
         int index = Byte.toUnsignedInt(input.get());
         if (index < 0 || index >= VALUES.length) {
             throw new IOException("Invalid DataType.");
         }
-        
+
         return VALUES[index];
     }
 
