@@ -17,12 +17,7 @@ package resaver.pex;
 
 import java.nio.ByteBuffer;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import resaver.Game;
 import resaver.IString;
@@ -169,14 +164,14 @@ final public class Pex {
         sum += 4; // userFlags
         sum += 2; // autoStateName
         sum += 6; // array sizes
-        sum += this.VARIABLES.stream().mapToInt(v -> v.calculateSize()).sum();
-        sum += this.PROPERTIES.stream().mapToInt(v -> v.calculateSize()).sum();
-        sum += this.STATES.stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.VARIABLES.stream().mapToInt(Variable::calculateSize).sum();
+        sum += this.PROPERTIES.stream().mapToInt(Property::calculateSize).sum();
+        sum += this.STATES.stream().mapToInt(State::calculateSize).sum();
 
         if (this.GAME.isFO4()) {
             sum += 1;
             sum += 2;
-            sum += this.STRUCTS.stream().mapToInt(v -> v.calculateSize()).sum();
+            sum += this.STRUCTS.stream().mapToInt(Struct::calculateSize).sum();
         }
 
         return sum;
@@ -284,17 +279,17 @@ final public class Pex {
         code.add("");
 
         final Map<Property, Variable> AUTOVARS = new java.util.HashMap<>();
-        this.PROPERTIES.stream().filter(p -> p.hasAutoVar()).forEach(p -> {
+        this.PROPERTIES.stream().filter(Property::hasAutoVar).forEach(p -> {
             this.VARIABLES.stream().filter(v -> v.NAME.equals(p.AUTOVARNAME)).forEach(v -> AUTOVARS.put(p, v));
         });
 
         List<Property> sortedProp = new ArrayList<>(this.PROPERTIES);
-        sortedProp.sort((a, b) -> a.NAME.compareTo(b.NAME));
-        sortedProp.sort((a, b) -> a.TYPE.compareTo(b.TYPE));
+        sortedProp.sort(Comparator.comparing(a -> a.NAME));
+        sortedProp.sort(Comparator.comparing(a -> a.TYPE));
 
         List<Variable> sortedVars = new ArrayList<>(this.VARIABLES);
-        sortedVars.sort((a, b) -> a.NAME.compareTo(b.NAME));
-        sortedVars.sort((a, b) -> a.TYPE.compareTo(b.TYPE));
+        sortedVars.sort(Comparator.comparing(a -> a.NAME));
+        sortedVars.sort(Comparator.comparing(a -> a.TYPE));
 
         code.add(";");
         code.add("; PROPERTIES");
@@ -399,7 +394,7 @@ final public class Pex {
             int sum = 0;
             sum += 2; // NAME
             sum += 2; // Count
-            sum += this.MEMBERS.stream().mapToInt(v -> v.calculateSize()).sum();
+            sum += this.MEMBERS.stream().mapToInt(Member::calculateSize).sum();
             return sum;
         }
 
@@ -864,7 +859,7 @@ final public class Pex {
             int sum = 0;
             sum += 2; // NAME
             sum += 2; // array size
-            sum += this.FUNCTIONS.stream().mapToInt(v -> v.calculateSize()).sum();
+            sum += this.FUNCTIONS.stream().mapToInt(Function::calculateSize).sum();
             return sum;
         }
 
@@ -1040,9 +1035,9 @@ final public class Pex {
             sum += 4; // userflags
             sum += 1; // flags
             sum += 6; // array sizes
-            sum += this.PARAMS.stream().mapToInt(v -> v.calculateSize()).sum();
-            sum += this.LOCALS.stream().mapToInt(v -> v.calculateSize()).sum();
-            sum += this.INSTRUCTIONS.stream().mapToInt(v -> v.calculateSize()).sum();
+            sum += this.PARAMS.stream().mapToInt(VariableType::calculateSize).sum();
+            sum += this.LOCALS.stream().mapToInt(VariableType::calculateSize).sum();
+            sum += this.INSTRUCTIONS.stream().mapToInt(Instruction::calculateSize).sum();
 
             return sum;
         }
@@ -1121,7 +1116,7 @@ final public class Pex {
             }
 
             final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(this.USERFLAGS);
-            FLAGOBJS.forEach(flag -> S.append(String.format(" " + flag.toString())));
+            FLAGOBJS.forEach(flag -> S.append(" " + flag.toString()));
 
             if (this.isGlobal()) {
                 S.append(" GLOBAL");
@@ -1138,7 +1133,7 @@ final public class Pex {
 
             Set<IString> GROUPS = this.LOCALS
                     .stream()
-                    .filter(v -> v.isTemp())
+                    .filter(VariableType::isTemp)
                     .map(v -> v.TYPE)
                     .collect(Collectors.toSet());
 
@@ -1148,7 +1143,7 @@ final public class Pex {
                 DECL.append("; ").append(t).append(' ');
                 DECL.append(this.LOCALS
                         .stream()
-                        .filter(v -> v.isTemp())
+                        .filter(VariableType::isTemp)
                         .filter(v -> v.TYPE == t)
                         .map(v -> v.name)
                         .collect(Collectors.joining(", ")));
@@ -1314,7 +1309,7 @@ final public class Pex {
             public int calculateSize() {
                 int sum = 0;
                 sum += 1; // opcode
-                sum += ARGS.stream().mapToInt(v -> v.calculateSize()).sum();
+                sum += ARGS.stream().mapToInt(VData::calculateSize).sum();
                 return sum;
             }
 

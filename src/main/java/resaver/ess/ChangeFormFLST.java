@@ -88,7 +88,7 @@ final public class ChangeFormFLST implements ChangeFormData {
 
         if (null != this.FORMS) {
             sum += 4;
-            sum += this.FORMS.stream().mapToInt(v -> v.calculateSize()).sum();
+            sum += this.FORMS.stream().mapToInt(RefID::calculateSize).sum();
         }
 
         return sum;
@@ -112,7 +112,7 @@ final public class ChangeFormFLST implements ChangeFormData {
         }
 
         int size = this.FORMS.size();
-        this.FORMS.removeIf(v -> v.isZero());
+        this.FORMS.removeIf(RefID::isZero);
         return size - this.FORMS.size();
     }
 
@@ -120,7 +120,7 @@ final public class ChangeFormFLST implements ChangeFormData {
      * @return A flag indicating that the formlist has nullref entries.
      */
     public boolean containsNullrefs() {
-        return this.FORMS.stream().anyMatch(v -> v.isZero());
+        return this.FORMS.stream().anyMatch(RefID::isZero);
     }
 
     /**

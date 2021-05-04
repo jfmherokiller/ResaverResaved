@@ -20,6 +20,7 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -613,8 +614,8 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
         static final private Type[] FALLOUT4_VALUES = values();
 
         static {
-            Arrays.sort(SKYRIM_VALUES, (a, b) -> Integer.compare(a.SKYRIMCODE, b.SKYRIMCODE));
-            Arrays.sort(FALLOUT4_VALUES, (a, b) -> Integer.compare(a.FALLOUTCODE, b.FALLOUTCODE));
+            Arrays.sort(SKYRIM_VALUES, Comparator.comparingInt(a -> a.SKYRIMCODE));
+            Arrays.sort(FALLOUT4_VALUES, Comparator.comparingInt(a -> a.FALLOUTCODE));
         }
     }
 

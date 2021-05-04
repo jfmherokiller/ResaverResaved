@@ -179,7 +179,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
 
         } else {
             return this.getVariables().stream()
-                    .filter(var -> var.hasRef())
+                    .filter(Variable::hasRef)
                     .filter(var -> var.getReferent() == target)
                     .map(var -> this.getVariables().indexOf(var))
                     .filter(index -> index >= 0)
@@ -284,7 +284,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
             int sum = 4;
             sum += this.FLAG.calculateSize();
             sum += getID().calculateSize();
-            sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
+            sum += this.VARIABLES.stream().mapToInt(Element::calculateSize).sum();
             return sum;
         }
 

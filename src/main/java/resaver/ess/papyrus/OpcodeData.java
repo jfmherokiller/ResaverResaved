@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Objects;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
+
+import resaver.ess.Element;
 import resaver.pex.Opcode;
 
 /**
@@ -105,7 +107,7 @@ final public class OpcodeData implements PapyrusElement {
     @Override
     public int calculateSize() {
         int sum = 1;
-        sum += this.PARAMETERS.stream().mapToInt(var -> var.calculateSize()).sum();
+        sum += this.PARAMETERS.stream().mapToInt(Element::calculateSize).sum();
         return sum;
     }
 

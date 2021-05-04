@@ -18,6 +18,7 @@ package resaver.pex;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -151,7 +152,7 @@ final public class Disassembler {
         // gradually assembling the conditional term.
         boolean rhs = false; // Flag indicating whether this is the right-hand side of a predicate.
         boolean end = false; // Flag indicating that the end of the term has been reached.
-        String lhs = ""; // The left-hand side, this is where the term is accumulated.
+        StringBuilder lhs = new StringBuilder(); // The left-hand side, this is where the term is accumulated.
         LinkedList<Boolean> stack1 = new LinkedList<>();
         LinkedList<String> stack2 = new LinkedList<>();
 
@@ -190,47 +191,47 @@ final public class Disassembler {
 
             // Balance the parentheses.
             if (!rhs && !end) {
-                lhs += term + " " + operator + " ";
+                lhs.append(term).append(" ").append(operator).append(" ");
                 rhs = true;
             } else if (!rhs && end) {
-                lhs += term;
+                lhs.append(term);
             } else if (rhs && !end) {
-                lhs += term;
+                lhs.append(term);
                 while (!stack1.isEmpty() && rhs) {
                     rhs = stack1.pop();
-                    lhs = stack2.pop() + "(" + lhs + ")";
+                    lhs = new StringBuilder(stack2.pop() + "(" + lhs + ")");
                 }
-                lhs = "(" + lhs + ") " + operator + " ";
+                lhs = new StringBuilder("(" + lhs + ") " + operator + " ");
             } else if (rhs && end) {
-                lhs += term;
+                lhs.append(term);
                 while (!stack1.isEmpty() && rhs) {
                     rhs = stack1.pop();
-                    lhs = stack2.pop() + "(" + lhs + ")";
+                    lhs = new StringBuilder(stack2.pop() + "(" + lhs + ")");
                 }
             }
 
             // Look for a subclause.
             boolean subclause = !end && block.subList(ptr + 1, ptr + offset)
                     .stream()
-                    .filter(v -> null != v)
+                    .filter(Objects::nonNull)
                     .anyMatch(v -> v.OPCODE.isConditional());
 
             if (subclause) {
                 stack1.push(rhs);
-                stack2.push(lhs);
+                stack2.push(lhs.toString());
                 rhs = false;
-                lhs = "";
+                lhs = new StringBuilder();
             }
 
             if (end) {
                 if (null != IF) {
                     List<Instruction> subBlock = block.subList(ptr, block.size());
-                    return disassembleIfElseBlock(lhs, subBlock, types, indent, elseif);
+                    return disassembleIfElseBlock(lhs.toString(), subBlock, types, indent, elseif);
                 } else if (null != WHILE) {
                     List<Instruction> subBlock = block.subList(ptr, block.size());
-                    return disassembleLoop(lhs, subBlock, types, indent);
+                    return disassembleLoop(lhs.toString(), subBlock, types, indent);
                 } else {
-                    String s = disassembleSimple(0, lhs, inst.ARGS, types, indent);
+                    String s = disassembleSimple(0, lhs.toString(), inst.ARGS, types, indent);
                     return Collections.singletonList(s);
                 }
             }
@@ -651,7 +652,7 @@ final public class Disassembler {
                 subArgs = args
                         .subList(4, args.size())
                         .stream()
-                        .map(v -> v.toString())//.paren())
+                        .map(Object::toString)//.paren())
                         .collect(Collectors.toList());
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
@@ -662,7 +663,7 @@ final public class Disassembler {
                 subArgs = args
                         .subList(3, args.size())
                         .stream()
-                        .map(v -> v.toString())//.paren())
+                        .map(Object::toString)//.paren())
                         .collect(Collectors.toList());
                 term = String.format("parent.%s%s", method, paramList(subArgs));
                 return processTerm(args, terms, 1, term);
@@ -674,7 +675,7 @@ final public class Disassembler {
                 subArgs = args
                         .subList(4, args.size())
                         .stream()
-                        .map(v -> v.toString())
+                        .map(Object::toString)
                         .collect(Collectors.toList());
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
@@ -853,7 +854,7 @@ final public class Disassembler {
                 List<String> subArgs = inst.ARGS
                         .subList(4, inst.ARGS.size())
                         .stream()
-                        .map(v -> v.toString())//.paren())
+                        .map(Object::toString)//.paren())
                         .collect(Collectors.toList());
                 return String.format("%s.%s%s", obj, method, paramList(subArgs));
             }
@@ -863,7 +864,7 @@ final public class Disassembler {
                 List<String> subArgs = inst.ARGS
                         .subList(3, inst.ARGS.size())
                         .stream()
-                        .map(v -> v.toString())//.paren())
+                        .map(Object::toString)//.paren())
                         .collect(Collectors.toList());
                 return String.format("parent.%s%s", method, paramList(subArgs));
             }
@@ -874,7 +875,7 @@ final public class Disassembler {
                 List<String> subArgs = inst.ARGS
                         .subList(4, inst.ARGS.size())
                         .stream()
-                        .map(v -> v.toString())//.paren())
+                        .map(Object::toString)//.paren())
                         .collect(Collectors.toList());
                 return String.format("%s.%s%s", obj, method, paramList(subArgs));
             }
@@ -1033,7 +1034,7 @@ final public class Disassembler {
      */
     static <T> String paramList(List<T> params) {
         return params.stream()
-                .map(p -> p.toString())
+                .map(Object::toString)
                 .collect(Collectors.joining(", ", "(", ")"));
     }
 

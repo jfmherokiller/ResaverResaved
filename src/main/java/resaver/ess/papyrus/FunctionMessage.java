@@ -140,7 +140,7 @@ final public class FunctionMessage implements PapyrusElement, AnalyzableElement,
     public String toHTML(Element target) {
         if (null != target && null != this.MESSAGE) {
             Optional<Variable> result = this.MESSAGE.getVariables().stream()
-                    .filter(v -> v.hasRef())
+                    .filter(Variable::hasRef)
                     .filter(v -> v.getReferent() == target)
                     .findFirst();
 
@@ -192,7 +192,7 @@ final public class FunctionMessage implements PapyrusElement, AnalyzableElement,
     @Override
     public String getInfo(resaver.Analysis analysis, ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGE</h3>"));
+        BUILDER.append("<html><h3>FUNCTIONMESSAGE</h3>");
 
         if (null != analysis && null != this.MESSAGE) {
             IString scriptName = this.MESSAGE.getScriptName().toIString();

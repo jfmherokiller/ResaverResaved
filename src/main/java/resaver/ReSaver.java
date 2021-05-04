@@ -25,7 +25,6 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
-import resaver.ess.CompressionType;
 import resaver.gui.Configurator;
 import resaver.gui.SaveWindow;
 

@@ -279,13 +279,13 @@ abstract public class PropertyData implements Entry {
 
         @Override
         public int calculateSize() {
-            return 4 + this.MEMBERS.stream().mapToInt(v -> v.calculateSize()).sum();
+            return 4 + this.MEMBERS.stream().mapToInt(Property::calculateSize).sum();
         }
 
         @Override
         public String toString() {
             return this.MEMBERS.stream()
-                    .map(v -> v.toString())
+                    .map(Property::toString)
                     .collect(Collectors.joining("; ", "{", "}"));
         }
 
@@ -319,14 +319,14 @@ abstract public class PropertyData implements Entry {
         @Override
         public int calculateSize() {
             int sum = 4;
-            sum += this.MEMBERS.stream().mapToInt(t -> t.calculateSize()).sum();
+            sum += this.MEMBERS.stream().mapToInt(Entry::calculateSize).sum();
             return sum;
         }
 
         @Override
         public String toString() {
             return MEMBERS.stream()
-                    .map(v -> v.toString())
+                    .map(Object::toString)
                     .collect(Collectors.joining(", ", "[", "]"));
         }
 

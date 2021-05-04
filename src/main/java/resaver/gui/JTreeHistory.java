@@ -80,7 +80,7 @@ final public class JTreeHistory extends JPanel {
                 if (selections != null && selections.length > 0) {
                     LOG.info(String.format("TreeSelection: selection = %s", selections[0].getLastPathComponent()));
                 } else {
-                    LOG.info(String.format("TreeSelection: selection = nothing"));
+                    LOG.info("TreeSelection: selection = nothing");
                 }
             } else {
                 LOG.info("TreeSelection: selection - skipping");
@@ -102,7 +102,7 @@ final public class JTreeHistory extends JPanel {
                     TREE.scrollPathToVisible(selections[0]);
                     LOG.info(String.format("TreeSelection: prev = %s", selections[0].getLastPathComponent()));
                 } else {
-                    LOG.info(String.format("TreeSelection: prev = nothing"));                    
+                    LOG.info("TreeSelection: prev = nothing");
                 }
             } finally {
                 LOCK.unlock();
@@ -124,7 +124,7 @@ final public class JTreeHistory extends JPanel {
                     TREE.scrollPathToVisible(selections[0]);
                     LOG.info(String.format("TreeSelection: next = %s", selections[0].getLastPathComponent()));
                 } else {
-                    LOG.info(String.format("TreeSelection: next = nothing"));                    
+                    LOG.info("TreeSelection: next = nothing");
                 }
             } finally {
                 LOCK.unlock();

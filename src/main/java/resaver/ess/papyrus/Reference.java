@@ -191,7 +191,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
 
             } else {
                 Optional<Variable> result = this.getVariables().stream()
-                        .filter(v -> v.hasRef())
+                        .filter(Variable::hasRef)
                         .filter(v -> v.getReferent() == target)
                         .findFirst();
 
@@ -317,7 +317,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
             sum += getID().calculateSize();
             sum += ((this.FLAG & 0x04) != 0 ? 4 : 0);
             sum += this.TYPE.calculateSize();
-            sum += this.VARIABLES.parallelStream().mapToInt(var -> var.calculateSize()).sum();
+            sum += this.VARIABLES.parallelStream().mapToInt(Element::calculateSize).sum();
             return sum;
         }
 

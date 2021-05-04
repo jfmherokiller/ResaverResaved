@@ -135,7 +135,7 @@ final public class SuspendedStack implements PapyrusElement, AnalyzableElement, 
     public String toHTML(Element target) {
         if (null != target && this.hasMessage()) {
             Optional<Variable> result = this.MESSAGE.getVariables().stream()
-                    .filter(v -> v.hasRef())
+                    .filter(Variable::hasRef)
                     .filter(v -> v.getReferent() == target)
                     .findFirst();
 
@@ -179,7 +179,7 @@ final public class SuspendedStack implements PapyrusElement, AnalyzableElement, 
     @Override
     public String getInfo(resaver.Analysis analysis, ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append(String.format("<html><h3>SUSPENDEDSTACK</h3>"));
+        BUILDER.append("<html><h3>SUSPENDEDSTACK</h3>");
 
         if (this.THREAD != null) {
             BUILDER.append(String.format("<p>ActiveScript: %s</p>", this.THREAD.toHTML(this)));

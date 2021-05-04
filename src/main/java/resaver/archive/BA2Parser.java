@@ -99,7 +99,7 @@ public class BA2Parser extends ArchiveParser {
                 .filter(file -> matcher.matches(file.getPath()))
                 .collect(Collectors.toMap(
                         record -> super.PATH.getFileName().resolve(record.getPath()),
-                        record -> record.getPath()));
+                        BA2FileRecord::getPath));
     }
 
     final BA2Header HEADER;

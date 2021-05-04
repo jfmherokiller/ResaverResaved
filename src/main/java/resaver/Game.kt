@@ -18,8 +18,6 @@ package resaver
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.PathMatcher
-import java.nio.file.Paths
-import java.util.*
 import javax.swing.filechooser.FileNameExtensionFilter
 
 /**
@@ -57,9 +55,9 @@ enum class Game(
         "Skyrim Savefile",
         "ess",
         "skse",
-        Paths.get("skyrim"),
-        Paths.get("Skyrim/Saves"),
-        Paths.get("tesv.exe"),
+        Path.of("skyrim"),
+        Path.of("Skyrim/Saves"),
+        Path.of("tesv.exe"),
         "Unofficial Skyrim Legendary Edition Patch.esp"
     ),
     SKYRIM_SE(
@@ -67,9 +65,9 @@ enum class Game(
         "Skyrim SE Savefile",
         "ess",
         "skse",
-        Paths.get("skyrim special edition"),
-        Paths.get("Skyrim Special Edition/Saves"),
-        Paths.get("skyrimse.exe"),
+        Path.of("skyrim special edition"),
+        Path.of("Skyrim Special Edition/Saves"),
+        Path.of("skyrimse.exe"),
         "Unofficial Skyrim Special Edition Patch.esp"
     ),
     SKYRIM_SW(
@@ -77,27 +75,27 @@ enum class Game(
         "Skyrim Switch Savefile",
         "sav0",
         "skse",
-        Paths.get("skyrim switch edition"),
-        Paths.get("Skyrim SW/Saves"),
-        Paths.get("SkyrimSE.exe")
+        Path.of("skyrim switch edition"),
+        Path.of("Skyrim SW/Saves"),
+        Path.of("SkyrimSE.exe")
     ),
     SKYRIM_VR(
         "Skyrim VR Edition",
         "Skyrim VR Savefile",
         "ess",
         "skse",
-        Paths.get("Elderscroll SkyrimVR"),
-        Paths.get("Skyrim VR/Saves"),
-        Paths.get("SkyrimVR.exe")
+        Path.of("Elderscroll SkyrimVR"),
+        Path.of("Skyrim VR/Saves"),
+        Path.of("SkyrimVR.exe")
     ),
     FALLOUT4(
         "Fallout 4",
         "Fallout 4 Savefile",
         "fos",
         "f4se",
-        Paths.get("fallout 4"),
-        Paths.get("fallout4/Saves"),
-        Paths.get("fallout4.exe"),
+        Path.of("fallout 4"),
+        Path.of("fallout4/Saves"),
+        Path.of("fallout4.exe"),
         "Unofficial Fallout 4 Patch.esp"
     ),
     FALLOUT_VR(
@@ -105,9 +103,9 @@ enum class Game(
         "Fallout 4 VR Savefile",
         "ess",
         "skse",
-        Paths.get("Fallout 4 VR"),
-        Paths.get("Fallout4VR/Saves"),
-        Paths.get("fallout4vr.exe")
+        Path.of("Fallout 4 VR"),
+        Path.of("Fallout4VR/Saves"),
+        Path.of("fallout4vr.exe")
     );
 
     /**
@@ -174,7 +172,7 @@ enum class Game(
         /**
          * Cached list version of the values.
          */
-        var VALUES = Collections.unmodifiableList(listOf(*values()))
+        var VALUES: MutableList<Game> = mutableListOf(*values())
     }
 
     /**
@@ -189,7 +187,7 @@ enum class Game(
      */
     init {
         FILTER = FileNameExtensionFilter(saveName, SAVE_EXT)
-        PATCH_NAMES = Collections.unmodifiableList(listOf(*patchNames))
+        PATCH_NAMES = mutableListOf(*patchNames)
         SAVE_MATCHER = FileSystems.getDefault().getPathMatcher("glob:*.$SAVE_EXT")
     }
 }

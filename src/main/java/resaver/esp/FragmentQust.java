@@ -84,8 +84,8 @@ public class FragmentQust extends FragmentBase {
         int sum = 5;
         sum += (null != this.FILENAME ? 2 + this.FILENAME.length() : 0);
         sum += (null != this.SCRIPT ? this.SCRIPT.calculateSize() : 0);
-        sum += this.FRAGMENTS.stream().mapToInt(v -> v.calculateSize()).sum();
-        sum += this.ALIASES.stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.FRAGMENTS.stream().mapToInt(Fragment::calculateSize).sum();
+        sum += this.ALIASES.stream().mapToInt(Alias::calculateSize).sum();
         return sum;
     }
 
@@ -178,7 +178,7 @@ public class FragmentQust extends FragmentBase {
         @Override
         public int calculateSize() {
             int sum = 14;
-            sum += this.SCRIPTS.stream().mapToInt(v -> v.calculateSize()).sum();
+            sum += this.SCRIPTS.stream().mapToInt(Script::calculateSize).sum();
             return sum;
         }
 

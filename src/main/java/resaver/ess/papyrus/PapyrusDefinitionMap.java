@@ -16,6 +16,8 @@
 package resaver.ess.papyrus;
 
 import resaver.ListException;
+import resaver.ess.Element;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -45,7 +47,7 @@ public class PapyrusDefinitionMap<T extends Definition> extends java.util.Linked
 
     @Override
     public int calculateSize() {
-        return 4 + this.values().parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        return 4 + this.values().parallelStream().mapToInt(Element::calculateSize).sum();
     }
 
     @Override

@@ -23,7 +23,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
-import net.jpountz.lz4.LZ4SafeDecompressor;
 import org.mozilla.universalchardet.UniversalDetector;
 
 /**

@@ -579,12 +579,12 @@ public class DataAnalyzer extends JSplitPane {
             return 0.0;
         }
 
-        long invalid = s.chars().filter(ch -> Character.isISOControl(ch)).count();
+        long invalid = s.chars().filter(Character::isISOControl).count();
         if (invalid > 0) {
             return 0.0;
         }
 
-        long valid = s.chars().filter(ch -> Character.isLetterOrDigit(ch)).count();
+        long valid = s.chars().filter(Character::isLetterOrDigit).count();
         return (double) valid / s.length();
     }
 

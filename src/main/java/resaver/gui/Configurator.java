@@ -15,7 +15,6 @@
  */
 package resaver.gui;
 
-import java.awt.Frame;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -789,7 +788,7 @@ abstract public class Configurator {
             }
 
             final List<Mod> MODS = MODNAMES.parallelStream()
-                    .map(name -> modDir.resolve(name))
+                    .map(modDir::resolve)
                     .map(path -> Mod.createMod(game, path))
                     .filter(Objects::nonNull)
                     .collect(Collectors.toList());
@@ -1050,8 +1049,8 @@ abstract public class Configurator {
      */
     static public Path getFirst(Path... items) {
         return Arrays.stream(items)
-                .filter(i -> i != null)
-                .filter(i -> Files.exists(i))
+                .filter(Objects::nonNull)
+                .filter(Files::exists)
                 .findFirst().orElse(null);
     }
 
@@ -1061,7 +1060,7 @@ abstract public class Configurator {
      * @return
      */
     static public String getFirst(String... items) {
-        return Arrays.stream(items).filter(i -> i != null).findFirst().orElse(null);
+        return Arrays.stream(items).filter(Objects::nonNull).findFirst().orElse(null);
     }
 
     static final private Logger LOG = Logger.getLogger(Configurator.class.getCanonicalName());

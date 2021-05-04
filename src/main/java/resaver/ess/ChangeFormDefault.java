@@ -17,7 +17,7 @@ package resaver.ess;
 
 import java.util.Arrays;
 import java.nio.ByteBuffer;
-import java.util.Objects;
+
 import resaver.Analysis;
 
 /**

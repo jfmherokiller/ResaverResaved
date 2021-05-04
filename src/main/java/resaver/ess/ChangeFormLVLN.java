@@ -89,7 +89,7 @@ final public class ChangeFormLVLN implements ChangeFormData {
 
         if (null != this.ENTRIES) {
             sum += 2;
-            sum += this.ENTRIES.stream().mapToInt(v -> v.calculateSize()).sum();
+            sum += this.ENTRIES.stream().mapToInt(LeveledEntry::calculateSize).sum();
         }
 
         return sum;

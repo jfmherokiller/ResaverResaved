@@ -63,7 +63,7 @@ public class ChangeFormRefr extends GeneralElement implements ChangeFormData {
             }
 
             if (flags.getFlag(CHANGE_FORM_FLAGS)) {
-                super.readElement(input, CHANGE_FORM_FLAGS, in -> new ChangeFormFlags(in));
+                super.readElement(input, CHANGE_FORM_FLAGS, ChangeFormFlags::new);
             }
 
             if (flags.getFlag(CHANGE_REFR_BASEOBJECT)) {

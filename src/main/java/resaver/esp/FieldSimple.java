@@ -116,8 +116,8 @@ public class FieldSimple implements Field {
         final StringBuilder BUF = new StringBuilder();
         BUF.append(this.getCode()).append("=");
 
-        for (int i = 0; i < this.DATA.length; i++) {
-            BUF.append(String.format("%02x", this.DATA[i]));
+        for (byte datum : this.DATA) {
+            BUF.append(String.format("%02x", datum));
         }
 
         return BUF.toString();

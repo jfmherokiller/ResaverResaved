@@ -121,8 +121,8 @@ class ESSTest {
     }
 
     companion object {
-        val WORK_DIR = Paths.get(System.getProperty("user.dir"))
-        val TESTSAVES_DIR = WORK_DIR.resolve("src/test/resources/TestSaves")
+        val WORK_DIR: Path = Paths.get(System.getProperty("user.dir"))
+        val TESTSAVES_DIR: Path = WORK_DIR.resolve("src/test/resources/TestSaves")
         private val LOG = Logger.getLogger(ESSTest::class.java.canonicalName)
     }
 
@@ -137,8 +137,7 @@ class ESSTest {
             }
         }
         LOG.parent.handlers[0].level = Level.INFO
-        val paths: List<Path>
-        paths = try {
+        val paths: List<Path> = try {
             Files.walk(TESTSAVES_DIR)
                 .filter { p: Path -> FILTER_ALL.accept(p.toFile()) }
                 .filter { path: Path? -> Files.isReadable(path) }

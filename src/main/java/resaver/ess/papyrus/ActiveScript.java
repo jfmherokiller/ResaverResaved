@@ -103,7 +103,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      * Replaces the opcodes of each <code>StackFrame</code> with NOPs.
      */
     public void zero() {
-        this.getStackFrames().forEach(f -> f.zero());
+        this.getStackFrames().forEach(StackFrame::zero);
     }
 
     /**
@@ -466,7 +466,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
         if (null == this.data) {
             return false;
         } else if (this.hasStack()) {
-            return this.getStackFrames().stream().anyMatch(frame -> frame.isUndefined());
+            return this.getStackFrames().stream().anyMatch(StackFrame::isUndefined);
         } else if (this.suspendedStack != null) {
             return this.suspendedStack.isUndefined();
         } else {
@@ -611,7 +611,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
             sum += (null == this.ATTACHED ? 0 : this.ATTACHED.calculateSize());
             sum += (null == this.UNKNOWN4 ? 0 : this.UNKNOWN4.calculateSize());
             sum += (null != this.UNKNOWN5 ? 1 : 0);
-            sum += this.STACKFRAMES.stream().mapToInt(frame -> frame.calculateSize()).sum();
+            sum += this.STACKFRAMES.stream().mapToInt(StackFrame::calculateSize).sum();
             return sum;
         }
 

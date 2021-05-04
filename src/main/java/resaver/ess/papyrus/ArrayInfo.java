@@ -167,7 +167,7 @@ final public class ArrayInfo implements AnalyzableElement, Linkable, HasID, Sepa
     public String toHTML(Element target) {
         if (null != target && null != this.data) {
             Optional<Variable> result = this.getVariables().stream()
-                    .filter(v -> v.hasRef())
+                    .filter(Variable::hasRef)
                     .filter(v -> v.getReferent() == target)
                     .findFirst();
 
@@ -384,7 +384,7 @@ final public class ArrayInfo implements AnalyzableElement, Linkable, HasID, Sepa
         @Override
         public int calculateSize() {
             int sum = ID.calculateSize();
-            sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
+            sum += this.VARIABLES.stream().mapToInt(Element::calculateSize).sum();
             return sum;
         }
 

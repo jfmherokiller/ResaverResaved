@@ -21,7 +21,6 @@ import java.nio.ByteOrder;
 import java.util.Objects;
 import resaver.ess.papyrus.Papyrus;
 import resaver.ess.papyrus.PapyrusException;
-import resaver.gui.DataAnalyzer;
 
 /**
  * Describes 3-byte formIDs from Skyrim savegames.

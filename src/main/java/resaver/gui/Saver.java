@@ -18,7 +18,6 @@ package resaver.gui;
 import resaver.ProgressModel;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -26,7 +25,7 @@ import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
-import resaver.ess.CompressionType;
+
 import resaver.ess.ESS;
 
 /**
@@ -100,12 +99,6 @@ public class Saver extends SwingWorker<ESS, Double> {
             }
             
             return this.SAVE;
-
-        } catch (IOException ex) {
-            final String MSG = String.format("Error while writing file \"%s\".\n%s", this.SAVEFILE.getFileName(), ex.getMessage());
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(this.WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE);
-            return null;
 
         } catch (Exception | Error ex) {
             final String MSG = String.format("Error while writing file \"%s\".\n%s", this.SAVEFILE.getFileName(), ex.getMessage());

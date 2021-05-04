@@ -62,7 +62,7 @@ public class ReSaverDropTarget extends DropTarget {
                 @SuppressWarnings("unchecked")
                 final java.util.List<File> FILES = (java.util.List<File>) DATA;
                 FILES.stream()
-                        .map(f -> f.toPath())
+                        .map(File::toPath)
                         .findFirst()
                         .ifPresent(HANDLER);
             }

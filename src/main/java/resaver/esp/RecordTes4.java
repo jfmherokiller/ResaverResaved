@@ -18,7 +18,6 @@ package resaver.esp;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -73,7 +72,7 @@ public class RecordTes4 extends Record {
                 .filter(f -> f.getCode().equals(IString.get("MAST")))
                 .filter(f -> f instanceof FieldSimple)
                 .map(f -> (FieldSimple) f)
-                .map(f -> f.getByteBuffer())
+                .map(FieldSimple::getByteBuffer)
                 .map(mf.BufferUtil::getZString)
                 .collect(Collectors.toList());
         this.MASTERS = java.util.Collections.unmodifiableList(new ArrayList<>(masters));
@@ -82,7 +81,7 @@ public class RecordTes4 extends Record {
                 .filter(f -> f.getCode().equals(IString.get("HEDR")))
                 .filter(f -> f instanceof FieldSimple)
                 .map(f -> (FieldSimple) f)
-                .map(f -> f.getByteBuffer())
+                .map(FieldSimple::getByteBuffer)
                 .findFirst();
 
         if (HEDR.isPresent()) {
@@ -122,7 +121,7 @@ public class RecordTes4 extends Record {
     @Override
     public int calculateSize() {
         int sum = 24;
-        sum += this.FIELDS.stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.FIELDS.stream().mapToInt(Entry::calculateSize).sum();
         return sum;
     }
 

@@ -25,6 +25,7 @@ import resaver.IString;
 import java.nio.ByteBuffer;
 import resaver.Analysis;
 import resaver.ess.ESS;
+import resaver.ess.Element;
 
 /**
  * Describes a function message data in a Skyrim savegame.
@@ -87,7 +88,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
         sum += this.EVENT.calculateSize();
         sum += this.UNKNOWNVAR.calculateSize();
         sum += 4;
-        sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
+        sum += this.VARIABLES.stream().mapToInt(Element::calculateSize).sum();
         return sum;
     }
 

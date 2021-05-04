@@ -16,7 +16,7 @@
 package resaver.esp;
 
 import java.nio.ByteBuffer;
-import static java.nio.charset.StandardCharsets.UTF_8;
+
 import resaver.IString;
 
 /**

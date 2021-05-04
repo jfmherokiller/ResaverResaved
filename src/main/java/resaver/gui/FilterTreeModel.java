@@ -149,9 +149,9 @@ final public class FilterTreeModel implements TreeModel {
     private TreePath findPath(Node node, Element element) {
         if (node == this.root) {
             return node.getChildren().parallelStream()
-                    .filter(c -> c.isVisible())
+                    .filter(Node::isVisible)
                     .map(c -> findPath(c, element))
-                    .filter(path -> path != null)
+                    .filter(Objects::nonNull)
                     .findFirst().orElse(null);
 
         } else if (!node.isLeaf()) {
@@ -185,7 +185,7 @@ final public class FilterTreeModel implements TreeModel {
         if (node == this.root) {
             return node.getChildren().parallelStream()
                     .map(v -> findPathUnfiltered(v, element))
-                    .filter(path -> path != null)
+                    .filter(Objects::nonNull)
                     .findFirst().orElse(null);
 
         } else if (!node.isLeaf()) {
@@ -245,7 +245,7 @@ final public class FilterTreeModel implements TreeModel {
         }
 
         if (!node.isLeaf()) {
-            node.getChildren().stream().filter(n -> n.isVisible()).forEach(n -> {
+            node.getChildren().stream().filter(Node::isVisible).forEach(n -> {
                 if (n.hasElement() && n.isLeaf()) {
                     collected.add(n.getElement());
                 } else {
@@ -290,7 +290,7 @@ final public class FilterTreeModel implements TreeModel {
     private void removeFilter(Node node) {
         node.setVisible(true);
         if (!node.isLeaf()) {
-            node.getChildren().forEach(child -> this.removeFilter(child));
+            node.getChildren().forEach(this::removeFilter);
             node.countLeaves();
         }
     }
@@ -340,7 +340,7 @@ final public class FilterTreeModel implements TreeModel {
         } else {
             // For folders, determine which children to setFilter.
             node.getChildren().parallelStream().forEach(child -> this.setFilter(child, filter));
-            boolean hasVisibleChildren = node.getChildren().stream().anyMatch(c -> c.isVisible());
+            boolean hasVisibleChildren = node.getChildren().stream().anyMatch(Node::isVisible);
             node.setVisible(nodeVisible || hasVisibleChildren);
         }
     }
@@ -414,7 +414,7 @@ final public class FilterTreeModel implements TreeModel {
         final Map<Element, Node> ELEMENTS = new LinkedHashMap<>();
 
         if (!node.isLeaf()) {
-            node.getChildren().stream().filter(c -> c.isVisible()).forEach(child -> {
+            node.getChildren().stream().filter(Node::isVisible).forEach(child -> {
                 if (child.hasElement()) {
                     ELEMENTS.put(child.getElement(), child);
                 }
@@ -755,8 +755,8 @@ final public class FilterTreeModel implements TreeModel {
         @Override
         final public int countLeaves() {
             int leafCount = this.getChildren().stream()
-                    .filter(c -> c.isVisible())
-                    .mapToInt(n -> n.countLeaves())
+                    .filter(Node::isVisible)
+                    .mapToInt(Node::countLeaves)
                     .sum();
 
             this.label = this.isLeaf()
@@ -902,7 +902,7 @@ final public class FilterTreeModel implements TreeModel {
             if (element.hasStack()) {
                 this.CHILDREN = element.getStackFrames()
                         .stream()
-                        .map(s -> new ElementNode<>(s))
+                        .map(ElementNode::new)
                         .collect(Collectors.toList());
                this.CHILDREN.forEach(child -> child.setParent(this));
             } else {

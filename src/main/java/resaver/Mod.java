@@ -34,7 +34,6 @@ import resaver.archive.ArchiveParser;
 import resaver.esp.StringsFile;
 import resaver.ess.PluginInfo;
 import resaver.ess.Plugin;
-import resaver.pex.PexFile;
 
 /**
  * Describes a mod as a 4-tuple of a directory, a list of plugins, a list of
@@ -95,7 +94,7 @@ final public class Mod implements java.io.Serializable {
 
         // Check if the parent directory is the game directory.
         final Path PARENT = dir.getParent();
-        if (Files.list(PARENT).map(p -> p.getFileName()).anyMatch(GLOB_EXE::matches)) {
+        if (Files.list(PARENT).map(Path::getFileName).anyMatch(GLOB_EXE::matches)) {
             this.MODNAME = PARENT.getFileName().toString();
         } else {
             this.MODNAME = dir.getFileName().toString();
@@ -261,11 +260,10 @@ final public class Mod implements java.io.Serializable {
         final String SSREGEX = String.format("_%s\\.(il|dl)?strings", language);
         final String FILENAME = stringsFilePath.getFileName().toString();
 
-        return Arrays.asList(
+        return Stream.of(
                 Paths.get(FILENAME.replaceAll(SSREGEX, ".esm")),
                 Paths.get(FILENAME.replaceAll(SSREGEX, ".esp")),
                 Paths.get(FILENAME.replaceAll(SSREGEX, ".esl")))
-                .stream()
                 .filter(plugins.getPaths()::containsKey)
                 .map(plugins.getPaths()::get)
                 .findFirst().orElse(null);
@@ -356,7 +354,7 @@ final public class Mod implements java.io.Serializable {
         // Read the loose stringtable files.
         final Map<Path, Path> LOOSE_SCRIPTS = this.SCRIPT_FILES.stream()
                 .filter(GLOB_SCRIPT::matches)
-                .collect(Collectors.toMap(p -> p, p -> p.getFileName()));
+                .collect(Collectors.toMap(p -> p, Path::getFileName));
         SCRIPT_ORIGINS.putAll(LOOSE_SCRIPTS);
 
         int stringsCount = LOOSE_STRINGSFILES.stream().mapToInt(s -> s.TABLE.size()).sum();
@@ -573,9 +571,8 @@ final public class Mod implements java.io.Serializable {
         }
 
         public Stream<Path> getErrorFiles() {
-            return Arrays.asList(ARCHIVE_ERRORS, SCRIPT_ERRORS, STRINGS_ERRORS)
-                    .stream()
-                    .flatMap(v -> v.stream());
+            return Stream.of(ARCHIVE_ERRORS, SCRIPT_ERRORS, STRINGS_ERRORS)
+                    .flatMap(Collection::stream);
         }
 
         final public Mod MOD;

@@ -643,7 +643,7 @@ public class GeneralElement implements Element {
      * @param val The value.
      */
     private <T> T addValue(String name, T val) {
-        if (!SUPPORTED.stream().anyMatch(type -> type.isInstance(val))) {
+        if (SUPPORTED.stream().noneMatch(type -> type.isInstance(val))) {
             throw new IllegalStateException(String.format("Invalid type for %s: %s", name, val.getClass()));
         }
 
@@ -658,7 +658,7 @@ public class GeneralElement implements Element {
     @Override
     public void write(ByteBuffer output) {
         this.DATA.values().forEach(v -> {
-            if (Element.class.isInstance(v)) {
+            if (v instanceof Element) {
                 Element element = (Element) v;
                 element.write(output);
             } else if (v instanceof Byte) {
@@ -735,7 +735,7 @@ public class GeneralElement implements Element {
             } else if (v instanceof float[]) {
                 sum += 4 * ((float[]) v).length;
             } else if (v instanceof Element[]) {
-                sum += Arrays.stream((Element[]) v).mapToInt(w -> w.calculateSize()).sum();
+                sum += Arrays.stream((Element[]) v).mapToInt(Element::calculateSize).sum();
             } else if (v == null) {
                 throw new IllegalStateException("Null element!");
             } else {

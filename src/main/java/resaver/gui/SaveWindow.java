@@ -15,8 +15,6 @@
  */
 package resaver.gui;
 
-import resaver.ProgressModel;
-import resaver.Game;
 import java.util.Set;
 import java.awt.*;
 import java.awt.event.*;
@@ -102,7 +100,7 @@ final public class SaveWindow extends JFrame {
         this.TREEHISTORY = new JTreeHistory(this.TREE);
 
         this.TABLE = new VariableTable(this);
-        this.INFOPANE = new InfoPane(null, e -> this.hyperlinkUpdate(e));
+        this.INFOPANE = new InfoPane(null, this::hyperlinkUpdate);
 
         this.DATASCROLLER = new JScrollPane(this.TABLE);
         this.INFOSCROLLER = new JScrollPane(this.INFOPANE);
@@ -404,16 +402,16 @@ final public class SaveWindow extends JFrame {
         }
         this.MODCOMBO.addItemListener(e -> updateFilters(false));
         this.PLUGINCOMBO.addItemListener(e -> updateFilters(false));
-        this.TREE.setDeleteHandler(paths -> deletePaths(paths));
-        this.TREE.setEditHandler(element -> editElement(element));
+        this.TREE.setDeleteHandler(this::deletePaths);
+        this.TREE.setEditHandler(this::editElement);
         this.TREE.setPurgeHandler(plugins -> purgePlugins(plugins, true, true));
         this.TREE.setDeleteFormsHandler((plugin) -> purgePlugins(Collections.singleton(plugin), false, true));
         this.TREE.setDeleteInstancesHandler((plugin) -> purgePlugins(Collections.singleton(plugin), true, false));
-        this.TREE.setFilterPluginsHandler(plugin -> PLUGINCOMBO.setSelectedItem(plugin));
-        this.TREE.setZeroThreadHandler(threads -> zeroThreads(threads));
-        this.TREE.setFindHandler(element -> this.findElement(element));
-        this.TREE.setCleanseFLSTHandler(flst -> this.cleanseFormList(flst));
-        this.TREE.setCompressionHandler(ct -> this.setCompressionType(ct));
+        this.TREE.setFilterPluginsHandler(PLUGINCOMBO::setSelectedItem);
+        this.TREE.setZeroThreadHandler(this::zeroThreads);
+        this.TREE.setFindHandler(this::findElement);
+        this.TREE.setCleanseFLSTHandler(this::cleanseFormList);
+        this.TREE.setCompressionHandler(this::setCompressionType);
         this.LBL_MEMORY.initialize();
     }
 
@@ -796,7 +794,7 @@ final public class SaveWindow extends JFrame {
                     return;
 
                 case JOptionPane.YES_OPTION:
-                    this.save(false, () -> this.exit());
+                    this.save(false, this::exit);
                     break;
 
                 case JOptionPane.NO_OPTION:
@@ -872,7 +870,7 @@ final public class SaveWindow extends JFrame {
             int result = JOptionPane.showConfirmDialog(this, "Do you want to save the current file first?", "Save First?", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             switch (result) {
                 case JOptionPane.YES_OPTION:
-                    this.save(false, () -> this.open());
+                    this.save(false, this::open);
                     break;
 
                 case JOptionPane.NO_OPTION:
@@ -895,7 +893,7 @@ final public class SaveWindow extends JFrame {
         final Path SAVEFILE = Configurator.choosePathModal(this,
                 null,
                 () -> Configurator.selectSaveFile(this),
-                path -> Configurator.validateSavegame(path),
+                Configurator::validateSavegame,
                 true);
 
         if (SAVEFILE != null) {
@@ -972,7 +970,7 @@ final public class SaveWindow extends JFrame {
                 : null;
 
         if (GAME_DIR != null) {
-            this.scanner = new Scanner(this, this.save, GAME_DIR, MO2_INI, () -> setScanning(false), s -> updateScan(s));
+            this.scanner = new Scanner(this, this.save, GAME_DIR, MO2_INI, () -> setScanning(false), this::updateScan);
             this.scanner.execute();
             this.setScanning(true);
         }
@@ -995,7 +993,7 @@ final public class SaveWindow extends JFrame {
         final Path EXPORT = Configurator.choosePathModal(this,
                 null,
                 () -> Configurator.selectPluginsExport(this, this.save.getOriginalFile()),
-                path -> Configurator.validWrite(path),
+                Configurator::validWrite,
                 true);
 
         if (null == EXPORT) {
@@ -1008,7 +1006,7 @@ final public class SaveWindow extends JFrame {
                 out.write('\n');
             }
 
-            final String MSG = String.format("Plugins list exported.");
+            final String MSG = "Plugins list exported.";
             JOptionPane.showMessageDialog(SaveWindow.this, MSG, "Success", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (IOException ex) {
@@ -1076,7 +1074,7 @@ final public class SaveWindow extends JFrame {
         final Path otherPath = Configurator.choosePathModal(this,
                 null,
                 () -> Configurator.selectSaveFile(this),
-                path -> Configurator.validateSavegame(path),
+                Configurator::validateSavegame,
                 true);
 
         if (null == otherPath) {
@@ -1263,7 +1261,7 @@ final public class SaveWindow extends JFrame {
                 return;
             }
 
-            LOG.info(String.format("Removing nonexistent created forms."));
+            LOG.info("Removing nonexistent created forms.");
             final Set<PapyrusElement> REMOVED = this.save.removeNonexistentCreated();
 
             if (!REMOVED.isEmpty()) {
@@ -1631,7 +1629,7 @@ final public class SaveWindow extends JFrame {
         }
 
         this.setModified();
-        threads.forEach(t -> t.zero());
+        threads.forEach(ActiveScript::zero);
         this.refreshTree();
 
         final String MSG = threads.size() > 1
@@ -1761,7 +1759,7 @@ final public class SaveWindow extends JFrame {
             }
 
             final Set<Element> REMOVED = this.save.removeElements(DELETABLE);
-            THREADS.forEach(v -> v.zero());
+            THREADS.forEach(ActiveScript::zero);
             if (deleteThreads) {
                 REMOVED.addAll(this.save.getPapyrus().removeElements(THREADS));
             }
@@ -1973,7 +1971,7 @@ final public class SaveWindow extends JFrame {
                     this.save.getPluginInfo().stream()
                             .filter(v -> v.NAME.equalsIgnoreCase(ADDRESS))
                             .findAny()
-                            .ifPresent(plugin -> this.findElement(plugin));
+                            .ifPresent(this::findElement);
                     break;
 
                 case "refid":

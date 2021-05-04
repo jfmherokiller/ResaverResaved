@@ -122,11 +122,11 @@ final public class PluginInfo implements Element {
     public int calculateSize() {
         int sum = 4;
         sum += 1;
-        sum += this.PLUGINS_FULL.stream().mapToInt(plugin -> plugin.calculateSize()).sum();
+        sum += this.PLUGINS_FULL.stream().mapToInt(Plugin::calculateSize).sum();
 
         if (this.hasLite()) {
             sum += 2;
-            sum += this.PLUGINS_LITE.stream().mapToInt(plugin -> plugin.calculateSize()).sum();
+            sum += this.PLUGINS_LITE.stream().mapToInt(Plugin::calculateSize).sum();
         }
         return sum;
     }

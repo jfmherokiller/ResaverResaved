@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import resaver.IString;
 import resaver.ListException;
+import resaver.WString;
 
 /**
  * An abstraction describing a string table.
@@ -123,7 +124,7 @@ final public class StringTable extends ArrayList<StringTable.TString> {
             sum += 2;
         }
 
-        sum += this.stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.stream().mapToInt(WString::calculateSize).sum();
         return sum;
     }
     

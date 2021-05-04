@@ -48,7 +48,7 @@ public class OtherData extends GeneralElement implements PapyrusElement {
         this.ARRAY4 = this.read32ElemArray(input, "Array4", (in) -> new Array4(in, context));
         LOG.info(String.format("Read ARRAY4, %d elements.", this.ARRAY4.length));
 
-        this.SCRIPTS = this.read32ElemArray(input, "Scripts", (in) -> new LString(in));
+        this.SCRIPTS = this.read32ElemArray(input, "Scripts", LString::new);
         LOG.info(String.format("Read SCRIPTS, %d element.", this.SCRIPTS.length));
 
         this.ARRAY4A = this.read32ElemArray(input, "Array4A", (in) -> new Array4A(in, context));
@@ -325,8 +325,8 @@ public class OtherData extends GeneralElement implements PapyrusElement {
             super.readRefID(input, "ref", context);
             final int COUNT1 = super.readInt(input, "count1");
             final int COUNT2 = super.readInt(input, "count2");
-            super.readElements(input, "refArray1", COUNT1, in -> context.readRefID(in));
-            super.readElements(input, "refArray2", COUNT2, in -> context.readRefID(in));
+            super.readElements(input, "refArray1", COUNT1, context::readRefID);
+            super.readElements(input, "refArray2", COUNT2, context::readRefID);
         }
     }
 

@@ -136,7 +136,7 @@ public class ChangeFormExtraDataData extends GeneralElement {
                 this.NAME = "LeveledCreature";
                 super.readRefID(input, "UNK1", context);
                 super.readRefID(input, "UNK2", context);
-                Flags.Int flags = super.readElement(input, "NPCChangeFlags", i -> Flags.readIntFlags(i));
+                Flags.Int flags = super.readElement(input, "NPCChangeFlags", Flags::readIntFlags);
                 super.readElement(input, "NPC", in -> new ChangeFormNPC(in, flags, context));
                 break;
             case 46:

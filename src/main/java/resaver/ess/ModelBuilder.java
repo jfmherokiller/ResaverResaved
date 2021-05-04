@@ -79,14 +79,14 @@ public class ModelBuilder {
     public void addPluginInfo(PluginInfo plugins) {
         this.TASKS.add(this.EXECUTOR.submit(() -> {
             final ContainerNode NODE = new ContainerNode("Plugins (full)");
-            NODE.addAll(plugins.getFullPlugins().stream().map(p -> new PluginNode(p)).collect(Collectors.toList()));
+            NODE.addAll(plugins.getFullPlugins().stream().map(PluginNode::new).collect(Collectors.toList()));
             PROGRESS.modifyValue(1);
             return NODE;
         }));
 
         this.TASKS.add(this.EXECUTOR.submit(() -> {
             final ContainerNode NODE = new ContainerNode("Plugins (lite)");
-            NODE.addAll(plugins.getLitePlugins().stream().map(p -> new PluginNode(p)).collect(Collectors.toList()));
+            NODE.addAll(plugins.getLitePlugins().stream().map(PluginNode::new).collect(Collectors.toList()));
             PROGRESS.modifyValue(1);
             return NODE;
         }));
@@ -256,7 +256,7 @@ public class ModelBuilder {
     public void addThreads(ActiveScriptMap threads) {
         this.TASKS.add(this.EXECUTOR.submit(() -> {
             final ContainerNode NODE = new ContainerNode("Active Scripts");
-            NODE.addAll(threads.values().stream().map(t -> new ActiveScriptNode(t)).collect(Collectors.toList())).sort();
+            NODE.addAll(threads.values().stream().map(ActiveScriptNode::new).collect(Collectors.toList())).sort();
             PROGRESS.modifyValue(1);
             return NODE;
         }));
@@ -270,7 +270,7 @@ public class ModelBuilder {
     public void addFunctionMessages(List<FunctionMessage> messages) {
         this.TASKS.add(this.EXECUTOR.submit(() -> {
             final ContainerNode NODE = new ContainerNode("Function Messages");
-            NODE.addAll(messages.stream().map(t -> new FunctionMessageNode(t)).collect(Collectors.toList())).sort();
+            NODE.addAll(messages.stream().map(FunctionMessageNode::new).collect(Collectors.toList())).sort();
             PROGRESS.modifyValue(1);
             return NODE;
         }));
@@ -284,7 +284,7 @@ public class ModelBuilder {
     public void addSuspendedStacks1(SuspendedStackMap stacks) {
         this.TASKS.add(this.EXECUTOR.submit(() -> {
             final ContainerNode NODE = new ContainerNode("Suspended Stacks 1");
-            NODE.addAll(stacks.values().stream().map(t -> new SuspendedStackNode(t)).collect(Collectors.toList())).sort();
+            NODE.addAll(stacks.values().stream().map(SuspendedStackNode::new).collect(Collectors.toList())).sort();
             PROGRESS.modifyValue(1);
             return NODE;
         }));
@@ -298,7 +298,7 @@ public class ModelBuilder {
     public void addSuspendedStacks2(SuspendedStackMap stacks) {
         this.TASKS.add(this.EXECUTOR.submit(() -> {
             final ContainerNode NODE = new ContainerNode("Suspended Stacks 2");
-            NODE.addAll(stacks.values().stream().map(t -> new SuspendedStackNode(t)).collect(Collectors.toList())).sort();
+            NODE.addAll(stacks.values().stream().map(SuspendedStackNode::new).collect(Collectors.toList())).sort();
             PROGRESS.modifyValue(1);
             return NODE;
         }));
@@ -310,7 +310,7 @@ public class ModelBuilder {
      */
     public void addChangeForms(Map<RefID, ChangeForm> changeForms) {
         this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final Map<ChangeForm.Type, List<ChangeForm>> DICTIONARY = changeForms.values().stream().collect(Collectors.groupingBy(form -> form.getType()));
+            final Map<ChangeForm.Type, List<ChangeForm>> DICTIONARY = changeForms.values().stream().collect(Collectors.groupingBy(ChangeForm::getType));
 
             final List<Node> NODES = DICTIONARY.entrySet().stream()
                     .map(entry -> new ContainerNode(entry.getKey().toString(), entry.getValue()).sort())
@@ -360,7 +360,7 @@ public class ModelBuilder {
             return null;
         }
 
-        if (!this.TASKS.stream().allMatch(task -> task.isDone())) {
+        if (!this.TASKS.stream().allMatch(Future::isDone)) {
             LOG.severe("Some tasks didn't finish.");
             return null;
         }

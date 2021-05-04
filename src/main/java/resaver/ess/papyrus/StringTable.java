@@ -190,7 +190,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
             sum += 2;
         }
 
-        sum += this.parallelStream().mapToInt(v -> v.calculateFullSize()).sum();
+        sum += this.parallelStream().mapToInt(TString::calculateFullSize).sum();
         return sum;
     }
 

@@ -176,7 +176,7 @@ public class BatchCleaner extends SwingWorker<Boolean, Double> {
                             .filter(v -> v.hasScript((Script)def)))
                     .collect(Collectors.toSet());
             
-            THREADS.forEach(t -> t.zero());
+            THREADS.forEach(ActiveScript::zero);
             final Set<PapyrusElement> REMOVED = this.SAVE.getPapyrus().removeElements(CLEAN_NAMES);
             this.WINDOW.deleteNodesFor(REMOVED);
             

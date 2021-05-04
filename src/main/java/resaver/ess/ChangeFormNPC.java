@@ -41,7 +41,7 @@ public class ChangeFormNPC extends GeneralElement implements ChangeFormData {
         Objects.requireNonNull(input);
 
         if (flags.getFlag(CHANGE_FORM_FLAGS)) {
-            this.CHANGEFORMFLAGS = super.readElement(input, CHANGE_FORM_FLAGS, in -> new ChangeFormFlags(in));
+            this.CHANGEFORMFLAGS = super.readElement(input, CHANGE_FORM_FLAGS, ChangeFormFlags::new);
         } else {
             this.CHANGEFORMFLAGS = null;
         }
@@ -239,7 +239,7 @@ public class ChangeFormNPC extends GeneralElement implements ChangeFormData {
                 super.readRefID(input, "HAIRCOLOR", context);
                 super.readInt(input, "SKINTONE");
                 super.readRefID(input, "SKIN", context);
-                super.readVSElemArray(input, "HEADPARTS", in -> context.readRefID(in));
+                super.readVSElemArray(input, "HEADPARTS", context::readRefID);
                 byte faceDataPrsent = super.readByte(input, "FACEDATAPRESENT");
                 
                 if (faceDataPrsent != 0) {

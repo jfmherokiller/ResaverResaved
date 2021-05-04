@@ -67,7 +67,7 @@ final public class GlobalVariableTable implements Element, GlobalDataBlock {
     @Override
     public int calculateSize() {
         int sum = this.COUNT.calculateSize();
-        sum += this.VARIABLES.parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.VARIABLES.parallelStream().mapToInt(GlobalVariable::calculateSize).sum();
         return sum;
     }
 

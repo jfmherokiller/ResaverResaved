@@ -71,7 +71,7 @@ public class AnimObjects implements GlobalDataBlock {
     @Override
     public int calculateSize() {
         int sum = 4;
-        sum += this.ANIMATIONS.parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.ANIMATIONS.parallelStream().mapToInt(GeneralElement::calculateSize).sum();
         return sum;
     }
 

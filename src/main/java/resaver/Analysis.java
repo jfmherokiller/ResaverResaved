@@ -15,6 +15,7 @@
  */
 package resaver;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -56,12 +57,12 @@ final public class Analysis extends Mod.Analysis {
         return this.ESP_INFOS.values().stream()
                 .map(v -> v.getID(searchTerm, this.STRINGS))
                 .filter(Objects::nonNull)
-                .flatMap(r -> r.stream())
+                .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
     }
 
     public long getScriptDataSize() {
-        return this.ESP_INFOS.values().stream().mapToLong(i -> i.getScriptDataSize()).sum();
+        return this.ESP_INFOS.values().stream().mapToLong(PluginData::getScriptDataSize).sum();
     }
 
     final public Map<Plugin, PluginData> ESP_INFOS;

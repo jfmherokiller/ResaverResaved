@@ -181,27 +181,27 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         sum += this.SCRIPTNAME.calculateSize();
         sum += this.BASENAME.calculateSize();
         sum += this.EVENT.calculateSize();
-        sum += this.STATUS.map(s -> s.calculateSize()).orElse(0);
+        sum += this.STATUS.map(Element::calculateSize).orElse(0);
         sum += 2;
         sum += this.RETURNTYPE.calculateSize();
         sum += this.FN_DOCSTRING.calculateSize();
         sum += 5;
 
         sum += 2;
-        sum += this.FN_PARAMS.parallelStream().mapToInt(param -> param.calculateSize()).sum();
+        sum += this.FN_PARAMS.parallelStream().mapToInt(MemberDesc::calculateSize).sum();
 
         sum += 2;
-        sum += this.FN_LOCALS.parallelStream().mapToInt(local -> local.calculateSize()).sum();
+        sum += this.FN_LOCALS.parallelStream().mapToInt(MemberDesc::calculateSize).sum();
 
         sum += 2;
-        sum += this.CODE.parallelStream().mapToInt(opcode -> opcode.calculateSize()).sum();
+        sum += this.CODE.parallelStream().mapToInt(OpcodeData::calculateSize).sum();
 
         sum += 4;
 
         sum += (null != this.OWNERFIELD ? this.OWNERFIELD.calculateSize() : 0);
 
         sum += 4;
-        sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
+        sum += this.VARIABLES.stream().mapToInt(Element::calculateSize).sum();
 
         return sum;
     }
@@ -633,7 +633,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 subArgs = args
                         .subList(3, args.size())
                         .stream()
-                        .map(v -> v.paren())
+                        .map(Parameter::paren)
                         .collect(Collectors.toList());
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
@@ -644,7 +644,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 subArgs = args
                         .subList(3, args.size())
                         .stream()
-                        .map(v -> v.paren())
+                        .map(Parameter::paren)
                         .collect(Collectors.toList());
                 term = String.format("parent.%s%s", method, paramList(subArgs));
                 return processTerm(args, terms, 1, term);
@@ -656,7 +656,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 subArgs = args
                         .subList(3, args.size())
                         .stream()
-                        .map(v -> v.paren())
+                        .map(Parameter::paren)
                         .collect(Collectors.toList());
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
@@ -826,7 +826,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      */
     static <T> String paramList(List<T> params) {
         return params.stream()
-                .map(p -> p.toString())
+                .map(Object::toString)
                 .collect(Collectors.joining(", ", "(", ")"));
     }
 

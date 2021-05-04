@@ -15,7 +15,6 @@
  */
 package resaver.gui;
 
-import java.nio.BufferUnderflowException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,7 +58,7 @@ public class FilterMaker {
                 .stream()
                 .filter(p -> p.NAME.equalsIgnoreCase(espName))
                 .findAny()
-                .ifPresent(p -> PLUGINS.add(p)));
+                .ifPresent(PLUGINS::add));
 
         Predicate<Node> modFilter = node -> node.hasElement()
                 && node.getElement() instanceof AnalyzableElement
@@ -637,12 +636,12 @@ public class FilterMaker {
         // Combine the filters.
         // OR the subfilters together.
         SUBFILTERS.stream()
-                .reduce((a, b) -> a.or(b))
-                .ifPresent(f -> FILTERS.add(f));
+                .reduce(Predicate::or)
+                .ifPresent(FILTERS::add);
 
         // AND the main filters together.
         return FILTERS.stream()
-                .reduce((a, b) -> a.and(b))
+                .reduce(Predicate::and)
                 .orElse(null);
     }
 

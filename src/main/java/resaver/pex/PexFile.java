@@ -193,8 +193,8 @@ final public class PexFile {
         sum += this.HEADER.calculateSize();
         sum += this.STRINGS.calculateSize();
         sum += this.DEBUG.calculateSize();
-        sum += 2 + this.USERFLAGDEFS.stream().mapToInt(f -> f.calculateSize()).sum();
-        sum += 2 + this.SCRIPTS.stream().mapToInt(f -> f.calculateSize()).sum();
+        sum += 2 + this.USERFLAGDEFS.stream().mapToInt(UserFlag::calculateSize).sum();
+        sum += 2 + this.SCRIPTS.stream().mapToInt(Pex::calculateSize).sum();
         return sum;
     }
 
@@ -454,11 +454,11 @@ final public class PexFile {
             int sum = 1;
             if (this.hasDebugInfo != 0) {
                 sum += 8;
-                sum += 2 + this.DEBUGFUNCTIONS.stream().mapToInt(f -> f.calculateSize()).sum();
+                sum += 2 + this.DEBUGFUNCTIONS.stream().mapToInt(DebugFunction::calculateSize).sum();
 
                 if (GAME.isFO4()) {
-                    sum += 2 + this.PROPERTYGROUPS.stream().mapToInt(p -> p.calculateSize()).sum();
-                    sum += 2 + this.STRUCTORDERS.stream().mapToInt(p -> p.calculateSize()).sum();
+                    sum += 2 + this.PROPERTYGROUPS.stream().mapToInt(PropertyGroup::calculateSize).sum();
+                    sum += 2 + this.STRUCTORDERS.stream().mapToInt(StructOrder::calculateSize).sum();
                 }
             }
 

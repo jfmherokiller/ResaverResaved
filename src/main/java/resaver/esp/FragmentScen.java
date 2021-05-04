@@ -79,8 +79,8 @@ public class FragmentScen extends FragmentBase {
         int sum = 4;
         sum += (null != this.SCRIPT ? this.SCRIPT.calculateSize() : 0);
         sum += (null != this.FILENAME ? 2 + this.FILENAME.length() : 0);
-        sum += this.FRAGMENTS.stream().mapToInt(v -> v.calculateSize()).sum();
-        sum += this.PHASES.stream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.FRAGMENTS.stream().mapToInt(Fragment::calculateSize).sum();
+        sum += this.PHASES.stream().mapToInt(Phase::calculateSize).sum();
         return sum;
     }
 
