@@ -15,14 +15,14 @@
  */
 package resaver.pex;
 
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.util.*;
-import java.util.stream.Collectors;
 import resaver.Game;
 import resaver.IString;
 import resaver.Scheme;
 import resaver.pex.StringTable.TString;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * Describes an object from a PEX file.
@@ -37,7 +37,7 @@ final public class Pex {
      * @param input A datainput for a Skyrim PEX file.
      * @param game The game for which the script was compiled.
      * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-     * @param flag The <code>UserFlag</code> list.
+     * @param flags The <code>UserFlag</code> list.
      * @throws IOException Exceptions aren't handled.
      */
     Pex(ByteBuffer input, Game game, List<UserFlag> flags, StringTable strings) throws IOException {
