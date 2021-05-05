@@ -112,9 +112,9 @@ class Scanner(
             MODS.forEach { mod ->
                 if (mod === CORE) {
                     COUNTER.click()
-                    PROGRESS.accept(String.format("Reading %s's data", GAME.NAME))
+                    PROGRESS.accept("Reading ${GAME.NAME}'s data")
                 } else {
-                    PROGRESS.accept(String.format("Reading %s: mod data for %s", COUNTER.eval(), mod.shortName))
+                    PROGRESS.accept("Reading ${COUNTER.eval()}: mod data for ${mod.shortName}")
                 }
                 val RESULTS = mod.readData(PLUGINS, LANGUAGE)
                 STRINGSFILES.addAll(RESULTS.STRINGSFILES)
@@ -123,7 +123,7 @@ class Scanner(
                 ERR_SCRIPTS.addAll(RESULTS.SCRIPT_ERRORS)
                 ERR_STRINGS.addAll(RESULTS.STRINGS_ERRORS)
                 RESULTS.errorFiles.forEach { v: Path? ->
-                    val MSG = String.format("Couldn't read %s from %s.", v, mod)
+                    val MSG = "Couldn't read $v from $mod."
                     LOG.warning(MSG)
                 }
             }
@@ -148,10 +148,10 @@ class Scanner(
             val SIZES: MutableMap<Plugin, Long> = hashMapOf()
             COUNTER.reset(PLUGINS.size)
             PLUGINS.allPlugins.forEach { plugin ->
-                PROGRESS.accept(String.format("Parsing %s: %s", COUNTER.eval(), plugin.indexName()))
+                PROGRESS.accept("Parsing ${COUNTER.eval()}: ${plugin.indexName()}")
                 if (!PLUGINFILEMAP.containsKey(plugin)) {
                     ERR_PLUGINS.add(Paths.get(plugin.NAME))
-                    LOG.info(String.format("Plugin %s could not be found.", plugin))
+                    LOG.info("Plugin $plugin could not be found.")
                 } else {
                     try {
                         val INFO = ESP.skimPlugin(PLUGINFILEMAP[plugin], GAME, plugin, PLUGINS)
@@ -170,11 +170,11 @@ class Scanner(
                         throw ex
                     } catch (ex: RuntimeException) {
                         ERR_PLUGINS.add(Paths.get(plugin.NAME))
-                        LOG.log(Level.WARNING, String.format("Error reading plugin: %s.", plugin.indexName()), ex)
+                        LOG.log(Level.WARNING, "Error reading plugin: ${plugin.indexName()}.", ex)
                         ex.printStackTrace(System.err)
                     } catch (ex: IOException) {
                         ERR_PLUGINS.add(Paths.get(plugin.NAME))
-                        LOG.log(Level.WARNING, String.format("Error reading plugin: %s.", plugin.indexName()), ex)
+                        LOG.log(Level.WARNING, "Error reading plugin: ${plugin.indexName()}.", ex)
                         ex.printStackTrace(System.err)
                     }
                 }
@@ -309,7 +309,7 @@ class Scanner(
             JOptionPane.showMessageDialog(WINDOW, MSG, "Read Error", JOptionPane.ERROR_MESSAGE)
             null
         } catch (ex: Error) {
-            val MSG = String.format("Error reading plugins. %s", ex.message)
+            val MSG = "Error reading plugins. ${ex.message}"
             LOG.log(Level.SEVERE, MSG, ex)
             JOptionPane.showMessageDialog(WINDOW, MSG, "Read Error", JOptionPane.ERROR_MESSAGE)
             null
