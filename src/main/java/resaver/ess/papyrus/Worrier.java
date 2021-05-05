@@ -60,7 +60,14 @@ final public class Worrier {
             } else if (PAPYRUS.isTruncated()) {
                 BUF.append("<br/><strong>TRUNCATED PAPYRUS BLOCK.</strong> This is usually caused by too many scripts running at once, or recursive scripts without proper boundary conditions.");
             }
-            if (Arrays.stream(ESS.getFormIDs()).anyMatch(i -> i == 0)) {
+            boolean b = false;
+            for (int i : ESS.getFormIDs()) {
+                if (i == 0) {
+                    b = true;
+                    break;
+                }
+            }
+            if (b) {
                 int present = 0;
                 while (present < ESS.getFormIDs().length && ESS.getFormIDs()[present] != 0) {
                     present++;
