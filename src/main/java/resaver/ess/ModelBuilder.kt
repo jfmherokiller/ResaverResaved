@@ -17,8 +17,6 @@ package resaver.ess
 
 import resaver.IString
 import resaver.ProgressModel
-import resaver.ess.ChangeForm
-import resaver.ess.ModelBuilder
 import resaver.ess.papyrus.*
 import resaver.gui.FilterTreeModel
 import resaver.gui.FilterTreeModel.*
@@ -29,11 +27,13 @@ import java.util.function.Function
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.stream.Collectors
-import kotlin.streams.toList
 
 /**
  *
  * @author Mark
+ */
+/**
+ * @param progress
  */
 class ModelBuilder(progress: ProgressModel) {
     /**
@@ -335,7 +335,7 @@ class ModelBuilder(progress: ProgressModel) {
                 throw IllegalStateException("ModelBuilding failed.", ex)
             }
         })
-        val ROOT: Node = FilterTreeModel.RootNode(ess, ROOT_NODES)
+        val ROOT: Node = RootNode(ess, ROOT_NODES)
         MODEL.root = ROOT
         return MODEL
     }
@@ -385,9 +385,7 @@ class ModelBuilder(progress: ProgressModel) {
         private val LOG = Logger.getLogger(ModelBuilder::class.java.canonicalName)
     }
 
-    /**
-     * @param progress
-     */
+
     init {
         progress.maximum = 36
         MODEL = FilterTreeModel()
