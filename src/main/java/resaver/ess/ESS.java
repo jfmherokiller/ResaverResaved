@@ -655,15 +655,15 @@ final public class ESS implements Element {
         sum += this.PLUGINS.calculateSize();
         sum += this.FLT.calculateSize();
 
-        sum += this.TABLE1.parallelStream().mapToInt(v -> v.calculateSize()).sum();
-        sum += this.TABLE2.parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.TABLE1.parallelStream().mapToInt(GlobalData::calculateSize).sum();
+        sum += this.TABLE2.parallelStream().mapToInt(GlobalData::calculateSize).sum();
         int result = 0;
         for (ChangeForm changeForm : this.CHANGEFORMS.values()) {
             int i = changeForm.calculateSize();
             result += i;
         }
         sum += result;
-        sum += this.TABLE3.parallelStream().mapToInt(v -> v.calculateSize()).sum();
+        sum += this.TABLE3.parallelStream().mapToInt(GlobalData::calculateSize).sum();
 
         sum += 4;
         sum += this.FORMIDARRAY == null ? 0 : 4 * this.FORMIDARRAY.length;
@@ -975,7 +975,7 @@ final public class ESS implements Element {
 
         float actualSize = this.calculateSize() / 1048576.0f;
         float papyrusSize = this.PAPYRUS.calculateSize() / 1048576.0f;
-        float changeFormsSize = this.CHANGEFORMS.values().parallelStream().mapToInt(cf -> cf.calculateSize()).sum() / 1048576.0f;
+        float changeFormsSize = this.CHANGEFORMS.values().parallelStream().mapToInt(ChangeForm::calculateSize).sum() / 1048576.0f;
 
         if (this.HEADER.getCompression().isCompressed()) {
             try {

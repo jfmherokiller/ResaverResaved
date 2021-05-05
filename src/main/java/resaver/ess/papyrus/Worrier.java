@@ -258,7 +258,7 @@ final public class Worrier {
 
         List<ScriptInstance> memberless = result.ESS.getPapyrus().getScriptInstances().values()
                 .parallelStream()
-                .filter(instance -> instance.hasMemberlessError())
+                .filter(ScriptInstance::hasMemberlessError)
                 .collect(Collectors.toList());
 
         if (!memberless.isEmpty()) {
@@ -269,7 +269,7 @@ final public class Worrier {
 
         List<ScriptInstance> definitionErrors = result.ESS.getPapyrus().getScriptInstances().values()
                 .parallelStream()
-                .filter(instance -> instance.hasDefinitionError())
+                .filter(ScriptInstance::hasDefinitionError)
                 .collect(Collectors.toList());
 
         if (!definitionErrors.isEmpty()) {
