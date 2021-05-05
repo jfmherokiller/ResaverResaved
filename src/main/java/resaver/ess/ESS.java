@@ -24,12 +24,7 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -347,7 +342,12 @@ final public class ESS implements Element {
             }
         }
 
-        SUM.click(this.TABLE1.stream().mapToInt(t -> t.calculateSize()).sum());
+        int sum = 0;
+        for (GlobalData globalData : this.TABLE1) {
+            int i = globalData.calculateSize();
+            sum += i;
+        }
+        SUM.click(sum);
         LOG.fine("Reading savegame: read GlobalDataTable #1.");
 
         for (int tableIndex = 0; tableIndex < this.FLT.TABLE2COUNT; tableIndex++) {
@@ -365,14 +365,24 @@ final public class ESS implements Element {
             }
         }
 
-        SUM.click(this.TABLE2.stream().mapToInt(t -> t.calculateSize()).sum());
+        int result = 0;
+        for (GlobalData globalData : this.TABLE2) {
+            int i = globalData.calculateSize();
+            result += i;
+        }
+        SUM.click(result);
         LOG.fine("Reading savegame: read GlobalDataTable #2.");
 
         // Get the GlobalVariableTable.
-        this.GLOBALS = this.TABLE1.stream()
-                .filter(b -> b.getType() == 3 && b.getDataBlock() instanceof GlobalVariableTable)
-                .map(b -> (GlobalVariableTable) b.getDataBlock())
-                .findAny().orElse(new GlobalVariableTable());
+        GlobalVariableTable found = new GlobalVariableTable();
+        for (GlobalData globalData : this.TABLE1) {
+            if (globalData.getType() == 3 && globalData.getDataBlock() instanceof GlobalVariableTable) {
+                GlobalVariableTable dataBlock = (GlobalVariableTable) globalData.getDataBlock();
+                found = dataBlock;
+                break;
+            }
+        }
+        this.GLOBALS = found;
         model.addGlobalVariableTable(this.GLOBALS);
 
         // Read the changeforms.
@@ -387,7 +397,12 @@ final public class ESS implements Element {
 
         model.addChangeForms(this.CHANGEFORMS);
 
-        SUM.click(this.CHANGEFORMS.values().stream().mapToInt(t -> t.calculateSize()).sum());
+        int sum1 = 0;
+        for (ChangeForm changeForm : this.CHANGEFORMS.values()) {
+            int i = changeForm.calculateSize();
+            sum1 += i;
+        }
+        SUM.click(sum1);
         LOG.fine("Reading savegame: read changeform table.");
 
         // Read the third set of data tables.
@@ -412,20 +427,35 @@ final public class ESS implements Element {
         }
 
         // Grab the Papyrus block.
-        this.PAPYRUS = this.TABLE3.stream()
-                .filter(b -> b.getType() == 1001 && b.getDataBlock() instanceof Papyrus)
-                .map(b -> (Papyrus) b.getDataBlock())
-                .findAny().orElse(papyrusPartial);
+        Papyrus found1 = papyrusPartial;
+        for (GlobalData globalData : this.TABLE3) {
+            if (globalData.getType() == 1001 && globalData.getDataBlock() instanceof Papyrus) {
+                Papyrus dataBlock = (Papyrus) globalData.getDataBlock();
+                found1 = dataBlock;
+                break;
+            }
+        }
+        this.PAPYRUS = found1;
 
         // Grab the Animations block.
-        this.ANIMATIONS = this.TABLE3.stream()
-                .filter(b -> b.getType() == 1002 && b.getDataBlock() instanceof DefaultGlobalDataBlock)
-                .map(b -> (DefaultGlobalDataBlock) b.getDataBlock())
-                .map(b -> new AnimObjects(b.getData(), context))
-                .findAny().orElse(new AnimObjects());
+        AnimObjects result1 = new AnimObjects();
+        for (GlobalData b : this.TABLE3) {
+            if (b.getType() == 1002 && b.getDataBlock() instanceof DefaultGlobalDataBlock) {
+                DefaultGlobalDataBlock dataBlock = (DefaultGlobalDataBlock) b.getDataBlock();
+                AnimObjects animObjects = new AnimObjects(dataBlock.getData(), context);
+                result1 = animObjects;
+                break;
+            }
+        }
+        this.ANIMATIONS = result1;
         model.addAnimations(this.ANIMATIONS);
 
-        SUM.click(this.TABLE3.stream().mapToInt(t -> t.calculateSize()).sum());
+        int sum2 = 0;
+        for (GlobalData t : this.TABLE3) {
+            int i = t.calculateSize();
+            sum2 += i;
+        }
+        SUM.click(sum2);
         LOG.fine("Reading savegame: read GlobalDataTable #3.");
 
         // Try to readRefID the visited worldspaces block.
@@ -626,7 +656,12 @@ final public class ESS implements Element {
 
         sum += this.TABLE1.parallelStream().mapToInt(v -> v.calculateSize()).sum();
         sum += this.TABLE2.parallelStream().mapToInt(v -> v.calculateSize()).sum();
-        sum += this.CHANGEFORMS.values().stream().mapToInt(v -> v.calculateSize()).sum();
+        int result = 0;
+        for (ChangeForm changeForm : this.CHANGEFORMS.values()) {
+            int i = changeForm.calculateSize();
+            result += i;
+        }
+        sum += result;
         sum += this.TABLE3.parallelStream().mapToInt(v -> v.calculateSize()).sum();
 
         sum += 4;
@@ -793,15 +828,21 @@ final public class ESS implements Element {
      *
      */
     public java.util.Set<Element> removeElements(java.util.Collection<? extends Element> elements) {
-        final Set<ChangeForm> ELEM1 = elements.stream()
-                .filter(v -> v instanceof ChangeForm)
-                .map(v -> (ChangeForm) v)
-                .collect(Collectors.toSet());
+        final Set<ChangeForm> ELEM1 = new HashSet<>();
+        for (Element element : elements) {
+            if (element instanceof ChangeForm) {
+                ChangeForm changeForm = (ChangeForm) element;
+                ELEM1.add(changeForm);
+            }
+        }
 
-        final Set<PapyrusElement> ELEM2 = elements.stream()
-                .filter(v -> v instanceof PapyrusElement)
-                .map(v -> (PapyrusElement) v)
-                .collect(Collectors.toSet());
+        final Set<PapyrusElement> ELEM2 = new HashSet<>();
+        for (Element v : elements) {
+            if (v instanceof PapyrusElement) {
+                PapyrusElement papyrusElement = (PapyrusElement) v;
+                ELEM2.add(papyrusElement);
+            }
+        }
 
         final Set<Element> REMOVED = new java.util.HashSet<>();
         REMOVED.addAll(this.removeChangeForms(ELEM1));
