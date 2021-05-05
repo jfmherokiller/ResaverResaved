@@ -27,14 +27,9 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.swing.JOptionPane;
 import javax.swing.SwingWorker;
 import resaver.Game;
@@ -120,19 +115,26 @@ public class Watcher {
          */
         @Override
         synchronized protected Path doInBackground() throws Exception {
-            List<Path> watchDirectories = null != watchDir
-                    ? Collections.singletonList(watchDir)
-                    : Game.VALUES.stream()
-                            .map(Configurator::getSaveDirectory)
-                            .filter(Files::exists)
-                            .collect(Collectors.toList());
+            List<Path> watchDirectories;
+            if (null != watchDir) {
+                watchDirectories = Collections.singletonList(watchDir);
+            } else {
+                List<Path> list = new ArrayList<>();
+                for (Game VALUE : Game.VALUES) {
+                    Path saveDirectory = Configurator.getSaveDirectory(VALUE);
+                    if (Files.exists(saveDirectory)) {
+                        list.add(saveDirectory);
+                    }
+                }
+                watchDirectories = list;
+            }
 
             final java.nio.file.FileSystem FS = java.nio.file.FileSystems.getDefault();
 
             try (final WatchService WATCHSERVICE = FS.newWatchService()) {
                 Map<WatchKey, Path> REGKEYS = new HashMap<>();
                 for (Path dir : watchDirectories) {
-                    LOG.info(String.format("WATCHER: initializing for %s", dir));
+                    LOG.info("WATCHER: initializing for " + dir);
                     REGKEYS.put(dir.register(WATCHSERVICE, StandardWatchEventKinds.ENTRY_CREATE), dir);
                 }
 
@@ -155,18 +157,20 @@ public class Watcher {
                         final Path FULL = REGKEYS.get(EVENTKEY).resolve(NAME);
 
                         if (Files.exists(FULL) && MATCHER.matches(FULL)) {
-                            LOG.info(String.format("WATCHER: Trying to open %s.", FULL));
+                            LOG.info("WATCHER: Trying to open " + FULL + ".");
 
-                            for (int i = 0; i < 50 && !Files.isReadable(FULL); i++) {
-                                LOG.info(String.format("Waiting for %s to be readable.", FULL));
-                                this.wait(250);
+                            int i = 0;
+                            while (i < 50 && !Files.isReadable(FULL)) {
+                                LOG.info("Waiting for " + FULL + " to be readable.");
+                                this.wait(250,0);
+                                i++;
                             }
 
                             if (Configurator.validateSavegame(FULL)) {
                                 final Opener OPENER = new Opener(WINDOW, FULL, WORRIER, null);
                                 OPENER.execute();
                             } else {
-                                LOG.info(String.format("WATCHER: Invalid file %s.", FULL));
+                                LOG.info("WATCHER: Invalid file " + FULL + ".");
                             }
                         }
                     }

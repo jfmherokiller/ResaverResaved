@@ -17,12 +17,12 @@ package resaver.gui;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.swing.BorderFactory;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
@@ -169,22 +169,52 @@ public class BatchCleaner extends SwingWorker<Boolean, Double> {
             }
 
             final Papyrus PAPYRUS = this.SAVE.getPapyrus();
-            
-            final Set<ActiveScript> THREADS = CLEAN_NAMES.stream()
-                    .filter(def -> (def instanceof Script))
-                    .flatMap(def -> PAPYRUS.getActiveScripts().values().stream()
-                            .filter(v -> v.hasScript((Script)def)))
-                    .collect(Collectors.toSet());
-            
+
+            final Set<ActiveScript> THREADS = new HashSet<>();
+            for (Definition def : CLEAN_NAMES) {
+                if ((def instanceof Script)) {
+                    for (ActiveScript activeScript : PAPYRUS.getActiveScripts().values()) {
+                        if (activeScript.hasScript((Script) def)) {
+                            THREADS.add(activeScript);
+                        }
+                    }
+                }
+            }
+
             THREADS.forEach(ActiveScript::zero);
             final Set<PapyrusElement> REMOVED = this.SAVE.getPapyrus().removeElements(CLEAN_NAMES);
             this.WINDOW.deleteNodesFor(REMOVED);
-            
-            long scripts = REMOVED.stream().filter(v -> v instanceof Script).count();
-            long scriptInstances = REMOVED.stream().filter(v -> v instanceof ScriptInstance).count();
-            long structs = REMOVED.stream().filter(v -> v instanceof Struct).count();
-            long structsInstances = REMOVED.stream().filter(v -> v instanceof StructInstance).count();
-            long references = REMOVED.stream().filter(v -> v instanceof Reference).count();
+
+            long scripts = 0L;
+            for (PapyrusElement papyrusElement : REMOVED) {
+                if (papyrusElement instanceof Script) {
+                    scripts++;
+                }
+            }
+            long scriptInstances = 0L;
+            for (PapyrusElement papyrusElement : REMOVED) {
+                if (papyrusElement instanceof ScriptInstance) {
+                    scriptInstances++;
+                }
+            }
+            long structs = 0L;
+            for (PapyrusElement papyrusElement : REMOVED) {
+                if (papyrusElement instanceof Struct) {
+                    structs++;
+                }
+            }
+            long structsInstances = 0L;
+            for (PapyrusElement papyrusElement : REMOVED) {
+                if (papyrusElement instanceof StructInstance) {
+                    structsInstances++;
+                }
+            }
+            long references = 0L;
+            for (PapyrusElement v : REMOVED) {
+                if (v instanceof Reference) {
+                    references++;
+                }
+            }
             long threads = THREADS.size();
 
             final String MSG = String.format("Cleaned %d scripts and %d corresponding instances.\nCleaned %s structs and %d corresponding instances.\nCleaned %d references.\n%d threads were terminated.", scripts, scriptInstances, structs, structsInstances, references, threads);

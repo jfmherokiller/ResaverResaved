@@ -21,14 +21,10 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import resaver.ess.Element;
 import resaver.ess.ESS;
-import resaver.ess.papyrus.HasID;
-import resaver.ess.papyrus.ActiveScript;
-import resaver.ess.papyrus.FunctionMessage;
-import resaver.ess.papyrus.FunctionMessageData;
-import resaver.ess.papyrus.SuspendedStack;
+import resaver.ess.papyrus.*;
+
 import java.util.function.Predicate;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.swing.tree.TreePath;
 import resaver.ess.Plugin;
 
@@ -245,13 +241,15 @@ final public class FilterTreeModel implements TreeModel {
         }
 
         if (!node.isLeaf()) {
-            node.getChildren().stream().filter(Node::isVisible).forEach(n -> {
-                if (n.hasElement() && n.isLeaf()) {
-                    collected.add(n.getElement());
-                } else {
-                    collected.addAll(this.getElements(n));
+            for (Node n : node.getChildren()) {
+                if (n.isVisible()) {
+                    if (n.hasElement() && n.isLeaf()) {
+                        collected.add(n.getElement());
+                    } else {
+                        collected.addAll(this.getElements(n));
+                    }
                 }
-            });
+            }
         }
 
         return collected;
@@ -340,7 +338,13 @@ final public class FilterTreeModel implements TreeModel {
         } else {
             // For folders, determine which children to setFilter.
             node.getChildren().parallelStream().forEach(child -> this.setFilter(child, filter));
-            boolean hasVisibleChildren = node.getChildren().stream().anyMatch(Node::isVisible);
+            boolean hasVisibleChildren = false;
+            for (Node node1 : node.getChildren()) {
+                if (node1.isVisible()) {
+                    hasVisibleChildren = true;
+                    break;
+                }
+            }
             node.setVisible(nodeVisible || hasVisibleChildren);
         }
     }
@@ -362,17 +366,27 @@ final public class FilterTreeModel implements TreeModel {
 
         for (int i = 1; i < path.getPathCount(); i++) {
             Node originalNode = (Node) path.getPathComponent(i);
-            Optional<Node> child = newNode.getChildren().stream()
-                    .filter(n -> n.getName().equals(originalNode.getName()) || (n.hasElement(originalNode.getElement())))
-                    .findFirst();
+            Optional<Node> child = Optional.empty();
+            for (Node node : newNode.getChildren()) {
+                if (node.getName().equals(originalNode.getName()) || (node.hasElement(originalNode.getElement()))) {
+                    child = Optional.of(node);
+                    break;
+                }
+            }
 
             if (!child.isPresent()) {
                 if (originalNode.hasElement() && originalNode.getElement() instanceof HasID) {
                     HasID original = (HasID) originalNode.getElement();
-                    child = newNode.getChildren().stream()
-                            .filter(n -> n.hasElement() && n.getElement() instanceof HasID)
-                            .filter(n -> ((HasID) n.getElement()).getID() == original.getID())
-                            .findAny();
+                    Optional<Node> found = Optional.empty();
+                    for (Node n : newNode.getChildren()) {
+                        if (n.hasElement() && n.getElement() instanceof HasID) {
+                            if (((HasID) n.getElement()).getID() == original.getID()) {
+                                found = Optional.of(n);
+                                break;
+                            }
+                        }
+                    }
+                    child = found;
                 }
             }
 
@@ -414,13 +428,15 @@ final public class FilterTreeModel implements TreeModel {
         final Map<Element, Node> ELEMENTS = new LinkedHashMap<>();
 
         if (!node.isLeaf()) {
-            node.getChildren().stream().filter(Node::isVisible).forEach(child -> {
-                if (child.hasElement()) {
-                    ELEMENTS.put(child.getElement(), child);
-                }
+            for (Node child : node.getChildren()) {
+                if (child.isVisible()) {
+                    if (child.hasElement()) {
+                        ELEMENTS.put(child.getElement(), child);
+                    }
 
-                ELEMENTS.putAll(this.parsePath(child));
-            });
+                    ELEMENTS.putAll(this.parsePath(child));
+                }
+            }
         }
 
         return ELEMENTS;
@@ -685,7 +701,12 @@ final public class FilterTreeModel implements TreeModel {
          */
         public ContainerNode(CharSequence name, Collection<? extends Element> elements) {
             this.NAME = Objects.requireNonNull(name).toString();
-            this.CHILDREN = elements.stream().map(ElementNode::new).collect(Collectors.toList());
+            List<Node> list = new ArrayList<>();
+            for (Element element : elements) {
+                ElementNode<? extends Element> elementNode = new ElementNode(element);
+                list.add(elementNode);
+            }
+            this.CHILDREN = list;
             this.CHILDREN.forEach(child -> child.setParent(this));
             this.countLeaves();
         }
@@ -702,7 +723,9 @@ final public class FilterTreeModel implements TreeModel {
                 throw new NullPointerException();
             }
 
-            children.forEach(child -> child.setParent(this));
+            for (Node child : children) {
+                child.setParent(this);
+            }
             this.CHILDREN.addAll(children);
             this.countLeaves();
             return this;
@@ -746,10 +769,13 @@ final public class FilterTreeModel implements TreeModel {
 
         @Override
         final public int countLeaves() {
-            int leafCount = this.getChildren().stream()
-                    .filter(Node::isVisible)
-                    .mapToInt(Node::countLeaves)
-                    .sum();
+            int leafCount = 0;
+            for (Node node : this.getChildren()) {
+                if (node.isVisible()) {
+                    int countLeaves = node.countLeaves();
+                    leafCount += countLeaves;
+                }
+            }
 
             this.label = this.isLeaf()
                     ? this.getName()
@@ -890,10 +916,12 @@ final public class FilterTreeModel implements TreeModel {
         public ActiveScriptNode(ActiveScript element) {
             super(element);
             if (element.hasStack()) {
-                this.CHILDREN = element.getStackFrames()
-                        .stream()
-                        .map(ElementNode::new)
-                        .collect(Collectors.toList());
+                List<Node> list = new ArrayList<>();
+                for (StackFrame stackFrame : element.getStackFrames()) {
+                    ElementNode<StackFrame> stackFrameElementNode = new ElementNode<>(stackFrame);
+                    list.add(stackFrameElementNode);
+                }
+                this.CHILDREN = list;
                this.CHILDREN.forEach(child -> child.setParent(this));
             } else {
                 this.CHILDREN = null;

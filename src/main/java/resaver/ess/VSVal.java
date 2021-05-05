@@ -117,8 +117,8 @@ final public class VSVal implements Element {
                 return value;
             }
             default: {
-                int value = (Byte.toUnsignedInt(this.DATA[0]) 
-                        | (Byte.toUnsignedInt(this.DATA[1]) << 8) 
+                int value = (Byte.toUnsignedInt(this.DATA[0])
+                        | (Byte.toUnsignedInt(this.DATA[1]) << 8)
                         | (Byte.toUnsignedInt(this.DATA[2]) << 16)) >>> 2;
                 return value;
             }

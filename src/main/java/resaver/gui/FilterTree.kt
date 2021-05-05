@@ -24,11 +24,11 @@ import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.util.*
 import java.util.function.Consumer
 import java.util.function.Predicate
 import javax.swing.*
 import javax.swing.tree.TreePath
-import kotlin.streams.toList
 
 /**
  * A JTree that supports filtering.
@@ -83,12 +83,13 @@ class FilterTree : JTree(FilterTreeModel()) {
                 if (null == PATHS || PATHS.isEmpty()) {
                     return@addActionListener
                 }
-                val ELEMENTS = model.parsePaths(PATHS)
-                val PLUGINS: List<Plugin> = ELEMENTS.keys
-                    .stream()
-                    .filter { v: Element? -> v is Plugin }
-                    .map { v: Element? -> v as Plugin? }
-                    .toList().filterNotNull()
+                val ELEMENTS = model?.parsePaths(PATHS)
+                val PLUGINS: MutableList<Plugin> = ArrayList()
+                ELEMENTS?.keys?.forEach { v ->
+                    if (v is Plugin) {
+                        PLUGINS.add(v)
+                    }
+                }
                 purgeHandler!!.accept(PLUGINS)
             }
         }
@@ -110,12 +111,12 @@ class FilterTree : JTree(FilterTreeModel()) {
                 if (null == PATHS || PATHS.isEmpty()) {
                     return@addActionListener
                 }
-                val ELEMENTS = model.parsePaths(PATHS)
-                val THREADS: List<ActiveScript> = ELEMENTS.keys
-                    .stream()
-                    .filter(ESS.THREAD)
-                    .map { v: Element? -> v as ActiveScript? }
-                    .toList().filterNotNull()
+                val ELEMENTS = model?.parsePaths(PATHS)
+                val THREADS: MutableList<ActiveScript> = ELEMENTS?.keys
+                    ?.asSequence()
+                    ?.filter { ESS.THREAD.test(it) }
+                    ?.map { it as ActiveScript }
+                    ?.toMutableList()?.toList()!!.toMutableList()
                 zeroThreadHandler!!.accept(THREADS)
             }
         }
@@ -130,7 +131,7 @@ class FilterTree : JTree(FilterTreeModel()) {
                 } else if (element is StackFrame) {
                     val frame = element
                     val owner = frame.owner
-                    if (owner is Variable.Ref) {
+                    if (null != owner && owner is Variable.Ref) {
                         val ref = frame.owner as Variable.Ref?
                         findHandler!!.accept(ref!!.referent)
                     }
@@ -166,15 +167,13 @@ class FilterTree : JTree(FilterTreeModel()) {
                     val x = evt.point.x
                     val y = evt.point.y
                     val path = getClosestPathForLocation(x, y)
-                    var paths = selectionPaths?.filterNotNull()
-                    if (paths != null) {
-                        if (!listOf(*paths.toTypedArray()).contains(path)) {
-                            selectionPath = path
-                            paths = selectionPaths?.toList()
-                        }
+                    var paths = selectionPaths
+                    if (!listOf(*paths!!).contains(path)) {
+                        selectionPath = path
+                        paths = selectionPaths
                     }
-                    val ELEMENTS = model.parsePaths(paths?.toTypedArray() ?: emptyArray())
-                    if (ELEMENTS.size == 1) {
+                    val ELEMENTS = model?.parsePaths(paths)
+                    if (ELEMENTS?.size == 1) {
                         val ELEMENT = ELEMENTS.keys.iterator().next()
                         if (ELEMENT is ESS) {
                             val ESS = ELEMENT
@@ -201,15 +200,30 @@ class FilterTree : JTree(FilterTreeModel()) {
                             MI_CLEANSE_FLST.isVisible = false
                             TREE_POPUP_MENU.show(evt.component, evt.x, evt.y)
                         }
-                    } else if (ELEMENTS.size > 1) {
+                    } else if (ELEMENTS?.size!! > 1) {
                         MI_FIND_OWNER.isVisible = false
-                        val purgeable = ELEMENTS.keys.stream().filter(ESS.PURGEABLE).count().toInt()
+                        var count = 0L
+                        ELEMENTS.keys
+                            .asSequence()
+                            .filter { ESS.PURGEABLE.test(it) }
+                            .forEach { _ -> count++ }
+                        val purgeable = count.toInt()
                         MI_PURGES.isEnabled = purgeable > 0
                         MI_PURGES.text = String.format("Purge (%d plugins)", purgeable)
-                        val deletable = ELEMENTS.keys.stream().filter(ESS.DELETABLE).count().toInt()
+                        var result = 0L
+                        ELEMENTS.keys
+                            .asSequence()
+                            .filter { ESS.DELETABLE.test(it) }
+                            .forEach { _ -> result++ }
+                        val deletable = result.toInt()
                         MI_DELETE.isEnabled = deletable > 0
                         MI_DELETE.text = String.format("Delete (%d elements)", deletable)
-                        val threads = ELEMENTS.keys.stream().filter(ESS.THREAD).count().toInt()
+                        var count1 = 0L
+                        ELEMENTS.keys
+                            .asSequence()
+                            .filter { ESS.THREAD.test(it) }
+                            .forEach { _ -> count1++ }
+                        val threads = count1.toInt()
                         MI_ZERO_THREAD.isVisible = threads > 0
                         TREE_POPUP_MENU.show(evt.component, evt.x, evt.y)
                     }
@@ -257,7 +271,8 @@ class FilterTree : JTree(FilterTreeModel()) {
      * `Element` was not found.
      */
     fun findPath(element: Element?): TreePath {
-        return this.model.findPath(element)
+        Objects.requireNonNull(element)
+        return this.model?.findPath(element)!!
     }
 
     /**
@@ -337,7 +352,9 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new handler.
      */
-    fun setCleanseFLSTHandler(newHandler: Consumer<ChangeFormFLST?>?) {}
+    fun setCleanseFLSTHandler(newHandler: Consumer<ChangeFormFLST>?) {
+        cleanFLSTHandler = newHandler
+    }
 
     /**
      * Sets the compression type handler.
@@ -359,12 +376,16 @@ class FilterTree : JTree(FilterTreeModel()) {
         if (null == PATHS || PATHS.isEmpty()) {
             return
         }
-        val ELEMENTS = model.parsePaths(PATHS)
-        deleteHandler!!.accept(ELEMENTS)
+        val ELEMENTS = model?.parsePaths(PATHS)
+        deleteHandler!!.accept(ELEMENTS!!)
     }
 
-    override fun getModel(): FilterTreeModel {
-        return super.getModel() as FilterTreeModel
+    override fun getModel(): FilterTreeModel? {
+        val model = super.getModel()
+        if(model != null) {
+            return model as FilterTreeModel
+        }
+        return null
     }
 
     private val MI_PURGE: JMenuItem = JMenuItem("Purge (1 plugin)", KeyEvent.VK_P)
@@ -392,6 +413,7 @@ class FilterTree : JTree(FilterTreeModel()) {
     private var deleteInstancesHandler: Consumer<Plugin>? = null
     private var purgeHandler: Consumer<Collection<Plugin>>? = null
     private var findHandler: Consumer<Element>? = null
+    private var cleanFLSTHandler: Consumer<ChangeFormFLST>? = null
     private var compressionHandler: Consumer<CompressionType>? = null
 
     /**

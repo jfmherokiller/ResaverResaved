@@ -13,101 +13,90 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.Objects;
+import resaver.ess.ESS.ESSContext
+import java.nio.ByteBuffer
+
+
 
 /**
  *
  * @author Mark
  */
-final public class GlobalVariableTable implements Element, GlobalDataBlock {
-
+class GlobalVariableTable : Element, GlobalDataBlock {
     /**
-     * Creates a new <code>GlobalVariableTable</code>.
+     * Creates a new `GlobalVariableTable`.
      *
      * @param input The input data.
-     * @param context The <code>ESSContext</code> info.
+     * @param context The `ESSContext` info.
      */
-    public GlobalVariableTable(ByteBuffer input, ESS.ESSContext context) {
-        this.COUNT = new VSVal(input);
-        final int C = this.COUNT.getValue();
-        this.VARIABLES = new java.util.ArrayList<>(C);
-
-        for (int i = 0; i < C; i++) {
-            GlobalVariable var = new GlobalVariable(input, context);
-            this.VARIABLES.add(var);
+    constructor(input: ByteBuffer?, context: ESSContext?) {
+        COUNT = VSVal(input)
+        val C = COUNT.value
+        VARIABLES = ArrayList(C)
+        for (i in 0 until C) {
+            val `var` = GlobalVariable(input, context!!)
+            VARIABLES.add(`var`)
         }
     }
 
     /**
-     * Creates a new empty <code>GlobalVariableTable</code>.
+     * Creates a new empty `GlobalVariableTable`.
      */
-    public GlobalVariableTable() {
-        this.COUNT = new VSVal(0);
-        this.VARIABLES = Collections.emptyList();
+    constructor() {
+        COUNT = VSVal(0)
+        VARIABLES = emptyList()
     }
-    
+
     /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        this.COUNT.write(output);
-        this.VARIABLES.forEach(var -> var.write(output));
+    override fun write(output: ByteBuffer?) {
+        COUNT.write(output)
+        VARIABLES.forEach { `var`: GlobalVariable -> `var`.write(output) }
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = this.COUNT.calculateSize();
-        sum += this.VARIABLES.parallelStream().mapToInt(GlobalVariable::calculateSize).sum();
-        return sum;
+    override fun calculateSize(): Int {
+        var sum = COUNT.calculateSize()
+        sum += VARIABLES.parallelStream().mapToInt { obj: GlobalVariable -> obj.calculateSize() }.sum()
+        return sum
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 17 * hash + Objects.hashCode(this.COUNT);
-        hash = 17 * hash + Objects.hashCode(this.VARIABLES);
-        return hash;
+    override fun hashCode(): Int {
+        var hash = 3
+        hash = 17 * hash + COUNT.hashCode()
+        hash = 17 * hash + VARIABLES.hashCode()
+        return hash
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        if (obj == null) {
-            return false;
+        if (other == null) {
+            return false
         }
-        if (getClass() != obj.getClass()) {
-            return false;
+        if (javaClass != other.javaClass) {
+            return false
         }
-        final GlobalVariableTable other = (GlobalVariableTable) obj;
-        if (!Objects.equals(this.COUNT, other.COUNT)) {
-            return false;
+        val other2 = other as GlobalVariableTable
+        if (COUNT != other2.COUNT) {
+            return false
         }
-        if (!Objects.equals(this.VARIABLES, other.VARIABLES)) {
-            return false;
-        }
-        return true;
+        return VARIABLES == other2.VARIABLES
     }
 
     /**
-     * @return The <code>GlobalVariable</code> list.
+     * @return The `GlobalVariable` list.
      */
-    public java.util.List<GlobalVariable> getVariables() {
-        return java.util.Collections.unmodifiableList(this.VARIABLES);
-    }
-
-    final private VSVal COUNT;
-    final private java.util.List<GlobalVariable> VARIABLES;
-
+    val variables: List<GlobalVariable>
+        get() = VARIABLES
+    private val COUNT: VSVal
+    private val VARIABLES: List<GlobalVariable>
 }
