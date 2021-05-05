@@ -739,7 +739,7 @@ final public class SaveWindow extends JFrame {
                     MODEL.setValue(9);
 
                     if (null != path) {
-                        LOG.info(String.format("Updating filter: restoring path = %s", path.toString()));
+                        LOG.info(String.format("Updating filter: restoring path = %s", path));
 
                         if (path.getLastPathComponent() == null) {
                             this.TREE.clearSelection();

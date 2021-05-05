@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.io.IOException
+import java.nio.ByteBuffer
+
 
 /**
  * Describes a local variable or parameter of a Function. A VariableType is
@@ -27,87 +25,42 @@ import java.util.regex.Pattern;
  *
  * @author Mark Fairchild
  */
-final class VariableType {
-
+internal class VariableType private constructor(input: ByteBuffer, strings: StringTable, role: Role) {
     /**
-     * The role of the <code>VariableType</code>.
+     * The role of the `VariableType`.
      */
-    static public enum Role {
+    enum class Role {
         PARAM, LOCAL
-    };
-
-    /**
-     * Creates a VariableType by reading from a DataInput.
-     *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-     * @throws IOException Exceptions aren't handled.
-     */
-    static public VariableType readLocal(ByteBuffer input, StringTable strings) throws IOException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(strings);
-        return new VariableType(input, strings, Role.LOCAL);
     }
 
     /**
-     * Creates a VariableType by reading from a DataInput.
+     * Write the object to a `ByteBuffer`.
      *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-     * @throws IOException Exceptions aren't handled.
-     */
-    static public VariableType readParam(ByteBuffer input, StringTable strings) throws IOException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(strings);
-        return new VariableType(input, strings, Role.PARAM);
-    }
-
-    /**
-     * Creates a VariableType by reading from a DataInput.
-     *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-     * @param role The role, as a function parameter or local variable.
-     * @throws IOException Exceptions aren't handled.
-     */
-    private VariableType(ByteBuffer input, StringTable strings, Role role) throws IOException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(strings);
-        Objects.requireNonNull(role);
-        this.name = strings.read(input);
-        this.TYPE = strings.read(input);
-        this.ROLE = role;
-    }
-
-    /**
-     * Write the object to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      * @throws IOException IO errors aren't handled at all, they are simply
      * passed on.
      */
-    void write(ByteBuffer output) throws IOException {
-        this.name.write(output);
-        this.TYPE.write(output);
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer?) {
+        name.write(output)
+        TYPE.write(output)
     }
 
     /**
      * Calculates the size of the VariableType, in bytes.
      *
      * @return The size of the VariableType.
-     *
      */
-    public int calculateSize() {
-        return 4;
+    fun calculateSize(): Int {
+        return 4
     }
 
     /**
-     * @return A flag indicating whether the <code>VariableType</code> is a temp
+     * @return A flag indicating whether the `VariableType` is a temp
      * or not.
      */
-    public boolean isTemp() {
-        return TEMP_PATTERN.asPredicate().test(this.name.toString());
-    }
+    val isTemp: Boolean
+        get() = TEMP_PATTERN.containsMatchIn(name.toString())
 
     /**
      * Collects all of the strings used by the VariableType and adds them to a
@@ -115,9 +68,9 @@ final class VariableType {
      *
      * @param strings The set of strings.
      */
-    public void collectStrings(Set<StringTable.TString> strings) {
-        strings.add(this.name);
-        strings.add(this.TYPE);
+    fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        strings.add(name)
+        strings.add(TYPE)
     }
 
     /**
@@ -125,29 +78,69 @@ final class VariableType {
      *
      * @return A string representation of the VariableType.
      */
-    @Override
-    public String toString() {
-        final String FORMAT = "%s %s";
-        return String.format(FORMAT, this.TYPE, this.name);
+    override fun toString(): String {
+        val FORMAT = "%s %s"
+        return String.format(FORMAT, TYPE, name)
     }
 
     /**
-     * @return Checks if the <code>VariableType</code> is a local variable.
+     * @return Checks if the `VariableType` is a local variable.
      */
-    public boolean isLocal() {
-        return this.ROLE == Role.LOCAL;
-    }
-    
-    /**
-     * @return Checks if the <code>VariableType</code> is a parameter.
-     */
-    public boolean isParam() {
-        return this.ROLE == Role.PARAM;
-    }
-    
-    public StringTable.TString name;
-    final public StringTable.TString TYPE;
-    final public Role ROLE;
+    val isLocal: Boolean
+        get() = ROLE == Role.LOCAL
 
-    static final Pattern TEMP_PATTERN = Pattern.compile("^::.+$");
+    /**
+     * @return Checks if the `VariableType` is a parameter.
+     */
+    val isParam: Boolean
+        get() = ROLE == Role.PARAM
+    @JvmField
+    var name: StringTable.TString
+    @JvmField
+    val TYPE: StringTable.TString
+    val ROLE: Role
+
+    companion object {
+        /**
+         * Creates a VariableType by reading from a DataInput.
+         *
+         * @param input A datainput for a Skyrim PEX file.
+         * @param strings The `StringTable` for the `Pex`.
+         * @throws IOException Exceptions aren't handled.
+         */
+        @JvmStatic
+        @Throws(IOException::class)
+        fun readLocal(input: ByteBuffer, strings: StringTable): VariableType {
+            return VariableType(input, strings, Role.LOCAL)
+        }
+
+        /**
+         * Creates a VariableType by reading from a DataInput.
+         *
+         * @param input A datainput for a Skyrim PEX file.
+         * @param strings The `StringTable` for the `Pex`.
+         * @throws IOException Exceptions aren't handled.
+         */
+        @JvmStatic
+        @Throws(IOException::class)
+        fun readParam(input: ByteBuffer, strings: StringTable): VariableType {
+            return VariableType(input, strings, Role.PARAM)
+        }
+
+        val TEMP_PATTERN = Regex("^::.+$")
+    }
+
+    /**
+     * Creates a VariableType by reading from a DataInput.
+     *
+     * @param input A datainput for a Skyrim PEX file.
+     * @param strings The `StringTable` for the `Pex`.
+     * @param role The role, as a function parameter or local variable.
+     * @throws IOException Exceptions aren't handled.
+     */
+    init {
+        name = strings.read(input)
+        TYPE = strings.read(input)
+        ROLE = role
+    }
 }

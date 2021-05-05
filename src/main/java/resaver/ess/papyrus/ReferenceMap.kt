@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.papyrus.PapyrusElementMap
+import resaver.ess.papyrus.ScriptMap
+import resaver.ess.papyrus.PapyrusContext
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
-final public class ReferenceMap extends PapyrusElementMap<Reference> {
-
-    ReferenceMap(java.nio.ByteBuffer input, ScriptMap scripts, PapyrusContext context) throws PapyrusElementException {
-        super(input, b -> new Reference(b, scripts, context));
+class ReferenceMap : PapyrusElementMap<Reference> {
+    internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusContext?) : super(
+        input,
+        PapyrusElementReader<Reference> { b: ByteBuffer? -> Reference(b, scripts, context) }) {
     }
 
-    ReferenceMap() {
-    }
-
+    internal constructor() {}
 }

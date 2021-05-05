@@ -13,130 +13,133 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import resaver.ProgressModel;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.util.Objects;
+import javax.swing.JPanel
+import kotlin.jvm.Synchronized
+import resaver.ProgressModel
+import java.awt.Cursor
+import java.util.Objects
+import javax.swing.JLabel
+import javax.swing.JProgressBar
+import javax.swing.JComponent
+import javax.swing.RootPaneContainer
+import java.awt.event.MouseAdapter
+import java.awt.FlowLayout
+import java.awt.Dimension
 
 /**
- * Displays a <code>JProgressBar</code> in a panel, while blocking the owner
+ * Displays a `JProgressBar` in a panel, while blocking the owner
  * window.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class ProgressIndicator extends JPanel {
-
+class ProgressIndicator : JPanel() {
     /**
-     * Creates a new <code>ProgressIndicator</code>.
-     *
-     */
-    public ProgressIndicator() {
-        super.setLayout(new FlowLayout());
-        this.LABEL = new JLabel("Please wait.");
-        this.BAR = new JProgressBar();
-        this.BAR.setIndeterminate(true);
-        
-        Dimension s = this.BAR.getPreferredSize();
-        Dimension s_ = new Dimension(2 * s.width / 3, s.height);
-        this.BAR.setPreferredSize(s_);
-        this.LABEL.setVisible(false);
-        this.BAR.setVisible(false);
-        this.active = 0;
-        super.add(this.LABEL);
-        super.add(this.BAR);
-    }
-
-    /**
-     * Sets the title and model of the <code>ProgressIndicator</code>..
+     * Sets the title and model of the `ProgressIndicator`..
      *
      * @param title The new title of the dialog.
      */
-    synchronized public void start(String title) {
-        this.start(title, null);
+    @Synchronized
+    fun start(title: String?) {
+        this.start(title, null)
     }
 
     /**
-     * Sets the title and model of the <code>ProgressIndicator</code>..
+     * Sets the title and model of the `ProgressIndicator`..
      *
      * @param title The new title of the dialog.
-     * @param model The <code>ProgressModel</code> or null for indeterminate.
+     * @param model The `ProgressModel` or null for indeterminate.
      */
-    synchronized public void start(String title, ProgressModel model) {
-        Objects.requireNonNull(title);
-        this.LABEL.setText(title);
-        this.setModel(model);
-        
-        if (this.active > 0) {
-            this.active++;
+    @Synchronized
+    fun start(title: String?, model: ProgressModel?) {
+        Objects.requireNonNull(title)
+        LABEL.text = title
+        setModel(model)
+        if (active > 0) {
+            active++
         } else {
-            this.active = 1;
-            this.LABEL.setVisible(true);
-            this.BAR.setVisible(true);
-            startWaitCursor(this.getRootPane());            
+            active = 1
+            LABEL.isVisible = true
+            BAR.isVisible = true
+            startWaitCursor(this.rootPane)
         }
     }
 
-    public void setModel(ProgressModel model) {
+    fun setModel(model: ProgressModel?) {
         if (model == null) {
-            this.BAR.setIndeterminate(true);
-            this.BAR.setModel(new ProgressModel(1));
+            BAR.isIndeterminate = true
+            BAR.model = ProgressModel(1)
         } else {
-            this.BAR.setIndeterminate(false);
-            this.BAR.setModel(model);
+            BAR.isIndeterminate = false
+            BAR.model = model
         }
     }
 
-    public void clearModel() {
-        this.setModel(null);
+    fun clearModel() {
+        setModel(null)
     }
 
     /**
      *
      */
-    synchronized public void stop() {
-        assert this.active > 0 : "Invalid call to ProgressIndicator.stop().";
-        
-        if (this.active > 0) {
-            this.active--;
+    @Synchronized
+    fun stop() {
+        assert(active > 0) { "Invalid call to ProgressIndicator.stop()." }
+        if (active > 0) {
+            active--
         }
-        
-        assert this.active >= 0 : "Invalid call to ProgressIndicator.stop().";
-        
-        if (this.active <= 0) {
-            this.active = 0;
-            this.LABEL.setVisible(false);
-            this.BAR.setVisible(false);
-            stopWaitCursor(this.getRootPane());
+        assert(active >= 0) { "Invalid call to ProgressIndicator.stop()." }
+        if (active <= 0) {
+            active = 0
+            LABEL.isVisible = false
+            BAR.isVisible = false
+            stopWaitCursor(this.rootPane)
         }
+    }
+
+    private val LABEL: JLabel
+    private val BAR: JProgressBar
+    private var active: Int
+
+    companion object {
+        /**
+         *
+         * @param component
+         */
+        private fun startWaitCursor(component: JComponent) {
+            val root = component.topLevelAncestor as RootPaneContainer
+            root.glassPane.cursor = Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR)
+            root.glassPane.addMouseListener(NULLMOUSEADAPTER)
+            root.glassPane.isVisible = true
+        }
+
+        private fun stopWaitCursor(component: JComponent) {
+            val root = component.topLevelAncestor as RootPaneContainer
+            root.glassPane.cursor = Cursor.getDefaultCursor()
+            root.glassPane.removeMouseListener(NULLMOUSEADAPTER)
+            root.glassPane.isVisible = false
+        }
+
+        private val NULLMOUSEADAPTER: MouseAdapter = object : MouseAdapter() {}
     }
 
     /**
+     * Creates a new `ProgressIndicator`.
      *
-     * @param component
      */
-    static private void startWaitCursor(JComponent component) {
-        RootPaneContainer root = ((RootPaneContainer) component.getTopLevelAncestor());
-        root.getGlassPane().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-        root.getGlassPane().addMouseListener(NULLMOUSEADAPTER);
-        root.getGlassPane().setVisible(true);
+    init {
+        super.setLayout(FlowLayout())
+        LABEL = JLabel("Please wait.")
+        BAR = JProgressBar()
+        BAR.isIndeterminate = true
+        val s = BAR.preferredSize
+        val s_ = Dimension(2 * s.width / 3, s.height)
+        BAR.preferredSize = s_
+        LABEL.isVisible = false
+        BAR.isVisible = false
+        active = 0
+        super.add(LABEL)
+        super.add(BAR)
     }
-
-    static private void stopWaitCursor(JComponent component) {
-        RootPaneContainer root = ((RootPaneContainer) component.getTopLevelAncestor());
-        root.getGlassPane().setCursor(Cursor.getDefaultCursor());
-        root.getGlassPane().removeMouseListener(NULLMOUSEADAPTER);
-        root.getGlassPane().setVisible(false);
-    }
-
-    static final private MouseAdapter NULLMOUSEADAPTER = new MouseAdapter() {
-    };
-
-    final private JLabel LABEL;
-    final private JProgressBar BAR;
-    private int active;
-
 }

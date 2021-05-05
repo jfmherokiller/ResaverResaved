@@ -138,7 +138,7 @@ public class Watcher {
 
                 while (true) {
                     final WatchKey EVENTKEY = WATCHSERVICE.take();
-                    //final WatchKey EVENTKEY = WATCHSERVICE.poll(1, TimeUnit.SECONDS);                    
+                    //final WatchKey EVENTKEY = WATCHSERVICE.poll(1, TimeUnit.SECONDS);
                     if (EVENTKEY == null || !EVENTKEY.isValid()) {
                         LOG.info("INVALID EVENTKEY");
                         break;

@@ -134,9 +134,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ReferenceMap referenceMap = null;
             try {
                 referenceMap = new ReferenceMap(input, this.SCRIPTS, CONTEXT);
-            } catch (PapyrusElementException ex) {
-                referenceMap = (ReferenceMap) ex.getPartial();
-                throw new PapyrusException("Error reading References.", ex, this);
             } finally {
                 this.REFERENCES = referenceMap;
                 SUM.click(this.REFERENCES.calculateSize());

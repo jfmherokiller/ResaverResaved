@@ -13,125 +13,95 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import resaver.ProgressModel;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Objects;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-import resaver.ess.CompressionType;
-import resaver.ess.ESS;
+import resaver.ProgressModel
+import resaver.ess.ESS
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
+import java.nio.file.Path
+import java.util.*
+import java.util.logging.Level
+import java.util.logging.Logger
+import javax.swing.JOptionPane
+import javax.swing.SwingUtilities
+import javax.swing.SwingWorker
 
 /**
  *
  * @author Mark Fairchild
  */
-public class Saver extends SwingWorker<ESS, Double> {
-
-    /**
-     *
-     * @param window
-     * @param saveFile
-     * @param save
-     * @param doAfter
-     * 
-     */
-    public Saver(SaveWindow window, Path saveFile, ESS save, Runnable doAfter) {
-        this.WINDOW = Objects.requireNonNull(window, "The window field must not be null.");
-        this.SAVEFILE = Objects.requireNonNull(saveFile, "The saveFile field must not be null.");
-        this.SAVE = Objects.requireNonNull(save, "The save field must not be null.");
-        this.DOAFTER = doAfter;
-    }
-
+class Saver(window: SaveWindow?, saveFile: Path, save: ESS?, doAfter: Runnable?) : SwingWorker<ESS?, Double?>() {
     /**
      *
      * @return @throws Exception
      */
-    @Override
-    protected ESS doInBackground() throws Exception {
-        if (!Configurator.validWrite(this.SAVEFILE)) {
-            return null;
+    @Throws(Exception::class)
+    override fun doInBackground(): ESS? {
+        if (!Configurator.validWrite(SAVEFILE)) {
+            return null
         }
-
-        this.WINDOW.getProgressIndicator().start("Saving");
-        this.WINDOW.addWindowListener(this.LISTENER);
-
-        try {
-            LOG.info("================");
-            LOG.info(String.format("Writing to savegame file \"%s\".", this.SAVEFILE));
-
-            final ProgressModel MODEL = new ProgressModel();
-            this.WINDOW.getProgressIndicator().setModel(MODEL);
-
-            boolean watcherRunning = WINDOW.getWatcher().isRunning();
-            WINDOW.getWatcher().stop();
-            
-            final ESS.Result RESULT = ESS.writeESS(this.SAVE, this.SAVEFILE);
-            
+        WINDOW.progressIndicator.start("Saving")
+        WINDOW.addWindowListener(LISTENER)
+        return try {
+            LOG.info("================")
+            LOG.info(String.format("Writing to savegame file \"%s\".", SAVEFILE))
+            val MODEL = ProgressModel()
+            WINDOW.progressIndicator.setModel(MODEL)
+            val watcherRunning = WINDOW.watcher.isRunning
+            WINDOW.watcher.stop()
+            val RESULT = ESS.writeESS(SAVE, SAVEFILE)
             if (watcherRunning) {
-                WINDOW.getWatcher().resume();
+                WINDOW.watcher.resume()
             }
-
-            double time = RESULT.TIME_S;
-            double size = RESULT.SIZE_MB;
-            final StringBuilder MSG = new StringBuilder();
-            MSG.append("The savefile was successfully written.");
-            MSG.append(String.format("\nWrote %1.1f mb in %1.1f seconds.", size, time));
+            val time = RESULT.TIME_S
+            val size = RESULT.SIZE_MB
+            val MSG = StringBuilder()
+            MSG.append("The savefile was successfully written.")
+            MSG.append(String.format("\nWrote %1.1f mb in %1.1f seconds.", size, time))
             if (null != RESULT.BACKUP_FILE) {
-                MSG.append(String.format("\nBackup written to %s.", RESULT.BACKUP_FILE));
+                MSG.append(String.format("\nBackup written to %s.", RESULT.BACKUP_FILE))
             }
             if (RESULT.ESS.hasCosave()) {
-                MSG.append(String.format("\n%s co-save was copied.", RESULT.GAME.COSAVE_EXT.toUpperCase()));
+                MSG.append(String.format("\n%s co-save was copied.", RESULT.GAME.COSAVE_EXT.toUpperCase()))
             }
-
-            final String TITLE = "Save Written";
-            JOptionPane.showMessageDialog(this.WINDOW, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
-            this.WINDOW.resetTitle(this.SAVEFILE);
-
-            if (this.DOAFTER != null) {
-                SwingUtilities.invokeLater(DOAFTER);
+            val TITLE = "Save Written"
+            JOptionPane.showMessageDialog(WINDOW, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
+            WINDOW.resetTitle(SAVEFILE)
+            if (DOAFTER != null) {
+                SwingUtilities.invokeLater(DOAFTER)
             }
-            
-            return this.SAVE;
-
-        } catch (IOException ex) {
-            final String MSG = String.format("Error while writing file \"%s\".\n%s", this.SAVEFILE.getFileName(), ex.getMessage());
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(this.WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE);
-            return null;
-
-        } catch (Exception | Error ex) {
-            final String MSG = String.format("Error while writing file \"%s\".\n%s", this.SAVEFILE.getFileName(), ex.getMessage());
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(this.WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE);
-            return null;
-
+            SAVE
+        } catch (ex: Exception) {
+            val MSG = String.format("Error while writing file \"%s\".\n%s", SAVEFILE.fileName, ex.message)
+            LOG.log(Level.SEVERE, MSG, ex)
+            JOptionPane.showMessageDialog(WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE)
+            null
+        } catch (ex: Error) {
+            val MSG = String.format("Error while writing file \"%s\".\n%s", SAVEFILE.fileName, ex.message)
+            LOG.log(Level.SEVERE, MSG, ex)
+            JOptionPane.showMessageDialog(WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE)
+            null
         } finally {
-            this.WINDOW.removeWindowListener(this.LISTENER);
-            this.WINDOW.getProgressIndicator().stop();
+            WINDOW.removeWindowListener(LISTENER)
+            WINDOW.progressIndicator.stop()
         }
     }
 
-    final private Path SAVEFILE;
-    final private SaveWindow WINDOW;
-    final private ESS SAVE;
-    final private Runnable DOAFTER;
-    
-    static final private Logger LOG = Logger.getLogger(Saver.class.getCanonicalName());
-
-    final private WindowAdapter LISTENER = new WindowAdapter() {
-        @Override
-        public void windowClosing(WindowEvent e) {
-            if (!isDone()) {
-                cancel(true);
+    private val SAVEFILE: Path = Objects.requireNonNull(saveFile, "The saveFile field must not be null.")
+    private val WINDOW: SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
+    private val SAVE: ESS = Objects.requireNonNull(save, "The save field must not be null.")!!
+    private val DOAFTER: Runnable? = doAfter
+    private val LISTENER: WindowAdapter = object : WindowAdapter() {
+        override fun windowClosing(e: WindowEvent) {
+            if (!isDone) {
+                cancel(true)
             }
         }
-    };
+    }
+
+    companion object {
+        private val LOG = Logger.getLogger(Saver::class.java.canonicalName)
+    }
+
 }

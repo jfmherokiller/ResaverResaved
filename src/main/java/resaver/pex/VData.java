@@ -481,7 +481,7 @@ abstract public class VData {
     /**
      * VData that stores a "term", for disassembly purposes.
      */
-    static class Term extends VData {
+    public static class Term extends VData {
 
         public Term(String val) {
             this.VALUE = Objects.requireNonNull(val);

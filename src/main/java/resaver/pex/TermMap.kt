@@ -13,24 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
+
 
 /**
  *
  * @author Mark
  */
-public class TermMap extends java.util.HashMap<VData.ID, VData.Term> implements Cloneable {
-    
-    public TermMap() {
-        
-    }
-    
-    public TermMap(TermMap o) {
-        super(o);
-    }
-    
-    @Override
-    public TermMap clone() {
-        return new TermMap(this);
+class TermMap : HashMap<VData.ID, VData.Term>, Cloneable {
+    constructor() {}
+    constructor(o: TermMap) : super(o) {}
+
+    override fun clone(): TermMap {
+        return TermMap(this)
     }
 }

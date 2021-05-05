@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.Element
 
 /**
  * Designates an element of the papyrus section of a savegame.
  *
  * @author Mark Fairchild
  */
-public interface PapyrusElement extends resaver.ess.Element {
-
-}
+interface PapyrusElement : Element

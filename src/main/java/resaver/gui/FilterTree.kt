@@ -13,330 +13,251 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import javax.swing.*;
-import javax.swing.tree.*;
-import resaver.ess.*;
-import resaver.ess.papyrus.*;
-import resaver.gui.FilterTreeModel.Node;
+import resaver.ess.*
+import resaver.ess.papyrus.ActiveScript
+import resaver.ess.papyrus.ArrayInfo
+import resaver.ess.papyrus.StackFrame
+import resaver.ess.papyrus.Variable
+import java.awt.event.ActionEvent
+import java.awt.event.KeyEvent
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
+import java.util.function.Consumer
+import java.util.function.Predicate
+import javax.swing.*
+import javax.swing.tree.TreePath
+import kotlin.streams.toList
 
 /**
  * A JTree that supports filtering.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class FilterTree extends JTree {
-
-    /**
-     * Creates a new <code>FilterTree</code>.
-     */
-    public FilterTree() {
-        super(new FilterTreeModel());
-        this.deleteHandler = null;
-        this.deleteFormsHandler = null;
-        this.deleteInstancesHandler = null;
-        this.purgeHandler = null;
-        this.editHandler = null;
-        this.MI_PURGE = new JMenuItem("Purge (1 plugin)", KeyEvent.VK_P);
-        this.MI_PURGES = new JMenuItem("Purge (%d plugins)", KeyEvent.VK_P);
-        this.MI_DELETE = new JMenuItem("Delete", KeyEvent.VK_D);
-        this.MI_FILTER = new JMenuItem("Set filter for this plugin", KeyEvent.VK_F);
-        this.MI_DELETE_FORMS = new JMenuItem("Delete plugin changeforms", KeyEvent.VK_C);
-        this.MI_DELETE_INSTANCES = new JMenuItem("Delete plugin script instances", KeyEvent.VK_S);
-        this.MI_ZERO_THREAD = new JMenuItem("Terminate", KeyEvent.VK_Z);
-        this.MI_FIND_OWNER = new JMenuItem("Find owner", KeyEvent.VK_F);
-        this.MI_CLEANSE_FLST = new JMenuItem("Cleanse Formlist", KeyEvent.VK_C);
-        this.MI_COMPRESS_UNCOMPRESSED = new JRadioButtonMenuItem("No compression");
-        this.MI_COMPRESS_ZLIB = new JRadioButtonMenuItem("ZLib compression");
-        this.MI_COMPRESS_LZ4 = new JRadioButtonMenuItem("LZ4 compression");
-        this.TREE_POPUP_MENU = new JPopupMenu();
-        this.PLUGIN_POPUP_MENU = new JPopupMenu();
-        this.COMPRESSION_POPUP_MENU = new JPopupMenu();
-        this.COMPRESSION_GROUP = new ButtonGroup();
-        this.initComponents();
-    }
-
+class FilterTree : JTree(FilterTreeModel()) {
     /**
      * Initialize the swing and AWT components.
      */
-    private void initComponents() {
-        this.setLargeModel(true);
-        this.setRootVisible(true);
-        this.setShowsRootHandles(true);
-
-        this.TREE_POPUP_MENU.add(this.MI_DELETE);
-        this.TREE_POPUP_MENU.add(this.MI_ZERO_THREAD);
-        this.TREE_POPUP_MENU.add(this.MI_FIND_OWNER);
-        this.TREE_POPUP_MENU.add(this.MI_CLEANSE_FLST);
-        this.TREE_POPUP_MENU.add(this.MI_PURGES);
-        this.PLUGIN_POPUP_MENU.add(this.MI_PURGE);
-        this.PLUGIN_POPUP_MENU.add(this.MI_FILTER);
-        this.PLUGIN_POPUP_MENU.add(this.MI_DELETE_FORMS);
-        this.PLUGIN_POPUP_MENU.add(this.MI_DELETE_INSTANCES);
-
-        this.COMPRESSION_POPUP_MENU.add(this.MI_COMPRESS_UNCOMPRESSED);
-        this.COMPRESSION_POPUP_MENU.add(this.MI_COMPRESS_ZLIB);
-        this.COMPRESSION_POPUP_MENU.add(this.MI_COMPRESS_LZ4);
-
-        COMPRESSION_GROUP.add(this.MI_COMPRESS_UNCOMPRESSED);
-        COMPRESSION_GROUP.add(this.MI_COMPRESS_ZLIB);
-        COMPRESSION_GROUP.add(this.MI_COMPRESS_LZ4);
-
-        this.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteSelected");
-        this.getActionMap().put("deleteSelected", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent evt) {
-                deleteNodes();
+    private fun initComponents() {
+        this.isLargeModel = true
+        this.isRootVisible = true
+        setShowsRootHandles(true)
+        TREE_POPUP_MENU.add(MI_DELETE)
+        TREE_POPUP_MENU.add(MI_ZERO_THREAD)
+        TREE_POPUP_MENU.add(MI_FIND_OWNER)
+        TREE_POPUP_MENU.add(MI_CLEANSE_FLST)
+        TREE_POPUP_MENU.add(MI_PURGES)
+        PLUGIN_POPUP_MENU.add(MI_PURGE)
+        PLUGIN_POPUP_MENU.add(MI_FILTER)
+        PLUGIN_POPUP_MENU.add(MI_DELETE_FORMS)
+        PLUGIN_POPUP_MENU.add(MI_DELETE_INSTANCES)
+        COMPRESSION_POPUP_MENU.add(MI_COMPRESS_UNCOMPRESSED)
+        COMPRESSION_POPUP_MENU.add(MI_COMPRESS_ZLIB)
+        COMPRESSION_POPUP_MENU.add(MI_COMPRESS_LZ4)
+        COMPRESSION_GROUP.add(MI_COMPRESS_UNCOMPRESSED)
+        COMPRESSION_GROUP.add(MI_COMPRESS_ZLIB)
+        COMPRESSION_GROUP.add(MI_COMPRESS_LZ4)
+        this.inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteSelected")
+        actionMap.put("deleteSelected", object : AbstractAction() {
+            override fun actionPerformed(evt: ActionEvent) {
+                deleteNodes()
             }
-        });
-
-        this.MI_DELETE.addActionListener(e -> deleteNodes());
-
-        this.MI_FILTER.addActionListener(e -> {
-            if (null != this.pluginFilterHandler) {
-                Plugin plugin = (Plugin) ((Node) getSelectionPath().getLastPathComponent()).getElement();
-                this.pluginFilterHandler.accept(plugin);
+        })
+        MI_DELETE.addActionListener { e: ActionEvent? -> deleteNodes() }
+        MI_FILTER.addActionListener { e: ActionEvent? ->
+            if (null != pluginFilterHandler) {
+                val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
+                pluginFilterHandler!!.accept(plugin)
             }
-        });
-
-        this.MI_PURGE.addActionListener(e -> {
-            Plugin plugin = (Plugin) ((Node) getSelectionPath().getLastPathComponent()).getElement();
-            if (null != this.purgeHandler) {
-                this.purgeHandler.accept(Collections.singleton(plugin));
+        }
+        MI_PURGE.addActionListener { e: ActionEvent? ->
+            val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
+            if (null != purgeHandler) {
+                purgeHandler!!.accept(setOf(plugin))
             }
-        });
-
-        this.MI_PURGES.addActionListener(e -> {
-            if (null != this.purgeHandler) {
-                final TreePath[] PATHS = getSelectionPaths();
-                if (null == PATHS || PATHS.length == 0) {
-                    return;
+        }
+        MI_PURGES.addActionListener { e: ActionEvent? ->
+            if (null != purgeHandler) {
+                val PATHS = selectionPaths
+                if (null == PATHS || PATHS.isEmpty()) {
+                    return@addActionListener
                 }
-
-                final Map<Element, Node> ELEMENTS = getModel().parsePaths(PATHS);
-                final List<Plugin> PLUGINS = ELEMENTS.keySet()
-                        .stream()
-                        .filter(v -> v instanceof Plugin)
-                        .map(v -> (Plugin) v)
-                        .collect(Collectors.toList());
-                this.purgeHandler.accept(PLUGINS);
+                val ELEMENTS = model.parsePaths(PATHS)
+                val PLUGINS: List<Plugin> = ELEMENTS.keys
+                    .stream()
+                    .filter { v: Element? -> v is Plugin }
+                    .map { v: Element? -> v as Plugin? }
+                    .toList().filterNotNull()
+                purgeHandler!!.accept(PLUGINS)
             }
-        });
-
-        this.MI_DELETE_FORMS.addActionListener(e -> {
-            Plugin plugin = (Plugin) ((Node) getSelectionPath().getLastPathComponent()).getElement();
-            if (null != this.deleteFormsHandler) {
-                this.deleteFormsHandler.accept(plugin);
+        }
+        MI_DELETE_FORMS.addActionListener { e: ActionEvent? ->
+            val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
+            if (null != deleteFormsHandler) {
+                deleteFormsHandler!!.accept(plugin)
             }
-        });
-
-        this.MI_DELETE_INSTANCES.addActionListener(e -> {
-            Plugin plugin = (Plugin) ((Node) getSelectionPath().getLastPathComponent()).getElement();
-            if (null != this.deleteInstancesHandler) {
-                this.deleteInstancesHandler.accept(plugin);
+        }
+        MI_DELETE_INSTANCES.addActionListener { e: ActionEvent? ->
+            val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
+            if (null != deleteInstancesHandler) {
+                deleteInstancesHandler!!.accept(plugin)
             }
-        });
-
-        this.MI_ZERO_THREAD.addActionListener(e -> {
-            if (null != this.zeroThreadHandler) {
-                final TreePath[] PATHS = getSelectionPaths();
-                if (null == PATHS || PATHS.length == 0) {
-                    return;
+        }
+        MI_ZERO_THREAD.addActionListener { e: ActionEvent? ->
+            if (null != zeroThreadHandler) {
+                val PATHS = selectionPaths
+                if (null == PATHS || PATHS.isEmpty()) {
+                    return@addActionListener
                 }
-
-                final Map<Element, Node> ELEMENTS = getModel().parsePaths(PATHS);
-                final List<ActiveScript> THREADS = ELEMENTS.keySet()
-                        .stream()
-                        .filter(ESS.THREAD)
-                        .map(v -> (ActiveScript) v)
-                        .collect(Collectors.toList());
-                this.zeroThreadHandler.accept(THREADS);
+                val ELEMENTS = model.parsePaths(PATHS)
+                val THREADS: List<ActiveScript> = ELEMENTS.keys
+                    .stream()
+                    .filter(ESS.THREAD)
+                    .map { v: Element? -> v as ActiveScript? }
+                    .toList().filterNotNull()
+                zeroThreadHandler!!.accept(THREADS)
             }
-        });
-
-        this.MI_FIND_OWNER.addActionListener(e -> {
-            Element element = ((Node) getSelectionPath().getLastPathComponent()).getElement();
-            if (null != this.findHandler) {
-                if (element instanceof ActiveScript) {
-                    ActiveScript script = (ActiveScript) element;
-                    if (null != script.getInstance()) {
-                        this.findHandler.accept(script.getInstance());
+        }
+        MI_FIND_OWNER.addActionListener { e: ActionEvent? ->
+            val element = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element
+            if (null != findHandler) {
+                if (element is ActiveScript) {
+                    val script = element
+                    if (null != script.instance) {
+                        findHandler!!.accept(script.instance)
                     }
-                } else if (element instanceof StackFrame) {
-                    StackFrame frame = (StackFrame) element;
-                    Variable owner = frame.getOwner();
-                    if (owner instanceof Variable.Ref) {
-                        Variable.Ref ref = (Variable.Ref) frame.getOwner();
-                        this.findHandler.accept(ref.getReferent());
+                } else if (element is StackFrame) {
+                    val frame = element
+                    val owner = frame.owner
+                    if (owner is Variable.Ref) {
+                        val ref = frame.owner as Variable.Ref?
+                        findHandler!!.accept(ref!!.referent)
                     }
-                } else if (element instanceof ArrayInfo) {
-                    ArrayInfo array = (ArrayInfo) element;
-                    if (null != array.getHolder()) {
-                        this.findHandler.accept(array.getHolder());
+                } else if (element is ArrayInfo) {
+                    val array = element
+                    if (null != array.holder) {
+                        findHandler!!.accept(array.holder)
                     }
-
                 }
             }
-
-        });
-
-        this.MI_CLEANSE_FLST.addActionListener(e -> {
-            ChangeForm form = (ChangeForm) ((Node) getSelectionPath().getLastPathComponent()).getElement();
-            /*
-            ChangeFormFLST flst = (ChangeFormFLST) form.getData();
-            if (null != this.cleanFLSTHandler) {
-                this.cleanFLSTHandler.accept(flst);
-            }*/
-        });
-
-        this.MI_COMPRESS_UNCOMPRESSED.addActionListener(e -> {
-            if (this.compressionHandler != null) {
-                this.compressionHandler.accept(CompressionType.UNCOMPRESSED);
+        }
+        MI_CLEANSE_FLST.addActionListener { e: ActionEvent? ->
+            val form = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as ChangeForm
+        }
+        MI_COMPRESS_UNCOMPRESSED.addActionListener { e: ActionEvent? ->
+            if (compressionHandler != null) {
+                compressionHandler!!.accept(CompressionType.UNCOMPRESSED)
             }
-        });
-        this.MI_COMPRESS_ZLIB.addActionListener(e -> {
-            if (this.compressionHandler != null) {
-                this.compressionHandler.accept(CompressionType.ZLIB);
+        }
+        MI_COMPRESS_ZLIB.addActionListener { e: ActionEvent? ->
+            if (compressionHandler != null) {
+                compressionHandler!!.accept(CompressionType.ZLIB)
             }
-        });
-        this.MI_COMPRESS_LZ4.addActionListener(e -> {
-            if (this.compressionHandler != null) {
-                this.compressionHandler.accept(CompressionType.LZ4);
+        }
+        MI_COMPRESS_LZ4.addActionListener { e: ActionEvent? ->
+            if (compressionHandler != null) {
+                compressionHandler!!.accept(CompressionType.LZ4)
             }
-        });
-
-        this.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseReleased(MouseEvent evt) {
-                if (evt.isPopupTrigger()) {
-                    int x = evt.getPoint().x;
-                    int y = evt.getPoint().y;
-
-                    TreePath path = getClosestPathForLocation(x, y);
-                    TreePath[] paths = getSelectionPaths();
-
-                    if (!Arrays.asList(paths).contains(path)) {
-                        setSelectionPath(path);
-                        paths = getSelectionPaths();
-                    }
-
-                    final Map<Element, Node> ELEMENTS = getModel().parsePaths(paths);
-
-                    if (ELEMENTS.size() == 1) {
-                        final Element ELEMENT = ELEMENTS.keySet().iterator().next();
-
-                        if (ELEMENT instanceof ESS) {
-                            final ESS ESS = (ESS) ELEMENT;
-                            if (ESS.supportsCompression()) {
-                                switch (ESS.getHeader().getCompression()) {
-                                    case UNCOMPRESSED:
-                                        MI_COMPRESS_UNCOMPRESSED.setSelected(true);
-                                        break;
-                                    case ZLIB:
-                                        MI_COMPRESS_ZLIB.setSelected(true);
-                                        break;
-                                    case LZ4:
-                                        MI_COMPRESS_LZ4.setSelected(true);
-                                        break;
-                                }
-                                COMPRESSION_POPUP_MENU.show(evt.getComponent(), evt.getX(), evt.getY());
-                            }
-                        } else if (ELEMENT instanceof GlobalVariable) {
-                            if (null != editHandler) {
-                                editHandler.accept(ELEMENT);
-                            }
-
-                        } else if (ELEMENT instanceof Plugin) {
-                            PLUGIN_POPUP_MENU.show(evt.getComponent(), evt.getX(), evt.getY());
-
-                        } else if (ESS.DELETABLE.test(ELEMENT) || ESS.THREAD.test(ELEMENT) || ESS.OWNABLE.test(ELEMENT)) {
-                            MI_DELETE.setText("Delete (1 element)");
-                            MI_DELETE.setVisible(ESS.DELETABLE.test(ELEMENT));
-                            MI_ZERO_THREAD.setVisible(ESS.THREAD.test(ELEMENT));
-                            MI_FIND_OWNER.setVisible(ESS.OWNABLE.test(ELEMENT));
-                            //MI_CLEANSE_FLST.setVisible(ELEMENT instanceof ChangeForm && ((ChangeForm) ELEMENT).getData() instanceof ChangeFormFLST);
-                            MI_CLEANSE_FLST.setVisible(false);
-                            TREE_POPUP_MENU.show(evt.getComponent(), evt.getX(), evt.getY());
+        }
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseReleased(evt: MouseEvent) {
+                if (evt.isPopupTrigger) {
+                    val x = evt.point.x
+                    val y = evt.point.y
+                    val path = getClosestPathForLocation(x, y)
+                    var paths = selectionPaths?.filterNotNull()
+                    if (paths != null) {
+                        if (!listOf(*paths.toTypedArray()).contains(path)) {
+                            selectionPath = path
+                            paths = selectionPaths?.toList()
                         }
-
-                    } else if (ELEMENTS.size() > 1) {
-
-                        MI_FIND_OWNER.setVisible(false);
-
-                        int purgeable = (int) ELEMENTS.keySet().stream().filter(ESS.PURGEABLE).count();
-                        MI_PURGES.setEnabled(purgeable > 0);
-                        MI_PURGES.setText(String.format("Purge (%d plugins)", purgeable));
-
-                        int deletable = (int) ELEMENTS.keySet().stream().filter(ESS.DELETABLE).count();
-                        MI_DELETE.setEnabled(deletable > 0);
-                        MI_DELETE.setText(String.format("Delete (%d elements)", deletable));
-
-                        int threads = (int) ELEMENTS.keySet().stream().filter(ESS.THREAD).count();
-                        MI_ZERO_THREAD.setVisible(threads > 0);
-
-                        TREE_POPUP_MENU.show(evt.getComponent(), evt.getX(), evt.getY());
+                    }
+                    val ELEMENTS = model.parsePaths(paths?.toTypedArray() ?: emptyArray())
+                    if (ELEMENTS.size == 1) {
+                        val ELEMENT = ELEMENTS.keys.iterator().next()
+                        if (ELEMENT is ESS) {
+                            val ESS = ELEMENT
+                            if (ESS.supportsCompression()) {
+                                when (ESS.header.getCompression()) {
+                                    CompressionType.UNCOMPRESSED -> MI_COMPRESS_UNCOMPRESSED.isSelected = true
+                                    CompressionType.ZLIB -> MI_COMPRESS_ZLIB.isSelected = true
+                                    CompressionType.LZ4 -> MI_COMPRESS_LZ4.isSelected = true
+                                }
+                                COMPRESSION_POPUP_MENU.show(evt.component, evt.x, evt.y)
+                            }
+                        } else if (ELEMENT is GlobalVariable) {
+                            if (null != editHandler) {
+                                editHandler!!.accept(ELEMENT)
+                            }
+                        } else if (ELEMENT is Plugin) {
+                            PLUGIN_POPUP_MENU.show(evt.component, evt.x, evt.y)
+                        } else if (ESS.DELETABLE.test(ELEMENT) || ESS.THREAD.test(ELEMENT) || ESS.OWNABLE.test(ELEMENT)) {
+                            MI_DELETE.text = "Delete (1 element)"
+                            MI_DELETE.isVisible = ESS.DELETABLE.test(ELEMENT)
+                            MI_ZERO_THREAD.isVisible = ESS.THREAD.test(ELEMENT)
+                            MI_FIND_OWNER.isVisible = ESS.OWNABLE.test(ELEMENT)
+                            //MI_CLEANSE_FLST.setVisible(ELEMENT instanceof ChangeForm && ((ChangeForm) ELEMENT).getData() instanceof ChangeFormFLST);
+                            MI_CLEANSE_FLST.isVisible = false
+                            TREE_POPUP_MENU.show(evt.component, evt.x, evt.y)
+                        }
+                    } else if (ELEMENTS.size > 1) {
+                        MI_FIND_OWNER.isVisible = false
+                        val purgeable = ELEMENTS.keys.stream().filter(ESS.PURGEABLE).count().toInt()
+                        MI_PURGES.isEnabled = purgeable > 0
+                        MI_PURGES.text = String.format("Purge (%d plugins)", purgeable)
+                        val deletable = ELEMENTS.keys.stream().filter(ESS.DELETABLE).count().toInt()
+                        MI_DELETE.isEnabled = deletable > 0
+                        MI_DELETE.text = String.format("Delete (%d elements)", deletable)
+                        val threads = ELEMENTS.keys.stream().filter(ESS.THREAD).count().toInt()
+                        MI_ZERO_THREAD.isVisible = threads > 0
+                        TREE_POPUP_MENU.show(evt.component, evt.x, evt.y)
                     }
                 }
             }
-        });
+        })
     }
 
     /**
-     * Clears the <code>ESS</code>.
+     * Clears the `ESS`.
      */
-    public void clearESS() {
-        this.setModel(new FilterTreeModel());
+    fun clearESS() {
+        this.model = FilterTreeModel()
     }
 
     /**
-     * Uses an <code>ESS</code> to create the tree's data model.
+     * Uses an `ESS` to create the tree's data model.
      *
-     * @param ess The <code>ESS</code>.
-     * @param model A <code>FilterTreeModel</code>.
+     * @param ess The `ESS`.
+     * @param model A `FilterTreeModel`.
      * @param filter An optional setFilter.
-     *
      */
-    public void setESS(ESS ess, FilterTreeModel model, Predicate<Node> filter) {
-        final TreePath[] PATHS = this.getSelectionPaths();
-
+    fun setESS(ess: ESS?, model: FilterTreeModel?, filter: Predicate<FilterTreeModel.Node?>?) {
+        val PATHS = this.selectionPaths
         if (null != filter) {
-            model.setFilter(filter);
+            model!!.setFilter(filter)
         }
-
         if (null != model) {
-            this.setModel(model);
+            this.model = model
         }
-
         if (null != PATHS) {
-            for (int i = 0; i < PATHS.length; i++) {
-                PATHS[i] = this.getModel().rebuildPath(PATHS[i]);
+            for (i in PATHS.indices) {
+                PATHS[i] = model?.rebuildPath(PATHS[i])
             }
-
-            this.setSelectionPaths(PATHS);
+            this.selectionPaths = PATHS
         }
     }
 
     /**
-     * Searches for the <code>Node</code> that represents a specified
-     * <code>Element</code> and returns it.
+     * Searches for the `Node` that represents a specified
+     * `Element` and returns it.
      *
-     * @param element The <code>Element</code> to find.
-     * @return The corresponding <code>Node</code> or null if the
-     * <code>Element</code> was not found.
+     * @param element The `Element` to find.
+     * @return The corresponding `Node` or null if the
+     * `Element` was not found.
      */
-    public TreePath findPath(Element element) {
-        Objects.requireNonNull(element);
-        return this.getModel().findPath(element);
+    fun findPath(element: Element?): TreePath {
+        return this.model.findPath(element)
     }
 
     /**
@@ -344,8 +265,8 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new delete handler.
      */
-    public void setDeleteHandler(Consumer<Map<Element, Node>> newHandler) {
-        this.deleteHandler = newHandler;
+    fun setDeleteHandler(newHandler: Consumer<Map<Element, FilterTreeModel.Node>>?) {
+        deleteHandler = newHandler
     }
 
     /**
@@ -353,8 +274,8 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new edit handler.
      */
-    public void setEditHandler(Consumer<Element> newHandler) {
-        this.editHandler = newHandler;
+    fun setEditHandler(newHandler: Consumer<Element>?) {
+        editHandler = newHandler
     }
 
     /**
@@ -362,8 +283,8 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new delete handler.
      */
-    public void setFilterPluginsHandler(Consumer<Plugin> newHandler) {
-        this.pluginFilterHandler = newHandler;
+    fun setFilterPluginsHandler(newHandler: Consumer<Plugin>?) {
+        pluginFilterHandler = newHandler
     }
 
     /**
@@ -371,8 +292,8 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new delete handler.
      */
-    public void setPurgeHandler(Consumer<Collection<Plugin>> newHandler) {
-        this.purgeHandler = newHandler;
+    fun setPurgeHandler(newHandler: Consumer<Collection<Plugin>>?) {
+        purgeHandler = newHandler
     }
 
     /**
@@ -380,8 +301,8 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new delete handler.
      */
-    public void setDeleteFormsHandler(Consumer<Plugin> newHandler) {
-        this.deleteFormsHandler = newHandler;
+    fun setDeleteFormsHandler(newHandler: Consumer<Plugin>?) {
+        deleteFormsHandler = newHandler
     }
 
     /**
@@ -389,8 +310,8 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new delete handler.
      */
-    public void setDeleteInstancesHandler(Consumer<Plugin> newHandler) {
-        this.deleteInstancesHandler = newHandler;
+    fun setDeleteInstancesHandler(newHandler: Consumer<Plugin>?) {
+        deleteInstancesHandler = newHandler
     }
 
     /**
@@ -398,8 +319,8 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new handler.
      */
-    public void setZeroThreadHandler(Consumer<List<ActiveScript>> newHandler) {
-        this.zeroThreadHandler = newHandler;
+    fun setZeroThreadHandler(newHandler: Consumer<List<ActiveScript>>?) {
+        zeroThreadHandler = newHandler
     }
 
     /**
@@ -407,8 +328,8 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new handler.
      */
-    public void setFindHandler(Consumer<Element> newHandler) {
-        this.findHandler = newHandler;
+    fun setFindHandler(newHandler: Consumer<Element>?) {
+        findHandler = newHandler
     }
 
     /**
@@ -416,65 +337,67 @@ final public class FilterTree extends JTree {
      *
      * @param newHandler The new handler.
      */
-    public void setCleanseFLSTHandler(Consumer<ChangeFormFLST> newHandler) {
-    }
+    fun setCleanseFLSTHandler(newHandler: Consumer<ChangeFormFLST?>?) {}
 
     /**
      * Sets the compression type handler.
      *
      * @param newHandler The new compression type handler.
      */
-    public void setCompressionHandler(Consumer<CompressionType> newHandler) {
-        this.compressionHandler = newHandler;
+    fun setCompressionHandler(newHandler: Consumer<CompressionType>?) {
+        compressionHandler = newHandler
     }
 
     /**
      * Deletes a node by submitting it back to the app.
      */
-    private void deleteNodes() {
-        if (null == this.deleteHandler) {
-            return;
+    private fun deleteNodes() {
+        if (null == deleteHandler) {
+            return
         }
-
-        final TreePath[] PATHS = getSelectionPaths();
-        if (null == PATHS || PATHS.length == 0) {
-            return;
+        val PATHS = selectionPaths
+        if (null == PATHS || PATHS.isEmpty()) {
+            return
         }
-
-        final Map<Element, Node> ELEMENTS = getModel().parsePaths(PATHS);
-        this.deleteHandler.accept(ELEMENTS);
+        val ELEMENTS = model.parsePaths(PATHS)
+        deleteHandler!!.accept(ELEMENTS)
     }
 
-    @Override
-    public FilterTreeModel getModel() {
-        return (FilterTreeModel) super.getModel();
+    override fun getModel(): FilterTreeModel {
+        return super.getModel() as FilterTreeModel
     }
 
-    final private JMenuItem MI_PURGE;
-    final private JMenuItem MI_PURGES;
-    final private JMenuItem MI_DELETE;
-    final private JMenuItem MI_FILTER;
-    final private JMenuItem MI_DELETE_FORMS;
-    final private JMenuItem MI_DELETE_INSTANCES;
-    final private JMenuItem MI_ZERO_THREAD;
-    final private JMenuItem MI_FIND_OWNER;
-    final private JMenuItem MI_CLEANSE_FLST;
-    final private JRadioButtonMenuItem MI_COMPRESS_UNCOMPRESSED;
-    final private JRadioButtonMenuItem MI_COMPRESS_ZLIB;
-    final private JRadioButtonMenuItem MI_COMPRESS_LZ4;
-    final ButtonGroup COMPRESSION_GROUP;
-    final private JPopupMenu TREE_POPUP_MENU;
-    final private JPopupMenu PLUGIN_POPUP_MENU;
-    final private JPopupMenu COMPRESSION_POPUP_MENU;
-    private Consumer<Map<Element, Node>> deleteHandler;
-    private Consumer<List<ActiveScript>> zeroThreadHandler;
-    private Consumer<Element> editHandler;
-    private Consumer<Plugin> pluginFilterHandler;
-    private Consumer<Plugin> deleteFormsHandler;
-    private Consumer<Plugin> deleteInstancesHandler;
-    private Consumer<Collection<Plugin>> purgeHandler;
-    private Consumer<Element> findHandler;
-    private Consumer<CompressionType> compressionHandler;
+    private val MI_PURGE: JMenuItem = JMenuItem("Purge (1 plugin)", KeyEvent.VK_P)
+    private val MI_PURGES: JMenuItem = JMenuItem("Purge (%d plugins)", KeyEvent.VK_P)
+    private val MI_DELETE: JMenuItem = JMenuItem("Delete", KeyEvent.VK_D)
+    private val MI_FILTER: JMenuItem = JMenuItem("Set filter for this plugin", KeyEvent.VK_F)
+    private val MI_DELETE_FORMS: JMenuItem = JMenuItem("Delete plugin changeforms", KeyEvent.VK_C)
+    private val MI_DELETE_INSTANCES: JMenuItem = JMenuItem("Delete plugin script instances", KeyEvent.VK_S)
+    private val MI_ZERO_THREAD: JMenuItem = JMenuItem("Terminate", KeyEvent.VK_Z)
+    private val MI_FIND_OWNER: JMenuItem = JMenuItem("Find owner", KeyEvent.VK_F)
+    private val MI_CLEANSE_FLST: JMenuItem = JMenuItem("Cleanse Formlist", KeyEvent.VK_C)
+    private val MI_COMPRESS_UNCOMPRESSED: JRadioButtonMenuItem = JRadioButtonMenuItem("No compression")
+    private val MI_COMPRESS_ZLIB: JRadioButtonMenuItem = JRadioButtonMenuItem("ZLib compression")
+    private val MI_COMPRESS_LZ4: JRadioButtonMenuItem = JRadioButtonMenuItem("LZ4 compression")
+    val COMPRESSION_GROUP: ButtonGroup = ButtonGroup()
+    private val TREE_POPUP_MENU: JPopupMenu = JPopupMenu()
+    private val PLUGIN_POPUP_MENU: JPopupMenu = JPopupMenu()
+    private val COMPRESSION_POPUP_MENU: JPopupMenu = JPopupMenu()
+    private var deleteHandler: Consumer<Map<Element, FilterTreeModel.Node>>? =
+        null
+    private var zeroThreadHandler: Consumer<List<ActiveScript>>? = null
+    private var editHandler: Consumer<Element>? = null
+    private var pluginFilterHandler: Consumer<Plugin>? = null
+    private var deleteFormsHandler: Consumer<Plugin>? = null
+    private var deleteInstancesHandler: Consumer<Plugin>? = null
+    private var purgeHandler: Consumer<Collection<Plugin>>? = null
+    private var findHandler: Consumer<Element>? = null
+    private var compressionHandler: Consumer<CompressionType>? = null
 
-
+    /**
+     * Creates a new `FilterTree`.
+     */
+    init {
+        initComponents()
+    }
 }

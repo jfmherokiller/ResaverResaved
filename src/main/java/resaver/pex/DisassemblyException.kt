@@ -13,30 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.lang.Exception
+import java.util.ArrayList
+import kotlin.jvm.JvmOverloads
+import java.util.Objects
+import java.util.Collections
 
 /**
  *
  * @author Mark Fairchild
  */
-final public class DisassemblyException extends Exception {
-
+class DisassemblyException @JvmOverloads constructor(
+    message: String?,
+    partial: List<String> = emptyList(),
+    pdel: Int = 0,
+    cause: Throwable? = null
+) : Exception(message, cause) {
     /**
-     * Creates a new instance of <code>DisassemblyException</code> with a
-     * message, an empty partial disassembly, and no cause.
-     *
-     * @param message
+     * @return The partial disassembly.
      */
-    public DisassemblyException(String message) {
-        this(message, Collections.emptyList(), 0, null);
-    }
+    val partial: List<String> = partial
 
     /**
-     * Creates a new instance of <code>DisassemblyException</code> with a
+     * @return The pointer-delta.
+     */
+    val ptrDelta: Int = pdel
+    /**
+     * Creates a new instance of `DisassemblyException` with a
      * message, a partial disassembly, and a cause.
      *
      * @param message The exception message.
@@ -44,27 +49,4 @@ final public class DisassemblyException extends Exception {
      * @param pdel The point-delta.
      * @param cause
      */
-    public DisassemblyException(String message, List<String> partial, int pdel, Throwable cause) {
-        super(message, cause);
-        Objects.requireNonNull(partial);
-        this.PARTIAL = Collections.unmodifiableList(new java.util.ArrayList<>(partial));
-        this.PDEL = pdel;
-    }
-
-    /**
-     * @return The partial disassembly.
-     */
-    public List<String> getPartial() {
-        return this.PARTIAL;
-    }
-
-    /**
-     * @return The pointer-delta.
-     */
-    public int getPtrDelta()    {
-        return this.PDEL;
-    }
-    
-    final private List<String> PARTIAL;
-    final private int PDEL;
 }

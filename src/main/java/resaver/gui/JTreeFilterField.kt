@@ -13,104 +13,97 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import javax.swing.JTextField;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import mf.Timer;
+import mf.Timer
+import java.util.*
+import javax.swing.JTextField
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
 /**
  *
  * @author Mark Fairchild
  */
-final public class JTreeFilterField extends JTextField {
-
-    /**
-     * Creates a new <code>JTreeFilterField</code>.
-     * 
-     * @param updateFilter Closure to execute a filter update.
-     * @param defaultFilter The filter to begin with.
-     */
-    public JTreeFilterField(Runnable updateFilter, String defaultFilter) {
-        super(defaultFilter, 14);
-        super.setToolTipText("Enter a regular expression for filtering.");
-        this.initComponents(updateFilter);
-        this.FILTERTIMER = new java.util.Timer();
-    }
-    
+class JTreeFilterField(updateFilter: Runnable, defaultFilter: String?) : JTextField(defaultFilter, 14) {
     /**
      * Initialize the swing and AWT components.
      *
      */
-    private void initComponents(Runnable updateFilter) {
-        this.getDocument().addDocumentListener(new DocumentListener() {
-            
-            @Override
-            public void insertUpdate(DocumentEvent evt) {
-                DELAYTRACKER.restart();
-                final java.util.TimerTask FILTERTASK = new java.util.TimerTask() {
-                    @Override
-                    public void run() {
-                        long elaspsed = DELAYTRACKER.getElapsed() / 900000;
+    private fun initComponents(updateFilter: Runnable) {
+        this.document.addDocumentListener(object : DocumentListener {
+            override fun insertUpdate(evt: DocumentEvent) {
+                DELAYTRACKER.restart()
+                val FILTERTASK: TimerTask = object : TimerTask() {
+                    override fun run() {
+                        val elaspsed = DELAYTRACKER.elapsed / 900000
                         if (elaspsed >= DELAY) {
-                            updateFilter.run();
+                            updateFilter.run()
                         }
                     }
-                };
-                FILTERTIMER.schedule(FILTERTASK, DELAY);
+                }
+                FILTERTIMER.schedule(FILTERTASK, DELAY.toLong())
             }
 
-            @Override
-            public void removeUpdate(DocumentEvent evt) {
-                DELAYTRACKER.restart();
-                final java.util.TimerTask FILTERTASK = new java.util.TimerTask() {
-                    @Override
-                    public void run() {
-                        long elaspsed = DELAYTRACKER.getElapsed() / 900000;
+            override fun removeUpdate(evt: DocumentEvent) {
+                DELAYTRACKER.restart()
+                val FILTERTASK: TimerTask = object : TimerTask() {
+                    override fun run() {
+                        val elaspsed = DELAYTRACKER.elapsed / 900000
                         if (elaspsed >= DELAY) {
-                            updateFilter.run();
+                            updateFilter.run()
                         }
                     }
-                };
-                FILTERTIMER.schedule(FILTERTASK, DELAY);
+                }
+                FILTERTIMER.schedule(FILTERTASK, DELAY.toLong())
             }
 
-            @Override
-            public void changedUpdate(DocumentEvent evt) {
-                DELAYTRACKER.restart();
-                final java.util.TimerTask FILTERTASK = new java.util.TimerTask() {
-                    @Override
-                    public void run() {
-                        long elaspsed = DELAYTRACKER.getElapsed() / 900000;
+            override fun changedUpdate(evt: DocumentEvent) {
+                DELAYTRACKER.restart()
+                val FILTERTASK: TimerTask = object : TimerTask() {
+                    override fun run() {
+                        val elaspsed = DELAYTRACKER.elapsed / 900000
                         if (elaspsed >= DELAY) {
-                            updateFilter.run();
+                            updateFilter.run()
                         }
                     }
-                };
-                FILTERTIMER.schedule(FILTERTASK, DELAY);
+                }
+                FILTERTIMER.schedule(FILTERTASK, DELAY.toLong())
             }
-        });        
+        })
     }
-    
+
     /**
      * Ends the update loop.
      */
-    public void terminate() {
-        this.FILTERTIMER.cancel();
-        this.FILTERTIMER.purge();
+    fun terminate() {
+        FILTERTIMER.cancel()
+        FILTERTIMER.purge()
     }
 
-    final private java.util.Timer FILTERTIMER;
-    
-    /**
-     * Milliseconds before the search is updated.
-     */
-    static final public int DELAY = 700;
-    
-    /**
-     * The <code>Timer</code> use to track delays before filter updates.
-     */
-    final private Timer DELAYTRACKER = new mf.Timer("Delayer");
+    private val FILTERTIMER: java.util.Timer
 
+    /**
+     * The `Timer` use to track delays before filter updates.
+     */
+    private val DELAYTRACKER = Timer("Delayer")
+
+    companion object {
+        /**
+         * Milliseconds before the search is updated.
+         */
+        const val DELAY = 700
+    }
+
+    /**
+     * Creates a new `JTreeFilterField`.
+     *
+     * @param updateFilter Closure to execute a filter update.
+     * @param defaultFilter The filter to begin with.
+     */
+    init {
+        super.setToolTipText("Enter a regular expression for filtering.")
+        initComponents(updateFilter)
+        FILTERTIMER = Timer()
+    }
 }

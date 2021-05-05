@@ -13,67 +13,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
-import java.util.Objects;
+import java.util.Objects
 
 /**
  * Describe an IString mapping.
  *
  * This exists solely for convenience, to avoid having to write
- * Map<IString, IString> repeatedly..
+ * Map<IString></IString>, IString> repeatedly..
  *
  * @author Mark
  */
-final public class Scheme extends java.util.HashMap<IString, IString> {
-
+class Scheme : HashMap<IString, IString> {
     /**
      * Creates a new empty Scheme.
      */
-    public Scheme() {
-        super();
-    }
+    constructor() : super() {}
 
     /**
      * Creates a new Scheme containing the contents of an existing sScheme.
      *
      * @param m The existing Scheme whose contents should be copied.
      */
-    public Scheme(java.util.Map<IString, IString> m) {
-        super(m);
+    constructor(m: Map<IString, IString>) : super(m) {}
+
+    /**
+     * @see java.util.HashMap.clone
+     * @return
+     */
+    override fun clone(): Scheme {
+        return super.clone() as Scheme
     }
 
     /**
-     * @see java.util.HashMap#clone()
+     * @see Object.hashCode
      * @return
      */
-    @Override
-    public Scheme clone() {
-        return (Scheme) super.clone();
-    }
-    
-    /**
-     * @see Object#hashCode() 
-     * @return 
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(this);
+    override fun hashCode(): Int {
+        return Objects.hash(this)
         //return o.hashCode();
     }
 
     /**
-     * @see Object#equals(java.lang.Object) 
-     * @param obj
-     * @return 
+     * @see Object.equals
+     * @param other
+     * @return
      */
-    @Override
-    public boolean equals(Object obj) {
-        return Objects.equals(this, obj);        
-    }
-    
-    // This is used to generate an identity hashcode rather than the value
+    override fun equals(other: Any?): Boolean {
+        return this === other
+    } // This is used to generate an identity hashcode rather than the value
     // hashcode that HashMap normally produces.
     //final private Object o = new Object();
-    
 }

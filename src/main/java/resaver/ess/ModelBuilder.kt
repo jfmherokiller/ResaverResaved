@@ -13,337 +13,289 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import resaver.ProgressModel;
-import resaver.ess.papyrus.ActiveScriptMap;
-import resaver.ess.papyrus.ArrayMap;
-import resaver.ess.papyrus.EID;
-import resaver.ess.papyrus.FunctionMessage;
-import resaver.ess.papyrus.OtherData;
-import resaver.ess.papyrus.ScriptInstanceMap;
-import resaver.ess.papyrus.Papyrus;
-import resaver.ess.papyrus.ReferenceMap;
-import resaver.ess.papyrus.ScriptInstance;
-import resaver.ess.papyrus.ScriptMap;
-import resaver.gui.FilterTreeModel;
-import resaver.gui.FilterTreeModel.Node;
-import resaver.ess.papyrus.StringTable;
-import resaver.ess.papyrus.StructMap;
-import resaver.ess.papyrus.StructInstanceMap;
-import resaver.ess.papyrus.SuspendedStackMap;
-import resaver.ess.papyrus.TString;
-import resaver.ess.papyrus.UnbindMap;
-import resaver.gui.FilterTreeModel.RootNode;
-import resaver.gui.FilterTreeModel.ContainerNode;
-import resaver.gui.FilterTreeModel.PluginNode;
-import resaver.gui.FilterTreeModel.ActiveScriptNode;
-import resaver.gui.FilterTreeModel.FunctionMessageNode;
-import resaver.gui.FilterTreeModel.SuspendedStackNode;
+import resaver.IString
+import resaver.ProgressModel
+import resaver.ess.ChangeForm
+import resaver.ess.ModelBuilder
+import resaver.ess.papyrus.*
+import resaver.gui.FilterTreeModel
+import resaver.gui.FilterTreeModel.*
+import java.util.*
+import java.util.concurrent.*
+import java.util.function.Consumer
+import java.util.function.Function
+import java.util.logging.Level
+import java.util.logging.Logger
+import java.util.stream.Collectors
+import kotlin.streams.toList
 
 /**
  *
  * @author Mark
  */
-public class ModelBuilder {
-
+class ModelBuilder(progress: ProgressModel) {
     /**
-     * @param progress
-     */
-    public ModelBuilder(ProgressModel progress) {
-        progress.setMaximum(36);
-        this.MODEL = new FilterTreeModel();
-        this.EXECUTOR = java.util.concurrent.Executors.newFixedThreadPool(2);
-        this.TASKS = java.util.Collections.synchronizedList(new ArrayList<>(15));
-        this.PROGRESS = progress;
-    }
-
-    /**
-     * Add a <code>PluginInfo</code> to the model.
+     * Add a `PluginInfo` to the model.
      *
-     * @param plugins The <code>PluginInfo</code>.
+     * @param plugins The `PluginInfo`.
      */
-    public void addPluginInfo(PluginInfo plugins) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Plugins (full)");
-            NODE.addAll(plugins.getFullPlugins().stream().map(PluginNode::new).collect(Collectors.toList()));
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
-
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Plugins (lite)");
-            NODE.addAll(plugins.getLitePlugins().stream().map(PluginNode::new).collect(Collectors.toList()));
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addPluginInfo(plugins: PluginInfo) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Plugins (full)")
+            NODE.addAll(plugins.fullPlugins.stream().map { element: Plugin? -> PluginNode(element) }.toList())
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Plugins (lite)")
+            NODE.addAll(plugins.litePlugins.stream().map { element: Plugin? -> PluginNode(element) }.toList())
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>GlobalVariableTable</code> to the model.
+     * Add a `GlobalVariableTable` to the model.
      *
-     * @param gvt The <code>GlobalVariableTable</code>.
+     * @param gvt The `GlobalVariableTable`.
      */
-    public void addGlobalVariableTable(GlobalVariableTable gvt) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Global Variables", gvt.getVariables()).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addGlobalVariableTable(gvt: GlobalVariableTable) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Global Variables", gvt.variables).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>StringTable</code> to the model.
+     * Add a `StringTable` to the model.
      *
-     * @param table The <code>StringTable</code>.
+     * @param table The `StringTable`.
      */
-    public void addStringTable(StringTable table) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final Map<Character, List<TString>> DICTIONARY = table.stream()
-                    .collect(Collectors.groupingBy(ALPHABETICAL));
-
-            final List<Node> NODES = DICTIONARY.entrySet().stream()
-                    .map(entry -> new ContainerNode(entry.getKey().toString(), entry.getValue()).sort())
-                    .collect(Collectors.toList());
-
-            final ContainerNode NODE = new ContainerNode("Strings");
-            NODE.addAll(NODES).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addStringTable(table: StringTable) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val DICTIONARY = table.stream()
+                .collect(Collectors.groupingBy(ALPHABETICAL))
+            val NODES: List<Node> = DICTIONARY.entries.stream()
+                .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
+                .collect(Collectors.toList())
+            val NODE = ContainerNode("Strings")
+            NODE.addAll(NODES).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>ScriptMap</code> to the model.
+     * Add a `ScriptMap` to the model.
      *
-     * @param script The <code>ScriptMap</code>.
+     * @param script The `ScriptMap`.
      */
-    public void addScripts(ScriptMap script) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Script Definitions", script.values()).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addScripts(script: ScriptMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Script Definitions", script.values).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>StructMap</code> to the model.
+     * Add a `StructMap` to the model.
      *
-     * @param structs The <code>StructMap</code>.
+     * @param structs The `StructMap`.
      */
-    public void addStructs(StructMap structs) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Struct Definitions", structs.values()).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addStructs(structs: StructMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Struct Definitions", structs.values).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>ReferenceMap</code> to the model.
+     * Add a `ReferenceMap` to the model.
      *
-     * @param references The <code>ReferenceMap</code>.
+     * @param references The `ReferenceMap`.
      */
-    public void addReferences(ReferenceMap references) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("References", references.values()).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addReferences(references: ReferenceMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("References", references.values).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add an <code>ArrayMap</code> to the model.
+     * Add an `ArrayMap` to the model.
      *
-     * @param arrays The <code>ArrayMap</code>.
+     * @param arrays The `ArrayMap`.
      */
-    public void addArrays(ArrayMap arrays) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Arrays", arrays.values()).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addArrays(arrays: ArrayMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Arrays", arrays.values).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>UnbindMap</code> to the model.
+     * Add a `UnbindMap` to the model.
      *
-     * @param unbinds The <code>UnbindMap</code>.
+     * @param unbinds The `UnbindMap`.
      */
-    public void addUnbinds(UnbindMap unbinds) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("QueuedUnbinds", unbinds.values()).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addUnbinds(unbinds: UnbindMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("QueuedUnbinds", unbinds.values).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * @param unknownIDs The <code>EID</code> list.
+     * @param unknownIDs The `EID` list.
      */
-    public void addUnknownIDList(List<EID> unknownIDs) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Unknown ID List", unknownIDs).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addUnknownIDList(unknownIDs: List<EID?>?) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Unknown ID List", unknownIDs).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>GlobalVariableTable</code> to the model.
+     * Add a `GlobalVariableTable` to the model.
      *
-     * @param animations The <code>GlobalVariableTable</code>.
+     * @param animations The `GlobalVariableTable`.
      */
-    public void addAnimations(AnimObjects animations) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Global Variables", animations.getAnimations());
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addAnimations(animations: AnimObjects) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Global Variables", animations.animations)
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>ScriptInstanceMap</code> to the model.
+     * Add a `ScriptInstanceMap` to the model.
      *
-     * @param instances The <code>ScriptInstanceMap</code>.
+     * @param instances The `ScriptInstanceMap`.
      */
-    public void addScriptInstances(ScriptInstanceMap instances) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final Map<Character, List<ScriptInstance>> DICTIONARY = instances.values().stream()
-                    .collect(Collectors.groupingBy(ALPHABETICAL));
-
-            final List<Node> NODES = DICTIONARY.entrySet().stream()
-                    .map(entry -> new ContainerNode(entry.getKey().toString(), entry.getValue()).sort())
-                    .collect(Collectors.toList());
-
-            final ContainerNode NODE = new ContainerNode("Script Instances").addAll(NODES).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addScriptInstances(instances: ScriptInstanceMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val DICTIONARY = instances.values.stream()
+                .collect(Collectors.groupingBy(ALPHABETICAL))
+            val NODES: List<Node> = DICTIONARY.entries.stream()
+                .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
+                .collect(Collectors.toList())
+            val NODE = ContainerNode("Script Instances").addAll(NODES).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>StructInstanceMap</code> to the model.
+     * Add a `StructInstanceMap` to the model.
      *
-     * @param instances The <code>StructInstanceMap</code>.
+     * @param instances The `StructInstanceMap`.
      */
-    public void addStructInstances(StructInstanceMap instances) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Struct Instances", instances.values()).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addStructInstances(instances: StructInstanceMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Struct Instances", instances.values).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a <code>ActiveScriptMap</code> to the model.
+     * Add a `ActiveScriptMap` to the model.
      *
-     * @param threads The <code>ActiveScriptMap</code>.
+     * @param threads The `ActiveScriptMap`.
      */
-    public void addThreads(ActiveScriptMap threads) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Active Scripts");
-            NODE.addAll(threads.values().stream().map(ActiveScriptNode::new).collect(Collectors.toList())).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addThreads(threads: ActiveScriptMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Active Scripts").addAll(threads.values.stream().map { element: ActiveScript? -> ActiveScriptNode(element) }.toList()).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a list of <code>FunctionMessage</code> to the model.
+     * Add a list of `FunctionMessage` to the model.
      *
-     * @param messages The list of <code>FunctionMessage</code>.
+     * @param messages The list of `FunctionMessage`.
      */
-    public void addFunctionMessages(List<FunctionMessage> messages) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Function Messages");
-            NODE.addAll(messages.stream().map(FunctionMessageNode::new).collect(Collectors.toList())).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addFunctionMessages(messages: List<FunctionMessage?>) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Function Messages").addAll(messages.stream().map { element: FunctionMessage? -> FunctionMessageNode(element) }.toList()).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a list of <code>SuspendedStack</code> to the model.
+     * Add a list of `SuspendedStack` to the model.
      *
-     * @param stacks The list of <code>SuspendedStack</code>.
+     * @param stacks The list of `SuspendedStack`.
      */
-    public void addSuspendedStacks1(SuspendedStackMap stacks) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Suspended Stacks 1");
-            NODE.addAll(stacks.values().stream().map(SuspendedStackNode::new).collect(Collectors.toList())).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addSuspendedStacks1(stacks: SuspendedStackMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Suspended Stacks 1").addAll(stacks.values.stream().map { element: SuspendedStack? -> SuspendedStackNode(element) }
+                .toList()).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add a list of <code>SuspendedStack</code> to the model.
+     * Add a list of `SuspendedStack` to the model.
      *
-     * @param stacks The list of <code>SuspendedStack</code>.
+     * @param stacks The list of `SuspendedStack`.
      */
-    public void addSuspendedStacks2(SuspendedStackMap stacks) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final ContainerNode NODE = new ContainerNode("Suspended Stacks 2");
-            NODE.addAll(stacks.values().stream().map(SuspendedStackNode::new).collect(Collectors.toList())).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addSuspendedStacks2(stacks: SuspendedStackMap) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val NODE = ContainerNode("Suspended Stacks 2").addAll(stacks.values.stream().map { element: SuspendedStack? -> SuspendedStackNode(element) }
+                .toList()).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
      *
      * @param changeForms
      */
-    public void addChangeForms(Map<RefID, ChangeForm> changeForms) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final Map<ChangeFormType, List<ChangeForm>> DICTIONARY = changeForms.values().stream().collect(Collectors.groupingBy(ChangeForm::getType));
-
-            final List<Node> NODES = DICTIONARY.entrySet().stream()
-                    .map(entry -> new ContainerNode(entry.getKey().toString(), entry.getValue()).sort())
-                    .collect(Collectors.toList());
-
-            final ContainerNode NODE = new ContainerNode("ChangeForms").addAll(NODES).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+    fun addChangeForms(changeForms: Map<RefID?, ChangeForm?>) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val DICTIONARY: Map<ChangeFormType, List<ChangeForm>> =
+                changeForms.values.stream().toList().filterNotNull().groupBy(ChangeForm::type)
+            val NODES: List<Node> = DICTIONARY.entries.stream()
+                .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
+                .collect(Collectors.toList())
+            val NODE = ContainerNode("ChangeForms").addAll(NODES).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
-     * Add <code>OtherData</code> to the model.
+     * Add `OtherData` to the model.
      *
-     * @param data The <code>OtherData</code>.
+     * @param data The `OtherData`.
      */
-    public void addOtherData(OtherData data) {
-        this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final List<FilterTreeModel.Node> OTHERDATA_NODES = new LinkedList<>();
-
-            if (data != null) {
-                data.getValues().forEach((key, val) -> {
-                    if (val instanceof Element[]) {
-                        Element[] array = (Element[]) val;
-                        OTHERDATA_NODES.add(new ContainerNode(key, Arrays.asList(array)));
-                    }
-                });
+    fun addOtherData(data: OtherData?) {
+        TASKS.add(EXECUTOR.submit(Callable {
+            val OTHERDATA_NODES: MutableList<Node> = LinkedList()
+            data?.values?.forEach { (key: IString?, `val`: Any?) ->
+                if (`val` is Array<*>) {
+                    OTHERDATA_NODES.add(ContainerNode(key, listOf(*`val`) as List<Element?>))
+                }
             }
-
-            final ContainerNode NODE = new ContainerNode("Mystery Arrays").addAll(OTHERDATA_NODES).sort();
-            PROGRESS.modifyValue(1);
-            return NODE;
-        }));
+            val NODE = ContainerNode("Mystery Arrays").addAll(OTHERDATA_NODES).sort()
+            PROGRESS.modifyValue(1)
+            NODE
+        }))
     }
 
     /**
@@ -351,85 +303,90 @@ public class ModelBuilder {
      * @param ess
      * @return
      */
-    public FilterTreeModel finish(ESS ess) {
+    fun finish(ess: ESS?): FilterTreeModel? {
         try {
-            this.EXECUTOR.shutdown();
-            this.EXECUTOR.awaitTermination(2, TimeUnit.MINUTES);
-        } catch (InterruptedException ex) {
-            LOG.log(Level.SEVERE, "Model building was interrupted.", ex);
-            return null;
+            EXECUTOR.shutdown()
+            EXECUTOR.awaitTermination(2, TimeUnit.MINUTES)
+        } catch (ex: InterruptedException) {
+            LOG.log(Level.SEVERE, "Model building was interrupted.", ex)
+            return null
         }
-
-        if (!this.TASKS.stream().allMatch(Future::isDone)) {
-            LOG.severe("Some tasks didn't finish.");
-            return null;
+        if (!TASKS.stream().allMatch { obj: Future<Node> -> obj.isDone }) {
+            LOG.severe("Some tasks didn't finish.")
+            return null
         }
 
         // Populate the root elementNode.
-        final ArrayList<FilterTreeModel.Node> ROOT_NODES = new ArrayList<>(15);
-
-        this.TASKS.forEach(task -> {
+        val ROOT_NODES = ArrayList<Node>(15)
+        TASKS.forEach(Consumer { task: Future<Node> ->
             try {
-                final Node NODE = task.get();
-                ROOT_NODES.add(NODE);
-                this.PROGRESS.modifyValue(1);
-            } catch (InterruptedException | ExecutionException ex) {
-                throw new IllegalStateException("ModelBuilding failed.", ex);
+                val NODE = task.get()
+                ROOT_NODES.add(NODE)
+                PROGRESS.modifyValue(1)
+            } catch (ex: InterruptedException) {
+                throw IllegalStateException("ModelBuilding failed.", ex)
+            } catch (ex: ExecutionException) {
+                throw IllegalStateException("ModelBuilding failed.", ex)
             }
-        });
-
-        final FilterTreeModel.Node ROOT = new RootNode(ess, ROOT_NODES);
-        MODEL.setRoot(ROOT);
-        return MODEL;
+        })
+        val ROOT: Node = FilterTreeModel.RootNode(ess, ROOT_NODES)
+        MODEL.root = ROOT
+        return MODEL
     }
 
-    static public FilterTreeModel createModel(ESS ess, ProgressModel progress) {
-        final ModelBuilder MB = new ModelBuilder(progress);
-        Papyrus papyrus = ess.getPapyrus();
+    private val MODEL: FilterTreeModel
+    private val EXECUTOR: ExecutorService
+    private val TASKS: MutableList<Future<Node>>
+    private val PROGRESS: ProgressModel
 
-        MB.addPluginInfo(ess.getPluginInfo());
-        MB.addGlobalVariableTable(ess.getGlobals());
-
-        MB.addChangeForms(ess.getChangeForms());
-        MB.addStringTable(papyrus.getStringTable());
-        MB.addScripts(papyrus.getScripts());
-
-        if (ess.isFO4()) {
-            MB.addStructs(papyrus.getStructs());
+    companion object {
+        fun createModel(ess: ESS, progress: ProgressModel): FilterTreeModel? {
+            val MB = ModelBuilder(progress)
+            val papyrus = ess.papyrus
+            MB.addPluginInfo(ess.pluginInfo)
+            MB.addGlobalVariableTable(ess.globals)
+            MB.addChangeForms(ess.changeForms)
+            MB.addStringTable(papyrus.stringTable)
+            MB.addScripts(papyrus.scripts)
+            if (ess.isFO4) {
+                MB.addStructs(papyrus.structs)
+            }
+            MB.addScriptInstances(papyrus.scriptInstances)
+            if (ess.isFO4) {
+                MB.addStructInstances(papyrus.structInstances)
+            }
+            MB.addReferences(papyrus.references)
+            MB.addArrays(papyrus.arrays)
+            MB.addThreads(papyrus.activeScripts)
+            MB.addFunctionMessages(papyrus.functionMessages)
+            MB.addSuspendedStacks1(papyrus.suspendedStacks1)
+            MB.addSuspendedStacks2(papyrus.suspendedStacks2)
+            MB.addUnknownIDList(papyrus.unknownIDList)
+            MB.addUnbinds(papyrus.unbinds)
+            MB.addAnimations(ess.animations)
+            return MB.finish(ess)
         }
 
-        MB.addScriptInstances(papyrus.getScriptInstances());
-
-        if (ess.isFO4()) {
-            MB.addStructInstances(papyrus.getStructInstances());
+        /**
+         * Maps a `TString` to a character.
+         */
+        val ALPHABETICAL = Function { v: Element ->
+            val str = v.toString()
+            val firstChar = if (str.length == 0) '0' else Character.toUpperCase(str[0])
+            val category = if (Character.isLetter(firstChar)) firstChar else '0'
+            category
         }
-
-        MB.addReferences(papyrus.getReferences());
-        MB.addArrays(papyrus.getArrays());
-        MB.addThreads(papyrus.getActiveScripts());
-        MB.addFunctionMessages(papyrus.getFunctionMessages());
-        MB.addSuspendedStacks1(papyrus.getSuspendedStacks1());
-        MB.addSuspendedStacks2(papyrus.getSuspendedStacks2());
-        MB.addUnknownIDList(papyrus.getUnknownIDList());
-        MB.addUnbinds(papyrus.getUnbinds());
-        MB.addAnimations(ess.getAnimations());
-        return MB.finish(ess);
+        private val LOG = Logger.getLogger(ModelBuilder::class.java.canonicalName)
     }
-
-    final private FilterTreeModel MODEL;
-    final private ExecutorService EXECUTOR;
-    final private List<Future<Node>> TASKS;
-    final private ProgressModel PROGRESS;
 
     /**
-     * Maps a <code>TString</code> to a character.
+     * @param progress
      */
-    static final Function<Element, Character> ALPHABETICAL = (v) -> {
-        String str = v.toString();
-        char firstChar = str.length() == 0 ? '0' : Character.toUpperCase(str.charAt(0));
-        char category = Character.isLetter(firstChar) ? firstChar : '0';
-        return category;
-    };
-
-    static final private Logger LOG = Logger.getLogger(ModelBuilder.class.getCanonicalName());
+    init {
+        progress.maximum = 36
+        MODEL = FilterTreeModel()
+        EXECUTOR = Executors.newFixedThreadPool(2)
+        TASKS = Collections.synchronizedList(ArrayList(15))
+        PROGRESS = progress
+    }
 }

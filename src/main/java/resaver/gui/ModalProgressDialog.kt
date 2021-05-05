@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.Objects;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.SwingUtilities;
+import java.awt.BorderLayout
+import java.awt.Dimension
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
+import java.util.*
+import javax.swing.*
 
 /**
  * Displays a modal dialog box with a message, blocking the UI until some
@@ -32,84 +28,65 @@ import javax.swing.SwingUtilities;
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-public class ModalProgressDialog extends JDialog {
-
-    /**
-     * Create a new <code>ModalProgressDialog</code>.
-     *
-     * @param owner The owning <code>Frame</code>, which will be blocked.
-     * @param title The title of the dialog.
-     * @param task The task to perform while the owner is blocked.
-     */
-    public ModalProgressDialog(SaveWindow owner, String title, Runnable task) {
-        super(owner, title, ModalityType.APPLICATION_MODAL);
-        this.OWNER = owner;
-        this.TOPPANEL = new JPanel();
-        this.BOTTOMPANEL = new JPanel();
-        this.LABEL = new JLabel("Please Wait.");
-        this.BAR = new JProgressBar();
-        this.initComponents(task);
-    }
-
+class ModalProgressDialog(private val OWNER: SaveWindow, title: String?, task: Runnable) : JDialog(
+    OWNER, title, ModalityType.APPLICATION_MODAL
+) {
     /**
      * Initialize the swing and AWT components.
      *
      */
-    private void initComponents(Runnable task) {
-        this.setPreferredSize(new Dimension(420, 100));
-        this.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        this.BAR.setPreferredSize(new Dimension(400, 30));
-        this.TOPPANEL.add(this.LABEL);
-        this.BOTTOMPANEL.add(this.BAR);
-
-        this.setLayout(new BorderLayout());
-        this.add(this.TOPPANEL, BorderLayout.PAGE_START);
-        this.add(this.BOTTOMPANEL, BorderLayout.PAGE_END);
-
-        this.pack();
-        this.setResizable(false);
-        this.setLocationRelativeTo(this.getOwner());
-
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowOpened(WindowEvent e) {
-                Objects.requireNonNull(task);
-
-                Runnable doThings = () -> {
-                    task.run();
-                    setVisible(false);
-                };
-
-                if (OWNER.isJavaFXAvailable()) {
+    private fun initComponents(task: Runnable) {
+        this.preferredSize = Dimension(420, 100)
+        defaultCloseOperation = DO_NOTHING_ON_CLOSE
+        BAR.preferredSize = Dimension(400, 30)
+        TOPPANEL.add(LABEL)
+        BOTTOMPANEL.add(BAR)
+        this.layout = BorderLayout()
+        this.add(TOPPANEL, BorderLayout.PAGE_START)
+        this.add(BOTTOMPANEL, BorderLayout.PAGE_END)
+        pack()
+        this.isResizable = false
+        setLocationRelativeTo(this.owner)
+        addWindowListener(object : WindowAdapter() {
+            override fun windowOpened(e: WindowEvent) {
+                Objects.requireNonNull(task)
+                val doThings = Runnable {
+                    task.run()
+                    isVisible = false
+                }
+                if (OWNER.isJavaFXAvailable) {
                     try {
-                        Class<?> PLATFORM = Class.forName("javafx.application.Platform");
-                        java.lang.reflect.Method RUNLATER = PLATFORM.getMethod("runLater", Runnable.class);
-                        RUNLATER.invoke(null, doThings);
-                    } catch (ReflectiveOperationException ex) {
-                        SwingUtilities.invokeLater(doThings);
+                        val PLATFORM = Class.forName("javafx.application.Platform")
+                        val RUNLATER = PLATFORM.getMethod("runLater", Runnable::class.java)
+                        RUNLATER.invoke(null, doThings)
+                    } catch (ex: ReflectiveOperationException) {
+                        SwingUtilities.invokeLater(doThings)
                     }
                 } else {
-                    SwingUtilities.invokeLater(doThings);
+                    SwingUtilities.invokeLater(doThings)
                 }
             }
 
-            @Override
-            public void windowClosing(WindowEvent e) {
-
+            override fun windowClosing(e: WindowEvent) {}
+            override fun windowClosed(e: WindowEvent) {
+                dispose()
             }
-
-            @Override
-            public void windowClosed(WindowEvent e) {
-                dispose();
-            }
-        });
+        })
     }
 
-    final private SaveWindow OWNER;
-    final private JPanel TOPPANEL;
-    final private JPanel BOTTOMPANEL;
-    final private JLabel LABEL;
-    final private JProgressBar BAR;
+    private val TOPPANEL: JPanel = JPanel()
+    private val BOTTOMPANEL: JPanel = JPanel()
+    private val LABEL: JLabel = JLabel("Please Wait.")
+    private val BAR: JProgressBar = JProgressBar()
 
+    /**
+     * Create a new `ModalProgressDialog`.
+     *
+     * @param owner The owning `Frame`, which will be blocked.
+     * @param title The title of the dialog.
+     * @param task The task to perform while the owner is blocked.
+     */
+    init {
+        initComponents(task)
+    }
 }
