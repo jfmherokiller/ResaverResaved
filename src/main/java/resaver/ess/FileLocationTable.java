@@ -72,9 +72,21 @@ public final class FileLocationTable implements Element {
         this.UNUSED = new int[15];
         Arrays.fill(this.UNUSED, 0);
 
-        int table1Size = ess.getTable1().stream().mapToInt(GlobalData::calculateSize).sum();
-        int table2Size = ess.getTable2().stream().mapToInt(GlobalData::calculateSize).sum();
-        int table3Size = ess.getTable3().stream().mapToInt(GlobalData::calculateSize).sum();
+        int table1Size = 0;
+        for (GlobalData globalData : ess.getTable1()) {
+            int calculateSize = globalData.calculateSize();
+            table1Size += calculateSize;
+        }
+        int table2Size = 0;
+        for (GlobalData globalData : ess.getTable2()) {
+            int calculateSize = globalData.calculateSize();
+            table2Size += calculateSize;
+        }
+        int table3Size = 0;
+        for (GlobalData globalData : ess.getTable3()) {
+            int calculateSize = globalData.calculateSize();
+            table3Size += calculateSize;
+        }
         int changeFormsSize = ess.getChangeForms().values().parallelStream().mapToInt(ChangeForm::calculateSize).sum();
 
         this.table1Offset = 0;
@@ -103,9 +115,21 @@ public final class FileLocationTable implements Element {
      * @param ess The <code>ESS</code> to rebuild for.
      */
     public void rebuild(ESS ess) {
-        int table1Size = ess.getTable1().stream().mapToInt(GlobalData::calculateSize).sum();
-        int table2Size = ess.getTable2().stream().mapToInt(GlobalData::calculateSize).sum();
-        int table3Size = ess.getTable3().stream().mapToInt(GlobalData::calculateSize).sum();
+        int table1Size = 0;
+        for (GlobalData globalData : ess.getTable1()) {
+            int calculateSize = globalData.calculateSize();
+            table1Size += calculateSize;
+        }
+        int table2Size = 0;
+        for (GlobalData globalData : ess.getTable2()) {
+            int calculateSize = globalData.calculateSize();
+            table2Size += calculateSize;
+        }
+        int table3Size = 0;
+        for (GlobalData globalData : ess.getTable3()) {
+            int calculateSize = globalData.calculateSize();
+            table3Size += calculateSize;
+        }
         int changeFormsSize = ess.getChangeForms().values().parallelStream().mapToInt(ChangeForm::calculateSize).sum();
         
         this.table1Offset = 0;
