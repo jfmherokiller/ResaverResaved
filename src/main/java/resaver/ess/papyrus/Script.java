@@ -84,7 +84,12 @@ final public class Script extends Definition {
         int sum = 4;
         sum += this.NAME.calculateSize();
         sum += this.TYPE.calculateSize();
-        sum += this.MEMBERS.stream().mapToInt(MemberDesc::calculateSize).sum();
+        int result = 0;
+        for (MemberDesc MEMBER : this.MEMBERS) {
+            int calculateSize = MEMBER.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
@@ -207,19 +212,23 @@ final public class Script extends Definition {
         }
         BUILDER.append(String.format("<p>Contains %d member variables, %d were inherited.</p>", this.MEMBERS.size() + inheritCount, inheritCount));
 
-        final List<ScriptInstance> INSTANCES = save.getPapyrus()
+        final List<ScriptInstance> INSTANCES = new ArrayList<>();
+        for (ScriptInstance instance : save.getPapyrus()
                 .getScriptInstances()
-                .values()
-                .stream()
-                .filter(instance -> instance.getScript() == this)
-                .collect(Collectors.toList());
+                .values()) {
+            if (instance.getScript() == this) {
+                INSTANCES.add(instance);
+            }
+        }
 
-        final List<Reference> REFERENCES = save.getPapyrus()
+        final List<Reference> REFERENCES = new ArrayList<>();
+        for (Reference ref : save.getPapyrus()
                 .getReferences()
-                .values()
-                .stream()
-                .filter(ref -> ref.getScript() == this)
-                .collect(Collectors.toList());
+                .values()) {
+            if (ref.getScript() == this) {
+                REFERENCES.add(ref);
+            }
+        }
 
         BUILDER.append(String.format("<p>There are %d instances of this script.</p>", INSTANCES.size()));
         if (INSTANCES.size() < 20) {
