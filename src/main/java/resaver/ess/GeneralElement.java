@@ -16,13 +16,7 @@
 package resaver.ess;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import resaver.IString;
 import resaver.ess.papyrus.EID;
@@ -643,7 +637,14 @@ public class GeneralElement implements Element {
      * @param val The value.
      */
     private <T> T addValue(String name, T val) {
-        if (SUPPORTED.stream().noneMatch(type -> type.isInstance(val))) {
+        boolean b = true;
+        for (Class<?> type : SUPPORTED) {
+            if (type.isInstance(val)) {
+                b = false;
+                break;
+            }
+        }
+        if (b) {
             throw new IllegalStateException(String.format("Invalid type for %s: %s", name, val.getClass()));
         }
 
@@ -787,10 +788,12 @@ public class GeneralElement implements Element {
      * @return String representation.
      */
     public String toTextBlock() {
-        return DATA.keySet()
-                .stream()
-                .map(n -> String.format("%s=%s", n, getVal(n)))
-                .collect(Collectors.joining(", ", "[", "]"));
+        StringJoiner joiner = new StringJoiner(", ", "[", "]");
+        for (IString n : DATA.keySet()) {
+            String format = String.format("%s=%s", n, getVal(n));
+            joiner.add(format);
+        }
+        return joiner.toString();
     }
 
     /**
