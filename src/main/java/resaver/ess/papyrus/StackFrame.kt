@@ -350,7 +350,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         if (CODE!!.size > 0) {
             BUILDER.append("<hr/><p>PAPYRUS BYTECODE:</p>")
             BUILDER.append("<code><pre>")
-            val OPS: List<OpcodeData> = mutableListOf()
+            val OPS: List<OpcodeData> = this.CODE!!.toList()
             OPS.subList(0, PTR).forEach { v: OpcodeData? -> BUILDER.append("   $v\n") }
             BUILDER.append(String.format("==><b>%s</b>\n", OPS[PTR]))
             OPS.subList(PTR + 1, CODE!!.size)
