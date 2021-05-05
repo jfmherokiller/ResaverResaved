@@ -190,7 +190,7 @@ public class StringsFile {
         }
 
         final private PathMatcher GLOB;
-    };
+    }
 
     /**
      * Makes a string from a byte array in a region-friendly way. Thank you

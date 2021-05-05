@@ -86,6 +86,6 @@ public class StringTable {
         }
 
         final public java.util.regex.Pattern REGEX;
-    };
+    }
 
 }

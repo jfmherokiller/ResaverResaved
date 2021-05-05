@@ -207,4 +207,4 @@ public enum Game {
         this.SAVE_MATCHER = FileSystems.getDefault().getPathMatcher("glob:*." + this.SAVE_EXT);
     }
 
-};
+}
