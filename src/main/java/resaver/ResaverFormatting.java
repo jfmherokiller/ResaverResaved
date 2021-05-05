@@ -30,7 +30,12 @@ abstract public class ResaverFormatting {
                 .append(String.format(msg, items.size()))
                 .append("<ol>");
 
-        items.stream().limit(limit).map(namer).forEach(item -> BUF.append("<li>").append(item).append("</li>"));
+        long limit1 = limit;
+        for (T item : items) {
+            if (limit1-- == 0) break;
+            CharSequence charSequence = namer.apply(item);
+            BUF.append("<li>").append(charSequence).append("</li>");
+        }
         BUF.append("</ol>");
         
         int excess = items.size() - limit;
@@ -46,7 +51,12 @@ abstract public class ResaverFormatting {
         final StringBuilder BUF = new StringBuilder();
         BUF.append(String.format(msg, items.size()));
 
-        items.stream().limit(limit).map(namer).forEach(item -> BUF.append(NLDOT).append(item));
+        long limit1 = limit;
+        for (T item : items) {
+            if (limit1-- == 0) break;
+            CharSequence charSequence = namer.apply(item);
+            BUF.append(NLDOT).append(charSequence);
+        }
 
         int excess = items.size() - limit;
         if (excess > 0) {
