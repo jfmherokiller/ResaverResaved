@@ -96,13 +96,13 @@ public class ReSaverSettings extends JDialog {
                     PREFS.putFloat("settings.fontScale", fontScale);
                     SCALEFIELD.setValue(fontScale);
 
-                    UIManager.getLookAndFeelDefaults().keySet().stream()
-                            .filter(key -> key.toString().endsWith(".font"))
-                            .forEach(key -> {
-                                Font font = UIManager.getFont(key);
-                                Font biggerFont = font.deriveFont(fontScale * font.getSize2D());
-                                UIManager.put(key, biggerFont);
-                            });
+                    for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
+                        if (key.toString().endsWith(".font")) {
+                            Font font = UIManager.getFont(key);
+                            Font biggerFont = font.deriveFont(fontScale * font.getSize2D());
+                            UIManager.put(key, biggerFont);
+                        }
+                    }
                 });
             }
 
