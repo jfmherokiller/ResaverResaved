@@ -222,7 +222,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
             BUILDER.append(scriptName).append(" ");
 
         } else if (this.suspendedStack != null && this.suspendedStack.getMessage() != null) {
-            BUILDER.append(this.suspendedStack.getMessage().toString());
+            BUILDER.append(this.suspendedStack.getMessage());
 
         } else {
         }

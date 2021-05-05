@@ -1264,7 +1264,7 @@ final public class Pex {
                         }
                     }
                 }
-                DECL.append(joiner.toString());
+                DECL.append(joiner);
                 code.add(DECL.toString());
             }
 

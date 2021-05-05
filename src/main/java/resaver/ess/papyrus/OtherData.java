@@ -158,7 +158,7 @@ public class OtherData extends GeneralElement implements PapyrusElement {
             if (null == this.THREAD) {
                 return "INVALID (" + super.toString() + ")";
             } else {
-                return this.THREAD.toString() + "(" + super.toString() + ")";
+                return this.THREAD + "(" + super.toString() + ")";
             }
         }
 
@@ -181,7 +181,7 @@ public class OtherData extends GeneralElement implements PapyrusElement {
             if (null == this.THREAD) {
                 return "INVALID (" + super.toString() + ")";
             } else {
-                return this.THREAD.toString() + "(" + super.toString() + ")";
+                return this.THREAD + "(" + super.toString() + ")";
             }
         }
 
@@ -204,7 +204,7 @@ public class OtherData extends GeneralElement implements PapyrusElement {
             if (this.THREAD == null) {
                 return "null(" + super.toString() + ")";
             } else {
-                return this.THREAD.toString() + "(" + super.toString() + ")";
+                return this.THREAD + "(" + super.toString() + ")";
             }
         }
 

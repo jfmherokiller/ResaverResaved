@@ -1678,7 +1678,7 @@ final public class SaveWindow extends JFrame {
             } else if (ESS.DELETABLE.test(ELEMENT)) {
                 WARNING = String.format("Are you sure you want to delete this element?\n%s", ELEMENT);
             } else if (ELEMENT instanceof SuspendedStack) {
-                WARNING = String.format("Element \"%s\" is a Suspended Stack. Deleting it could make your savefile impossible to load. Are you sure you want to proceed?", ELEMENT.toString());
+                WARNING = String.format("Element \"%s\" is a Suspended Stack. Deleting it could make your savefile impossible to load. Are you sure you want to proceed?", ELEMENT);
             } else {
                 return;
             }

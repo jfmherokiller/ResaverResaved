@@ -699,9 +699,9 @@ abstract public class Variable implements PapyrusElement, Linkable {
             }
 
             if (this.TYPE.isRefType()) {
-                return this.TYPE + ":" + "" + this.REFTYPE + "[" + Integer.toString(this.ARRAY.getLength()) + "]";
+                return this.TYPE + ":" + "" + this.REFTYPE + "[" + this.ARRAY.getLength() + "]";
             } else {
-                return this.TYPE + ":" + this.getElementType() + "[" + Integer.toString(this.ARRAY.getLength()) + "]";
+                return this.TYPE + ":" + this.getElementType() + "[" + this.ARRAY.getLength() + "]";
             }
         }
 

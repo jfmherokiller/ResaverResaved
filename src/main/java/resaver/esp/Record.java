@@ -41,7 +41,7 @@ abstract public class Record implements Entry {
      * @return A list of fields that were readFully.
      *
      */
-    static final public FieldList readField(RecordCode parentCode, ByteBuffer input, ESPContext ctx) {
+    static public FieldList readField(RecordCode parentCode, ByteBuffer input, ESPContext ctx) {
         return readFieldAux(parentCode, input, 0, ctx);
     }
 

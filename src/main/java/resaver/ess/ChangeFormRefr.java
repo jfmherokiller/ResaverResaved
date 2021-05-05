@@ -129,7 +129,7 @@ public class ChangeFormRefr extends GeneralElement implements ChangeFormData {
                     BUILDER.append("<li>");
                     BUILDER.append(flag.getPosition());
                     BUILDER.append(": ");
-                    BUILDER.append(flag.toString());
+                    BUILDER.append(flag);
                     BUILDER.append("</li><br/>");
                 }
             }

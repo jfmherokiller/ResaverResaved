@@ -357,7 +357,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
         if (save.getChangeForms().containsKey(this.REFID)) {
             BUILDER.append(String.format("RefID%s: %s<br/>", (mysteryFlag ? "@" : ""), this.REFID.toHTML(null)));
         } else {
-            BUILDER.append(String.format("RefID%s: %s<br/>", (mysteryFlag ? "@" : ""), this.REFID.toString()));
+            BUILDER.append(String.format("RefID%s: %s<br/>", (mysteryFlag ? "@" : ""), this.REFID));
         }
 
         BUILDER.append(String.format("Unknown2bits: %01X<br/>", this.UNKNOWN2BITS));
