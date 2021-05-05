@@ -124,21 +124,18 @@ class FilterTree : JTree(FilterTreeModel()) {
             val element = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element
             if (null != findHandler) {
                 if (element is ActiveScript) {
-                    val script = element
-                    if (null != script.instance) {
-                        findHandler!!.accept(script.instance)
+                    if (null != element.instance) {
+                        findHandler!!.accept(element.instance!!)
                     }
                 } else if (element is StackFrame) {
-                    val frame = element
-                    val owner = frame.owner
+                    val owner = element.owner
                     if (null != owner && owner is Variable.Ref) {
-                        val ref = frame.owner as Variable.Ref?
+                        val ref = element.owner as Variable.Ref?
                         findHandler!!.accept(ref!!.referent)
                     }
                 } else if (element is ArrayInfo) {
-                    val array = element
-                    if (null != array.holder) {
-                        findHandler!!.accept(array.holder)
+                    if (null != element.holder) {
+                        findHandler!!.accept(element.holder)
                     }
                 }
             }
