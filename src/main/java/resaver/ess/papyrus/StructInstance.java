@@ -20,6 +20,8 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+
 import resaver.ess.AnalyzableElement;
 import resaver.ess.ESS;
 import resaver.ess.Element;
@@ -178,12 +180,19 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
             }
 
         } else {
-            return this.getVariables().stream()
-                    .filter(Variable::hasRef)
-                    .filter(var -> var.getReferent() == target)
-                    .map(var -> this.getVariables().indexOf(var))
-                    .filter(index -> index >= 0)
-                    .findFirst()
+            for (Variable var : this.getVariables()) {
+                if (var.hasRef()) {
+                    if (var.getReferent() == target) {
+                        Integer indexOf = this.getVariables().indexOf(var);
+                        if (indexOf >= 0) {
+                            return Optional.of(indexOf)
+                                    .map(index -> Linkable.makeLink("structinstance", this.getID(), index, this.toString()))
+                                    .orElse(Linkable.makeLink("structinstance", this.getID(), this.toString()));
+                        }
+                    }
+                }
+            }
+            return Optional.<Integer>empty()
                     .map(index -> Linkable.makeLink("structinstance", this.getID(), index, this.toString()))
                     .orElse(Linkable.makeLink("structinstance", this.getID(), this.toString()));
         }
@@ -284,7 +293,12 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
             int sum = 4;
             sum += this.FLAG.calculateSize();
             sum += getID().calculateSize();
-            sum += this.VARIABLES.stream().mapToInt(Element::calculateSize).sum();
+            int result = 0;
+            for (Variable VARIABLE : this.VARIABLES) {
+                int calculateSize = VARIABLE.calculateSize();
+                result += calculateSize;
+            }
+            sum += result;
             return sum;
         }
 
