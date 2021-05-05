@@ -190,10 +190,15 @@ final public class Reference extends GameElement implements SeparateData, HasVar
                 }
 
             } else {
-                Optional<Variable> result = this.getVariables().stream()
-                        .filter(Variable::hasRef)
-                        .filter(v -> v.getReferent() == target)
-                        .findFirst();
+                Optional<Variable> result = Optional.empty();
+                for (Variable v : this.getVariables()) {
+                    if (v.hasRef()) {
+                        if (v.getReferent() == target) {
+                            result = Optional.of(v);
+                            break;
+                        }
+                    }
+                }
 
                 if (result.isPresent()) {
                     int i = this.getVariables().indexOf(result.get());
