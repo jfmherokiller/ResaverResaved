@@ -466,7 +466,12 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
         if (null == this.data) {
             return false;
         } else if (this.hasStack()) {
-            return this.getStackFrames().stream().anyMatch(StackFrame::isUndefined);
+            for (StackFrame stackFrame : this.getStackFrames()) {
+                if (stackFrame.isUndefined()) {
+                    return true;
+                }
+            }
+            return false;
         } else if (this.suspendedStack != null) {
             return this.suspendedStack.isUndefined();
         } else {
@@ -607,7 +612,12 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
             sum += (null == this.ATTACHED ? 0 : this.ATTACHED.calculateSize());
             sum += (null == this.UNKNOWN4 ? 0 : this.UNKNOWN4.calculateSize());
             sum += (null != this.UNKNOWN5 ? 1 : 0);
-            sum += this.STACKFRAMES.stream().mapToInt(StackFrame::calculateSize).sum();
+            int result = 0;
+            for (StackFrame STACKFRAME : this.STACKFRAMES) {
+                int calculateSize = STACKFRAME.calculateSize();
+                result += calculateSize;
+            }
+            sum += result;
             return sum;
         }
 
