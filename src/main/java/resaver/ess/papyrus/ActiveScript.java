@@ -57,7 +57,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     }
 
     /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element#write(ByteBuffer)
      * @param output The output stream.
      */
     @Override
@@ -175,8 +175,13 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
         }
 
         final StackFrame FIRST = this.getStackFrames().get(0);
-        return !FIRST.isNative() && FIRST.isZeroed()
-                && this.getStackFrames().stream().allMatch(f -> f.isZeroed() || f.isNative());
+        if (FIRST.isNative() || !FIRST.isZeroed()) return false;
+        for (StackFrame f : this.getStackFrames()) {
+            if (!f.isZeroed() && !f.isNative()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -350,7 +355,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement#matches(Analysis, String)
      * @param analysis
      * @param mod
      * @return
@@ -359,7 +364,12 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     public boolean matches(Analysis analysis, String mod) {
         Objects.requireNonNull(analysis);
         Objects.requireNonNull(mod);
-        return this.getStackFrames().stream().anyMatch(v -> v.matches(analysis, mod));
+        for (StackFrame v : this.getStackFrames()) {
+            if (v.matches(analysis, mod)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -390,7 +400,12 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
         if (null == this.data) {
             return false;
         }
-        return this.getStackFrames().stream().anyMatch(frame -> frame.getScript() == script);
+        for (StackFrame frame : this.getStackFrames()) {
+            if (frame.getScript() == script) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
