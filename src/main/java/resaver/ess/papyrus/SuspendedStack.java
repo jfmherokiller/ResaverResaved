@@ -134,10 +134,15 @@ final public class SuspendedStack implements PapyrusElement, AnalyzableElement, 
     @Override
     public String toHTML(Element target) {
         if (null != target && this.hasMessage()) {
-            Optional<Variable> result = this.MESSAGE.getVariables().stream()
-                    .filter(Variable::hasRef)
-                    .filter(v -> v.getReferent() == target)
-                    .findFirst();
+            Optional<Variable> result = Optional.empty();
+            for (Variable v : this.MESSAGE.getVariables()) {
+                if (v.hasRef()) {
+                    if (v.getReferent() == target) {
+                        result = Optional.of(v);
+                        break;
+                    }
+                }
+            }
 
             if (result.isPresent()) {
                 int i = this.MESSAGE.getVariables().indexOf(result.get());
