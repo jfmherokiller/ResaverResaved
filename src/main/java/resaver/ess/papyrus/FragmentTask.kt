@@ -13,171 +13,93 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.util.Objects;
-import java.nio.ByteBuffer;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import resaver.ess.ChangeForm;
-import resaver.ess.RefID;
-import resaver.ess.Element;
-import resaver.ess.Flags;
-import resaver.ess.Linkable;
+import mf.BufferUtil
+import resaver.ess.*
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+
 
 /**
- * Describes the FragmentTask field of an <code>ActiveScriptData</code>.
+ * Describes the FragmentTask field of an `ActiveScriptData`.
  *
  * @author Mark Fairchild
  */
-final public class FragmentTask implements PapyrusElement, Linkable {
-
+class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) : PapyrusElement, Linkable {
     /**
-     * Creates a new <code>Unknown4</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param unknown3 The value of the unknown3 field.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     */
-    public FragmentTask(ByteBuffer input, byte unknown3, PapyrusContext context) throws PapyrusFormatException {
-        try {
-            Objects.requireNonNull(input);
-            Objects.requireNonNull(context);
-            assert 1 <= unknown3 && unknown3 <= 3;
-
-            if (unknown3 == 2) {
-                this.DATA = new Type2(input, context);
-                this.TYPECODE = null;
-                this.TYPE = null;
-
-            } else {
-                this.TYPECODE = mf.BufferUtil.getLStringRaw(input);
-                this.TYPE = FragmentType.valueOf(new String(this.TYPECODE, UTF_8));
-
-                switch (this.TYPE) {
-                    case QuestStage:
-                        this.DATA = new QuestStage(input, context);
-                        break;
-                    case ScenePhaseResults:
-                        this.DATA = new ScenePhaseResults(input, context);
-                        break;
-                    case SceneActionResults:
-                        this.DATA = new SceneActionResults(input, context);
-                        break;
-                    case SceneResults:
-                        this.DATA = new SceneResults(input, context);
-                        break;
-                    case TerminalRunResults:
-                        this.DATA = new TerminalRunResults(input, context);
-                        break;
-                    case TopicInfo:
-                        this.DATA = new TopicInfo(input, context);
-                        break;
-                    default:
-                        throw new PapyrusFormatException("Unknown ActiveScript QuestData");
-                }
-
-            }
-
-            this.VARIABLE = (unknown3 == 3 || unknown3 == 2)
-                    ? Variable.read(input, context)
-                    : null;
-
-        } catch (PapyrusFormatException ex) {
-            throw ex;
-        }
-    }
-
-    /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        assert null != output;
-        assert null != this.TYPECODE || null != this.VARIABLE;
+    override fun write(output: ByteBuffer?) {
+        assert(null != output)
+        assert(null != TYPECODE || null != VARIABLE)
 
         // Corresponds to the unknown3 == 2 case.
-        if (null != this.TYPECODE) {
-            output.putInt(this.TYPECODE.length);
-            output.put(this.TYPECODE);
+        if (null != TYPECODE) {
+            output!!.putInt(TYPECODE.size)
+            output.put(TYPECODE)
         }
-
-        this.DATA.write(output);
-
-        if (null != this.VARIABLE) {
-            this.VARIABLE.write(output);
-        }
+        DATA!!.write(output)
+        VARIABLE?.write(output)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 0;
-
-        if (null != this.TYPECODE) {
-            sum = 4 + this.TYPECODE.length;
+    override fun calculateSize(): Int {
+        var sum = 0
+        if (null != TYPECODE) {
+            sum = 4 + TYPECODE.size
         }
-
-        sum += (null == this.DATA ? 0 : this.DATA.calculateSize());
-        sum += (null == this.VARIABLE ? 0 : this.VARIABLE.calculateSize());
-        return sum;
+        sum += DATA?.calculateSize() ?: 0
+        sum += VARIABLE?.calculateSize() ?: 0
+        return sum
     }
 
     /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        assert null != this.TYPECODE || null != this.VARIABLE;
-
-        final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append("UNK4:");
-
-        if (null != this.TYPECODE) {
-            BUILDER.append(this.TYPE);
+    override fun toHTML(target: Element): String {
+        assert(null != TYPECODE || null != VARIABLE)
+        val BUILDER = StringBuilder()
+        BUILDER.append("UNK4:")
+        if (null != TYPECODE) {
+            BUILDER.append(TYPE)
         }
-
-        BUILDER.append(this.DATA.toHTML(target));
-
-        if (null != this.VARIABLE) {
-            BUILDER.append(" (").append(this.VARIABLE.toHTML(null)).append(")");
+        BUILDER.append(DATA!!.toHTML(target))
+        if (null != VARIABLE) {
+            BUILDER.append(" (").append(VARIABLE!!.toHTML(null)).append(")")
         }
-
-        return BUILDER.toString();
+        return BUILDER.toString()
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append("FragmentTask");
-
-        if (null != this.TYPECODE) {
-            BUILDER.append("(").append(this.TYPE).append("): ");
+    override fun toString(): String {
+        val BUILDER = StringBuilder()
+        BUILDER.append("FragmentTask")
+        if (null != TYPECODE) {
+            BUILDER.append("(").append(TYPE).append("): ")
         }
-
-        BUILDER.append(this.DATA);
-
-        if (null != this.VARIABLE) {
-            BUILDER.append("(").append(this.VARIABLE).append(")");
+        BUILDER.append(DATA)
+        if (null != VARIABLE) {
+            BUILDER.append("(").append(VARIABLE).append(")")
         }
-
-        return BUILDER.toString();
+        return BUILDER.toString()
     }
 
-    final public byte[] TYPECODE;
-    final public FragmentType TYPE;
-    final public FragmentData DATA;
-    final public Variable VARIABLE;
+    val TYPECODE: ByteArray?
+
+    @JvmField
+    var TYPE: FragmentType? = null
+    var DATA: FragmentData? = null
+    var VARIABLE: Variable? = null
+
     //final public RefID QUESTID;
     //final public Byte BYTE;
     //final public Integer INT;
@@ -185,421 +107,394 @@ final public class FragmentTask implements PapyrusElement, Linkable {
     //final public TString TSTRING;
     //final public Short STAGE;
     //final public ChangeForm FORM;
-
-    static public enum FragmentType {
-        QuestStage,
-        ScenePhaseResults,
-        SceneActionResults,
-        SceneResults,
-        TerminalRunResults,
-        TopicInfo,
+    enum class FragmentType {
+        QuestStage, ScenePhaseResults, SceneActionResults, SceneResults, TerminalRunResults, TopicInfo
     }
 
-    static public interface FragmentData extends Linkable, PapyrusElement {
-    }
+    interface FragmentData : Linkable, PapyrusElement
 
     /**
      * Stores the data for the other type of fragment.
      */
-    static final public class Type2 implements FragmentData {
-
-        public Type2(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
-            if (context.getGame().isFO4()) {
-                this.RUNNING_ID = context.readEID32(input);
-                this.RUNNING = context.findActiveScript(this.RUNNING_ID);
-            } else {
-                this.RUNNING_ID = null;
-                this.RUNNING = null;
-            }
-        }
-
+    class Type2(input: ByteBuffer?, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
+         * @see resaver.ess.Element.write
          * @param output The output stream.
          */
-        @Override
-        public void write(ByteBuffer output) {
-            if (null != this.RUNNING_ID) {
-                this.RUNNING_ID.write(output);
-            }
+        override fun write(output: ByteBuffer?) {
+            RUNNING_ID?.write(output)
         }
 
         /**
-         * @see resaver.ess.Element#calculateSize()
-         * @return The size of the <code>Element</code> in bytes.
+         * @see resaver.ess.Element.calculateSize
+         * @return The size of the `Element` in bytes.
          */
-        @Override
-        public int calculateSize() {
-            return this.RUNNING_ID == null ? 0 : this.RUNNING_ID.calculateSize();
+        override fun calculateSize(): Int {
+            return RUNNING_ID?.calculateSize() ?: 0
         }
 
         /**
-         * @see resaver.ess.Linkable#toHTML(Element)
-         * @param target A target within the <code>Linkable</code>.
+         * @see resaver.ess.Linkable.toHTML
+         * @param target A target within the `Linkable`.
          * @return
          */
-        @Override
-        public String toHTML(Element target) {
-            final StringBuilder BUILDER = new StringBuilder();
-            BUILDER.append("FragmentTask.Type2");
-
-            if (null != this.RUNNING) {
-                BUILDER.append(" ").append(this.RUNNING.toHTML(null));
-            } else if (null != this.RUNNING_ID) {
-                BUILDER.append(" ").append(this.RUNNING_ID);
+        override fun toHTML(target: Element): String {
+            val BUILDER = StringBuilder()
+            BUILDER.append("FragmentTask.Type2")
+            if (null != RUNNING) {
+                BUILDER.append(" ").append(RUNNING!!.toHTML(null))
+            } else if (null != RUNNING_ID) {
+                BUILDER.append(" ").append(RUNNING_ID)
             }
-
-            return BUILDER.toString();
+            return BUILDER.toString()
         }
 
         /**
          * @return String representation.
          */
-        @Override
-        public String toString() {
-            final StringBuilder BUILDER = new StringBuilder();
-            BUILDER.append("Type2");
-
-            if (null != this.RUNNING_ID) {
-                BUILDER.append(this.RUNNING_ID).append(" ");
+        override fun toString(): String {
+            val BUILDER = StringBuilder()
+            BUILDER.append("Type2")
+            if (null != RUNNING_ID) {
+                BUILDER.append(RUNNING_ID).append(" ")
             }
-
-            return BUILDER.toString();
+            return BUILDER.toString()
         }
 
-        final public EID RUNNING_ID;
-        final private ActiveScript RUNNING;
+        var RUNNING_ID: EID? = null
+        private var RUNNING: ActiveScript? = null
+
+        init {
+            if (context.game.isFO4) {
+                RUNNING_ID = context.readEID32(input)
+                RUNNING = context.findActiveScript(RUNNING_ID)
+            } else {
+                RUNNING_ID = null
+                RUNNING = null
+            }
+        }
     }
 
     /**
      * Stores the data for a QuestStage fragment.
      */
-    static final public class QuestStage implements FragmentData {
-
-        public QuestStage(ByteBuffer input, PapyrusContext context) {
-            this.QUESTID = context.readRefID(input);
-            this.STAGE = input.getShort();
-            this.FLAGS = Flags.readByteFlags(input);
-            this.UNKNOWN_4BYTES = (context.getGame().isFO4() ? input.getInt() : null);
-            this.QUEST = context.getChangeForm(this.QUESTID);
-        }
-
-        @Override
-        public void write(ByteBuffer output) {
-            this.QUESTID.write(output);
-            output.putShort(this.STAGE);
-            this.FLAGS.write(output);
-            if (null != this.UNKNOWN_4BYTES) {
-                output.putInt(this.UNKNOWN_4BYTES);
+    class QuestStage(input: ByteBuffer, context: PapyrusContext) : FragmentData {
+        override fun write(output: ByteBuffer?) {
+            QUESTID.write(output)
+            output!!.putShort(STAGE)
+            FLAGS.write(output)
+            if (null != UNKNOWN_4BYTES) {
+                output.putInt(UNKNOWN_4BYTES)
             }
         }
 
-        @Override
-        public int calculateSize() {
-            int sum = 2;
-            sum += this.QUESTID.calculateSize();
-            sum += this.FLAGS.calculateSize();
-            sum += this.UNKNOWN_4BYTES == null ? 0 : 4;
-            return sum;
+        override fun calculateSize(): Int {
+            var sum = 2
+            sum += QUESTID.calculateSize()
+            sum += FLAGS.calculateSize()
+            sum += if (UNKNOWN_4BYTES == null) 0 else 4
+            return sum
         }
 
-        @Override
-        public String toHTML(Element target) {
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(this.QUEST == null ? this.QUESTID : this.QUEST.toHTML(target));
+        override fun toHTML(target: Element): String {
+            val BUF = StringBuilder()
+            BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
             return BUF.append(" stage=")
-                    .append(this.STAGE)
-                    .append(" ").append(this.FLAGS)
-                    .append(this.UNKNOWN_4BYTES)
-                    .toString();
+                .append(STAGE.toInt())
+                .append(" ").append(FLAGS)
+                .append(UNKNOWN_4BYTES)
+                .toString()
         }
 
-        @Override
-        public String toString() {
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(this.QUEST == null ? this.QUESTID : this.QUEST);
+        override fun toString(): String {
+            val BUF = StringBuilder()
+            BUF.append(QUEST ?: QUESTID)
             return BUF.append(" stage=")
-                    .append(this.STAGE)
-                    .append(" ").append(this.FLAGS)
-                    .append(this.UNKNOWN_4BYTES)
-                    .toString();
+                .append(STAGE.toInt())
+                .append(" ").append(FLAGS)
+                .append(UNKNOWN_4BYTES)
+                .toString()
         }
 
-        final public RefID QUESTID;
-        final public short STAGE;
-        final public Flags.Byte FLAGS;
-        final public Integer UNKNOWN_4BYTES;
-        final public ChangeForm QUEST;
+        val QUESTID: RefID
+        val STAGE: Short
+        val FLAGS: Flags.Byte
+        val UNKNOWN_4BYTES: Int?
+        val QUEST: ChangeForm?
 
+        init {
+            QUESTID = context.readRefID(input)
+            STAGE = input.short
+            FLAGS = Flags.readByteFlags(input)
+            UNKNOWN_4BYTES = if (context.game.isFO4) input.int else null
+            QUEST = context.getChangeForm(QUESTID)
+        }
     }
 
     /**
      * Stores the data for a ScenePhaseResults fragment.
      */
-    static final public class ScenePhaseResults implements FragmentData {
-
-        public ScenePhaseResults(ByteBuffer input, PapyrusContext context) {
-            this.QUESTID = context.readRefID(input);
-            this.INT = input.getInt();
-            this.UNKNOWN_4BYTES = (context.getGame().isFO4() ? input.getInt() : null);
-            this.QUEST = context.getChangeForm(this.QUESTID);
-        }
-
+    class ScenePhaseResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
+         * @see resaver.ess.Element.write
          * @param output The output stream.
          */
-        @Override
-        public void write(ByteBuffer output) {
-            this.QUESTID.write(output);
-            output.putInt(this.INT);
-            if (null != this.UNKNOWN_4BYTES) {
-                output.putInt(this.UNKNOWN_4BYTES);
+        override fun write(output: ByteBuffer?) {
+            QUESTID.write(output)
+            output!!.putInt(INT)
+            if (null != UNKNOWN_4BYTES) {
+                output.putInt(UNKNOWN_4BYTES)
             }
         }
 
-        @Override
-        public int calculateSize() {
-            int sum = 4;
-            sum += this.QUESTID.calculateSize();
-            sum += this.UNKNOWN_4BYTES == null ? 0 : 4;
-            return sum;
+        override fun calculateSize(): Int {
+            var sum = 4
+            sum += QUESTID.calculateSize()
+            sum += if (UNKNOWN_4BYTES == null) 0 else 4
+            return sum
         }
 
-        @Override
-        public String toHTML(Element target) {
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(this.QUEST == null ? this.QUESTID : this.QUEST.toHTML(target));
+        override fun toHTML(target: Element): String {
+            val BUF = StringBuilder()
+            BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
             return BUF.append(" stage=")
-                    .append(this.INT)
-                    .append(this.UNKNOWN_4BYTES)
-                    .toString();
+                .append(INT)
+                .append(UNKNOWN_4BYTES)
+                .toString()
         }
 
-        @Override
-        public String toString() {
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(this.QUEST == null ? this.QUESTID : this.QUEST);
+        override fun toString(): String {
+            val BUF = StringBuilder()
+            BUF.append(QUEST ?: QUESTID)
             return BUF.append(" stage=")
-                    .append(this.INT)
-                    .append(this.UNKNOWN_4BYTES)
-                    .toString();
+                .append(INT)
+                .append(UNKNOWN_4BYTES)
+                .toString()
         }
 
-        final public RefID QUESTID;
-        final public int INT;
-        final public Integer UNKNOWN_4BYTES;
-        final public ChangeForm QUEST;
+        val QUESTID: RefID
+        val INT: Int
+        val UNKNOWN_4BYTES: Int?
+        val QUEST: ChangeForm?
 
+        init {
+            QUESTID = context.readRefID(input)
+            INT = input.int
+            UNKNOWN_4BYTES = if (context.game.isFO4) input.int else null
+            QUEST = context.getChangeForm(QUESTID)
+        }
     }
 
     /**
      * Stores the data for a SceneActionResults fragment.
      */
-    static final public class SceneActionResults implements FragmentData {
-
-        public SceneActionResults(ByteBuffer input, PapyrusContext context) {
-            this.QUESTID = context.readRefID(input);
-            this.INT = input.getInt();
-            this.UNKNOWN_4BYTES = (context.getGame().isFO4() ? input.getInt() : null);
-            this.QUEST = context.getChangeForm(this.QUESTID);
-        }
-
+    class SceneActionResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
+         * @see resaver.ess.Element.write
          * @param output The output stream.
          */
-        @Override
-        public void write(ByteBuffer output) {
-            this.QUESTID.write(output);
-            output.putInt(this.INT);
-            if (null != this.UNKNOWN_4BYTES) {
-                output.putInt(this.UNKNOWN_4BYTES);
+        override fun write(output: ByteBuffer?) {
+            QUESTID.write(output)
+            output!!.putInt(INT)
+            if (null != UNKNOWN_4BYTES) {
+                output.putInt(UNKNOWN_4BYTES)
             }
         }
 
-        @Override
-        public int calculateSize() {
-            int sum = 4;
-            sum += this.QUESTID.calculateSize();
-            sum += this.UNKNOWN_4BYTES == null ? 0 : 4;
-            return sum;
+        override fun calculateSize(): Int {
+            var sum = 4
+            sum += QUESTID.calculateSize()
+            sum += if (UNKNOWN_4BYTES == null) 0 else 4
+            return sum
         }
 
-        @Override
-        public String toHTML(Element target) {
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(this.QUEST == null ? this.QUESTID : this.QUEST.toHTML(target));
+        override fun toHTML(target: Element): String {
+            val BUF = StringBuilder()
+            BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
             return BUF.append(" stage=")
-                    .append(this.INT)
-                    .append(this.UNKNOWN_4BYTES)
-                    .toString();
+                .append(INT)
+                .append(UNKNOWN_4BYTES)
+                .toString()
         }
 
-        @Override
-        public String toString() {
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(this.QUEST == null ? this.QUESTID : this.QUEST);
+        override fun toString(): String {
+            val BUF = StringBuilder()
+            BUF.append(QUEST ?: QUESTID)
             return BUF.append(" stage=")
-                    .append(this.INT)
-                    .append(this.UNKNOWN_4BYTES)
-                    .toString();
+                .append(INT)
+                .append(UNKNOWN_4BYTES)
+                .toString()
         }
 
-        final public RefID QUESTID;
-        final public int INT;
-        final public Integer UNKNOWN_4BYTES;
-        final public ChangeForm QUEST;
+        val QUESTID: RefID
+        val INT: Int
+        val UNKNOWN_4BYTES: Int?
+        val QUEST: ChangeForm?
 
+        init {
+            QUESTID = context.readRefID(input)
+            INT = input.int
+            UNKNOWN_4BYTES = if (context.game.isFO4) input.int else null
+            QUEST = context.getChangeForm(QUESTID)
+        }
     }
 
     /**
      * Stores the data for a SceneResults fragment.
      */
-    static final public class SceneResults implements FragmentData {
-
-        public SceneResults(ByteBuffer input, PapyrusContext context) {
-            this.QUESTID = context.readRefID(input);
-            this.UNKNOWN_4BYTES = (context.getGame().isFO4() ? input.getInt() : null);
-            this.QUEST = context.getChangeForm(this.QUESTID);
-        }
-
+    class SceneResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
+         * @see resaver.ess.Element.write
          * @param output The output stream.
          */
-        @Override
-        public void write(ByteBuffer output) {
-            this.QUESTID.write(output);
-            if (null != this.UNKNOWN_4BYTES) {
-                output.putInt(this.UNKNOWN_4BYTES);
+        override fun write(output: ByteBuffer?) {
+            QUESTID.write(output)
+            if (null != UNKNOWN_4BYTES) {
+                output!!.putInt(UNKNOWN_4BYTES)
             }
         }
 
-        @Override
-        public int calculateSize() {
-            int sum = this.QUESTID.calculateSize();
-            sum += this.UNKNOWN_4BYTES == null ? 0 : 4;
-            return sum;
+        override fun calculateSize(): Int {
+            var sum = QUESTID.calculateSize()
+            sum += if (UNKNOWN_4BYTES == null) 0 else 4
+            return sum
         }
 
-        @Override
-        public String toHTML(Element target) {
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(this.QUEST == null ? this.QUESTID : this.QUEST.toHTML(target));
+        override fun toHTML(target: Element): String {
+            val BUF = StringBuilder()
+            BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
             return BUF.append(" stage=")
-                    .append(this.UNKNOWN_4BYTES)
-                    .toString();
+                .append(UNKNOWN_4BYTES)
+                .toString()
         }
 
-        @Override
-        public String toString() {
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(this.QUEST == null ? this.QUESTID : this.QUEST);
+        override fun toString(): String {
+            val BUF = StringBuilder()
+            BUF.append(QUEST ?: QUESTID)
             return BUF.append(" stage=")
-                    .append(this.UNKNOWN_4BYTES)
-                    .toString();
+                .append(UNKNOWN_4BYTES)
+                .toString()
         }
 
-        final public RefID QUESTID;
-        final public Integer UNKNOWN_4BYTES;
-        final public ChangeForm QUEST;
+        val QUESTID: RefID
+        val UNKNOWN_4BYTES: Int?
+        val QUEST: ChangeForm?
 
+        init {
+            QUESTID = context.readRefID(input)
+            UNKNOWN_4BYTES = if (context.game.isFO4) input.int else null
+            QUEST = context.getChangeForm(QUESTID)
+        }
     }
 
     /**
      * Stores the data for a TerminalRunResults fragment.
      */
-    static final public class TerminalRunResults implements FragmentData {
-
-        public TerminalRunResults(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
-            this.BYTE = input.get();
-            this.INT = input.getInt();
-            this.REFID = context.readRefID(input);
-            this.TSTRING = context.readTString(input);
-            this.FORM = context.getChangeForm(this.REFID);
-        }
-
+    class TerminalRunResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
+         * @see resaver.ess.Element.write
          * @param output The output stream.
          */
-        @Override
-        public void write(ByteBuffer output) {
-            output.put(this.BYTE);
-            output.putInt(this.INT);
-            this.REFID.write(output);
-            this.TSTRING.write(output);
+        override fun write(output: ByteBuffer?) {
+            output!!.put(BYTE)
+            output.putInt(INT)
+            REFID.write(output)
+            TSTRING.write(output)
         }
 
-        @Override
-        public int calculateSize() {
-            int sum = 5;
-            sum += this.REFID.calculateSize();
-            sum += this.TSTRING.calculateSize();
-            return sum;
+        override fun calculateSize(): Int {
+            var sum = 5
+            sum += REFID.calculateSize()
+            sum += TSTRING.calculateSize()
+            return sum
         }
 
-        @Override
-        public String toHTML(Element target) {
-            final StringBuilder BUF = new StringBuilder();
-            return new StringBuilder()
-                    .append(this.FORM == null ? this.REFID.toHTML(target) : this.FORM.toHTML(target))
-                    .append(" ").append(this.TSTRING)
-                    .append(String.format(" %08x %02x", this.INT, this.BYTE))
-                    .toString();
+        override fun toHTML(target: Element): String {
+            return StringBuilder()
+                .append(if (FORM == null) REFID.toHTML(target) else FORM.toHTML(target))
+                .append(" ").append(TSTRING)
+                .append(String.format(" %08x %02x", INT, BYTE))
+                .toString()
         }
 
-        @Override
-        public String toString() {
-            final StringBuilder BUF = new StringBuilder();
-            return new StringBuilder()
-                    .append(this.FORM == null ? this.REFID : this.FORM)
-                    .append(" ").append(this.TSTRING)
-                    .append(String.format(" %08x %02x", this.INT, this.BYTE))
-                    .toString();
+        override fun toString(): String {
+            val BUF = StringBuilder()
+            return StringBuilder()
+                .append(FORM ?: REFID)
+                .append(" ").append(TSTRING)
+                .append(String.format(" %08x %02x", INT, BYTE))
+                .toString()
         }
 
-        final byte BYTE;
-        final int INT;
-        final public RefID REFID;
-        final public TString TSTRING;
-        final public ChangeForm FORM;
+        val BYTE: Byte
+        val INT: Int
+        val REFID: RefID
+        val TSTRING: TString
+        val FORM: ChangeForm?
 
+        init {
+            BYTE = input.get()
+            INT = input.int
+            REFID = context.readRefID(input)
+            TSTRING = context.readTString(input)
+            FORM = context.getChangeForm(REFID)
+        }
     }
 
     /**
      * Stores the data for a SceneActionResults fragment.
      */
-    static final public class TopicInfo implements FragmentData {
-
-        public TopicInfo(ByteBuffer input, PapyrusContext context) {
-        }
-
+    class TopicInfo(input: ByteBuffer?, context: PapyrusContext?) : FragmentData {
         /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
+         * @see resaver.ess.Element.write
          * @param output The output stream.
          */
-        @Override
-        public void write(ByteBuffer output) {
+        override fun write(output: ByteBuffer?) {}
+        override fun calculateSize(): Int {
+            return 0
         }
 
-        @Override
-        public int calculateSize() {
-            return 0;
+        override fun toHTML(target: Element): String {
+            return ""
         }
 
-        @Override
-        public String toHTML(Element target) {
-            return "";
+        override fun toString(): String {
+            return ""
         }
-
-        @Override
-        public String toString() {
-            return "";
-        }
-
-
     }
 
+    /**
+     * Creates a new `Unknown4` by reading from a
+     * `ByteBuffer`. No error handling is performed.
+     *
+     * @param input The input stream.
+     * @param unknown3 The value of the unknown3 field.
+     * @param context The `PapyrusContext` info.
+     * @throws PapyrusFormatException
+     */
+    init {
+        try {
+            assert(unknown3 in 1..3)
+            if (unknown3.toInt() == 2) {
+                DATA = Type2(input, context)
+                TYPECODE = null
+                TYPE = null
+            } else {
+                TYPECODE = BufferUtil.getLStringRaw(input)
+                TYPE = FragmentType.valueOf(String(TYPECODE, StandardCharsets.UTF_8))
+                DATA = when (TYPE) {
+                    FragmentType.QuestStage -> QuestStage(input, context)
+                    FragmentType.ScenePhaseResults -> ScenePhaseResults(input, context)
+                    FragmentType.SceneActionResults -> SceneActionResults(input, context)
+                    FragmentType.SceneResults -> SceneResults(input, context)
+                    FragmentType.TerminalRunResults -> TerminalRunResults(input, context)
+                    FragmentType.TopicInfo -> TopicInfo(input, context)
+                    else -> throw PapyrusFormatException("Unknown ActiveScript QuestData")
+                }
+            }
+            VARIABLE = if (unknown3.toInt() == 3 || unknown3.toInt() == 2) Variable.read(input, context) else null
+        } catch (ex: PapyrusFormatException) {
+            throw ex
+        }
+    }
 }

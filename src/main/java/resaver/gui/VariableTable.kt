@@ -136,7 +136,7 @@ class VariableTable(window: SaveWindow?) : JTable() {
             }
         } else if (element is FunctionMessage) {
             if (element.hasMessage()) {
-                displayVariableTable(element.message, context)
+                element.message?.let { displayVariableTable(it, context) }
             } else {
                 clearTable()
             }

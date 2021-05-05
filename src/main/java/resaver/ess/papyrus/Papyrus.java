@@ -48,7 +48,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * readRefID.
      *
      */
-    public Papyrus(ByteBuffer input, ESS.ESSContext context, ModelBuilder model) throws PapyrusException {
+    public Papyrus(ByteBuffer input, ESS.ESSContext context, ModelBuilder model) throws PapyrusException, PapyrusElementException {
         final mf.Counter SUM = new mf.Counter(input.capacity());
         SUM.addCountListener(sum -> {
             if (this.truncated || sum != ((Buffer)input).position()) {
@@ -284,12 +284,8 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             this.FUNCTIONMESSAGES = new ArrayList<>(functionMessageCount);
             try {
                 for (int i = 0; i < functionMessageCount; i++) {
-                    try {
-                        FunctionMessage message = new FunctionMessage(input, CONTEXT);
-                        this.FUNCTIONMESSAGES.add(message);
-                    } catch (PapyrusElementException ex) {
-                        throw new ListException(i, functionMessageCount, ex);
-                    }
+                    FunctionMessage message = new FunctionMessage(input, CONTEXT);
+                    this.FUNCTIONMESSAGES.add(message);
                 }
                 SUM.click(4 + this.FUNCTIONMESSAGES.parallelStream().mapToInt(FunctionMessage::calculateSize).sum());
             } catch (ListException ex) {
