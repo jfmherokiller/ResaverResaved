@@ -258,7 +258,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      */
     override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
-        val HOLDERS = save!!.papyrus.scriptInstances.values.stream()
+        val HOLDERS = save!!.papyrus.scriptInstances.values
             .filter { i: ScriptInstance -> refID == i.refID }
             .toList().toSet()
         BUILDER.append("<html><h3>CHANGEFORM</h3>")
