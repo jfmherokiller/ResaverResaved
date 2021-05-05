@@ -83,7 +83,12 @@ public class RecordBasic extends Record {
     @Override
     public int calculateSize() {
         int sum = 24;
-        sum += this.FIELDS.stream().mapToInt(Entry::calculateSize).sum();
+        int result = 0;
+        for (Field FIELD : this.FIELDS) {
+            int calculateSize = FIELD.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
