@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.papyrus.PapyrusElementMap.PapyrusElementReader
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class ArrayMap extends PapyrusElementMap<ArrayInfo> {
-
-    ArrayMap(java.nio.ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
-        super(input, b -> new ArrayInfo(b, context));
+class ArrayMap : PapyrusElementMap<ArrayInfo> {
+    internal constructor(input: ByteBuffer?, context: PapyrusContext?) : super(
+        input,
+        PapyrusElementReader<ArrayInfo> { b: ByteBuffer? -> ArrayInfo(b, context) }) {
     }
 
-    ArrayMap() {
-    }
-
+    internal constructor() {}
 }

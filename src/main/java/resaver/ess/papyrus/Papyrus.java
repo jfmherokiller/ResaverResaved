@@ -162,9 +162,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ArrayMap arrayMap = null;
             try {
                 arrayMap = new ArrayMap(input, CONTEXT);
-            } catch (PapyrusElementException ex) {
-                arrayMap = (ArrayMap) ex.getPartial();
-                throw new PapyrusException("Error reading ArrayInfos.", ex, this);
             } finally {
                 this.ARRAYS = arrayMap;
                 SUM.click(this.ARRAYS.calculateSize());
