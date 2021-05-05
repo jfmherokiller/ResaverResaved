@@ -50,31 +50,27 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
      */
     @Throws(IOException::class)
     override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer>>? {
-        return FOLDERRECORDS!!.stream()
+        return FOLDERRECORDS!!
             .filter { block: BSAFolderRecord -> dir == null || dir == block.PATH }
-            .flatMap { block: BSAFolderRecord -> block.FILERECORDS.stream() }
+            .flatMap { block: BSAFolderRecord -> block.FILERECORDS }
             .filter { rec: BSAFileRecord -> matcher!!.matches(rec.path) }
-            .collect(
-                Collectors.toMap(
+            .associateBy(
                     { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path!!) },
                     { record: BSAFileRecord? -> BSAFileData.getData(super.CHANNEL, record!!, HEADER!!) })
-            )
     }
 
     /**
      * @see ArchiveParser.getFilenames
      */
     @Throws(IOException::class)
-    override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?>? {
-        return FOLDERRECORDS!!.stream()
+    override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?> {
+        return FOLDERRECORDS!!
             .filter { block: BSAFolderRecord -> dir == null || dir == block.PATH }
-            .flatMap { block: BSAFolderRecord -> block.FILERECORDS.stream() }
+            .flatMap { block: BSAFolderRecord -> block.FILERECORDS }
             .filter { rec: BSAFileRecord -> matcher!!.matches(rec.path) }
-            .collect(
-                Collectors.toMap(
+            .associateBy(
                     { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path!!) },
                     { obj: BSAFileRecord -> obj.path })
-            )
     }
 
     override fun toString(): String {
