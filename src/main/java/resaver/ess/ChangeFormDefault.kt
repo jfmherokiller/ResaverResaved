@@ -13,120 +13,105 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.util.Arrays;
-import java.nio.ByteBuffer;
-
-import resaver.Analysis;
+import resaver.Analysis
+import java.nio.ByteBuffer
 
 /**
  * Describes a default ChangeForm.
  *
  * @author Mark Fairchild
  */
-final public class ChangeFormDefault implements ChangeFormData {
-
+class ChangeFormDefault(input: ByteBuffer, size: Int) : ChangeFormData {
     /**
-     * Creates a new <code>ChangeFormDefault</code> by storing a data buffer.
-     *
-     * @param input The data buffer.
-     */
-    public ChangeFormDefault(ByteBuffer input, int size) {
-        this.DATA = new byte[size];
-        input.get(this.DATA);
-    }
-
-    /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.DATA);
+    override fun write(output: ByteBuffer?) {
+        output!!.put(DATA)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return this.DATA.length;
+    override fun calculateSize(): Int {
+        return DATA.size
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-
-        BUILDER.append("<hr/><p>RAW DATA:</p><code><pre>");
-
-        for (int i = 0; i < this.DATA.length; i++) {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
+        val BUILDER = StringBuilder()
+        BUILDER.append("<hr/><p>RAW DATA:</p><code><pre>")
+        for (i in DATA.indices) {
             if (i > 0 && i % 16 == 0) {
-                BUILDER.append('\n');
+                BUILDER.append('\n')
             }
-
-            final byte B = this.DATA[i];
-            BUILDER.append(String.format("%02x ", B));
+            val B = DATA[i]
+            BUILDER.append(String.format("%02x ", B))
         }
-
-        BUILDER.append("</pre></code>");
-        return BUILDER.toString();
+        BUILDER.append("</pre></code>")
+        return BUILDER.toString()
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return ""; //(" + this.BUFFER.length + " bytes)";
+    override fun toString(): String {
+        return "" //(" + this.BUFFER.length + " bytes)";
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(Analysis analysis, String mod) {
-        return false;
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+        return false
     }
 
     /**
-     * @see Object#hashCode()
+     * @see Object.hashCode
      * @return
      */
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode(this.DATA);
+    override fun hashCode(): Int {
+        return DATA.contentHashCode()
     }
 
     /**
-     * @see Object#equals(java.lang.Object)
+     * @see Object.equals
      * @return
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
         }
         if (obj == null) {
-            return false;
+            return false
         }
-        if (getClass() != obj.getClass()) {
-            return false;
+        if (javaClass != obj.javaClass) {
+            return false
         }
-        final ChangeFormDefault other = (ChangeFormDefault) obj;
-        return Arrays.equals(this.DATA, other.DATA);
+        val other = obj as ChangeFormDefault
+        return DATA.contentEquals(other.DATA)
     }
 
-    final private byte[] DATA;
+    private val DATA: ByteArray
 
+    /**
+     * Creates a new `ChangeFormDefault` by storing a data buffer.
+     *
+     * @param input The data buffer.
+     */
+    init {
+        DATA = ByteArray(size)
+        input[DATA]
+    }
 }

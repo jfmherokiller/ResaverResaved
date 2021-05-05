@@ -310,7 +310,7 @@ public class ModelBuilder {
      */
     public void addChangeForms(Map<RefID, ChangeForm> changeForms) {
         this.TASKS.add(this.EXECUTOR.submit(() -> {
-            final Map<ChangeForm.Type, List<ChangeForm>> DICTIONARY = changeForms.values().stream().collect(Collectors.groupingBy(ChangeForm::getType));
+            final Map<ChangeFormType, List<ChangeForm>> DICTIONARY = changeForms.values().stream().collect(Collectors.groupingBy(ChangeForm::getType));
 
             final List<Node> NODES = DICTIONARY.entrySet().stream()
                     .map(entry -> new ContainerNode(entry.getKey().toString(), entry.getValue()).sort())

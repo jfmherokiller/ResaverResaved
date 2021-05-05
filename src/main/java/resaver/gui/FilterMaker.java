@@ -274,7 +274,7 @@ public class FilterMaker {
 
             final ChangeForm FORM = (ChangeForm) node.getElement();
 
-            if (!(FORM.getType() == ChangeForm.Type.ACHR || FORM.getType() == ChangeForm.Type.REFR)) {
+            if (!(FORM.getType() == ChangeFormType.ACHR || FORM.getType() == ChangeFormType.REFR)) {
                 return false;
             }
 
@@ -326,7 +326,7 @@ public class FilterMaker {
 
             final ChangeForm FORM = (ChangeForm) node.getElement();
 
-            if (!(FORM.getType() == ChangeForm.Type.ACHR || FORM.getType() == ChangeForm.Type.REFR)) {
+            if (!(FORM.getType() == ChangeFormType.ACHR || FORM.getType() == ChangeFormType.REFR)) {
                 return false;
             }
 
@@ -476,8 +476,8 @@ public class FilterMaker {
 
                 final ChangeForm FORM = (ChangeForm) node.getElement();
 
-                if (Arrays.asList(ChangeForm.Type.ACHR, ChangeForm.Type.CELL,
-                        ChangeForm.Type.NPC_, ChangeForm.Type.REFR).contains(FORM.getType())) {
+                if (Arrays.asList(ChangeFormType.ACHR, ChangeFormType.CELL,
+                        ChangeFormType.NPC_, ChangeFormType.REFR).contains(FORM.getType())) {
                     return false;
                 }
 

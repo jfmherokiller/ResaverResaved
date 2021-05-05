@@ -13,85 +13,80 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.util.*
 
 /**
- * Describes a the data for a <code>GlobalData</code> when it is not parsed.
+ * Describes a the data for a `GlobalData` when it is not parsed.
  *
  * @author Mark Fairchild
  */
-final public class DefaultGlobalDataBlock implements GlobalDataBlock {
+class DefaultGlobalDataBlock(data: ByteArray?) : GlobalDataBlock {
+    /**
+     * @return A read-only view of the data.
+     */
+    val data: ByteBuffer
+        get() = ByteBuffer.wrap(DATA).asReadOnlyBuffer().order(ByteOrder.LITTLE_ENDIAN)
 
     /**
-     * Creates a new <code>DefaultGlobalDataBlock</code> by supplying it with a
+     * @see resaver.ess.Element.write
+     * @param output The output stream.
+     */
+    override fun write(output: ByteBuffer?) {
+        output!!.put(DATA)
+    }
+
+    /**
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
+     */
+    override fun calculateSize(): Int {
+        return DATA.size
+    }
+
+    /**
+     * @see Object.hashCode
+     * @return
+     */
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 89 * hash + DATA.contentHashCode()
+        return hash
+    }
+
+    /**
+     * @see Object.equals
+     * @return
+     */
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        }
+        if (other == null) {
+            return false
+        }
+        if (javaClass != other.javaClass) {
+            return false
+        }
+        val other2 = other as DefaultGlobalDataBlock
+        return DATA.contentEquals(other2.DATA)
+    }
+
+    private val DATA: ByteArray
+
+    /**
+     * Creates a new `DefaultGlobalDataBlock` by supplying it with a
      * byte buffer.
      *
      * @param data The data.
      */
-    public DefaultGlobalDataBlock(byte[] data) {
+    init {
         if (data == null) {
-            throw new NullPointerException("data must not be null.");
+            throw NullPointerException("data must not be null.")
         }
-        this.DATA = data;
+        DATA = data
     }
-
-    /**
-     * @return A read-only view of the data.
-     */
-    public ByteBuffer getData() {
-        return ByteBuffer.wrap(this.DATA).asReadOnlyBuffer().order(ByteOrder.LITTLE_ENDIAN);
-    }
-    /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer) 
-     * @param output The output stream.
-     */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.DATA);
-    }
-
-    /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
-     */
-    @Override
-    public int calculateSize() {
-        return this.DATA.length;
-    }
-
-    /**
-     * @see Object#hashCode()
-     * @return
-     */
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 89 * hash + java.util.Arrays.hashCode(this.DATA);
-        return hash;
-    }
-
-    /**
-     * @see Object#equals(java.lang.Object)
-     * @return
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final DefaultGlobalDataBlock other = (DefaultGlobalDataBlock) obj;
-        return java.util.Arrays.equals(this.DATA, other.DATA);
-    }
-
-    final private byte[] DATA;
-
 }

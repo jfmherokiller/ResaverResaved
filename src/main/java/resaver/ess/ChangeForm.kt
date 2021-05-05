@@ -13,201 +13,87 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.Buffer;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.Set;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.zip.DataFormatException;
-import mf.BufferUtil;
-import resaver.Analysis;
-import resaver.Game;
-import resaver.ess.papyrus.ScriptInstance;
+import mf.BufferUtil
+import resaver.Analysis
+import resaver.ess.ESS.ESSContext
+import resaver.ess.papyrus.ScriptInstance
+import java.nio.Buffer
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+
+import java.util.logging.Logger
+import java.util.zip.DataFormatException
+import kotlin.streams.toList
 
 /**
  * Describes a ChangeForm.
  *
  * @author Mark Fairchild
  */
-final public class ChangeForm implements Element, AnalyzableElement, Linkable {
-
+class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableElement, Linkable {
     /**
-     * Creates a new <code>ChangeForm</code> by reading from a
-     * <code>ByteBuffer</code>.
-     *
-     * @param input The input stream.
-     * @param context The <code>ESSContext</code> info.
-     */
-    public ChangeForm(ByteBuffer input, ESS.ESSContext context) {
-        Objects.requireNonNull(input);
-        this.REFID = context.readRefID(input);
-        this.CHANGEFLAGS = Flags.readIntFlags(input);
-        this.TYPEFIELD = Byte.toUnsignedInt(input.get());
-        this.VERSION = input.get();
-
-        int typeCode = this.TYPEFIELD & 0x3F;
-        Type type = Type.getType(context.getGame(), typeCode);
-        if (null == type) {
-            throw new IllegalStateException("Invalid changeform type index: " + typeCode);
-        }
-        this.TYPE = type;
-
-        switch (this.getDataLength()) {
-            case INT8:
-                this.length1 = Byte.toUnsignedInt(input.get());
-                this.length2 = Byte.toUnsignedInt(input.get());
-                break;
-            case INT16:
-                this.length1 = Short.toUnsignedInt(input.getShort());
-                this.length2 = Short.toUnsignedInt(input.getShort());
-                break;
-            case INT32:
-                this.length1 = input.getInt();
-                this.length2 = input.getInt();
-                break;
-            default:
-                throw new IllegalStateException("Invalid type.");
-        }
-
-        if (this.length1 < 0) {
-            throw new IllegalStateException(String.format("Invalid data size: l1 = %d, l2 = %d, %s, %s", this.length1, this.length2, this.TYPE, this.REFID));
-        }
-
-        if (this.length2 < 0) {
-            throw new IllegalStateException(String.format("Invalid data size: l1 = %d, l2 = %d, %s, %s", this.length1, this.length2, this.TYPE, this.REFID));
-        }
-
-        // Read the changeform's data.
-        final byte[] BUF = new byte[this.length1];
-        input.get(BUF);
-
-        // If the length2 field is greater than 0, then the data is compressed.
-        this.ISCOMPRESSED = this.length2 > 0;
-        this.RAWDATA = BUF;
-        this.parsedData = null;
-        //this.modified = false;
-    }
-
-    /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        Objects.requireNonNull(output);
-        this.REFID.write(output);
-        this.CHANGEFLAGS.write(output);
-        final int RAWTYPE = this.TYPEFIELD & 0x3F;
-
-        /*if (this.modified) {
-            this.updateRawData(this.parsedData);
-        }*/
-        switch (this.getDataLength()) {
-            case INT8:
-                output.put((byte) RAWTYPE);
-                output.put(this.VERSION);
-                output.put((byte) this.length1);
-                output.put((byte) this.length2);
-                break;
-            case INT16:
-                output.put((byte) (RAWTYPE | 0x40));
-                output.put(this.VERSION);
-                output.putShort((short) this.length1);
-                output.putShort((short) this.length2);
-                break;
-            case INT32:
-                output.put((byte) (RAWTYPE | 0x80));
-                output.put(this.VERSION);
-                output.putInt(this.length1);
-                output.putInt(this.length2);
-                break;
-            default:
-                throw new IllegalStateException("Invalid type.");
-        }
-
-        output.put(this.RAWDATA);
-
-    }
-
-    /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
-     */
-    @Override
-    public int calculateSize() {
-        int sum = 2;
-        sum += this.REFID.calculateSize();
-        sum += this.CHANGEFLAGS.calculateSize();
-
-        /*try {
-            if (this.modified) {
-                this.updateRawData(this.parsedData);
+    override fun write(output: ByteBuffer?) {
+        refID.write(output)
+        changeFlags.write(output)
+        val RAWTYPE = TYPEFIELD and 0x3F
+        when (dataLength) {
+            LengthSize.INT8 -> {
+                output!!.put(RAWTYPE.toByte())
+                output.put(VERSION)
+                output.put(length1.toByte())
+                output.put(length2.toByte())
             }
-        } catch (IOException ex) {
-            throw new IllegalStateException("Failed to recompress the changeform data.");
-        }*/
-        switch (this.getDataLength()) {
-            case INT8:
-                sum += 2;
-                break;
-            case INT16:
-                sum += 4;
-                break;
-            case INT32:
-                sum += 8;
-                break;
-            default:
-                return -1;
+            LengthSize.INT16 -> {
+                output!!.put((RAWTYPE or 0x40).toByte())
+                output.put(VERSION)
+                output.putShort(length1.toShort())
+                output.putShort(length2.toShort())
+            }
+            LengthSize.INT32 -> {
+                output!!.put((RAWTYPE or 0x80).toByte())
+                output.put(VERSION)
+                output.putInt(length1)
+                output.putInt(length2)
+            }
+            else -> throw IllegalStateException("Invalid type.")
         }
-
-        sum += this.length1;
-        return sum;
+        output.put(RAWDATA)
     }
 
     /**
-     * @return The changeflag field.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    public Flags.Int getChangeFlags() {
-        return this.CHANGEFLAGS;
-    }
-
-    /**
-     * @return The <code>RefID</code> of the <code>CHangeForm</code>.
-     */
-    public RefID getRefID() {
-        return this.REFID;
-    }
-
-    /**
-     * @return The type field.
-     */
-    public Type getType() {
-        return this.TYPE;
+    override fun calculateSize(): Int {
+        var sum = 2
+        sum += refID.calculateSize()
+        sum += changeFlags.calculateSize()
+        sum += when (dataLength) {
+            LengthSize.INT8 -> 2
+            LengthSize.INT16 -> 4
+            LengthSize.INT32 -> 8
+            else -> return -1
+        }
+        sum += length1
+        return sum
     }
 
     /**
      * @return Returns the size of the data length, in bytes.
      */
-    public LengthSize getDataLength() {
-        switch (this.TYPEFIELD >>> 6) {
-            case 0:
-                return LengthSize.INT8;
-            case 1:
-                return LengthSize.INT16;
-            case 2:
-                return LengthSize.INT32;
-            default:
-                throw new IllegalArgumentException();
+    val dataLength: LengthSize
+        get() = when (TYPEFIELD ushr 6) {
+            0 -> LengthSize.INT8
+            1 -> LengthSize.INT16
+            2 -> LengthSize.INT32
+            else -> throw IllegalArgumentException()
         }
-    }
-
     /**
      * Replaces the changeform's data, handling compression and decompression as
      * necessary.
@@ -246,31 +132,21 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
         }
     }*/
     /**
-     * @return Whether the data is compressed.
-     */
-    public boolean isCompressed() {
-        return this.ISCOMPRESSED;
-    }
-
-    /**
      * @return The version field.
      */
-    public int getVersion() {
-        return this.VERSION;
-    }
+    val version: Int
+        get() = VERSION.toInt()
 
     /**
      * Returns the raw data for the ChangeForm. It will be decompressed first,
      * if necessary.
      *
-     * @return The raw form of the <code>ChangeFormData</code>.
-     *
+     * @return The raw form of the `ChangeFormData`.
      */
-    public ByteBuffer getBodyData() {
-        return this.ISCOMPRESSED
-                ? ChangeForm.decompress(this.RAWDATA, this.length2)
-                : ByteBuffer.allocate(this.RAWDATA.length).put(this.RAWDATA);
-    }
+    val bodyData: ByteBuffer?
+        get() = if (isCompressed) decompress(RAWDATA, length2) else ByteBuffer.allocate(RAWDATA.size).put(
+            RAWDATA
+        )
 
     /**
      * Parses the changeform's data and returns it, handling decompression as
@@ -279,75 +155,57 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
      * If the changeform's data is compressed and cannot be successfully
      * decompressed, null will be returned.
      *
-     * If the changeform's data cannot be parsed and <code>bestEffort</code> is
+     * If the changeform's data cannot be parsed and `bestEffort` is
      * false, null will be returned.
      *
      * @param analysis
-     * @param context The <code>ESSContext</code> info.
+     * @param context The `ESSContext` info.
      * @param bestEffort A flag indicating whether or not to return a
      * ChangeFormDefault if there was a problem parsing the data.
-     * @return The <code>ChangeFormData</code>.
-     *
+     * @return The `ChangeFormData`.
      */
-    public ChangeFormData getData(resaver.Analysis analysis, ESS.ESSContext context, boolean bestEffort) {
+    fun getData(analysis: Analysis?, context: ESSContext?, bestEffort: Boolean): ChangeFormData? {
         if (parsedData != null) {
-            return this.parsedData;
+            return parsedData
         }
-
-        final ByteBuffer BODYDATA = this.getBodyData();
-        if (BODYDATA == null) {
-            return null;
-        }
-
-        BODYDATA.order(ByteOrder.LITTLE_ENDIAN);
-        ((Buffer) BODYDATA).position(0);
-
+        val BODYDATA = bodyData ?: return null
+        BODYDATA.order(ByteOrder.LITTLE_ENDIAN)
+        (BODYDATA as Buffer).position(0)
         try {
-            switch (this.TYPE) {
-                case FLST:
-                    this.parsedData = new ChangeFormFLST(BODYDATA, this.CHANGEFLAGS, context);
-                    break;
-                case LVLN:
-                    this.parsedData = new ChangeFormLVLN(BODYDATA, this.CHANGEFLAGS, context);
-                    break;
-                /*case LVLI:
-                    this.parsedData = new ChangeFormLVLI(BODYDATA, this.CHANGEFLAGS);
-                    break;*/
-                case REFR:
-                    this.parsedData = new ChangeFormRefr(BODYDATA, this.CHANGEFLAGS, this.REFID, analysis, context);
-                    break;
-                case ACHR:
-                    this.parsedData = new ChangeFormACHR(BODYDATA, this.CHANGEFLAGS, this.REFID, analysis, context);
-                    break;
-                case NPC_:
-                    this.parsedData = new ChangeFormNPC(BODYDATA, this.CHANGEFLAGS, context);
-                    break;
-                default:
-                    if (bestEffort) {
-                        this.parsedData = new ChangeFormDefault(BODYDATA, this.length1);
-                    } else {
-                        return null;
-                    }
-                    break;
+            parsedData = when (type) {
+                ChangeFormType.FLST -> ChangeFormFLST(BODYDATA, changeFlags, context)
+                ChangeFormType.LVLN -> ChangeFormLVLN(BODYDATA, changeFlags, context)
+                ChangeFormType.REFR -> ChangeFormRefr(BODYDATA, changeFlags, refID, analysis, context)
+                ChangeFormType.ACHR -> ChangeFormACHR(BODYDATA, changeFlags, refID, analysis, context)
+                ChangeFormType.NPC_ -> ChangeFormNPC(BODYDATA, changeFlags, context)
+                else -> if (bestEffort) {
+                    ChangeFormDefault(BODYDATA, length1)
+                } else {
+                    return null
+                }
             }
-        } catch (ElementException | BufferUnderflowException ex) {
-            LOG.warning(ex.getMessage());
-
+        } catch (ex: ElementException) {
+            LOG.warning(ex.message)
             if (bestEffort) {
-                ((Buffer) BODYDATA).position(0);
-                this.parsedData = new ChangeFormDefault(BODYDATA, this.length1);
+                (BODYDATA as Buffer).position(0)
+                parsedData = ChangeFormDefault(BODYDATA, length1)
             } else {
-                return null;
+                return null
+            }
+        } catch (ex: BufferUnderflowException) {
+            LOG.warning(ex.message)
+            if (bestEffort) {
+                (BODYDATA as Buffer).position(0)
+                parsedData = ChangeFormDefault(BODYDATA, length1)
+            } else {
+                return null
             }
         }
-
-        if (null == this.parsedData) {
-            throw new NullPointerException("This shouldn't happen!");
+        if (null == parsedData) {
+            throw NullPointerException("This shouldn't happen!")
         }
-
-        return this.parsedData;
+        return parsedData
     }
-
     /**
      * Enables the modified flag, indicating that the changeform will have to
      * recalculate it's size and compressed data.
@@ -356,303 +214,253 @@ final public class ChangeForm implements Element, AnalyzableElement, Linkable {
         this.modified = true;
     }*/
     /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        return this.REFID.toHTML(target);
+    override fun toHTML(target: Element?): String {
+        return refID.toHTML(target)
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        final StringBuilder BUF = new StringBuilder();
-        BUF.append(this.TYPE);
-
-        if (null != this.REFID.PLUGIN) {
-            BUF.append(" (").append(this.REFID.PLUGIN).append(")");
-        } else if (this.REFID.getType() == RefID.Type.FORMIDX) {
-            int k = 0;
+    override fun toString(): String {
+        val BUF = StringBuilder()
+        BUF.append(type)
+        if (null != refID.PLUGIN) {
+            BUF.append(" (").append(refID.PLUGIN).append(")")
+        } else if (refID.type === RefID.Type.FORMIDX) {
+            val k = 0
         }
-        BUF.append(" refid=").append(this.REFID);
-
-        if (parsedData != null && this.parsedData instanceof GeneralElement) {
-            GeneralElement gen = (GeneralElement) this.parsedData;
-            if (gen.hasVal("BASE_OBJECT")) {
-                RefID base = (RefID) gen.getVal("BASE_OBJECT");
-                BUF.append(" base=").append(base.toString());
+        BUF.append(" refid=").append(refID)
+        if (parsedData != null && parsedData is GeneralElement) {
+            val gen = parsedData as GeneralElement?
+            if (gen!!.hasVal("BASE_OBJECT")) {
+                val base = gen.getVal("BASE_OBJECT") as RefID
+                BUF.append(" base=").append(base.toString())
             } else if (gen.hasVal("INITIAL")) {
-                GeneralElement initial = gen.getGeneralElement("INITIAL");
+                val initial = gen.getGeneralElement("INITIAL")
                 if (initial.hasVal("BASE_OBJECT")) {
-                    RefID base = (RefID) initial.getVal("BASE_OBJECT");
-                    BUF.append(" base=").append(base.toString());
+                    val base = initial.getVal("BASE_OBJECT") as RefID
+                    BUF.append(" base=").append(base.toString())
                 }
             }
         }
-
-        return BUF.toString();
+        return BUF.toString()
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-
-        Set<ScriptInstance> HOLDERS = save.getPapyrus().getScriptInstances().values().stream()
-                .filter(i -> this.getRefID().equals(i.getRefID()))
-                .collect(Collectors.toSet());
-
-        BUILDER.append("<html><h3>CHANGEFORM</h3>");
-        BUILDER.append(String.format("<p>RefID: %s</p>", this.REFID));
-        BUILDER.append(String.format("<p style=\"display:inline-table;\">ChangeFlags: %s</p>", this.CHANGEFLAGS.toHTML()));
-        BUILDER.append("<p>");
-        BUILDER.append(String.format("DataLength: %s<br/>", this.getDataLength()));
-        BUILDER.append(String.format("Type: %s (%d : %d)<br/>", this.getType(), this.getType().SKYRIMCODE, this.getType().FULL));
-        BUILDER.append(String.format("Version: %d<br/>", this.VERSION));
-
-        if (this.length2 > 0) {
-            BUILDER.append(String.format("Length: %d bytes (%d bytes uncompressed)<br/>", this.length1, this.length2));
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
+        val BUILDER = StringBuilder()
+        val HOLDERS = save!!.papyrus.scriptInstances.values.stream()
+            .filter { i: ScriptInstance -> refID == i.refID }
+            .toList().toSet()
+        BUILDER.append("<html><h3>CHANGEFORM</h3>")
+        BUILDER.append(String.format("<p>RefID: %s</p>", refID))
+        BUILDER.append(String.format("<p style=\"display:inline-table;\">ChangeFlags: %s</p>", changeFlags.toHTML()))
+        BUILDER.append("<p>")
+        BUILDER.append(String.format("DataLength: %s<br/>", dataLength))
+        BUILDER.append(String.format("Type: %s (%d : %d)<br/>", type, type.SKYRIMCODE, type.FULL))
+        BUILDER.append(String.format("Version: %d<br/>", VERSION))
+        if (length2 > 0) {
+            BUILDER.append(String.format("Length: %d bytes (%d bytes uncompressed)<br/>", length1, length2))
         } else {
-            BUILDER.append(String.format("Length: %d bytes<br/>", this.length1));
+            BUILDER.append(String.format("Length: %d bytes<br/>", length1))
         }
-        BUILDER.append("</p>");
-
+        BUILDER.append("</p>")
         if (HOLDERS.isEmpty()) {
-            BUILDER.append("<p>No attached instances.</p>");
+            BUILDER.append("<p>No attached instances.</p>")
         } else {
-            BUILDER.append(String.format("<p>%d attached instances:</p><ul>", HOLDERS.size()));
-            HOLDERS.forEach(owner -> {
+            BUILDER.append(String.format("<p>%d attached instances:</p><ul>", HOLDERS.size))
+            HOLDERS.forEach { owner: ScriptInstance? ->
                 if (owner != null) {
-                    BUILDER.append(String.format("<li>%s - %s", owner.getClass().getSimpleName(), ((Linkable) owner).toHTML(this)));
+                    BUILDER.append(
+                        String.format(
+                            "<li>%s - %s",
+                            owner.javaClass.simpleName,
+                            (owner as Linkable).toHTML(this)
+                        )
+                    )
                 }
-            });
-            BUILDER.append("</ul>");
+            }
+            BUILDER.append("</ul>")
         }
-
-        BUILDER.append(String.format("<h3>ANALYZE RAW DATA: %s</h3>", this.REFID.toHTML(null)));
-
-        final ChangeFormData BODY = this.getData(analysis, save.getContext(), true);
-        if (null == BODY) {
-            BUILDER.append("<p><b>The ChangeForm appears to contain invalid data.</b></p>");
-        } else if (BODY instanceof ChangeFormDefault) {
-            BUILDER.append("<p><b>The ChangeForm could not be parsed.</b></p>");
-            BUILDER.append(BODY.getInfo(analysis, save));
-        } else {
-            BUILDER.append(BODY.getInfo(analysis, save));
+        BUILDER.append(String.format("<h3>ANALYZE RAW DATA: %s</h3>", refID.toHTML(null)))
+        val BODY = getData(analysis, save.context, true)
+        when (BODY) {
+            null -> {
+                BUILDER.append("<p><b>The ChangeForm appears to contain invalid data.</b></p>")
+            }
+            is ChangeFormDefault -> {
+                BUILDER.append("<p><b>The ChangeForm could not be parsed.</b></p>")
+                BUILDER.append(BODY.getInfo(analysis, save))
+            }
+            else -> {
+                BUILDER.append(BODY.getInfo(analysis, save))
+            }
         }
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis,resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(Analysis analysis, String mod) {
-        return false;
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+        return false
     }
-
     /**
-     * The <code>RefID</code> of the <code>ChangeForm</code>.
+     * @return The `RefID` of the `CHangeForm`.
      */
-    final private RefID REFID;
-
+    /**
+     * The `RefID` of the `ChangeForm`.
+     */
+    val refID: RefID
+    /**
+     * @return The changeflag field.
+     */
     /**
      * ChangeFlags describe what parts of the form have changed.
      */
-    final private Flags.Int CHANGEFLAGS;
+    val changeFlags: Flags.Int
 
     /**
      * The type of Form.
      */
-    final private int TYPEFIELD;
-    final private Type TYPE;
-    final private byte VERSION;
+    private val TYPEFIELD: Int
+
+    /**
+     * @return The type field.
+     */
+    val type: ChangeFormType
+    private val VERSION: Byte
 
     /**
      * For compressed changeForms, length1 represents the size of the compressed
      * data.
      */
-    private final int length1;
+    private var length1 = 0
 
     /**
      * For compressed changeForms, length2 represents the size of the
      * uncompressed data.
      */
-    final private int length2;
+    private var length2 = 0
 
-    final private boolean ISCOMPRESSED;
-    final private byte[] RAWDATA;
-    private ChangeFormData parsedData;
-    static final private Logger LOG = Logger.getLogger(ChangeForm.class.getCanonicalName());
+    /**
+     * @return Whether the data is compressed.
+     */
+    val isCompressed: Boolean
+    private val RAWDATA: ByteArray
+    private var parsedData: ChangeFormData?
 
     /**
      * Data sizes for the length fields.
      */
-    static public enum LengthSize {
+    enum class LengthSize {
         INT8, INT16, INT32
     }
 
-    /**
-     * Types of ChangeForms.
-     */
-    static public enum Type {
-        REFR(0, 0, 63, "Object Reference"),
-        ACHR(1, 1, 64, "NPC Reference"),
-        PMIS(2, 2, 65, ""),
-        PGRE(3, 3, 67, ""),
-        PBEA(4, 4, 68, ""),
-        PFLA(5, 5, 69, ""),
-        CELL(6, 6, 62, "Cell"),
-        INFO(7, 7, 78, "Dialogue Info"),
-        QUST(8, 8, 79, "Quest"),
-        NPC_(9, 9, 45, "NPC Template"),
-        ACTI(10, 10, 25, "Activator"),
-        TACT(11, 11, 26, "Talking Activator"),
-        ARMO(12, 12, 27, "Armor"),
-        BOOK(13, 13, 28, "Book"),
-        CONT(14, 14, 29, "Container"),
-        DOOR(15, 15, 30, "Door"),
-        INGR(16, 16, 31, "Ingredient"),
-        LIGH(17, 17, 32, "Light"),
-        MISC(18, 18, 33, "Miscellaneous"),
-        APPA(19, 19, 34, ""),
-        STAT(20, 20, 35, "Static"),
-        MSTT(21, 21, 37, "Moveable Static"),
-        FURN(22, 22, 42, "Furniture"),
-        WEAP(23, 23, 43, "Weapon"),
-        AMMO(24, 24, 44, "Ammunition"),
-        KEYM(25, 25, 47, "Key"),
-        ALCH(26, 26, 48, "Ingestible"),
-        IDLM(27, 27, 49, "Idle Marker"),
-        NOTE(28, 28, 50, "Note"),
-        ECZN(29, 29, 105, "Encounter Zone"),
-        CLAS(30, 30, 10, "Class"),
-        FACT(31, 31, 11, "Faction"),
-        PACK(32, 32, 81, "Package"),
-        NAVM(33, 33, 75, "Navigation Mesh"),
-        WOOP(34, 34, 120, ""),
-        MGEF(35, 35, 19, "Magical Effect"),
-        SMQN(36, 36, 115, "Story Manager Quest Node"),
-        SCEN(37, 37, 124, "Scene"),
-        LCTN(38, 38, 106, "Location"),
-        RELA(39, 39, 123, "Relationship"),
-        PHZD(40, 40, 72, "Physical Hazard"),
-        PBAR(41, 41, 71, ""),
-        PCON(42, 42, 70, ""),
-        FLST(43, 43, 93, "Form List"),
-        LVLN(44, 44, 46, "Leveled NPC"),
-        LVLI(45, 45, 55, "Leveled Item"),
-        LVSP(46, 46, 84, "Leveled Spell"),
-        PARW(47, 47, 66, ""),
-        ENCH(48, 48, 22, "Enchantment"),
-        UNKNOWN49(49, 49, -1, ""),
-        UNKNOWN50(50, 50, -1, ""),
-        UNKNOWN51(51, 51, -1, ""),
-        UNKNOWN52(52, 52, -1, ""),
-        UNKNOWN53(53, 53, -1, ""),
-        UNKNOWN54(54, 54, -1, ""),
-        UNKNOWN55(55, 55, -1, ""),
-        UNKNOWN56(56, 56, -1, ""),
-        UNKNOWN57(57, 57, -1, ""),
-        UNKNOWN58(58, 58, -1, ""),
-        UNKNOWN59(59, 59, -1, ""),
-        UNKNOWN60(60, 60, -1, ""),
-        UNKNOWN61(61, 61, -1, ""),
-        UNKNOWN62(62, 62, -1, ""),
-        LAND(63, 63, -1, "");
+    companion object {
+        private val LOG = Logger.getLogger(ChangeForm::class.java.canonicalName)
 
-        private Type(int skyrim, int fo4, int full, String name) {
-            this.SKYRIMCODE = (byte) skyrim;
-            this.FALLOUTCODE = (byte) fo4;
-            this.FULL = (byte) full;
-            this.NAME = name;
+        /**
+         * Decompresses a buffer.
+         *
+         * @param buf
+         * @param length
+         * @return
+         */
+        private fun decompress(buf: ByteArray, length: Int): ByteBuffer? {
+            return try {
+                BufferUtil.inflateZLIB(ByteBuffer.wrap(buf), length, buf.size)
+            } catch (ex: DataFormatException) {
+                null
+            }
         }
 
-        static Type getType(Game game, int code) {
-            if (code >= SKYRIM_VALUES.length || code < 0) {
-                return null;
-            }
-
-            if (game.isSkyrim()) {
-                if (SKYRIM_VALUES[code].SKYRIMCODE != code) {
-                    throw new IllegalStateException();
-                }
-                return SKYRIM_VALUES[code];
-            } else if (game.isFO4()) {
-                if (FALLOUT4_VALUES[code].FALLOUTCODE != code) {
-                    throw new IllegalStateException();
-                }
-                return FALLOUT4_VALUES[code];
-            }
-            return null;
-        }
-
-        final public byte SKYRIMCODE;
-        final public byte FALLOUTCODE;
-        final public byte FULL;
-        final public String NAME;
-        static final private Type[] SKYRIM_VALUES = values();
-        static final private Type[] FALLOUT4_VALUES = values();
-
-        static {
-            Arrays.sort(SKYRIM_VALUES, Comparator.comparingInt(a -> a.SKYRIMCODE));
-            Arrays.sort(FALLOUT4_VALUES, Comparator.comparingInt(a -> a.FALLOUTCODE));
+        /**
+         * Verifies that two instances of `ChangeForm` are identical.
+         *
+         * @param cf1 The first `ChangeForm`.
+         * @param cf2 The second `ChangeForm`.
+         * @throws IllegalStateException Thrown if the two instances of
+         * `ChangeForm` are not equal.
+         */
+        @JvmStatic
+        @Throws(IllegalStateException::class)
+        fun verifyIdentical(cf1: ChangeForm, cf2: ChangeForm) {
+            check(cf1.refID == cf2.refID) { String.format("RefID mismatch: %s vs %s.", cf1.refID, cf2.refID) }
+            check(cf1.type == cf2.type) { String.format("Type mismatch: %s vs %s.", cf1.type, cf2.type) }
         }
     }
 
     /**
-     * Decompresses a buffer.
+     * Creates a new `ChangeForm` by reading from a
+     * `ByteBuffer`.
      *
-     * @param buf
-     * @param length
-     * @return
+     * @param input The input stream.
+     * @param context The `ESSContext` info.
      */
-    static private ByteBuffer decompress(byte[] buf, int length) {
-        try {
-            final ByteBuffer DECOMPRESSED = BufferUtil.inflateZLIB(ByteBuffer.wrap(buf), length, buf.length);
-            return DECOMPRESSED;
-        } catch (DataFormatException ex) {
-            return null;
+    init {
+        refID = context.readRefID(input)
+        changeFlags = Flags.readIntFlags(input)
+        TYPEFIELD = java.lang.Byte.toUnsignedInt(input.get())
+        VERSION = input.get()
+        val typeCode = TYPEFIELD and 0x3F
+        val type = ChangeFormType.getType(context.game, typeCode)
+            ?: throw IllegalStateException("Invalid changeform type index: $typeCode")
+        this.type = type
+        when (dataLength) {
+            LengthSize.INT8 -> {
+                length1 = java.lang.Byte.toUnsignedInt(input.get())
+                length2 = java.lang.Byte.toUnsignedInt(input.get())
+            }
+            LengthSize.INT16 -> {
+                length1 = java.lang.Short.toUnsignedInt(input.short)
+                length2 = java.lang.Short.toUnsignedInt(input.short)
+            }
+            LengthSize.INT32 -> {
+                length1 = input.int
+                length2 = input.int
+            }
         }
-    }
-
-    /**
-     * Verifies that two instances of <code>ChangeForm</code> are identical.
-     *
-     * @param cf1 The first <code>ChangeForm</code>.
-     * @param cf2 The second <code>ChangeForm</code>.
-     * @throws IllegalStateException Thrown if the two instances of
-     * <code>ChangeForm</code> are not equal.
-     */
-    static public void verifyIdentical(ChangeForm cf1, ChangeForm cf2) throws IllegalStateException {
-        if (!Objects.equals(cf1.getRefID(), cf2.getRefID())) {
-            throw new IllegalStateException(String.format("RefID mismatch: %s vs %s.", cf1.getRefID(), cf2.getRefID()));
-        } else if (cf1.getType() != cf2.getType()) {
-            throw new IllegalStateException(String.format("Type mismatch: %s vs %s.", cf1.getType(), cf2.getType()));
-        } else if (!Objects.equals(cf1.getChangeFlags(), cf2.getChangeFlags())) {
-            throw new IllegalStateException(String.format("ChangeFlags mismatch: %s vs %s.", cf1.getChangeFlags(), cf2.getChangeFlags()));
-        } else if (cf1.getVersion() != cf2.getVersion()) {
-            throw new IllegalStateException(String.format("Version mismatch: %d vs %d.", cf1.getVersion(), cf2.getVersion()));
-        } else if (cf1.isCompressed() != cf2.isCompressed()) {
-            throw new IllegalStateException(String.format("RefID mismatch: %s vs %s.", cf1.isCompressed(), cf2.isCompressed()));
-        } else if (cf1.getDataLength() != cf2.getDataLength()) {
-            throw new IllegalStateException(String.format("Data length mismatch: %s vs %s.", cf1.getDataLength().toString(), cf2.getDataLength().toString()));
-        } else if (!Objects.equals(cf1.getBodyData(), cf2.getBodyData())) {
-            throw new IllegalStateException(String.format("RefID mismatch: %s vs %s.", cf1.getBodyData(), cf2.getBodyData()));
+        check(length1 >= 0) {
+            String.format(
+                "Invalid data size: l1 = %d, l2 = %d, %s, %s",
+                length1,
+                length2,
+                this.type,
+                refID
+            )
+        }
+        check(length2 >= 0) {
+            String.format(
+                "Invalid data size: l1 = %d, l2 = %d, %s, %s",
+                length1,
+                length2,
+                this.type,
+                refID
+            )
         }
 
+        // Read the changeform's data.
+        val BUF = ByteArray(length1)
+        input[BUF]
+
+        // If the length2 field is greater than 0, then the data is compressed.
+        isCompressed = length2 > 0
+        RAWDATA = BUF
+        parsedData = null
+        //this.modified = false;
     }
 }

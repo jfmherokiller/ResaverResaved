@@ -29,7 +29,7 @@ import javax.swing.table.TableModel
  */
 class ArrayTableModel(data: ArrayInfo?) : TableModel {
     override fun getRowCount(): Int {
-        return DATA.variables.size
+        return DATA.variables?.size ?: 0
     }
 
     override fun getColumnCount(): Int {
@@ -40,8 +40,8 @@ class ArrayTableModel(data: ArrayInfo?) : TableModel {
         assert(0 <= rowIndex && rowIndex < this.rowCount)
         return when (columnIndex) {
             0 -> rowIndex
-            1 -> DATA.variables[rowIndex].toTypeString()
-            2 -> DATA.variables[rowIndex]
+            1 -> DATA.variables?.get(rowIndex)?.toTypeString()!!
+            2 -> DATA.variables?.get(rowIndex)!!
             else -> throw IllegalStateException()
         }
     }
@@ -59,8 +59,8 @@ class ArrayTableModel(data: ArrayInfo?) : TableModel {
             return false
         }
         assert(0 <= rowIndex && rowIndex < this.rowCount)
-        val `var` = DATA.variables[rowIndex]
-        return when (`var`.type) {
+        val `var` = DATA.variables?.get(rowIndex)
+        return when (`var`?.type) {
             Type.STRING, Type.INTEGER, Type.FLOAT, Type.BOOLEAN, Type.REF -> true
             else -> false
         }
