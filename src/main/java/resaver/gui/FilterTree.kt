@@ -206,7 +206,7 @@ class FilterTree : JTree(FilterTreeModel()) {
                             .forEach { _ -> count++ }
                         val purgeable = count.toInt()
                         MI_PURGES.isEnabled = purgeable > 0
-                        MI_PURGES.text = String.format("Purge (%d plugins)", purgeable)
+                        MI_PURGES.text = "Purge ($purgeable plugins)"
                         var result = 0L
                         ELEMENTS.keys
                             .asSequence()
