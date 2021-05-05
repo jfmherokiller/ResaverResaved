@@ -124,7 +124,12 @@ final public class StringTable extends ArrayList<StringTable.TString> {
             sum += 2;
         }
 
-        sum += this.stream().mapToInt(WString::calculateSize).sum();
+        int result = 0;
+        for (TString tString : this) {
+            int calculateSize = tString.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
     
@@ -137,7 +142,13 @@ final public class StringTable extends ArrayList<StringTable.TString> {
      * <code>StringTable</code> already contained a match.
      */
     public TString addString(IString val) {
-        Optional<TString> match = this.stream().filter(v -> v.equals(val)).findFirst();
+        Optional<TString> match = Optional.empty();
+        for (TString v : this) {
+            if (v.equals(val)) {
+                match = Optional.of(v);
+                break;
+            }
+        }
         if (match.isPresent()) {
             return match.get();
         }
