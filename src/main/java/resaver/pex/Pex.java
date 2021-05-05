@@ -89,7 +89,7 @@ final public class Pex {
             this.STATES.add(new State(input, strings));
         }
 
-        this.PROPERTIES.forEach(prop -> {
+        for (Property prop : this.PROPERTIES) {
             if (prop.hasAutoVar()) {
                 for (Variable var : this.VARIABLES) {
                     if (prop.AUTOVARNAME.equals(var.NAME)) {
@@ -100,7 +100,7 @@ final public class Pex {
                 assert this.AUTOVARMAP.containsKey(prop);
             }
 
-        });
+        }
     }
 
     /**
@@ -164,14 +164,34 @@ final public class Pex {
         sum += 4; // userFlags
         sum += 2; // autoStateName
         sum += 6; // array sizes
-        sum += this.VARIABLES.stream().mapToInt(Variable::calculateSize).sum();
-        sum += this.PROPERTIES.stream().mapToInt(Property::calculateSize).sum();
-        sum += this.STATES.stream().mapToInt(State::calculateSize).sum();
+        int sum2 = 0;
+        for (Variable VARIABLE : this.VARIABLES) {
+            int size1 = VARIABLE.calculateSize();
+            sum2 += size1;
+        }
+        sum += sum2;
+        int result1 = 0;
+        for (Property PROPERTY : this.PROPERTIES) {
+            int calculateSize1 = PROPERTY.calculateSize();
+            result1 += calculateSize1;
+        }
+        sum += result1;
+        int sum1 = 0;
+        for (State STATE : this.STATES) {
+            int i = STATE.calculateSize();
+            sum1 += i;
+        }
+        sum += sum1;
 
         if (this.GAME.isFO4()) {
             sum += 1;
             sum += 2;
-            sum += this.STRUCTS.stream().mapToInt(Struct::calculateSize).sum();
+            int result = 0;
+            for (Struct STRUCT : this.STRUCTS) {
+                int calculateSize = STRUCT.calculateSize();
+                result += calculateSize;
+            }
+            sum += result;
         }
 
         return sum;
@@ -187,10 +207,18 @@ final public class Pex {
         strings.add(this.PARENTNAME);
         strings.add(this.DOCSTRING);
         strings.add(this.AUTOSTATENAME);
-        this.STRUCTS.forEach(f -> f.collectStrings(strings));
-        this.VARIABLES.forEach(f -> f.collectStrings(strings));
-        this.PROPERTIES.forEach(f -> f.collectStrings(strings));
-        this.STATES.forEach(f -> f.collectStrings(strings));
+        for (Struct STRUCT : this.STRUCTS) {
+            STRUCT.collectStrings(strings);
+        }
+        for (Variable VARIABLE : this.VARIABLES) {
+            VARIABLE.collectStrings(strings);
+        }
+        for (Property PROPERTY : this.PROPERTIES) {
+            PROPERTY.collectStrings(strings);
+        }
+        for (State f : this.STATES) {
+            f.collectStrings(strings);
+        }
     }
 
     /**
@@ -200,7 +228,12 @@ final public class Pex {
      *
      */
     public Set<IString> getStructNames() {
-        return this.STRUCTS.stream().map(p -> p.NAME).collect(Collectors.toSet());
+        Set<IString> set = new HashSet<>();
+        for (Struct p : this.STRUCTS) {
+            TString name = p.NAME;
+            set.add(name);
+        }
+        return set;
     }
 
     /**
@@ -210,7 +243,12 @@ final public class Pex {
      *
      */
     public Set<IString> getPropertyNames() {
-        return this.PROPERTIES.stream().map(p -> p.NAME).collect(Collectors.toSet());
+        Set<IString> set = new HashSet<>();
+        for (Property p : this.PROPERTIES) {
+            TString name = p.NAME;
+            set.add(name);
+        }
+        return set;
     }
 
     /**
@@ -220,7 +258,12 @@ final public class Pex {
      *
      */
     public Set<IString> getVariableNames() {
-        return this.VARIABLES.stream().map(p -> p.NAME).collect(Collectors.toSet());
+        Set<IString> set = new HashSet<>();
+        for (Variable p : this.VARIABLES) {
+            TString name = p.NAME;
+            set.add(name);
+        }
+        return set;
     }
 
     /**
@@ -231,7 +274,11 @@ final public class Pex {
      */
     public Set<IString> getFunctionNames() {
         final Set<IString> NAMES = new java.util.HashSet<>();
-        this.STATES.forEach(state -> state.FUNCTIONS.forEach(func -> NAMES.add(func.getFullName())));
+        for (State state : this.STATES) {
+            for (Function func : state.FUNCTIONS) {
+                NAMES.add(func.getFullName());
+            }
+        }
         return NAMES;
     }
 
@@ -244,11 +291,11 @@ final public class Pex {
     public Set<UserFlag> getFlags(int userFlags) {
         final Set<UserFlag> FLAGS = new java.util.HashSet<>();
 
-        this.USERFLAGDEFS.forEach(flag -> {
+        for (UserFlag flag : this.USERFLAGDEFS) {
             if (flag.matches(userFlags)) {
                 FLAGS.add(flag);
             }
-        });
+        }
 
         return FLAGS;
     }
@@ -269,7 +316,9 @@ final public class Pex {
         }
 
         final Set<UserFlag> FLAGOBJS = this.getFlags(this.USERFLAGS);
-        FLAGOBJS.forEach(flag -> S.append(" ").append(flag));
+        for (UserFlag flag : FLAGOBJS) {
+            S.append(" ").append(flag);
+        }
         code.add(S.toString());
 
         if (null != this.DOCSTRING && !this.DOCSTRING.isEmpty()) {
@@ -279,7 +328,15 @@ final public class Pex {
         code.add("");
 
         final Map<Property, Variable> AUTOVARS = new java.util.HashMap<>();
-        this.PROPERTIES.stream().filter(Property::hasAutoVar).forEach(p -> this.VARIABLES.stream().filter(v -> v.NAME.equals(p.AUTOVARNAME)).forEach(v -> AUTOVARS.put(p, v)));
+        for (Property p : this.PROPERTIES) {
+            if (p.hasAutoVar()) {
+                for (Variable v : this.VARIABLES) {
+                    if (v.NAME.equals(p.AUTOVARNAME)) {
+                        AUTOVARS.put(p, v);
+                    }
+                }
+            }
+        }
 
         List<Property> sortedProp = new ArrayList<>(this.PROPERTIES);
         sortedProp.sort(Comparator.comparing(a -> a.NAME));
@@ -292,17 +349,25 @@ final public class Pex {
         code.add(";");
         code.add("; PROPERTIES");
         code.add(";");
-        sortedProp.forEach(v -> v.disassemble(code, level, AUTOVARS));
+        for (Property property : sortedProp) {
+            property.disassemble(code, level, AUTOVARS);
+        }
         code.add("");
         code.add(";");
         code.add("; VARIABLES");
         code.add(";");
-        sortedVars.stream().filter(v -> !AUTOVARS.containsValue(v)).forEach(v -> v.disassemble(code, level));
+        for (Variable sortedVar : sortedVars) {
+            if (!AUTOVARS.containsValue(sortedVar)) {
+                sortedVar.disassemble(code, level);
+            }
+        }
         code.add("");
         code.add(";");
         code.add("; STATES");
         code.add(";");
-        this.STATES.forEach(v -> v.disassemble(code, level, this.AUTOSTATENAME.equals(v.NAME), AUTOVARS));
+        for (State v : this.STATES) {
+            v.disassemble(code, level, this.AUTOSTATENAME.equals(v.NAME), AUTOVARS);
+        }
     }
 
     /**
@@ -318,9 +383,15 @@ final public class Pex {
         buf.append(String.format("\tInitial state: %s\n", this.AUTOSTATENAME));
         buf.append("\n");
 
-        this.PROPERTIES.forEach(prop -> buf.append(prop.toString()));
-        this.VARIABLES.forEach(var -> buf.append(var.toString()));
-        this.STATES.forEach(state -> buf.append(state.toString()));
+        for (Property prop : this.PROPERTIES) {
+            buf.append(prop.toString());
+        }
+        for (Variable var : this.VARIABLES) {
+            buf.append(var.toString());
+        }
+        for (State state : this.STATES) {
+            buf.append(state.toString());
+        }
 
         return buf.toString();
     }
@@ -392,7 +463,12 @@ final public class Pex {
             int sum = 0;
             sum += 2; // NAME
             sum += 2; // Count
-            sum += this.MEMBERS.stream().mapToInt(Member::calculateSize).sum();
+            int result = 0;
+            for (Member MEMBER : this.MEMBERS) {
+                int calculateSize = MEMBER.calculateSize();
+                result += calculateSize;
+            }
+            sum += result;
             return sum;
         }
 
@@ -404,7 +480,9 @@ final public class Pex {
          */
         public void collectStrings(Set<TString> strings) {
             strings.add(this.NAME);
-            this.MEMBERS.forEach(f -> f.collectStrings(strings));
+            for (Member f : this.MEMBERS) {
+                f.collectStrings(strings);
+            }
         }
 
         /**
@@ -734,11 +812,15 @@ final public class Pex {
 
                 S.append(" AUTO");
                 final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(AUTOVAR.USERFLAGS);
-                FLAGOBJS.forEach(flag -> S.append(" ").append(flag.toString()));
+                for (UserFlag flag : FLAGOBJS) {
+                    S.append(" ").append(flag.toString());
+                }
             }
 
             final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(this.USERFLAGS);
-            FLAGOBJS.forEach(flag -> S.append(" ").append(flag.toString()));
+            for (UserFlag flag : FLAGOBJS) {
+                S.append(" ").append(flag.toString());
+            }
 
             if (autovars.containsKey(this) || this.hasAutoVar()) {
                 final Variable AUTOVAR = autovars.get(this);
@@ -857,7 +939,12 @@ final public class Pex {
             int sum = 0;
             sum += 2; // NAME
             sum += 2; // array size
-            sum += this.FUNCTIONS.stream().mapToInt(Function::calculateSize).sum();
+            int result = 0;
+            for (Function FUNCTION : this.FUNCTIONS) {
+                int calculateSize = FUNCTION.calculateSize();
+                result += calculateSize;
+            }
+            sum += result;
             return sum;
         }
 
@@ -868,7 +955,9 @@ final public class Pex {
          */
         public void collectStrings(Set<TString> strings) {
             strings.add(this.NAME);
-            this.FUNCTIONS.forEach(function -> function.collectStrings(strings));
+            for (Function function : this.FUNCTIONS) {
+                function.collectStrings(strings);
+            }
         }
 
         /**
@@ -901,12 +990,12 @@ final public class Pex {
 
             final int INDENT = (autostate ? 0 : 1);
 
-            this.FUNCTIONS.stream()
-                    .filter(f -> !RESERVED.contains(f.NAME))
-                    .forEach(f -> {
-                        f.disassemble(code, level, null, autovars, INDENT);
-                        code.add("");
-                    });
+            for (Function f : this.FUNCTIONS) {
+                if (!RESERVED.contains(f.NAME)) {
+                    f.disassemble(code, level, null, autovars, INDENT);
+                    code.add("");
+                }
+            }
 
             if (null == this.NAME || this.NAME.isEmpty()) {
                 code.add(";EndState");
@@ -926,7 +1015,9 @@ final public class Pex {
         public String toString() {
             StringBuilder buf = new StringBuilder();
             buf.append(String.format("\tState %s\n", this.NAME));
-            this.FUNCTIONS.forEach(function -> buf.append(function.toString()));
+            for (Function function : this.FUNCTIONS) {
+                buf.append(function.toString());
+            }
             return buf.toString();
         }
 
@@ -1033,9 +1124,24 @@ final public class Pex {
             sum += 4; // userflags
             sum += 1; // flags
             sum += 6; // array sizes
-            sum += this.PARAMS.stream().mapToInt(VariableType::calculateSize).sum();
-            sum += this.LOCALS.stream().mapToInt(VariableType::calculateSize).sum();
-            sum += this.INSTRUCTIONS.stream().mapToInt(Instruction::calculateSize).sum();
+            int result1 = 0;
+            for (VariableType PARAM : this.PARAMS) {
+                int calculateSize1 = PARAM.calculateSize();
+                result1 += calculateSize1;
+            }
+            sum += result1;
+            int sum1 = 0;
+            for (VariableType LOCAL : this.LOCALS) {
+                int i = LOCAL.calculateSize();
+                sum1 += i;
+            }
+            sum += sum1;
+            int result = 0;
+            for (Instruction INSTRUCTION : this.INSTRUCTIONS) {
+                int calculateSize = INSTRUCTION.calculateSize();
+                result += calculateSize;
+            }
+            sum += result;
 
             return sum;
         }
@@ -1054,9 +1160,15 @@ final public class Pex {
             strings.add(this.RETURNTYPE);
             strings.add(this.DOC);
 
-            this.PARAMS.forEach(param -> param.collectStrings(strings));
-            this.LOCALS.forEach(local -> local.collectStrings(strings));
-            this.INSTRUCTIONS.forEach(instr -> instr.collectStrings(strings));
+            for (VariableType param : this.PARAMS) {
+                param.collectStrings(strings);
+            }
+            for (VariableType local : this.LOCALS) {
+                local.collectStrings(strings);
+            }
+            for (Instruction instr : this.INSTRUCTIONS) {
+                instr.collectStrings(strings);
+            }
 
         }
 
@@ -1114,7 +1226,9 @@ final public class Pex {
             }
 
             final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(this.USERFLAGS);
-            FLAGOBJS.forEach(flag -> S.append(" ").append(flag.toString()));
+            for (UserFlag flag : FLAGOBJS) {
+                S.append(" ").append(flag.toString());
+            }
 
             if (this.isGlobal()) {
                 S.append(" GLOBAL");
@@ -1129,24 +1243,30 @@ final public class Pex {
                 code.add(String.format("%s{%s}", Disassembler.tab(indent + 1), this.DOC));
             }
 
-            Set<IString> GROUPS = this.LOCALS
-                    .stream()
-                    .filter(VariableType::isTemp)
-                    .map(v -> v.TYPE)
-                    .collect(Collectors.toSet());
+            Set<IString> GROUPS = new HashSet<>();
+            for (VariableType LOCAL : this.LOCALS) {
+                if (LOCAL.isTemp()) {
+                    TString type = LOCAL.TYPE;
+                    GROUPS.add(type);
+                }
+            }
 
-            GROUPS.forEach(t -> {
+            for (IString t : GROUPS) {
                 final StringBuilder DECL = new StringBuilder();
                 DECL.append(Disassembler.tab(indent + 1));
                 DECL.append("; ").append(t).append(' ');
-                DECL.append(this.LOCALS
-                        .stream()
-                        .filter(VariableType::isTemp)
-                        .filter(v -> v.TYPE == t)
-                        .map(v -> v.name)
-                        .collect(Collectors.joining(", ")));
+                StringJoiner joiner = new StringJoiner(", ");
+                for (VariableType v : this.LOCALS) {
+                    if (v.isTemp()) {
+                        if (v.TYPE == t) {
+                            TString name = v.name;
+                            joiner.add(name);
+                        }
+                    }
+                }
+                DECL.append(joiner.toString());
                 code.add(DECL.toString());
-            });
+            }
 
             /*this.LOCALS.forEach(v -> {
                 code.add(String.format("%s%s %s", Disassembler.tab(indent + 1), v.TYPE, v.NAME));
@@ -1155,7 +1275,11 @@ final public class Pex {
             types.addAll(this.LOCALS);
 
             TermMap terms = new TermMap();
-            autovars.forEach((p, v) -> terms.put(new VData.ID(v.NAME), new VData.Term(p.NAME.toString())));
+            for (Map.Entry<Property, Variable> entry : autovars.entrySet()) {
+                Property p = entry.getKey();
+                Variable value = entry.getValue();
+                terms.put(new VData.ID(value.NAME), new VData.Term(p.NAME.toString()));
+            }
 
             List<Instruction> block = new ArrayList<>(this.INSTRUCTIONS);
 
@@ -1165,7 +1289,9 @@ final public class Pex {
                     break;
                 case BYTECODE:
                     Disassembler.preMap(block, types, terms);
-                    block.forEach(v -> code.add(String.format("%s%s", Disassembler.tab(indent + 1), v)));
+                    for (Instruction v : block) {
+                        code.add(String.format("%s%s", Disassembler.tab(indent + 1), v));
+                    }
                     break;
                 case FULL:
                     try {
@@ -1205,11 +1331,11 @@ final public class Pex {
             buf.append(this.LOCALS.toString());
             buf.append("\n\tBEGIN\n");
 
-            this.INSTRUCTIONS.forEach(instruction -> {
+            for (Instruction instruction : this.INSTRUCTIONS) {
                 buf.append("\t\t");
                 buf.append(instruction.toString());
                 buf.append("\n");
-            });
+            }
 
             buf.append("\tEND\n\n");
 
@@ -1305,7 +1431,12 @@ final public class Pex {
             public int calculateSize() {
                 int sum = 0;
                 sum += 1; // opcode
-                sum += ARGS.stream().mapToInt(VData::calculateSize).sum();
+                int result = 0;
+                for (VData ARG : ARGS) {
+                    int calculateSize = ARG.calculateSize();
+                    result += calculateSize;
+                }
+                sum += result;
                 return sum;
             }
 
@@ -1316,7 +1447,9 @@ final public class Pex {
              * @param strings The set of strings.
              */
             public void collectStrings(Set<TString> strings) {
-                this.ARGS.forEach(arg -> arg.collectStrings(strings));
+                for (VData arg : this.ARGS) {
+                    arg.collectStrings(strings);
+                }
             }
 
             /**
@@ -1485,7 +1618,9 @@ final public class Pex {
             }
 
             final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(this.USERFLAGS);
-            FLAGOBJS.forEach(flag -> S.append(" ").append(flag.toString()));
+            for (UserFlag flag : FLAGOBJS) {
+                S.append(" ").append(flag.toString());
+            }
             code.add(S.toString());
         }
 
