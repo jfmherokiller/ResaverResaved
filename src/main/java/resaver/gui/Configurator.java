@@ -611,13 +611,13 @@ abstract public class Configurator {
             } catch (IllegalArgumentException ex) {
             }
 
-            Game.VALUES.stream()
-                    .filter(game -> GAME_PATH.endsWith(game.GAME_DIRECTORY))
-                    .findFirst()
-                    .ifPresent(game -> {
-                        setMO2Ini(game, mo2Ini);
-                        JOptionPane.showMessageDialog(null, "Stored MO2 ini file for " + game.NAME, "Success", JOptionPane.INFORMATION_MESSAGE);
-                    });
+            for (Game VALUE : Game.VALUES) {
+                if (GAME_PATH.endsWith(VALUE.GAME_DIRECTORY)) {
+                    setMO2Ini(VALUE, mo2Ini);
+                    JOptionPane.showMessageDialog(null, "Stored MO2 ini file for " + VALUE.NAME, "Success", JOptionPane.INFORMATION_MESSAGE);
+                    break;
+                }
+            }
 
         } catch (IOException | RuntimeException ex) {
             LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex);
