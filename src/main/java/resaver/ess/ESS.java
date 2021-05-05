@@ -38,6 +38,7 @@ import mf.Timer;
 import resaver.ListException;
 import resaver.ess.papyrus.Papyrus;
 import resaver.ess.papyrus.PapyrusElement;
+import resaver.ess.papyrus.PapyrusElementException;
 import resaver.ess.papyrus.PapyrusException;
 import resaver.gui.FilterTreeModel;
 
