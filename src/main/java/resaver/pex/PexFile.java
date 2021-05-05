@@ -193,8 +193,18 @@ final public class PexFile {
         sum += this.HEADER.calculateSize();
         sum += this.STRINGS.calculateSize();
         sum += this.DEBUG.calculateSize();
-        sum += 2 + this.USERFLAGDEFS.stream().mapToInt(UserFlag::calculateSize).sum();
-        sum += 2 + this.SCRIPTS.stream().mapToInt(Pex::calculateSize).sum();
+        int sum1 = 0;
+        for (UserFlag USERFLAGDEF : this.USERFLAGDEFS) {
+            int size = USERFLAGDEF.calculateSize();
+            sum1 += size;
+        }
+        sum += 2 + sum1;
+        int result = 0;
+        for (Pex SCRIPT : this.SCRIPTS) {
+            int calculateSize = SCRIPT.calculateSize();
+            result += calculateSize;
+        }
+        sum += 2 + result;
         return sum;
     }
 
@@ -207,8 +217,12 @@ final public class PexFile {
     public void rebuildStringTable() {
         final Set<TString> INUSE = new java.util.LinkedHashSet<>();
         this.DEBUG.collectStrings(INUSE);
-        this.USERFLAGDEFS.forEach(flag -> flag.collectStrings(INUSE));
-        this.SCRIPTS.forEach(obj -> obj.collectStrings(INUSE));
+        for (UserFlag flag : this.USERFLAGDEFS) {
+            flag.collectStrings(INUSE);
+        }
+        for (Pex obj : this.SCRIPTS) {
+            obj.collectStrings(INUSE);
+        }
         this.STRINGS.rebuildStringTable(INUSE);
     }
 
@@ -219,7 +233,9 @@ final public class PexFile {
      * @param code The code strings.
      */
     public void disassemble(List<String> code, AssemblyLevel level) {
-        this.SCRIPTS.forEach(v -> v.disassemble(code, level));
+        for (Pex v : this.SCRIPTS) {
+            v.disassemble(code, level);
+        }
     }
 
     /**
@@ -236,7 +252,9 @@ final public class PexFile {
         buf.append(this.USERFLAGDEFS);
 
         if (this.SCRIPTS != null) {
-            this.SCRIPTS.forEach(obj -> buf.append("\n\nOBJECT\n").append(obj).append('\n'));
+            for (Pex obj : this.SCRIPTS) {
+                buf.append("\n\nOBJECT\n").append(obj).append('\n');
+            }
         }
 
         return buf.toString();
@@ -441,9 +459,15 @@ final public class PexFile {
          * @param strings The set of strings.
          */
         public void collectStrings(Set<TString> strings) {
-            this.DEBUGFUNCTIONS.forEach(f -> f.collectStrings(strings));
-            this.PROPERTYGROUPS.forEach(f -> f.collectStrings(strings));
-            this.STRUCTORDERS.forEach(f -> f.collectStrings(strings));
+            for (DebugFunction DEBUGFUNCTION : this.DEBUGFUNCTIONS) {
+                DEBUGFUNCTION.collectStrings(strings);
+            }
+            for (PropertyGroup PROPERTYGROUP : this.PROPERTYGROUPS) {
+                PROPERTYGROUP.collectStrings(strings);
+            }
+            for (StructOrder f : this.STRUCTORDERS) {
+                f.collectStrings(strings);
+            }
         }
 
         /**
@@ -454,11 +478,26 @@ final public class PexFile {
             int sum = 1;
             if (this.hasDebugInfo != 0) {
                 sum += 8;
-                sum += 2 + this.DEBUGFUNCTIONS.stream().mapToInt(DebugFunction::calculateSize).sum();
+                int result1 = 0;
+                for (DebugFunction DEBUGFUNCTION : this.DEBUGFUNCTIONS) {
+                    int i = DEBUGFUNCTION.calculateSize();
+                    result1 += i;
+                }
+                sum += 2 + result1;
 
                 if (GAME.isFO4()) {
-                    sum += 2 + this.PROPERTYGROUPS.stream().mapToInt(PropertyGroup::calculateSize).sum();
-                    sum += 2 + this.STRUCTORDERS.stream().mapToInt(StructOrder::calculateSize).sum();
+                    int sum1 = 0;
+                    for (PropertyGroup PROPERTYGROUP : this.PROPERTYGROUPS) {
+                        int size = PROPERTYGROUP.calculateSize();
+                        sum1 += size;
+                    }
+                    sum += 2 + sum1;
+                    int result = 0;
+                    for (StructOrder STRUCTORDER : this.STRUCTORDERS) {
+                        int calculateSize = STRUCTORDER.calculateSize();
+                        result += calculateSize;
+                    }
+                    sum += 2 + result;
                 }
             }
 
@@ -474,7 +513,9 @@ final public class PexFile {
         public String toString() {
             StringBuilder buf = new StringBuilder();
             buf.append("DEBUGINFO\n");
-            this.DEBUGFUNCTIONS.forEach(function -> buf.append('\t').append(function).append('\n'));
+            for (DebugFunction function : this.DEBUGFUNCTIONS) {
+                buf.append('\t').append(function).append('\n');
+            }
             buf.append('\n');
             return buf.toString();
         }
