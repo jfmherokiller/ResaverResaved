@@ -175,3 +175,8 @@ $RECYCLE.BIN/
 /ReSaver.0.log.xml.1.lck
 /ReSaver.0.log.xml.lck
 /ReSaver.exe
+/src/test/resources/TestSaves/FO4/*.f4se
+/src/test/resources/TestSaves/FO4/*.fos
+/src/test/resources/TestSaves/TES5LE/*.ess
+/src/test/resources/TestSaves/TES5SE/*.ess
+/src/test/resources/TestSaves/TES5SE/*.skse
