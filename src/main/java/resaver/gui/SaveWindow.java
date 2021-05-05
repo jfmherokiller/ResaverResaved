@@ -15,7 +15,7 @@
  */
 package resaver.gui;
 
-import java.util.Set;
+import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.BufferedWriter;
@@ -23,11 +23,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Objects;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.function.Predicate;
@@ -925,7 +921,11 @@ final public class SaveWindow extends JFrame {
                 final PexFile SCRIPT = PexFile.readScript(path);
                 final java.util.List<String> SOURCE = new java.util.LinkedList<>();
                 SCRIPT.disassemble(SOURCE, AssemblyLevel.FULL);
-                final TextDialog TEXT = new TextDialog(SOURCE.stream().collect(Collectors.joining("<br/>", "<pre>", "</pre>")));
+                StringJoiner joiner = new StringJoiner("<br/>", "<pre>", "</pre>");
+                for (String s : SOURCE) {
+                    joiner.add(s);
+                }
+                final TextDialog TEXT = new TextDialog(joiner.toString());
                 JOptionPane.showMessageDialog(this, TEXT, path.getFileName().toString(), JOptionPane.INFORMATION_MESSAGE);
             } catch (IOException | RuntimeException ex) {
                 LOG.log(Level.WARNING, "Error while decompiling drag-and-drop script.", ex);
@@ -1037,18 +1037,18 @@ final public class SaveWindow extends JFrame {
         final StringBuilder BUF = new StringBuilder();
         BUF.append("The following matches were found:\n\n");
 
-        matches.forEach(id -> {
+        for (Integer id : matches) {
             BUF.append(String.format("%08x", id));
 
             int pluginIndex = id >>> 24;
-            final java.util.List<Plugin> PLUGINS = this.save.getPluginInfo().getFullPlugins();
+            final List<Plugin> PLUGINS = this.save.getPluginInfo().getFullPlugins();
 
             if (pluginIndex < PLUGINS.size()) {
                 final Plugin PLUGIN = PLUGINS.get(pluginIndex);
                 BUF.append(" (").append(PLUGIN).append(")");
             }
             BUF.append('\n');
-        });
+        }
 
         JOptionPane.showMessageDialog(this, BUF.toString(), "Matches", JOptionPane.INFORMATION_MESSAGE);
         System.out.println(matches);
@@ -1553,9 +1553,12 @@ final public class SaveWindow extends JFrame {
         final int NUM_FORMS, NUM_INSTANCES;
 
         if (purgeScripts) {
-            final java.util.Set<ScriptInstance> INSTANCES = plugins.stream()
-                    .flatMap(p -> p.getInstances(this.save).stream())
-                    .collect(Collectors.toSet());
+            final Set<ScriptInstance> INSTANCES = new HashSet<>();
+            for (Plugin p : plugins) {
+                for (ScriptInstance scriptInstance : p.getInstances(this.save)) {
+                    INSTANCES.add(scriptInstance);
+                }
+            }
             NUM_INSTANCES = INSTANCES.size();
             Set<PapyrusElement> REMOVED = this.save.getPapyrus().removeElements(INSTANCES);
             assert REMOVED.size() == NUM_INSTANCES : String.format("Deleted %d/%d instances.", REMOVED.size(), NUM_INSTANCES);
@@ -1569,9 +1572,12 @@ final public class SaveWindow extends JFrame {
         }
 
         if (purgeForms) {
-            final java.util.Set<ChangeForm> FORMS = plugins.stream()
-                    .flatMap(p -> p.getChangeForms(this.save).stream())
-                    .collect(Collectors.toSet());
+            final Set<ChangeForm> FORMS = new HashSet<>();
+            for (Plugin p : plugins) {
+                for (ChangeForm changeForm : p.getChangeForms(this.save)) {
+                    FORMS.add(changeForm);
+                }
+            }
             NUM_FORMS = FORMS.size();
             final Set<ChangeForm> REMOVED = this.save.removeChangeForms(FORMS);
             assert REMOVED.size() == NUM_INSTANCES : String.format("Deleted %d/%d forms.", REMOVED.size(), NUM_FORMS);
@@ -1629,7 +1635,9 @@ final public class SaveWindow extends JFrame {
         }
 
         this.setModified();
-        threads.forEach(ActiveScript::zero);
+        for (ActiveScript thread : threads) {
+            thread.zero();
+        }
         this.refreshTree();
 
         final String MSG = threads.size() > 1
@@ -1696,21 +1704,32 @@ final public class SaveWindow extends JFrame {
 
         } else {
 
-            final java.util.Set<Element> DELETABLE = elements.stream()
-                    .filter(ESS.DELETABLE)
-                    .filter(v -> !(v instanceof ActiveScript))
-                    .filter(v -> !(v instanceof SuspendedStack))
-                    .collect(Collectors.toSet());
+            final Set<Element> DELETABLE = new HashSet<>();
+            for (Element v1 : elements) {
+                if (ESS.DELETABLE.test(v1)) {
+                    if (!(v1 instanceof ActiveScript)) {
+                        if (!(v1 instanceof SuspendedStack)) {
+                            DELETABLE.add(v1);
+                        }
+                    }
+                }
+            }
 
-            final java.util.Set<SuspendedStack> STACKS = elements.stream()
-                    .filter(v -> v instanceof SuspendedStack)
-                    .map(v -> (SuspendedStack) v)
-                    .collect(Collectors.toSet());
+            final Set<SuspendedStack> STACKS = new HashSet<>();
+            for (Element element : elements) {
+                if (element instanceof SuspendedStack) {
+                    SuspendedStack suspendedStack = (SuspendedStack) element;
+                    STACKS.add(suspendedStack);
+                }
+            }
 
-            final java.util.Set<ActiveScript> THREADS = elements.stream()
-                    .filter(v -> v instanceof ActiveScript)
-                    .map(v -> (ActiveScript) v)
-                    .collect(Collectors.toSet());
+            final Set<ActiveScript> THREADS = new HashSet<>();
+            for (Element v : elements) {
+                if (v instanceof ActiveScript) {
+                    ActiveScript activeScript = (ActiveScript) v;
+                    THREADS.add(activeScript);
+                }
+            }
 
             boolean deleteStacks = false;
             if (!STACKS.isEmpty()) {
@@ -1759,7 +1778,9 @@ final public class SaveWindow extends JFrame {
             }
 
             final Set<Element> REMOVED = this.save.removeElements(DELETABLE);
-            THREADS.forEach(ActiveScript::zero);
+            for (ActiveScript THREAD : THREADS) {
+                THREAD.zero();
+            }
             if (deleteThreads) {
                 REMOVED.addAll(this.save.getPapyrus().removeElements(THREADS));
             }
@@ -2064,9 +2085,13 @@ final public class SaveWindow extends JFrame {
                 }
                 case "message": {
                     final EID ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16));
-                    final FunctionMessage MESSAGE = this.save.getPapyrus().getFunctionMessages().stream()
-                            .filter(v -> v.getID().equals(ID))
-                            .findAny().orElse(null);
+                    FunctionMessage MESSAGE = null;
+                    for (FunctionMessage v : this.save.getPapyrus().getFunctionMessages()) {
+                        if (v.getID().equals(ID)) {
+                            MESSAGE = v;
+                            break;
+                        }
+                    }
                     if (index1 != null) {
                         this.findElement(MESSAGE, index1);
                     } else {
