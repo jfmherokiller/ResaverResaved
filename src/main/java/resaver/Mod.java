@@ -172,10 +172,30 @@ final public class Mod implements java.io.Serializable {
             };
 
             this.size = 0.0;
-            this.size += this.SCRIPT_FILES.stream().mapToDouble(toSize).sum();
-            this.size += this.STRINGS_FILES.stream().mapToDouble(toSize).sum();
-            this.size += this.PLUGIN_FILES.stream().mapToDouble(toSize).sum();
-            this.size += this.ARCHIVE_FILES.stream().mapToDouble(toSize).sum();
+            double sum = 0.0;
+            for (Path SCRIPT_FILE : this.SCRIPT_FILES) {
+                double v = toSize.applyAsDouble(SCRIPT_FILE);
+                sum += v;
+            }
+            this.size += sum;
+            double result = 0.0;
+            for (Path STRINGS_FILE : this.STRINGS_FILES) {
+                double v = toSize.applyAsDouble(STRINGS_FILE);
+                result += v;
+            }
+            this.size += result;
+            double sum1 = 0.0;
+            for (Path PLUGIN_FILE : this.PLUGIN_FILES) {
+                double v = toSize.applyAsDouble(PLUGIN_FILE);
+                sum1 += v;
+            }
+            this.size += sum1;
+            double result1 = 0.0;
+            for (Path ARCHIVE_FILE : this.ARCHIVE_FILES) {
+                double v = toSize.applyAsDouble(ARCHIVE_FILE);
+                result1 += v;
+            }
+            this.size += result1;
         }
         return this.size;
     }
@@ -318,7 +338,11 @@ final public class Mod implements java.io.Serializable {
                 SCRIPT_ORIGINS.putAll(ARCHIVE_SCRIPTS);
                 STRINGSFILES.addAll(ARCHIVE_STRINGSFILES);
 
-                int stringsCount = ARCHIVE_STRINGSFILES.stream().mapToInt(s -> s.TABLE.size()).sum();
+                int stringsCount = 0;
+                for (StringsFile s : ARCHIVE_STRINGSFILES) {
+                    int i = s.TABLE.size();
+                    stringsCount += i;
+                }
                 int scriptsCount = ARCHIVE_SCRIPTS.size();
 
                 if (stringsCount > 0 || scriptsCount > 0) {
@@ -352,12 +376,21 @@ final public class Mod implements java.io.Serializable {
                 }).filter(Objects::nonNull).collect(Collectors.toList());
 
         // Read the loose stringtable files.
-        final Map<Path, Path> LOOSE_SCRIPTS = this.SCRIPT_FILES.stream()
-                .filter(GLOB_SCRIPT::matches)
-                .collect(Collectors.toMap(p -> p, Path::getFileName));
+        final Map<Path, Path> LOOSE_SCRIPTS = new HashMap<>();
+        for (Path p : this.SCRIPT_FILES) {
+            if (GLOB_SCRIPT.matches(p)) {
+                if (LOOSE_SCRIPTS.put(p, p.getFileName()) != null) {
+                    throw new IllegalStateException("Duplicate key");
+                }
+            }
+        }
         SCRIPT_ORIGINS.putAll(LOOSE_SCRIPTS);
 
-        int stringsCount = LOOSE_STRINGSFILES.stream().mapToInt(s -> s.TABLE.size()).sum();
+        int stringsCount = 0;
+        for (StringsFile s : LOOSE_STRINGSFILES) {
+            int i = s.TABLE.size();
+            stringsCount += i;
+        }
         int scriptsCount = LOOSE_SCRIPTS.size();
 
         if (stringsCount > 0 || scriptsCount > 0) {
