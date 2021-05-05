@@ -24,6 +24,8 @@ import java.util.stream.Stream;
 import resaver.ess.ESS;
 import resaver.ess.Header;
 import static resaver.ResaverFormatting.makeHTMLList;
+
+import resaver.ess.RefID;
 import resaver.ess.WStringElement;
 
 /**
@@ -146,7 +148,11 @@ final public class Worrier {
         if (frames.size() > 0) {
             Script most = frames.get(0);
 
-            long numFrames = frameCounts.values().stream().mapToLong(v -> v).sum();
+            long numFrames = 0L;
+            for (Long v : frameCounts.values()) {
+                long l = v;
+                numFrames += l;
+            }
 
             if (numStacks > 200 || numFrames > 1000) {
                 BUF.append(String.format("<p>There are %d stacks and %d frames, which probably indicates a problem.<br/>", numStacks, numFrames));
@@ -161,8 +167,13 @@ final public class Worrier {
                 this.shouldWorry = true;
             }
 
-            List<ActiveScript> deep = result.ESS.getPapyrus().getActiveScripts().values().stream()
-                    .filter(thread -> thread.getStackFrames().size() >= 100).sorted((a1, a2) -> Integer.compare(a2.getStackFrames().size(), a1.getStackFrames().size())).collect(Collectors.toList());
+            List<ActiveScript> deep = new ArrayList<>();
+            for (ActiveScript thread : result.ESS.getPapyrus().getActiveScripts().values()) {
+                if (thread.getStackFrames().size() >= 100) {
+                    deep.add(thread);
+                }
+            }
+            deep.sort((a1, a2) -> Integer.compare(a2.getStackFrames().size(), a1.getStackFrames().size()));
 
             if (!deep.isEmpty()) {
                 ActiveScript deepest = deep.get(0);
@@ -199,13 +210,20 @@ final public class Worrier {
                 }
             }
 
-            List<String> missingNamespaces = this.previousNamespaces.keySet().stream()
-                    .filter(namespace -> !currentNamespaces.containsKey(namespace))
-                    .filter(namespace -> this.previousNamespaces.get(namespace).stream()
-                    .map(ScriptInstance::getRefID)
-                    .filter(refID -> !refID.isZero())
-                    .anyMatch(refID -> result.ESS.getChangeForms().containsKey(refID)))
-                    .collect(Collectors.toList());
+            List<String> missingNamespaces = new ArrayList<>();
+            for (String namespace : this.previousNamespaces.keySet()) {
+                if (!currentNamespaces.containsKey(namespace)) {
+                    for (ScriptInstance scriptInstance : this.previousNamespaces.get(namespace)) {
+                        RefID refID = scriptInstance.getRefID();
+                        if (!refID.isZero()) {
+                            if (result.ESS.getChangeForms().containsKey(refID)) {
+                                missingNamespaces.add(namespace);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
 
             if (!missingNamespaces.isEmpty()) {
                 String msg = "This savefile has %d missing namespaces (the Canary error).";
@@ -213,11 +231,16 @@ final public class Worrier {
                 this.shouldWorry = true;
             }
 
-            List<Script> canaryErrors = this.previousCanaries.keySet().stream()
-                    .filter(currentCanaries::containsKey)
-                    .filter(script -> previousCanaries.get(script) != 0)
-                    .filter(script -> currentCanaries.get(script) == 0)
-                    .collect(Collectors.toList());
+            List<Script> canaryErrors = new ArrayList<>();
+            for (Script script : this.previousCanaries.keySet()) {
+                if (currentCanaries.containsKey(script)) {
+                    if (previousCanaries.get(script) != 0) {
+                        if (currentCanaries.get(script) == 0) {
+                            canaryErrors.add(script);
+                        }
+                    }
+                }
+            }
 
             if (!canaryErrors.isEmpty()) {
                 String msg = "This savefile has %d zeroed canaries.";
