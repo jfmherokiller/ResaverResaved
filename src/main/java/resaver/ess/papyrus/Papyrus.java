@@ -51,8 +51,8 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     public Papyrus(ByteBuffer input, ESS.ESSContext context, ModelBuilder model) throws PapyrusException, PapyrusElementException {
         final mf.Counter SUM = new mf.Counter(input.capacity());
         SUM.addCountListener(sum -> {
-            if (this.truncated || sum != ((Buffer)input).position()) {
-                throw new IllegalStateException(String.format("Position mismatch; counted %d but actual %d.", sum, ((Buffer)input).position()));
+            if (this.truncated || sum != input.position()) {
+                throw new IllegalStateException(String.format("Position mismatch; counted %d but actual %d.", sum, input.position()));
             }
         });
 
@@ -359,7 +359,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             this.ARRAYSBLOCK = new byte[remaining];
             input.get(this.ARRAYSBLOCK);
 
-            if (((Buffer)input).position() != this.calculateSize()) {
+            if (input.position() != this.calculateSize()) {
                 throw new IllegalStateException(String.format("pos = %d, calculated = %d", input.position(), this.calculateSize()));
             }
 
@@ -385,7 +385,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     }
 
     /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element#write(ByteBuffer)
      * @param output The output stream.
      */
     @Override
@@ -649,7 +649,13 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @return The number of unattached instances.
      */
     public int countUnattachedInstances() {
-        return (int) this.getScriptInstances().values().stream().filter(ScriptInstance::isUnattached).count();
+        long count = 0L;
+        for (ScriptInstance scriptInstance : this.getScriptInstances().values()) {
+            if (scriptInstance.isUnattached()) {
+                count++;
+            }
+        }
+        return (int) count;
     }
 
     /**
@@ -662,12 +668,42 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         int count = 0;
         int threads = 0;
 
-        count += this.getScripts().values().stream().filter(Script::isUndefined).count();
+        long result = 0L;
+        for (Script script : this.getScripts().values()) {
+            if (script.isUndefined()) {
+                result++;
+            }
+        }
+        count += result;
         count += this.getScriptInstances().values().parallelStream().filter(ScriptInstance::isUndefined).count();
-        count += this.getReferences().values().stream().filter(Reference::isUndefined).count();
-        count += this.getStructs().values().stream().filter(Struct::isUndefined).count();
-        count += this.getStructInstances().values().stream().filter(StructInstance::isUndefined).count();
-        threads += this.getActiveScripts().values().stream().filter(v -> v.isUndefined() && !v.isTerminated()).count();
+        long count1 = 0L;
+        for (Reference reference : this.getReferences().values()) {
+            if (reference.isUndefined()) {
+                count1++;
+            }
+        }
+        count += count1;
+        long result2 = 0L;
+        for (Struct struct : this.getStructs().values()) {
+            if (struct.isUndefined()) {
+                result2++;
+            }
+        }
+        count += result2;
+        long result1 = 0L;
+        for (StructInstance structInstance : this.getStructInstances().values()) {
+            if (structInstance.isUndefined()) {
+                result1++;
+            }
+        }
+        count += result1;
+        long count2 = 0L;
+        for (ActiveScript v : this.getActiveScripts().values()) {
+            if (v.isUndefined() && !v.isTerminated()) {
+                count2++;
+            }
+        }
+        threads += count2;
         return new int[]{count, threads};
     }
 
@@ -677,10 +713,12 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @return The elements that were removed.
      */
     public Set<PapyrusElement> removeUnattachedInstances() {
-        final Set<ScriptInstance> UNATTACHED = this.getScriptInstances().values()
-                .stream()
-                .filter(ScriptInstance::isUnattached)
-                .collect(Collectors.toSet());
+        final Set<ScriptInstance> UNATTACHED = new HashSet<>();
+        for (ScriptInstance scriptInstance : this.getScriptInstances().values()) {
+            if (scriptInstance.isUnattached()) {
+                UNATTACHED.add(scriptInstance);
+            }
+        }
 
         return this.removeElements(UNATTACHED);
     }
@@ -695,18 +733,48 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     public Set<PapyrusElement> removeUndefinedElements() {
         final java.util.Set<PapyrusElement> REMOVED = new java.util.HashSet<>();
 
-        REMOVED.addAll(this.removeElements(this.getScripts().values().stream().filter(Script::isUndefined).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getStructs().values().stream().filter(Struct::isUndefined).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getScriptInstances().values().stream().filter(ScriptInstance::isUndefined).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getReferences().values().stream().filter(Reference::isUndefined).collect(Collectors.toSet())));
-        REMOVED.addAll(this.removeElements(this.getStructInstances().values().stream().filter(StructInstance::isUndefined).collect(Collectors.toSet())));
+        Set<Script> set = new HashSet<>();
+        for (Script script : this.getScripts().values()) {
+            if (script.isUndefined()) {
+                set.add(script);
+            }
+        }
+        REMOVED.addAll(this.removeElements(set));
+        Set<Struct> result = new HashSet<>();
+        for (Struct struct : this.getStructs().values()) {
+            if (struct.isUndefined()) {
+                result.add(struct);
+            }
+        }
+        REMOVED.addAll(this.removeElements(result));
+        Set<ScriptInstance> set1 = new HashSet<>();
+        for (ScriptInstance scriptInstance : this.getScriptInstances().values()) {
+            if (scriptInstance.isUndefined()) {
+                set1.add(scriptInstance);
+            }
+        }
+        REMOVED.addAll(this.removeElements(set1));
+        Set<Reference> result1 = new HashSet<>();
+        for (Reference reference : this.getReferences().values()) {
+            if (reference.isUndefined()) {
+                result1.add(reference);
+            }
+        }
+        REMOVED.addAll(this.removeElements(result1));
+        Set<StructInstance> set2 = new HashSet<>();
+        for (StructInstance structInstance : this.getStructInstances().values()) {
+            if (structInstance.isUndefined()) {
+                set2.add(structInstance);
+            }
+        }
+        REMOVED.addAll(this.removeElements(set2));
 
-        this.getActiveScripts().values().stream()
-                .filter(v -> v.isUndefined() && !v.isTerminated())
-                .forEach(v -> {
-                    v.zero();
-                    REMOVED.add(v);
-                });
+        for (ActiveScript v : this.getActiveScripts().values()) {
+            if (v.isUndefined() && !v.isTerminated()) {
+                v.zero();
+                REMOVED.add(v);
+            }
+        }
 
         return REMOVED;
     }
@@ -719,9 +787,12 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @return The elements that were removed.
      */
     public Set<ActiveScript> terminateUndefinedThreads() {
-        final Set<ActiveScript> TERMINATED = this.getActiveScripts().values().stream()
-                .filter(v -> v.isUndefined() && !v.isTerminated())
-                .collect(Collectors.toSet());
+        final Set<ActiveScript> TERMINATED = new HashSet<>();
+        for (ActiveScript v : this.getActiveScripts().values()) {
+            if (v.isUndefined() && !v.isTerminated()) {
+                TERMINATED.add(v);
+            }
+        }
 
         TERMINATED.forEach(ActiveScript::zero);
         return TERMINATED;
@@ -821,36 +892,82 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     private ReferrentMap findMatches(EID id) {
         final ReferrentMap REFERRENTS = new ReferrentMap();
 
-        REFERRENTS.put(ScriptInstance.class, this.getScriptInstances().values().stream()
-                .filter(v -> v.getData() != null)
-                .filter(v -> v.getVariables().stream().anyMatch(m -> m.hasRef(id)))
-                .collect(Collectors.toSet()));
+        Set<Linkable> set = new HashSet<>();
+        for (ScriptInstance scriptInstance : this.getScriptInstances().values()) {
+            if (scriptInstance.getData() != null) {
+                for (Variable m : scriptInstance.getVariables()) {
+                    if (m.hasRef(id)) {
+                        set.add(scriptInstance);
+                        break;
+                    }
+                }
+            }
+        }
+        REFERRENTS.put(ScriptInstance.class, set);
 
-        REFERRENTS.put(Reference.class, this.getReferences().values().stream()
-                .filter(v -> v.getVariables().stream().anyMatch(m -> m.hasRef(id)))
-                .collect(Collectors.toSet()));
+        Set<Linkable> result = new HashSet<>();
+        for (Reference reference : this.getReferences().values()) {
+            for (Variable m : reference.getVariables()) {
+                if (m.hasRef(id)) {
+                    result.add(reference);
+                    break;
+                }
+            }
+        }
+        REFERRENTS.put(Reference.class, result);
 
-        REFERRENTS.put(ArrayInfo.class, this.getArrays().values().stream()
-                .filter(v -> v.getVariables().stream().anyMatch(m -> m.hasRef(id)))
-                .collect(Collectors.toSet()));
+        Set<Linkable> set1 = new HashSet<>();
+        for (ArrayInfo arrayInfo : this.getArrays().values()) {
+            for (Variable m : arrayInfo.getVariables()) {
+                if (m.hasRef(id)) {
+                    set1.add(arrayInfo);
+                    break;
+                }
+            }
+        }
+        REFERRENTS.put(ArrayInfo.class, set1);
 
-        REFERRENTS.put(ActiveScript.class, this.getActiveScripts().values().stream()
-                .filter(v -> v.getAttached() == id)
-                .collect(Collectors.toSet()));
+        Set<Linkable> result1 = new HashSet<>();
+        for (ActiveScript activeScript : this.getActiveScripts().values()) {
+            if (activeScript.getAttached() == id) {
+                result1.add(activeScript);
+            }
+        }
+        REFERRENTS.put(ActiveScript.class, result1);
 
-        REFERRENTS.put(ActiveScript.class, this.getActiveScripts().values().stream()
-                .flatMap(t -> t.getStackFrames().stream())
-                .filter(s -> s.getOwner().hasRef(id))
-                .collect(Collectors.toSet()));
+        Set<Linkable> set2 = new HashSet<>();
+        for (ActiveScript activeScript : this.getActiveScripts().values()) {
+            for (StackFrame stackFrame : activeScript.getStackFrames()) {
+                if (stackFrame.getOwner().hasRef(id)) {
+                    set2.add(stackFrame);
+                }
+            }
+        }
+        REFERRENTS.put(ActiveScript.class, set2);
 
-        REFERRENTS.put(StackFrame.class, this.getActiveScripts().values().stream()
-                .flatMap(t -> t.getStackFrames().stream())
-                .filter(s -> s.getVariables().stream().anyMatch(m -> m.hasRef(id)))
-                .collect(Collectors.toSet()));
+        Set<Linkable> result2 = new HashSet<>();
+        for (ActiveScript t : this.getActiveScripts().values()) {
+            for (StackFrame s : t.getStackFrames()) {
+                for (Variable m : s.getVariables()) {
+                    if (m.hasRef(id)) {
+                        result2.add(s);
+                        break;
+                    }
+                }
+            }
+        }
+        REFERRENTS.put(StackFrame.class, result2);
 
-        REFERRENTS.put(StructInstance.class, this.getStructInstances().values().stream()
-                .filter(v -> v.getVariables().stream().anyMatch(m -> m.hasRef(id)))
-                .collect(Collectors.toSet()));
+        Set<Linkable> set3 = new HashSet<>();
+        for (StructInstance v : this.getStructInstances().values()) {
+            for (Variable m : v.getVariables()) {
+                if (m.hasRef(id)) {
+                    set3.add(v);
+                    break;
+                }
+            }
+        }
+        REFERRENTS.put(StructInstance.class, set3);
 
         return REFERRENTS;
     }
