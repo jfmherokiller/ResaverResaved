@@ -17,13 +17,8 @@ package resaver.ess.papyrus;
 
 import resaver.ListException;
 import resaver.ess.AnalyzableElement;
-import java.util.Collections;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.SortedSet;
+
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -156,18 +151,26 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         this.FN_FLAGS.write(output);
 
         output.putShort((short) this.FN_PARAMS.size());
-        this.FN_PARAMS.forEach(param -> param.write(output));
+        for (FunctionParam param : this.FN_PARAMS) {
+            param.write(output);
+        }
 
         output.putShort((short) this.FN_LOCALS.size());
-        this.FN_LOCALS.forEach(local -> local.write(output));
+        for (FunctionLocal local : this.FN_LOCALS) {
+            local.write(output);
+        }
 
         output.putShort((short) this.CODE.size());
-        this.CODE.forEach(opcode -> opcode.write(output));
+        for (OpcodeData opcode : this.CODE) {
+            opcode.write(output);
+        }
 
         output.putInt(this.PTR);
 
         this.OWNERFIELD.write(output);
-        this.VARIABLES.forEach(var -> var.write(output));
+        for (Variable var : this.VARIABLES) {
+            var.write(output);
+        }
     }
 
     /**
@@ -201,7 +204,12 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         sum += (null != this.OWNERFIELD ? this.OWNERFIELD.calculateSize() : 0);
 
         sum += 4;
-        sum += this.VARIABLES.stream().mapToInt(var -> var.calculateSize()).sum();
+        int result = 0;
+        for (Variable var : this.VARIABLES) {
+            int i = var.calculateSize();
+            result += i;
+        }
+        sum += result;
 
         return sum;
     }
@@ -357,8 +365,13 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      *
      */
     public boolean isZeroed() {
-        return !this.isNative() && null != this.CODE && !this.CODE.isEmpty()
-                && this.CODE.stream().allMatch(op -> OpcodeData.NOP.equals(op));
+        if (this.isNative() || null == this.CODE || this.CODE.isEmpty()) return false;
+        for (OpcodeData op : this.CODE) {
+            if (!OpcodeData.NOP.equals(op)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -382,10 +395,15 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 }
 
             } else {
-                Optional<Variable> result = this.VARIABLES.stream()
-                        .filter(v -> v.hasRef())
-                        .filter(v -> v.getReferent() == target)
-                        .findFirst();
+                Optional<Variable> result = Optional.empty();
+                for (Variable v : this.VARIABLES) {
+                    if (v.hasRef()) {
+                        if (v.getReferent() == target) {
+                            result = Optional.of(v);
+                            break;
+                        }
+                    }
+                }
 
                 if (result.isPresent()) {
                     int varIndex = this.VARIABLES.indexOf(result.get());
@@ -502,9 +520,13 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
             BUILDER.append("<hr/><p>PAPYRUS BYTECODE:</p>");
             BUILDER.append("<code><pre>");
             List<OpcodeData> OPS = new ArrayList<>(this.CODE);
-            OPS.subList(0, PTR).forEach(v -> BUILDER.append(String.format("   %s\n", v)));
+            for (OpcodeData opcodeData : OPS.subList(0, PTR)) {
+                BUILDER.append(String.format("   %s\n", opcodeData));
+            }
             BUILDER.append(String.format("==><b>%s</b>\n", OPS.get(this.PTR)));
-            OPS.subList(PTR + 1, this.CODE.size()).forEach(v -> BUILDER.append(String.format("   %s\n", v)));
+            for (OpcodeData v : OPS.subList(PTR + 1, this.CODE.size())) {
+                BUILDER.append(String.format("   %s\n", v));
+            }
             BUILDER.append("</pre></code>");
         } else {
             BUILDER.append("<p><em>Papyrus bytecode not available.</em></p>");
@@ -555,12 +577,16 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 BUF.append(i == ptr ? "<b>==></b>" : "   ");
                 BUF.append("<em><font color=\"lightgray\">");
                 BUF.append(op.getOpcode());
-                params.forEach(p -> BUF.append(", ").append(p.toValueString()));
+                for (Parameter p : params) {
+                    BUF.append(", ").append(p.toValueString());
+                }
                 BUF.append("<font color=\"black\"></em>\n");
             } else {
                 BUF.append(i == ptr ? "<b>==>" : "   ");
                 BUF.append(op.getOpcode());
-                params.forEach(p -> BUF.append(", ").append(p.toValueString()));
+                for (Parameter p : params) {
+                    BUF.append(", ").append(p.toValueString());
+                }
                 BUF.append(i == ptr ? "</b>\n" : "\n");
             }
         }
@@ -630,22 +656,26 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 replaceVariables(args, terms, 2);
                 method = args.get(0).toValueString();
                 obj = args.get(1).toValueString();
-                subArgs = args
-                        .subList(3, args.size())
-                        .stream()
-                        .map(v -> v.paren())
-                        .collect(Collectors.toList());
+                List<String> result1 = new ArrayList<>();
+                for (Parameter v1 : args
+                        .subList(3, args.size())) {
+                    String paren1 = v1.paren();
+                    result1.add(paren1);
+                }
+                subArgs = result1;
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
 
             case CALLPARENT:
                 replaceVariables(args, terms, 1);
                 method = args.get(0).toValueString();
-                subArgs = args
-                        .subList(3, args.size())
-                        .stream()
-                        .map(v -> v.paren())
-                        .collect(Collectors.toList());
+                List<String> list1 = new ArrayList<>();
+                for (Parameter parameter : args
+                        .subList(3, args.size())) {
+                    String s = parameter.paren();
+                    list1.add(s);
+                }
+                subArgs = list1;
                 term = String.format("parent.%s%s", method, paramList(subArgs));
                 return processTerm(args, terms, 1, term);
 
@@ -653,11 +683,13 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 replaceVariables(args, terms, 2);
                 obj = args.get(0).toValueString();
                 method = args.get(1).toValueString();
-                subArgs = args
-                        .subList(3, args.size())
-                        .stream()
-                        .map(v -> v.paren())
-                        .collect(Collectors.toList());
+                List<String> list = new ArrayList<>();
+                for (Parameter v : args
+                        .subList(3, args.size())) {
+                    String paren = v.paren();
+                    list.add(paren);
+                }
+                subArgs = list;
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
 
@@ -681,7 +713,14 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 replaceVariables(args, terms, 0);
                 dest = args.get(0).toValueString();
                 arg = args.get(1).paren();
-                type = types.stream().filter(t -> t.getName().equals(dest)).findFirst().get().getType().toWString();
+                Optional<MemberDesc> result = Optional.empty();
+                for (MemberDesc memberDesc : types) {
+                    if (memberDesc.getName().equals(dest)) {
+                        result = Optional.of(memberDesc);
+                        break;
+                    }
+                }
+                type = result.get().getType().toWString();
 
                 if (type.equals("bool")) {
                     term = arg;
@@ -739,7 +778,14 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
             case ARR_CREATE:
                 int size = args.get(1).getIntValue();
                 dest = args.get(0).toValueString();
-                type = types.stream().filter(t -> t.getName().equals(dest)).findFirst().get().getType().toWString();
+                Optional<MemberDesc> found = Optional.empty();
+                for (MemberDesc t : types) {
+                    if (t.getName().equals(dest)) {
+                        found = Optional.of(t);
+                        break;
+                    }
+                }
+                type = found.get().getType().toWString();
                 String subtype = type.toString().substring(0, type.length() - 2);
                 term = String.format("new %s[%s]", subtype, size);
                 return processTerm(args, terms, 0, term);
@@ -825,9 +871,12 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @return
      */
     static <T> String paramList(List<T> params) {
-        return params.stream()
-                .map(p -> p.toString())
-                .collect(Collectors.joining(", ", "(", ")"));
+        StringJoiner joiner = new StringJoiner(", ", "(", ")");
+        for (T p : params) {
+            String s = p.toString();
+            joiner.add(s);
+        }
+        return joiner.toString();
     }
 
     final private ActiveScript THREAD;
