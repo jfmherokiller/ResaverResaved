@@ -21,7 +21,6 @@ import resaver.ess.papyrus.ScriptInstance
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import kotlin.streams.toList
 
 /**
  * Abstraction for plugins.
@@ -76,7 +75,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @return A set of changeforms.
      */
     fun getChangeForms(save: ESS?): Set<ChangeForm> {
-        return save!!.changeForms.values.stream()
+        return save!!.changeForms.values
             .filter { form: ChangeForm -> form.refID.PLUGIN === this }.toList().toSet()
     }
 
@@ -87,7 +86,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @return A set of scriptinstances.
      */
     fun getInstances(save: ESS?): Set<ScriptInstance> {
-        val INSTANCES: Set<ScriptInstance> = save!!.papyrus.scriptInstances.values.stream()
+        val INSTANCES: Set<ScriptInstance> = save!!.papyrus.scriptInstances.values
             .filter { instance: ScriptInstance -> instance.refID != null }
             .filter { instance: ScriptInstance -> instance.refID.PLUGIN === this }.toList().toSet()
         return INSTANCES
@@ -130,12 +129,12 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
             val PROVIDERS: MutableList<String> = mutableListOf()
             val espFilter = { esp: String -> esp.equals(NAME, ignoreCase = true) }
             analysis.ESPS.forEach { (mod: String, esps: Set<String>) ->
-                esps.sorted().stream().filter(espFilter).forEach { esp: String? -> PROVIDERS.add(mod) }
+                esps.sorted().filter(espFilter).forEach { esp: String? -> PROVIDERS.add(mod) }
             }
             if (PROVIDERS.isNotEmpty()) {
                 val probableProvider: String = PROVIDERS[PROVIDERS.size - 1]
                 val modFilter = { e: Set<String?> -> e.contains(probableProvider) }
-                val numScripts: Int = analysis.SCRIPT_ORIGINS.values.stream().filter(modFilter).sorted().count().toInt()
+                val numScripts: Int = analysis.SCRIPT_ORIGINS.values.filter(modFilter).count()
                 BUILDER.append(String.format("<p>%d scripts.</p>", numScripts))
                 BUILDER.append(String.format("<p>The plugin probably came from mod \"%s\".</p>", probableProvider))
                 if (PROVIDERS.size > 1) {
@@ -159,7 +158,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
         val filter = { esp: String -> esp.equals(NAME, ignoreCase = true) }
         val PROVIDERS: MutableList<String?> = mutableListOf()
         analysis!!.ESPS.forEach { (m: String?, esps: Set<String>) ->
-            esps.sorted().stream().filter(filter).forEach { esp: String? -> PROVIDERS.add(m) }
+            esps.sorted().filter(filter).forEach { esp: String? -> PROVIDERS.add(m) }
         }
         return PROVIDERS.contains(mod)
     }
