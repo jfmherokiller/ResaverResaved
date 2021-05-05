@@ -18,6 +18,7 @@ package resaver.esp;
 import java.nio.ByteBuffer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -279,14 +280,22 @@ abstract public class PropertyData implements Entry {
 
         @Override
         public int calculateSize() {
-            return 4 + this.MEMBERS.stream().mapToInt(Property::calculateSize).sum();
+            int sum = 0;
+            for (Property MEMBER : this.MEMBERS) {
+                int calculateSize = MEMBER.calculateSize();
+                sum += calculateSize;
+            }
+            return 4 + sum;
         }
 
         @Override
         public String toString() {
-            return this.MEMBERS.stream()
-                    .map(Property::toString)
-                    .collect(Collectors.joining("; ", "{", "}"));
+            StringJoiner joiner = new StringJoiner("; ", "{", "}");
+            for (Property MEMBER : this.MEMBERS) {
+                String toString = MEMBER.toString();
+                joiner.add(toString);
+            }
+            return joiner.toString();
         }
 
         final private List<Property> MEMBERS;
@@ -319,15 +328,23 @@ abstract public class PropertyData implements Entry {
         @Override
         public int calculateSize() {
             int sum = 4;
-            sum += this.MEMBERS.stream().mapToInt(Entry::calculateSize).sum();
+            int result = 0;
+            for (T MEMBER : this.MEMBERS) {
+                int calculateSize = MEMBER.calculateSize();
+                result += calculateSize;
+            }
+            sum += result;
             return sum;
         }
 
         @Override
         public String toString() {
-            return MEMBERS.stream()
-                    .map(Object::toString)
-                    .collect(Collectors.joining(", ", "[", "]"));
+            StringJoiner joiner = new StringJoiner(", ", "[", "]");
+            for (T MEMBER : MEMBERS) {
+                String toString = MEMBER.toString();
+                joiner.add(toString);
+            }
+            return joiner.toString();
         }
 
         final private List<T> MEMBERS;
