@@ -32,11 +32,11 @@ import java.io.IOException
 import java.nio.channels.ClosedByInterruptException
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import java.util.function.Consumer
 import java.util.function.Function
 import java.util.logging.Level
 import java.util.logging.Logger
-import java.util.*
 import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 import javax.swing.SwingWorker
@@ -138,8 +138,8 @@ class Scanner(
 
             // The master stringtable.
             val STRINGTABLE = StringTable()
-            PLUGINS.stream()
-                .filter { key1: Plugin -> PLUGIN_STRINGS.containsKey(key1) }
+            PLUGINS
+                .allPlugins.filter { key1: Plugin -> PLUGIN_STRINGS.containsKey(key1) }
                 .forEach { plugin: Plugin -> STRINGTABLE.populateFromFiles(PLUGIN_STRINGS[plugin], plugin) }
 
             // Create the database for plugin data.
