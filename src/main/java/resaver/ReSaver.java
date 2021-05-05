@@ -15,7 +15,7 @@
  */
 package resaver;
 
-import java.awt.Color;
+import java.awt.*;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
 import java.util.logging.*;
@@ -66,13 +66,13 @@ public class ReSaver implements Callable<Integer> {
         // Set the font scaling.
         float fontScale = Math.max(0.5f, PREFS.getFloat("settings.fontScale", 1.0f));
 
-        UIManager.getLookAndFeelDefaults().keySet().stream()
-                .filter(key -> key.toString().endsWith(".font"))
-                .forEach(key -> {
-                    java.awt.Font font = UIManager.getFont(key);
-                    java.awt.Font biggerFont = font.deriveFont(fontScale * font.getSize2D());
-                    UIManager.put(key, biggerFont);
-                });
+        for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
+            if (key.toString().endsWith(".font")) {
+                Font font = UIManager.getFont(key);
+                Font biggerFont = font.deriveFont(fontScale * font.getSize2D());
+                UIManager.put(key, biggerFont);
+            }
+        }
 
         // Set up logging stuff.
         LOG.getParent().getHandlers()[0].setFormatter(new java.util.logging.Formatter() {
