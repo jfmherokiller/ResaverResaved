@@ -17,6 +17,9 @@ package resaver.ess
 
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import resaver.Game.FILTER_ALL
 import resaver.ProgressModel
 import java.io.IOException
@@ -28,41 +31,40 @@ import java.util.logging.Level
 import java.util.logging.LogRecord
 import java.util.logging.Logger
 import java.util.stream.Collectors
+import java.util.stream.Stream
+
 
 /**
  * Tests the read and write methods of the `ESS` class.
  *
  * @author Mark Fairchild
  */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ESSTest {
     private val PATHS: List<Path>
 
-    /*static public Stream<Path> pathProvider() {
-        java.util.List<Path> paths;
-
+    fun pathProvider(): Stream<Path> {
+        var paths: List<Path>
         try {
             paths = Files.walk(TESTSAVES_DIR)
-                    .filter(p -> Game.FILTER_ALL.accept(p.toFile()))
-                    .filter(Files::isReadable)
-                    .filter(Files::isRegularFile)
-                    .collect(Collectors.toList());
-            System.out.println(paths);
-        } catch (IOException ex) {
-            System.out.println("Error while reading test files.");
-            System.err.println(ex.getMessage());
-            paths = Collections.emptyList();
+                .filter { p: Path -> FILTER_ALL.accept(p.toFile()) }
+                .filter { path: Path? -> Files.isReadable(path!!) }
+                .filter { path: Path? -> Files.isRegularFile(path!!) }
+                .collect(Collectors.toList())
+            println(paths)
+        } catch (ex: IOException) {
+            println("Error while reading test files.")
+            System.err.println(ex.message)
+            paths = emptyList()
         }
-
-        return paths.stream();
-    }*/
+        return paths.stream()
+    }
     @Test
     fun testReadESS() {
-        var index = 0
         val COUNT = PATHS.size
-        for (path in PATHS) {
+        for ((index, path) in PATHS.withIndex()) {
             println(String.format("Test save %d / %d : %s", index, COUNT, path))
             testReadESS(path)
-            index++
         }
     }
 
@@ -71,10 +73,10 @@ class ESSTest {
      *
      * @param path
      */
-    //@ParameterizedTest
-    //@MethodSource("pathProvider")    
+    @ParameterizedTest
+    @MethodSource("pathProvider")
     fun testReadESS(path: Path) {
-        //System.out.printf("readESS (%s)\n", WORK_DIR.relativize(path));
+        System.out.printf("readESS (%s)\n", WORK_DIR.relativize(path))
         try {
             val MODEL_ORIGINAL = ModelBuilder(ProgressModel(1))
             val IN_RESULT = ESS.readESS(path, MODEL_ORIGINAL)
@@ -140,8 +142,8 @@ class ESSTest {
         val paths: List<Path> = try {
             Files.walk(TESTSAVES_DIR)
                 .filter { p: Path -> FILTER_ALL.accept(p.toFile()) }
-                .filter { path: Path? -> Files.isReadable(path) }
-                .filter { path: Path? -> Files.isRegularFile(path) }
+                .filter { path: Path? -> Files.isReadable(path!!) }
+                .filter { path: Path? -> Files.isRegularFile(path!!) }
                 .collect(Collectors.toList())
         } catch (ex: IOException) {
             println("Error while reading test files.")
