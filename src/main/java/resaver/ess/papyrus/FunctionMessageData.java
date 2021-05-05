@@ -88,7 +88,12 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
         sum += this.EVENT.calculateSize();
         sum += this.UNKNOWNVAR.calculateSize();
         sum += 4;
-        sum += this.VARIABLES.stream().mapToInt(Element::calculateSize).sum();
+        int result = 0;
+        for (Variable VARIABLE : this.VARIABLES) {
+            int calculateSize = VARIABLE.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
