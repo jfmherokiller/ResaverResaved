@@ -23,7 +23,6 @@ import resaver.ListException
 import resaver.ess.*
 import resaver.pex.Opcode
 import java.nio.ByteBuffer
-import java.util.*
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -46,7 +45,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         scriptName.write(output)
         BASENAME.write(output)
         event.write(output)
-        STATUS.ifPresent { s: TString? -> s!!.write(output) }
+        STATUS!!.write(output)
         output.put(OPCODE_MAJORVERSION)
         output.put(OPCODE_MINORVERSION)
         RETURNTYPE.write(output)
@@ -74,7 +73,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         sum += scriptName.calculateSize()
         sum += BASENAME.calculateSize()
         sum += event.calculateSize()
-        sum += STATUS.map { s: TString? -> s!!.calculateSize() }.orElse(0)
+        sum += STATUS?.calculateSize() ?: 0
         sum += 2
         sum += RETURNTYPE.calculateSize()
         sum += docString.calculateSize()
@@ -116,13 +115,13 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @return The status.
      */
     val status: TString?
-        get() = STATUS.orElse(null)
+        get() = STATUS
 
     /**
      * @return The function parameter list.
      */
     @get:Contract(pure = true)
-    val functionParams:  List<FunctionParam>
+    val functionParams: List<FunctionParam>
         get() = FN_PARAMS
 
     /**
@@ -224,17 +223,17 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     return Linkable.makeLink("frame", THREAD.id, frameIndex, varIndex, this.toString())
                 }
             } else {
-                var result: Optional<Variable> = Optional.empty()
+                var result: Variable? = null
                 for (v in VARIABLES!!) {
                     if (v!!.hasRef()) {
                         if (v.referent === target) {
-                            result = Optional.of(v)
+                            result = v
                             break
                         }
                     }
                 }
-                if (result.isPresent) {
-                    val varIndex = VARIABLES!!.indexOf(result.get())
+                if (result != null) {
+                    val varIndex = VARIABLES!!.indexOf(result)
                     if (varIndex >= 0) {
                         return Linkable.makeLink("frame", THREAD.id, frameIndex, varIndex, this.toString())
                     }
@@ -285,7 +284,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         if (isUndefined) {
             BUILDER.append("#")
         }
-        BUILDER.append(String.format("%s.%s()", scriptName, event))
+        BUILDER.append("$scriptName.$event()")
         if (isStatic) {
             BUILDER.append(" static")
         }
@@ -316,24 +315,24 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                 BUILDER.append("<p>Owner: <em>UNOWNED</em></p>")
             }
             null != OWNER -> {
-                BUILDER.append(String.format("<p>Owner: %s</p>", OWNER!!.toHTML(this)))
+                BUILDER.append("<p>Owner: ${OWNER!!.toHTML(this)}</p>")
             }
             isStatic -> {
                 BUILDER.append("<p>Static method, no owner.</p>")
             }
             else -> {
-                BUILDER.append(String.format("<p>Owner: %s</p>", owner!!.toHTML(this)))
+                BUILDER.append("<p>Owner: ${owner!!.toHTML(this)}</p>")
             }
         }
         BUILDER.append("<p>")
         BUILDER.append(String.format("Script: %s<br/>", if (null == script) scriptName else script.toHTML(this)))
-        BUILDER.append(String.format("Base: %s<br/>", BASENAME))
-        BUILDER.append(String.format("Event: %s<br/>", event))
-        BUILDER.append(String.format("Status: %s<br/>", STATUS))
-        BUILDER.append(String.format("Flag: %s<br/>", FLAG))
-        BUILDER.append(String.format("Function type: %s<br/>", FN_TYPE))
-        BUILDER.append(String.format("Function return type: %s<br/>", RETURNTYPE))
-        BUILDER.append(String.format("Function docstring: %s<br/>", docString))
+        BUILDER.append("Base: $BASENAME<br/>")
+        BUILDER.append("Event: $event<br/>")
+        BUILDER.append("Status: $STATUS<br/>")
+        BUILDER.append("Flag: $FLAG<br/>")
+        BUILDER.append("Function type: $FN_TYPE<br/>")
+        BUILDER.append("Function return type: $RETURNTYPE<br/>")
+        BUILDER.append("Function docstring: $docString<br/>")
         BUILDER.append(
             String.format(
                 "%d parameters, %d locals, %d values.<br/>",
@@ -342,17 +341,17 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                 VARIABLES!!.size
             )
         )
-        BUILDER.append(String.format("Status: %s<br/>", STATUS))
-        BUILDER.append(String.format("Function flags: %s<br/>", FN_FLAGS))
-        BUILDER.append(String.format("Function user flags:<br/>%s", FN_USERFLAGS.toHTML()))
-        BUILDER.append(String.format("Opcode version: %d.%d<br/>", OPCODE_MAJORVERSION, OPCODE_MINORVERSION))
+        BUILDER.append("Status: $STATUS<br/>")
+        BUILDER.append("Function flags: $FN_FLAGS<br/>")
+        BUILDER.append("Function user flags:<br/>${FN_USERFLAGS.toHTML()}")
+        BUILDER.append("Opcode version: $OPCODE_MAJORVERSION.$OPCODE_MINORVERSION<br/>")
         BUILDER.append("</p>")
         if (CODE!!.size > 0) {
             BUILDER.append("<hr/><p>PAPYRUS BYTECODE:</p>")
             BUILDER.append("<code><pre>")
             val OPS: List<OpcodeData> = this.CODE!!.toList()
             OPS.subList(0, PTR).forEach { v: OpcodeData? -> BUILDER.append("   $v\n") }
-            BUILDER.append(String.format("==><b>%s</b>\n", OPS[PTR]))
+            BUILDER.append("==><b>${OPS[PTR]}</b>\n")
             OPS.subList(PTR + 1, CODE!!.size)
                 .forEach { v: OpcodeData? -> BUILDER.append("   $v\n") }
             BUILDER.append("</pre></code>")
@@ -370,8 +369,6 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @return
      */
     override fun matches(analysis: Analysis?, mod: String?): Boolean {
-        Objects.requireNonNull(analysis)
-        Objects.requireNonNull(mod)
         val OWNERS = analysis!!.SCRIPT_ORIGINS[scriptName.toIString()] ?: return false
         return OWNERS.contains(mod)
     }
@@ -395,7 +392,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @return The event name.
      */
     val event: TString
-    private val STATUS: Optional<TString>
+    private val STATUS: TString?
     private val OPCODE_MAJORVERSION: Byte
     private val OPCODE_MINORVERSION: Byte
     private val RETURNTYPE: TString
@@ -499,7 +496,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s - %s", operand1, operand2)
+                    term = "$operand1 - $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.IMUL, Opcode.FMUL -> {
@@ -587,18 +584,18 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 0)
                     dest = args[0]!!.toValueString()
                     arg = args[1]!!.paren()
-                    var found: Optional<MemberDesc> = Optional.empty()
+                    var found: MemberDesc? = null
                     for (memberDesc in types) {
                         if (memberDesc.name.equals(dest)) {
-                            found = Optional.of(memberDesc)
+                            found = memberDesc
                             break
                         }
                     }
-                    type = found.get().type.toWString()
+                    type = found?.type!!.toWString()
                     term = if (type.equals("bool")) {
                         arg
                     } else {
-                        String.format("(%s)%s", type, arg)
+                        "($type)$arg"
                     }
                     processTerm(args, terms, 0, term)
                 }
@@ -606,55 +603,55 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 2)
                     obj = args[1]!!.toValueString()
                     prop = args[0]!!.toValueString()
-                    term = String.format("%s.%s", obj, prop)
+                    term = "$obj.$prop"
                     processTerm(args, terms, 2, term)
                 }
                 Opcode.CMP_EQ -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s == %s", operand1, operand2)
+                    term = "$operand1 == $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CMP_LT -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s < %s", operand1, operand2)
+                    term = "$operand1 < $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CMP_LE -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s <= %s", operand1, operand2)
+                    term = "$operand1 <= $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CMP_GT -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s > %s", operand1, operand2)
+                    term = "$operand1 > $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CMP_GE -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s >= %s", operand1, operand2)
+                    term = "$operand1 >= $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.ARR_CREATE -> {
                     val size = args[1]!!.intValue
                     dest = args[0]!!.toValueString()
-                    var found1: Optional<MemberDesc> = Optional.empty()
+                    var found1: MemberDesc? = null
                     for (t in types) {
                         if (t.name.equals(dest)) {
-                            found1 = Optional.of(t)
+                            found1 = t
                             break
                         }
                     }
-                    type = found1.get().type.toWString()
+                    type = found1?.type!!.toWString()
                     val subtype = type.toString().substring(0, type.length - 2)
                     term = String.format("new %s[%s]", subtype, size)
                     processTerm(args, terms, 0, term)
@@ -732,7 +729,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
          * @return
         </T> */
         fun <T> paramList(params: List<T>): String {
-            val joiner = StringJoiner(", ", "(", ")")
+            val joiner = java.util.StringJoiner(", ", "(", ")")
             params
                 .asSequence()
                 .map { it.toString() }
@@ -754,9 +751,6 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @throws PapyrusElementException
      */
     init {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(thread)
-        Objects.requireNonNull(context)
         val variableCount = input.int
         if (variableCount < 0 || variableCount > 50000) {
             throw PapyrusFormatException("Invalid variableCount $variableCount")
@@ -770,9 +764,9 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         event = context.readTString(input)
         STATUS =
             if (!FLAG.getFlag(0) && FN_TYPE == Type.NULL) {
-                Optional.of(context.readTString(input))
+                context.readTString(input)
             } else {
-                Optional.empty()
+                null
             }
         OPCODE_MAJORVERSION = input.get()
         OPCODE_MINORVERSION = input.get()
