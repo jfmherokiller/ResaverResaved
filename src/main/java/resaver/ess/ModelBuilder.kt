@@ -44,13 +44,13 @@ class ModelBuilder(progress: ProgressModel) {
     fun addPluginInfo(plugins: PluginInfo) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Plugins (full)")
-            NODE.addAll(plugins.fullPlugins.stream().map { element: Plugin? -> PluginNode(element) }.toList())
+            NODE.addAll(plugins.fullPlugins.map { element: Plugin? -> PluginNode(element) }.toList())
             PROGRESS.modifyValue(1)
             NODE
         }))
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Plugins (lite)")
-            NODE.addAll(plugins.litePlugins.stream().map { element: Plugin? -> PluginNode(element) }.toList())
+            NODE.addAll(plugins.litePlugins.map { element: Plugin? -> PluginNode(element) }.toList())
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -78,9 +78,9 @@ class ModelBuilder(progress: ProgressModel) {
         TASKS.add(EXECUTOR.submit(Callable {
             val DICTIONARY = table.stream()
                 .collect(Collectors.groupingBy(ALPHABETICAL))
-            val NODES: List<Node> = DICTIONARY.entries.stream()
+            val NODES: List<Node> = DICTIONARY.entries
                 .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
-                .collect(Collectors.toList())
+                .toList()
             val NODE = ContainerNode("Strings")
             NODE.addAll(NODES).sort()
             PROGRESS.modifyValue(1)
@@ -215,7 +215,9 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addThreads(threads: ActiveScriptMap) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Active Scripts").addAll(threads.values.stream().map { element: ActiveScript? -> ActiveScriptNode(element) }.toList()).sort()
+            val NODE = ContainerNode("Active Scripts").addAll(
+                threads.values.map { element: ActiveScript? -> ActiveScriptNode(element) }.toList()
+            ).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -228,7 +230,9 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addFunctionMessages(messages: List<FunctionMessage?>) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Function Messages").addAll(messages.stream().map { element: FunctionMessage? -> FunctionMessageNode(element) }.toList()).sort()
+            val NODE = ContainerNode("Function Messages").addAll(
+                messages.map { element: FunctionMessage? -> FunctionMessageNode(element) }.toList()
+            ).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -241,8 +245,9 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addSuspendedStacks1(stacks: SuspendedStackMap) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Suspended Stacks 1").addAll(stacks.values.stream().map { element: SuspendedStack? -> SuspendedStackNode(element) }
-                .toList()).sort()
+            val NODE = ContainerNode("Suspended Stacks 1").addAll(
+                stacks.values.map { element: SuspendedStack? -> SuspendedStackNode(element) }
+                    .toList()).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -255,8 +260,9 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addSuspendedStacks2(stacks: SuspendedStackMap) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Suspended Stacks 2").addAll(stacks.values.stream().map { element: SuspendedStack? -> SuspendedStackNode(element) }
-                .toList()).sort()
+            val NODE = ContainerNode("Suspended Stacks 2").addAll(
+                stacks.values.map { element: SuspendedStack? -> SuspendedStackNode(element) }
+                    .toList()).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -269,10 +275,10 @@ class ModelBuilder(progress: ProgressModel) {
     fun addChangeForms(changeForms: Map<RefID?, ChangeForm?>) {
         TASKS.add(EXECUTOR.submit(Callable {
             val DICTIONARY: Map<ChangeFormType, List<ChangeForm>> =
-                changeForms.values.stream().toList().filterNotNull().groupBy(ChangeForm::type)
-            val NODES: List<Node> = DICTIONARY.entries.stream()
+                changeForms.values.toList().filterNotNull().groupBy(ChangeForm::type)
+            val NODES: List<Node> = DICTIONARY.entries
                 .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
-                .collect(Collectors.toList())
+                .toList()
             val NODE = ContainerNode("ChangeForms").addAll(NODES).sort()
             PROGRESS.modifyValue(1)
             NODE
