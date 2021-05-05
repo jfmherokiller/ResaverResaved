@@ -76,9 +76,8 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @return A set of changeforms.
      */
     fun getChangeForms(save: ESS?): Set<ChangeForm> {
-        val FORMS: Set<ChangeForm> = save!!.changeForms.values.stream()
+        return save!!.changeForms.values.stream()
             .filter { form: ChangeForm -> form.refID.PLUGIN === this }.toList().toSet()
-        return FORMS
     }
 
     /**

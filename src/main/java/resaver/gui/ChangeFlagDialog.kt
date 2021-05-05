@@ -13,120 +13,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFormattedTextField;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import java.util.Arrays;
-import mf.BiIntConsumer;
+import mf.BiIntConsumer
+import mf.Hex32Formatter
+import java.awt.BorderLayout
+import java.awt.FlowLayout
+import java.awt.GridLayout
+import java.awt.event.ActionEvent
+import java.beans.PropertyChangeEvent
+import javax.swing.*
 
 /**
  *
  * @author Mark
  */
-public class ChangeFlagDialog extends JDialog {
-
-    /**
-     *
-     * @param parent
-     * @param mask
-     * @param filter
-     * @param done
-     */
-    public ChangeFlagDialog(SaveWindow parent, int mask, int filter, BiIntConsumer done) {
-        super(parent, "", true);
-        this.FLAGS = new JButton[32];
-
-        this.mask = mask;
-        this.filter = filter;
-
-        int m = mask;
-        int f = filter;
-
-        for (int i = 0; i < 32; i++) {
-            this.FLAGS[i] = new JButton();
-        }
-
-        this.maskField = new JFormattedTextField(new mf.Hex32Formatter());
-        this.filterField = new JFormattedTextField(new mf.Hex32Formatter());
-
-        this.maskField.setValue(this.mask);
-        this.filterField.setValue(this.filter);
-        this.FILTER = new JButton("Set Filter");
-        this.CLEAR = new JButton("Clear");
-        this.CANCEL = new JButton("Cancel");
-
-        this.maskField.setColumns(8);
-        this.filterField.setColumns(8);
-        this.maskField.addPropertyChangeListener("value", e -> updateMask());
-        this.filterField.addPropertyChangeListener("value", e -> updateFilter());
-        super.setLayout(new BorderLayout());
-
-        final JPanel TOP = new JPanel(new FlowLayout());
-        final JPanel CENTER = new JPanel(new GridLayout(2, 32));
-        final JPanel BOTTOM = new JPanel(new FlowLayout());
-        super.add(TOP, BorderLayout.NORTH);
-        super.add(BOTTOM, BorderLayout.SOUTH);
-        super.add(CENTER, BorderLayout.CENTER);
-        TOP.add(new JLabel("Mask"));
-        TOP.add(this.maskField);
-        TOP.add(new JLabel("Filter"));
-        TOP.add(this.filterField);
-        BOTTOM.add(this.FILTER);
-        BOTTOM.add(this.CLEAR);
-        BOTTOM.add(this.CANCEL);
-
-        for (int i = 0; i < 32; i++) {
-            CENTER.add(new JLabel(Integer.toString(31 - i), JLabel.CENTER));
-        }
-        for (int i = 0; i < 32; i++) {
-            JButton b = this.FLAGS[31 - i];
-            CENTER.add(b);
-            b.addActionListener(e -> flagToggle((JButton) e.getSource()));
-        }
-
-        this.FILTER.addActionListener(e -> {
-            this.setVisible(false);
-            done.consume(this.mask, this.filter);
-        });
-
-        this.CANCEL.addActionListener(e -> this.setVisible(false));
-
-        this.CLEAR.addActionListener(e -> {
-            this.mask = 0;
-            this.filter = 0;
-            this.update();
-        });
-
-        super.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        this.update();
-    }
-
+class ChangeFlagDialog(parent: SaveWindow?, mask: Int, filter: Int, done: BiIntConsumer) : JDialog(parent, "", true) {
     /**
      *
      */
-    private void update() {
-        int m = this.mask;
-        int f = this.filter;
-
-        for (int i = 0; i < 32; i++) {
-            JButton flag = this.FLAGS[i];
-            int x = m & 0x1;
-            int v = f & 0x1;
-            m >>>= 1;
-            f >>>= 1;
-            if (x == 0) {
-                flag.setText("x");
-            } else if (v == 0) {
-                flag.setText("0");
-            } else {
-                flag.setText("1");
+    private fun update() {
+        var m = mask
+        var f = filter
+        for (i in 0..31) {
+            val flag = FLAGS[i]
+            val x = m and 0x1
+            val v = f and 0x1
+            m = m ushr 1
+            f = f ushr 1
+            when {
+                x == 0 -> {
+                    flag!!.text = "x"
+                }
+                v == 0 -> {
+                    flag!!.text = "0"
+                }
+                else -> {
+                    flag!!.text = "1"
+                }
             }
         }
     }
@@ -134,24 +58,24 @@ public class ChangeFlagDialog extends JDialog {
     /**
      *
      */
-    private void updateMask() {
+    private fun updateMask() {
         try {
-            this.mask = (Integer) this.maskField.getValue();
-            this.update();
-        } catch (NumberFormatException ex) {
-            throw new IllegalStateException("Illegal mask and/or field.", ex);
+            mask = maskField.value as Int
+            this.update()
+        } catch (ex: NumberFormatException) {
+            throw IllegalStateException("Illegal mask and/or field.", ex)
         }
     }
 
     /**
      *
      */
-    private void updateFilter() {
+    private fun updateFilter() {
         try {
-            this.filter = (Integer) this.filterField.getValue();
-            this.update();
-        } catch (NumberFormatException ex) {
-            throw new IllegalStateException("Illegal mask and/or field.", ex);
+            filter = filterField.value as Int
+            this.update()
+        } catch (ex: NumberFormatException) {
+            throw IllegalStateException("Illegal mask and/or field.", ex)
         }
     }
 
@@ -159,21 +83,13 @@ public class ChangeFlagDialog extends JDialog {
      *
      * @param b
      */
-    private void flagToggle(JButton b) {
-        int i = Arrays.asList(this.FLAGS).indexOf(b);
-
-        switch (b.getText()) {
-            case LABEL_X:
-                this.setFlag(i, 0);
-                break;
-            case LABEL_0:
-                this.setFlag(i, 1);
-                break;
-            case LABEL_1:
-                this.setFlag(i, -1);
-                break;
-            default:
-                throw new IllegalStateException("Illegal value.");
+    private fun flagToggle(b: JButton) {
+        val i = listOf(*FLAGS).indexOf(b)
+        when (b.text) {
+            LABEL_X -> setFlag(i, 0)
+            LABEL_0 -> setFlag(i, 1)
+            LABEL_1 -> setFlag(i, -1)
+            else -> throw IllegalStateException("Illegal value.")
         }
     }
 
@@ -182,52 +98,111 @@ public class ChangeFlagDialog extends JDialog {
      * @param i
      * @param val
      */
-    private void setFlag(int i, int val) {
-        System.out.printf("button %d, %d\n", i, val);
-        JButton flag = this.FLAGS[i];
-        int clearBit = ~(0x1 << i);
-        int setBit = 0x1 << i;
-
-        switch (val) {
-            case -1:
-                this.mask &= clearBit;
-                this.filter &= clearBit;
-                flag.setText(LABEL_X);
-                break;
-            case 0:
-                this.mask |= setBit;
-                this.filter &= clearBit;
-                flag.setText(LABEL_0);
-                break;
-            case 1:
-                this.mask |= setBit;
-                this.filter |= setBit;
-                flag.setText(LABEL_1);
-                break;
-            default:
-                throw new IllegalStateException("Illegal flag value.");
+    private fun setFlag(i: Int, `val`: Int) {
+        System.out.printf("button %d, %d\n", i, `val`)
+        val flag = FLAGS[i]
+        val clearBit = (0x1 shl i).inv()
+        val setBit = 0x1 shl i
+        when (`val`) {
+            -1 -> {
+                mask = mask and clearBit
+                filter = filter and clearBit
+                flag!!.text = LABEL_X
+            }
+            0 -> {
+                mask = mask or setBit
+                filter = filter and clearBit
+                flag!!.text = LABEL_0
+            }
+            1 -> {
+                mask = mask or setBit
+                filter = filter or setBit
+                flag!!.text = LABEL_1
+            }
+            else -> throw IllegalStateException("Illegal flag value.")
         }
-
-        this.maskField.setValue(this.mask);
-        this.filterField.setValue(this.filter);
+        maskField.value = mask
+        filterField.value = filter
     }
 
-    @Override
-    public String toString() {
-        return String.format("%08x / %08x", this.mask, this.filter);
+    override fun toString(): String {
+        return String.format("%08x / %08x", mask, filter)
     }
 
-    private int mask;
-    private int filter;
-    final private JFormattedTextField maskField;
-    final private JFormattedTextField filterField;
-    final private JButton[] FLAGS;
-    final private JButton FILTER;
-    final private JButton CLEAR;
-    final private JButton CANCEL;
+    private var mask: Int
+    private var filter: Int
+    private val maskField: JFormattedTextField
+    private val filterField: JFormattedTextField
+    private val FLAGS: Array<JButton?> = arrayOfNulls(32)
+    private val FILTER: JButton
+    private val CLEAR: JButton
+    private val CANCEL: JButton
 
-    static final private String LABEL_X = "x";
-    static final private String LABEL_0 = "0";
-    static final private String LABEL_1 = "1";
+    companion object {
+        private const val LABEL_X = "x"
+        private const val LABEL_0 = "0"
+        private const val LABEL_1 = "1"
+    }
 
+    /**
+     *
+     * @param parent
+     * @param mask
+     * @param filter
+     * @param done
+     */
+    init {
+        this.mask = mask
+        this.filter = filter
+        val m = mask
+        val f = filter
+        for (i in 0..31) {
+            FLAGS[i] = JButton()
+        }
+        maskField = JFormattedTextField(Hex32Formatter())
+        filterField = JFormattedTextField(Hex32Formatter())
+        maskField.value = this.mask
+        filterField.value = this.filter
+        FILTER = JButton("Set Filter")
+        CLEAR = JButton("Clear")
+        CANCEL = JButton("Cancel")
+        maskField.columns = 8
+        filterField.columns = 8
+        maskField.addPropertyChangeListener("value") { e: PropertyChangeEvent? -> updateMask() }
+        filterField.addPropertyChangeListener("value") { e: PropertyChangeEvent? -> updateFilter() }
+        super.setLayout(BorderLayout())
+        val TOP = JPanel(FlowLayout())
+        val CENTER = JPanel(GridLayout(2, 32))
+        val BOTTOM = JPanel(FlowLayout())
+        super.add(TOP, BorderLayout.NORTH)
+        super.add(BOTTOM, BorderLayout.SOUTH)
+        super.add(CENTER, BorderLayout.CENTER)
+        TOP.add(JLabel("Mask"))
+        TOP.add(maskField)
+        TOP.add(JLabel("Filter"))
+        TOP.add(filterField)
+        BOTTOM.add(FILTER)
+        BOTTOM.add(CLEAR)
+        BOTTOM.add(CANCEL)
+        for (i in 0..31) {
+            CENTER.add(JLabel((31 - i).toString(), JLabel.CENTER))
+        }
+        for (i in 0..31) {
+            val b = FLAGS[31 - i]
+            CENTER.add(b)
+            b!!.addActionListener { e: ActionEvent -> flagToggle(e.source as JButton) }
+        }
+        FILTER.addActionListener { e: ActionEvent? ->
+            this.isVisible = false
+            done.consume(this.mask, this.filter)
+        }
+        CANCEL.addActionListener { e: ActionEvent? -> this.isVisible = false }
+        CLEAR.addActionListener { e: ActionEvent? ->
+            this.mask = 0
+            this.filter = 0
+            this.update()
+        }
+        super.setDefaultCloseOperation(DISPOSE_ON_CLOSE)
+        this.update()
+    }
 }

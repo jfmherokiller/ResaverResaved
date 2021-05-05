@@ -13,53 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.util.List;
-import resaver.ess.AnalyzableElement;
-import resaver.ess.Linkable;
+import resaver.ess.AnalyzableElement
+import resaver.ess.Linkable
 
 /**
  *
  * @author Mark
  */
-abstract public class Definition implements PapyrusElement, AnalyzableElement, Linkable {
-
-    public Definition() {
-        this.instanceCount = 0;
-    }
-
+abstract class Definition : PapyrusElement, AnalyzableElement, Linkable {
     /**
      * @return The name of the papyrus element.
      */
-    abstract public TString getName();
+    abstract val name: TString?
 
     /**
-     * @return A flag indicating if the <code>Definition</code> is undefined.
-     *
+     * @return A flag indicating if the `Definition` is undefined.
      */
-    public boolean isUndefined() {
-        return false;
-    }
+    open val isUndefined: Boolean
+        get() = false
 
     /**
      * Increments the instance count.
      */
-    void incrementInstanceCount() {
-        this.instanceCount++;
-    }
-
-    /**
-     * @return The instance count.
-     */
-    protected int getInstanceCount() {
-        return this.instanceCount;
+    fun incrementInstanceCount() {
+        instanceCount++
     }
 
     /**
      * @return The list of member descriptions.
      */
-    abstract public List<MemberDesc> getMembers();
+    abstract val members: List<MemberDesc?>?
 
-    private int instanceCount;
+    /**
+     * @return The instance count.
+     */
+    protected var instanceCount = 0
+        private set
 }

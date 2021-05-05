@@ -177,9 +177,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ActiveScriptMap activeScriptMap = null;
             try {
                 activeScriptMap = new ActiveScriptMap(input, CONTEXT);
-            } catch (PapyrusElementException ex) {
-                activeScriptMap = (ActiveScriptMap) ex.getPartial();
-                throw new PapyrusException("Error reading ActiveScripts.", ex, this);
             } finally {
                 this.ACTIVESCRIPTS = activeScriptMap;
                 SUM.click(this.ACTIVESCRIPTS.calculateSize());

@@ -13,76 +13,64 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import javax.swing.*;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
+import java.awt.Dimension
+import java.util.logging.Handler
+import java.util.logging.LogRecord
+import javax.swing.JScrollPane
+import javax.swing.JTextArea
 
 /**
  * Displays progress messages in a JFrame. It receives messages via the Java
  * logging system.
  *
- * To use it, a <code>Handler</code> must be retrieved using the
- * <code>getHandler</code> method and attached to an instance of
- * <code>Logger</code>.
+ * To use it, a `Handler` must be retrieved using the
+ * `getHandler` method and attached to an instance of
+ * `Logger`.
  *
  * @see java.util.logging.Logger
+ *
  * @see java.util.logging.Handler
+ *
  *
  * @author Mark
  */
-public class LogWindow extends JScrollPane { 
-
+class LogWindow : JScrollPane() {
     /**
-     * Creates a new <code>LogWindow</code> with a default preferred size of
-     * 480x400.
+     * @return A `Handler` for the Java logging system.
      */
-    public LogWindow() {
-        this.HANDLER = new LogWindowHandler();
-        this.TEXT = new JTextArea();
-        this.TEXT.setWrapStyleWord(true);
-        this.TEXT.setLineWrap(true);
-        super.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        super.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        super.setViewportView(this.TEXT);
-        this.TEXT.setFont(this.TEXT.getFont().deriveFont(12.0f));
-        //super.add(SCROLLER);
-        super.setPreferredSize(new java.awt.Dimension(600, 400));
-    }
-
-    /**
-     * @return A <code>Handler</code> for the Java logging system.
-     */
-    public Handler getHandler() {
-        return this.HANDLER;
-    }
+    val handler: Handler
+        get() = HANDLER
 
     /**
      * This class handles the job of receiving log messages and displaying them.
      */
-    private class LogWindowHandler extends Handler {
-
-        public LogWindowHandler() {
-
+    private inner class LogWindowHandler : Handler() {
+        override fun publish(record: LogRecord) {
+            TEXT.append(record.message.trimIndent())
+            TEXT.caretPosition = TEXT.document.length
         }
 
-        @Override
-        public void publish(LogRecord record) {
-            LogWindow.this.TEXT.append(record.getMessage() + "\n");
-            LogWindow.this.TEXT.setCaretPosition(LogWindow.this.TEXT.getDocument().getLength());
-        }
-
-        @Override
-        public void flush() {
-        }
-
-        @Override
-        public void close() {
-        }
+        override fun flush() {}
+        override fun close() {}
     }
 
-    final private LogWindowHandler HANDLER;
-    final private JTextArea TEXT;
+    private val HANDLER: LogWindowHandler = LogWindowHandler()
+    private val TEXT: JTextArea = JTextArea()
 
+    /**
+     * Creates a new `LogWindow` with a default preferred size of
+     * 480x400.
+     */
+    init {
+        TEXT.wrapStyleWord = true
+        TEXT.lineWrap = true
+        super.setHorizontalScrollBarPolicy(HORIZONTAL_SCROLLBAR_AS_NEEDED)
+        super.setVerticalScrollBarPolicy(VERTICAL_SCROLLBAR_ALWAYS)
+        super.setViewportView(TEXT)
+        TEXT.font = TEXT.font.deriveFont(12.0f)
+        //super.add(SCROLLER);
+        super.setPreferredSize(Dimension(600, 400))
+    }
 }

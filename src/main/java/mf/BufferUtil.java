@@ -23,6 +23,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import net.jpountz.lz4.LZ4Compressor;
 import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.mozilla.universalchardet.UniversalDetector;
 
 /**
@@ -274,7 +276,8 @@ public class BufferUtil {
      * @return
      * @throws java.util.zip.DataFormatException
      */
-    static public ByteBuffer inflateZLIB(ByteBuffer compressed, int uncompressedSize) throws java.util.zip.DataFormatException {
+    @NotNull
+    static public ByteBuffer inflateZLIB(@NotNull ByteBuffer compressed, int uncompressedSize) throws java.util.zip.DataFormatException {
         int compressedSize = compressed.limit() - compressed.position();
         return inflateZLIB(compressed, uncompressedSize, compressedSize);
     }
@@ -288,7 +291,8 @@ public class BufferUtil {
      * @return
      * @throws java.util.zip.DataFormatException
      */
-    static public ByteBuffer inflateZLIB(ByteBuffer compressed, int uncompressedSize, int compressedSize) throws java.util.zip.DataFormatException {
+    @NotNull
+    static public ByteBuffer inflateZLIB(@NotNull ByteBuffer compressed, int uncompressedSize, int compressedSize) throws java.util.zip.DataFormatException {
         final byte[] UNCOMPRESSED_BYTES = new byte[uncompressedSize];
         final byte[] COMPRESSED_BYTES = new byte[compressedSize];
         compressed.get(COMPRESSED_BYTES);
@@ -314,6 +318,7 @@ public class BufferUtil {
      * @param uncompressedSize
      * @return
      */
+    @NotNull
     static public ByteBuffer inflateLZ4(ByteBuffer compressed, int uncompressedSize) {
         ByteBuffer uncompressed = ByteBuffer.allocate(uncompressedSize);
         final LZ4Factory LZ4FACTORY = LZ4Factory.fastestInstance();
@@ -330,6 +335,7 @@ public class BufferUtil {
      * @param uncompressedSize
      * @return
      */
+    @NotNull
     static public ByteBuffer deflateZLIB(ByteBuffer uncompressed, int uncompressedSize) {
         final int SIZE = Math.min(uncompressedSize, uncompressed.limit());
         final byte[] UNCOMPRESSED_BYTES = new byte[SIZE];
@@ -358,6 +364,7 @@ public class BufferUtil {
      * @param uncompressedSize
      * @return
      */
+    @NotNull
     static public ByteBuffer deflateLZ4(ByteBuffer uncompressed, int uncompressedSize) {
         final LZ4Factory LZ4FACTORY = LZ4Factory.fastestInstance();
         final LZ4Compressor LZ4COMP = LZ4FACTORY.fastCompressor();
@@ -375,6 +382,8 @@ public class BufferUtil {
     /**
      * @return A log of all character sets that have been detected.
      */
+    @NotNull
+    @Contract(pure = true)
     static public java.util.Set<Charset> getCharsetLog() {
         return java.util.Collections.unmodifiableSet(CHARSET_LOG);
     }

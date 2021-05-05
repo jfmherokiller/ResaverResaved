@@ -13,79 +13,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.util.Objects;
-import javax.swing.event.TableModelListener;
-import resaver.ess.papyrus.*;
+import resaver.ess.papyrus.Definition
+import javax.swing.event.TableModelListener
+import javax.swing.table.TableModel
 
 /**
  * A table model for papyrus scripts.
  *
  * @author Mark Fairchild
  */
-public class DefinitionTableModel implements javax.swing.table.TableModel {
-
-    public DefinitionTableModel(Definition def) {        
-        this.DEFINITION = Objects.requireNonNull(def);
+class DefinitionTableModel(def: Definition?) : TableModel {
+    override fun getRowCount(): Int {
+        return DEFINITION.members?.size!!
     }
 
-    @Override
-    public int getRowCount() {
-        return this.DEFINITION.getMembers().size();
+    override fun getColumnCount(): Int {
+        return 3
     }
 
-    @Override
-    public int getColumnCount() {
-        return 3;
-    }
-
-    @Override
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        assert 0 <= rowIndex && rowIndex < this.getRowCount();
-        MemberDesc member = this.DEFINITION.getMembers().get(rowIndex);
-
-        switch (columnIndex) {
-            case 0:
-                return rowIndex;
-            case 1:
-                return member.getType();
-            case 2:
-                return member.getName();
-            default:
-                throw new IllegalStateException();
+    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any? {
+        assert(0 <= rowIndex && rowIndex < this.rowCount)
+        val member = DEFINITION.members?.get(rowIndex)
+        return when (columnIndex) {
+            0 -> rowIndex
+            1 -> member?.type
+            2 -> member?.name
+            else -> throw IllegalStateException()
         }
     }
 
-    @Override
-    public String getColumnName(int columnIndex) {
-        return COLUMNNAMES[columnIndex];
+    override fun getColumnName(columnIndex: Int): String {
+        return COLUMNNAMES[columnIndex]
     }
 
-    @Override
-    public Class<?> getColumnClass(int columnIndex) {
-        return COLUMNTYPES[columnIndex];
+    override fun getColumnClass(columnIndex: Int): Class<*> {
+        return COLUMNTYPES[columnIndex]
     }
 
-    @Override
-    public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return false;
+    override fun isCellEditable(rowIndex: Int, columnIndex: Int): Boolean {
+        return false
     }
 
-    @Override
-    public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
-        throw new UnsupportedOperationException("Not supported.");
+    override fun setValueAt(aValue: Any, rowIndex: Int, columnIndex: Int) {
+        throw UnsupportedOperationException("Not supported.")
     }
 
-    @Override
-    public void addTableModelListener(TableModelListener l) {
+    override fun addTableModelListener(l: TableModelListener) {}
+    override fun removeTableModelListener(l: TableModelListener) {}
+    private val DEFINITION: Definition = def!!
+    private val COLUMNNAMES = arrayOf("#", "Type", "Name")
+
+    companion object {
+        private val COLUMNTYPES = arrayOf<Class<*>>(Int::class.java, String::class.java, String::class.java)
     }
 
-    @Override
-    public void removeTableModelListener(TableModelListener l) {
-    }
-
-    final private Definition DEFINITION;
-    final private String[] COLUMNNAMES = new String[]{"#", "Type", "Name"};
-    static final private Class<?>[] COLUMNTYPES = new Class<?>[]{Integer.class, String.class, String.class};
 }

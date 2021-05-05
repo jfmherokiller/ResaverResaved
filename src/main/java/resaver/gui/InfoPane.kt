@@ -13,42 +13,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import javax.swing.JTextPane;
-import javax.swing.event.HyperlinkListener;
+import javax.swing.event.HyperlinkListener
+import javax.swing.JTextPane
 
 /**
  * Displays HTML formatted text and supports a hyperlink listener.
- * 
+ *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class InfoPane extends JTextPane {
+class InfoPane(text: String?, listener: HyperlinkListener?) : JTextPane() {
+    /**
+     *
+     * @param text
+     */
+    override fun setText(text: String) {
+        super.setText(text)
+        super.setCaretPosition(0)
+    }
 
     /**
      * @param text
      * @param listener
      */
-    public InfoPane(String text, HyperlinkListener listener) {
-        super.setEditable(false);
-        super.setContentType("text/html");
+    init {
+        super.setEditable(false)
+        super.setContentType("text/html")
         if (text != null) {
-            this.setText(text);
+            this.text = text;
         }
         if (listener != null) {
             super.addHyperlinkListener(listener);
         }
-    }
-
-    /**
-     *
-     * @param text
-     *
-     */
-    @Override
-    public void setText(String text) {
-        super.setText(text);
-        super.setCaretPosition(0);
     }
 }

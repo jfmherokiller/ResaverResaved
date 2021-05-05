@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.papyrus.PapyrusElementMap.PapyrusElementReader
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class ActiveScriptMap extends PapyrusElementMap<ActiveScript> {
-
-    ActiveScriptMap(java.nio.ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
-        super(input, b -> new ActiveScript(b, context));
+class ActiveScriptMap : PapyrusElementMap<ActiveScript> {
+    internal constructor(input: ByteBuffer?, context: PapyrusContext?) : super(
+        input,
+        PapyrusElementReader<ActiveScript> { b: ByteBuffer? -> ActiveScript(b, context) }) {
     }
 
-    ActiveScriptMap() {
-    }
-
+    internal constructor() {}
 }

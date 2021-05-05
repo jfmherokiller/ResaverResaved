@@ -279,9 +279,7 @@ final public class Pex {
         code.add("");
 
         final Map<Property, Variable> AUTOVARS = new java.util.HashMap<>();
-        this.PROPERTIES.stream().filter(Property::hasAutoVar).forEach(p -> {
-            this.VARIABLES.stream().filter(v -> v.NAME.equals(p.AUTOVARNAME)).forEach(v -> AUTOVARS.put(p, v));
-        });
+        this.PROPERTIES.stream().filter(Property::hasAutoVar).forEach(p -> this.VARIABLES.stream().filter(v -> v.NAME.equals(p.AUTOVARNAME)).forEach(v -> AUTOVARS.put(p, v)));
 
         List<Property> sortedProp = new ArrayList<>(this.PROPERTIES);
         sortedProp.sort(Comparator.comparing(a -> a.NAME));
@@ -1157,9 +1155,7 @@ final public class Pex {
             types.addAll(this.LOCALS);
 
             TermMap terms = new TermMap();
-            autovars.forEach((p, v) -> {
-                terms.put(new VData.ID(v.NAME), new VData.Term(p.NAME.toString()));
-            });
+            autovars.forEach((p, v) -> terms.put(new VData.ID(v.NAME), new VData.Term(p.NAME.toString())));
 
             List<Instruction> block = new ArrayList<>(this.INSTRUCTIONS);
 
@@ -1259,18 +1255,18 @@ final public class Pex {
                 this.OPCODE = Opcode.read(input);
                 this.OP = (byte) this.OPCODE.ordinal();
 
-                if (this.OPCODE.ARGS > 0) {
-                    this.ARGS = new ArrayList<>(this.OPCODE.ARGS);
-                    for (int i = 0; i < OPCODE.ARGS; i++) {
+                if (this.OPCODE.getARGS() > 0) {
+                    this.ARGS = new ArrayList<>(this.OPCODE.getARGS());
+                    for (int i = 0; i < OPCODE.getARGS(); i++) {
                         this.ARGS.add(VData.readVariableData(input, strings));
                     }
-                } else if (this.OPCODE.ARGS < 0) {
-                    this.ARGS = new ArrayList<>(-this.OPCODE.ARGS);
-                    for (int i = 0; i < 1 - this.OPCODE.ARGS; i++) {
+                } else if (this.OPCODE.getARGS() < 0) {
+                    this.ARGS = new ArrayList<>(-this.OPCODE.getARGS());
+                    for (int i = 0; i < 1 - this.OPCODE.getARGS(); i++) {
                         this.ARGS.add(VData.readVariableData(input, strings));
                     }
 
-                    VData count = this.ARGS.get(-this.OPCODE.ARGS);
+                    VData count = this.ARGS.get(-this.OPCODE.getARGS());
                     if (!(count instanceof VData.Int)) {
                         throw new IOException("Invalid instruction");
                     }

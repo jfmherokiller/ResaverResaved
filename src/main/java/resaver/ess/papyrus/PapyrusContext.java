@@ -124,7 +124,7 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
      * @return The new <code>TString</code>.
      * @throws PapyrusFormatException
      */
-    public TString readTString(ByteBuffer input) throws PapyrusFormatException {
+    public TString readTString(ByteBuffer input) throws PapyrusFormatException{
         return this.PAPYRUS.getStringTable().read(input);
     }
 
@@ -206,11 +206,7 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
             return this.PAPYRUS.getSuspendedStacks1().get(id);
         } else if (this.PAPYRUS.getSuspendedStacks2().containsKey(id)) {
             return this.PAPYRUS.getSuspendedStacks2().get(id);
-        } else if (this.PAPYRUS.getUnbinds().containsKey(id)) {
-            return this.PAPYRUS.getUnbinds().get(id);
-        } else {
-            return null;
-        }
+        } else return this.PAPYRUS.getUnbinds().getOrDefault(id, null);
     }
 
     public HasID findAll(EID id) {

@@ -335,7 +335,7 @@ final public class FilterTreeModel implements TreeModel {
             // For Elements that contain other elements, don't setFilter
             // children at all unless the Element itself is filtered.
             // Don't apply this to the root!
-            node.setVisible(nodeVisible);
+            node.setVisible(true);
 
         } else {
             // For folders, determine which children to setFilter.
@@ -486,9 +486,7 @@ final public class FilterTreeModel implements TreeModel {
     public int getIndexOfChild(Object parent, Object target) {
         final Node PARENT = (Node) parent;
 
-        if (PARENT.isLeaf()) {
-            return -1;
-        } else {
+        if (!PARENT.isLeaf()) {
             int i = 0;
             for (Node child : PARENT.getChildren()) {
                 if (child.isVisible()) {
@@ -498,8 +496,8 @@ final public class FilterTreeModel implements TreeModel {
                     i++;
                 }
             }
-            return -1;
         }
+        return -1;
     }
 
     @Override
@@ -529,9 +527,7 @@ final public class FilterTreeModel implements TreeModel {
      * @param event
      */
     private void fireTreeNodesChanged(TreeModelEvent event) {
-        this.LISTENERS.forEach(listener -> {
-            listener.treeNodesChanged(event);
-        });
+        this.LISTENERS.forEach(listener -> listener.treeNodesChanged(event));
     }
 
     /**
@@ -540,9 +536,7 @@ final public class FilterTreeModel implements TreeModel {
      * @param event
      */
     private void fireTreeNodesInserted(TreeModelEvent event) {
-        this.LISTENERS.forEach(listener -> {
-            listener.treeNodesInserted(event);
-        });
+        this.LISTENERS.forEach(listener -> listener.treeNodesInserted(event));
     }
 
     /**
@@ -550,9 +544,7 @@ final public class FilterTreeModel implements TreeModel {
      * @param event
      */
     private void fireTreeNodesRemoved(TreeModelEvent event) {
-        this.LISTENERS.forEach(listener -> {
-            listener.treeNodesRemoved(event);
-        });
+        this.LISTENERS.forEach(listener -> listener.treeNodesRemoved(event));
     }
 
     private Node root;
@@ -820,10 +812,8 @@ final public class FilterTreeModel implements TreeModel {
         public String toString() {
             if (null == this.label) {
                 this.label = this.getName();
-                return this.label;
-            } else {
-                return this.label;
             }
+            return this.label;
         }
 
         @Override

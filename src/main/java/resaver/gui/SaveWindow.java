@@ -428,7 +428,7 @@ final public class SaveWindow extends JFrame {
             this.setTitle(TITLE);
 
         } else {
-            // Get the filesize if possible. 
+            // Get the filesize if possible.
             float size;
             try {
                 size = (float) Files.size(savefile) / 1048576.0f;
@@ -564,7 +564,7 @@ final public class SaveWindow extends JFrame {
         LOG.info("setESS");
         TIMER.restart();
 
-        // If the game is Skyrim Legendary, and the string table bug was 
+        // If the game is Skyrim Legendary, and the string table bug was
         // detected, disable the save menu command.
         if (disableSaving) {
             this.MI_SAVE.setEnabled(false);
@@ -1043,7 +1043,7 @@ final public class SaveWindow extends JFrame {
             int pluginIndex = id >>> 24;
             final java.util.List<Plugin> PLUGINS = this.save.getPluginInfo().getFullPlugins();
 
-            if (0 <= pluginIndex && pluginIndex < PLUGINS.size()) {
+            if (pluginIndex < PLUGINS.size()) {
                 final Plugin PLUGIN = PLUGINS.get(pluginIndex);
                 BUF.append(" (").append(PLUGIN).append(")");
             }
@@ -1658,7 +1658,7 @@ final public class SaveWindow extends JFrame {
             return;
         }
 
-        // Save the selected row so that we can select it again after this is done.        
+        // Save the selected row so that we can select it again after this is done.
         final int ROW = this.TREE.getSelectionModel().getMaxSelectionRow();
 
         if (elements.size() == 1) {

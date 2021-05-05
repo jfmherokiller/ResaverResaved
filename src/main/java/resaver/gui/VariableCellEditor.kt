@@ -234,7 +234,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
         private var eid: EID? = null
         private val FORMATTER: AbstractFormatter = object : AbstractFormatter() {
             @Throws(ParseException::class)
-            override fun stringToValue(text: String): Any {
+            override fun stringToValue(text: String?): Any {
                 return try {
                     java.lang.Long.parseUnsignedLong(text, 16)
                 } catch (ex: NumberFormatException) {
@@ -243,9 +243,9 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
             }
 
             @Throws(ParseException::class)
-            override fun valueToString(value: Any): String {
+            override fun valueToString(value: Any?): String {
                 return if (value is Number) {
-                    if (eid!!.is4Byte) {
+                    if (eid!!.is4Byte()) {
                         Integer.toHexString(value.toInt())
                     } else {
                         java.lang.Long.toHexString(value.toLong())

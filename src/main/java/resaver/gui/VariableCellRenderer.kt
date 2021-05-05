@@ -60,7 +60,7 @@ internal class VariableCellRenderer : DefaultTableCellRenderer() {
         }
     }
 
-    private val DEFAULT_COLOR: Color = super.getForeground()
+    private val DEFAULT_COLOR: Color = super.getForeground()?: Color.BLACK
     private val INVALID_COLOR: Color = Color.RED
     private val NULL_COLOR: Color = Color.BLUE
     private val DEFAULT_FONT: Font = super.getFont()

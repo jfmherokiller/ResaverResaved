@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.Linkable
 
 /**
  * An interface to designate elements that have an ID.
  *
  * @author Mark Fairchild
- *
  */
-public interface HasID extends PapyrusElement, resaver.ess.Linkable {
-
+interface HasID : PapyrusElement, Linkable {
     /**
      * @return The ID of the element.
      */
-    public EID getID();
-
+    val iD: EID?
 }

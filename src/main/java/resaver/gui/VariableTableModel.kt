@@ -75,7 +75,7 @@ class VariableTableModel(data: HasVariables?) : TableModel {
         }
     }
 
-    override fun setValueAt(aValue: Any, rowIndex: Int, columnIndex: Int) {
+    override fun setValueAt(aValue: Any?, rowIndex: Int, columnIndex: Int) {
         if (!isCellEditable(rowIndex, columnIndex)) {
             throw UnsupportedOperationException("Not supported.") //To change body of generated methods, choose Tools | Templates.
         } else if (aValue !is Variable) {

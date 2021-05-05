@@ -13,41 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.util.Objects;
+import kotlin.Throws
+import java.io.IOException
+import java.nio.ByteBuffer
 
 /**
  * Describes the six datatypes that appear in PEX files.
  *
  * @author Mark Fairchild
  */
-public enum DataType {
-    NONE,
-    IDENTIFIER,
-    STRING,
-    INTEGER,
-    FLOAT,
-    BOOLEAN;
+enum class DataType {
+    NONE, IDENTIFIER, STRING, INTEGER, FLOAT, BOOLEAN;
 
-    /**
-     * Read a <code>DataType</code> from an input stream.
-     *
-     * @param input The input stream.
-     * @return The <code>DataType</code>.
-     */
-    static DataType read(ByteBuffer input) throws IOException {
-        Objects.requireNonNull(input);
-
-        int index = Byte.toUnsignedInt(input.get());
-        if (index < 0 || index >= VALUES.length) {
-            throw new IOException("Invalid DataType.");
+    companion object {
+        /**
+         * Read a `DataType` from an input stream.
+         *
+         * @param input The input stream.
+         * @return The `DataType`.
+         */
+        @JvmStatic
+        @Throws(IOException::class)
+        fun read(input: ByteBuffer): DataType {
+            val index = java.lang.Byte.toUnsignedInt(input.get())
+            if (index < 0 || index >= VALUES.size) {
+                throw IOException("Invalid DataType.")
+            }
+            return VALUES[index]
         }
 
-        return VALUES[index];
+        private val VALUES = values()
     }
-
-    static final private DataType[] VALUES = DataType.values();
 }

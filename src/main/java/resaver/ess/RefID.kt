@@ -62,13 +62,13 @@ class RefID internal constructor(private val DATA: Int, ess: ESS) : Element, Lin
      * @return The value portion of the RefID, which is guaranteed to be non-negative.
      */
     private val valPart: Int
-        private get() = DATA and 0x3FFFFF
+        get() = DATA and 0x3FFFFF
 
     /**
      * @return A flag indicating if the RefID is zero.
      */
     val isZero: Boolean
-        get() = valPart == 0
+        get() = this.valPart == 0
 
     /**
      * Adds the EDID/FULL field for the RefID.

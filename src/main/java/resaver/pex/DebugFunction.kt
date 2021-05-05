@@ -13,54 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import resaver.IString;
+import resaver.IString.Companion.format
+import kotlin.Throws
+import java.io.IOException
+import resaver.IString
+import java.lang.StringBuilder
+import java.nio.ByteBuffer
 
 /**
  * Describes the debugging information for a function.
  *
  */
-final class DebugFunction {
-
+internal class DebugFunction(input: ByteBuffer, strings: StringTable) {
     /**
-     * Creates a DebugFunction by reading from a DataInput.
+     * Write the object to a `ByteBuffer`.
      *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param strings The <code>StringTable</code> for the <code>PexFile</code>.
-     * @throws IOException Exceptions aren't handled.
-     */
-    DebugFunction(ByteBuffer input, StringTable strings) throws IOException {
-        this.OBJECTNAME = strings.read(input);
-        this.STATENAME = strings.read(input);
-        this.FUNCNAME = strings.read(input);
-        this.FUNCTYPE = input.get();
-        int instructionCount = Short.toUnsignedInt(input.getShort());
-        this.INSTRUCTIONS = new ArrayList<>(instructionCount);
-        for (int i = 0; i < instructionCount; i++) {
-            this.INSTRUCTIONS.add(Short.toUnsignedInt(input.getShort()));
-        }
-    }
-
-    /**
-     * Write the object to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      * @throws IOException IO errors aren't handled at all, they are simply
      * passed on.
      */
-    void write(ByteBuffer output) throws IOException {
-        this.OBJECTNAME.write(output);
-        this.STATENAME.write(output);
-        this.FUNCNAME.write(output);
-        output.put(this.FUNCTYPE);
-        output.putShort((short) this.INSTRUCTIONS.size());
-        this.INSTRUCTIONS.forEach(instr -> output.putShort(instr.shortValue()));
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer) {
+        OBJECTNAME.write(output)
+        STATENAME.write(output)
+        FUNCNAME.write(output)
+        output.put(FUNCTYPE)
+        output.putShort(INSTRUCTIONS.size.toShort())
+        INSTRUCTIONS.forEach { instr: Int -> output.putShort(instr.toShort()) }
     }
 
     /**
@@ -69,47 +50,57 @@ final class DebugFunction {
      *
      * @param strings The set of strings.
      */
-    public void collectStrings(Set<StringTable.TString> strings) {
-        strings.add(this.OBJECTNAME);
-        strings.add(this.STATENAME);
-        strings.add(this.FUNCNAME);
+    fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        strings.add(OBJECTNAME)
+        strings.add(STATENAME)
+        strings.add(FUNCNAME)
     }
 
     /**
      * Generates a qualified name for the object of the form "OBJECT.FUNCTION".
      *
      * @return A qualified name.
-     *
      */
-    public IString getFullName() {
-        return IString.format("%s.%s", this.OBJECTNAME, this.FUNCNAME);
-    }
+    val fullName: IString
+        get() = format("%s.%s", OBJECTNAME, FUNCNAME)
 
     /**
-     * @return The size of the <code>DebugFunction</code>, in bytes.
-     *
+     * @return The size of the `DebugFunction`, in bytes.
      */
-    public int calculateSize() {
-        return 9 + 2 * this.INSTRUCTIONS.size();
+    fun calculateSize(): Int {
+        return 9 + 2 * INSTRUCTIONS.size
     }
-    
+
     /**
      * Pretty-prints the DebugFunction.
      *
      * @return A string representation of the DebugFunction.
      */
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append(String.format("%s %s.%s (type %d): ", this.OBJECTNAME, this.STATENAME, this.FUNCNAME, this.FUNCTYPE));
-        this.INSTRUCTIONS.forEach((java.lang.Integer instr) -> buf.append(String.format("%04x ", instr)));
-        return buf.toString();
+    override fun toString(): String {
+        val buf = StringBuilder()
+        buf.append(String.format("%s %s.%s (type %d): ", OBJECTNAME, STATENAME, FUNCNAME, FUNCTYPE))
+        INSTRUCTIONS.forEach { instr: Int? -> buf.append(String.format("%04x ", instr)) }
+        return buf.toString()
     }
 
-    final private StringTable.TString OBJECTNAME;
-    final private StringTable.TString STATENAME;
-    final private StringTable.TString FUNCNAME;
-    final private byte FUNCTYPE;
-    final private List<Integer> INSTRUCTIONS;
+    private val OBJECTNAME: StringTable.TString = strings.read(input)
+    private val STATENAME: StringTable.TString = strings.read(input)
+    private val FUNCNAME: StringTable.TString = strings.read(input)
+    private val FUNCTYPE: Byte = input.get()
+    private val INSTRUCTIONS: MutableList<Int>
 
+    /**
+     * Creates a DebugFunction by reading from a DataInput.
+     *
+     * @param input A datainput for a Skyrim PEX file.
+     * @param strings The `StringTable` for the `PexFile`.
+     * @throws IOException Exceptions aren't handled.
+     */
+    init {
+        val instructionCount = java.lang.Short.toUnsignedInt(input.short)
+        INSTRUCTIONS = mutableListOf()
+        for (i in 0 until instructionCount) {
+            INSTRUCTIONS.add(java.lang.Short.toUnsignedInt(input.short))
+        }
+    }
 }

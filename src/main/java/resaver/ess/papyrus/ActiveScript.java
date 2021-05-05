@@ -547,12 +547,8 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
 
                 this.STACKFRAMES = new ArrayList<>(count);
                 for (int i = 0; i < count; i++) {
-                    try {
-                        StackFrame frame = new StackFrame(input, ActiveScript.this, context);
-                        this.STACKFRAMES.add(frame);
-                    } catch (PapyrusFormatException ex) {
-                        throw new ListException(i, count, ex);
-                    }
+                    StackFrame frame = new StackFrame(input, ActiveScript.this, context);
+                    this.STACKFRAMES.add(frame);
                 }
             } catch (ListException ex) {
                 throw new PapyrusElementException("Failed to read with StackFrame data.", ex, this);

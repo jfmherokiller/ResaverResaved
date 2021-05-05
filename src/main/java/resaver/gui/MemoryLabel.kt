@@ -13,57 +13,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
+
+import javax.swing.JLabel
+import java.lang.Runtime
+import java.util.*
 
 /**
  *
  * @author Mark
  */
-final public class MemoryLabel extends javax.swing.JLabel {
-
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * Creates a new <code>MemoryLabel</code>.
-     *
-     */
-    public MemoryLabel() {
-        this.MEMTIMER = new java.util.Timer();
-    }
-
+class MemoryLabel : JLabel() {
     /**
      * Starts the update loop.
      */
-    public void initialize() {
-        this.MEMTIMER.schedule(TASK, 0, 500);
+    fun initialize() {
+        MEMTIMER.schedule(TASK, 0, 500)
     }
 
     /**
      * Ends the update loop.
      */
-    public void terminate() {
-        this.MEMTIMER.cancel();
-        this.MEMTIMER.purge();
+    fun terminate() {
+        MEMTIMER.cancel()
+        MEMTIMER.purge()
     }
 
     /**
      * Updates the memory display field.
      */
-    public void update() {
-        final Runtime RT = Runtime.getRuntime();
-        double GB = 1073741824.0;
-        long MAX = RT.maxMemory();
-        long PERCENT = 100 * RT.freeMemory() / MAX;
-        String txt = String.format("%2d%% / %1.2fgb RAM", PERCENT, MAX / GB);
-        this.setText(txt);
+    fun update() {
+        val RT = Runtime.getRuntime()
+        val GB = 1073741824.0
+        val MAX = RT.maxMemory()
+        val PERCENT = 100 * RT.freeMemory() / MAX
+        val txt = String.format("%2d%% / %1.2fgb RAM", PERCENT, MAX / GB)
+        text = txt
     }
 
-    final private java.util.Timer MEMTIMER;
-
-    final private java.util.TimerTask TASK = new java.util.TimerTask() {
-        @Override
-        public void run() {
-            update();
+    private val MEMTIMER: Timer = Timer()
+    private val TASK: TimerTask = object : TimerTask() {
+        override fun run() {
+            update()
         }
-    };
+    }
+
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+
 }
