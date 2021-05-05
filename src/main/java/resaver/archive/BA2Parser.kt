@@ -35,32 +35,23 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
      * @see ArchiveParser.getFiles
      */
     @Throws(IOException::class)
-    override fun getFiles(dir: Path?, matcher: PathMatcher?): MutableMap<Path?, Optional<ByteBuffer>>? {
-        return FILES.stream()
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): MutableMap<Path?, Optional<ByteBuffer>> {
+        return FILES
             .filter { file: BA2FileRecord -> dir == null || file.path!!.startsWith(dir) }
             .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }
-            .collect(
-                Collectors.toMap(
-                    { file: BA2FileRecord -> super.PATH.resolve(file.path!!) },
-                    { file: BA2FileRecord -> file.getData(CHANNEL) })
-            )
+            .associateBy({file: BA2FileRecord -> super.PATH.resolve(file.path!!)},{file: BA2FileRecord -> file.getData(CHANNEL)}).toMutableMap()
     }
 
     /**
      * @see ArchiveParser.getFilenames
      */
     @Throws(IOException::class)
-    override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?>? {
-        return FILES.stream()
+    override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?> {
+        return FILES
             .filter { file: BA2FileRecord -> dir == null || file.path!!.startsWith(dir) }
             .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }
-            .collect(
-                Collectors.toMap(
-                    { record: BA2FileRecord -> super.PATH.fileName.resolve(record.path!!) },
-                    { obj: BA2FileRecord -> obj.path })
-            )
+            .associateBy({ k: BA2FileRecord -> super.PATH.fileName.resolve(k.path!!) }, { v: BA2FileRecord -> v.path })
     }
-
     val HEADER: BA2Header
     private val FILES: MutableList<BA2FileRecord>
 
