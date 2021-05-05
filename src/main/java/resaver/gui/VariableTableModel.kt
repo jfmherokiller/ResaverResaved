@@ -34,7 +34,7 @@ import javax.swing.table.TableModel
  */
 class VariableTableModel(data: HasVariables?) : TableModel {
     override fun getRowCount(): Int {
-        return DATA.variables.size
+        return DATA.variables?.size!!
     }
 
     override fun getColumnCount(): Int {
@@ -45,14 +45,14 @@ class VariableTableModel(data: HasVariables?) : TableModel {
         assert(0 <= rowIndex && rowIndex < this.rowCount)
         return when (columnIndex) {
             0 -> rowIndex
-            1 -> DATA.variables[rowIndex].toTypeString()
+            1 -> DATA.variables?.get(rowIndex)?.toTypeString()
             2 -> {
-                val mb = DATA.descriptors[rowIndex]
+                val mb = DATA.descriptors?.get(rowIndex)
                 if (null == mb) "" else mb.name
             }
-            3 -> DATA.variables[rowIndex]
+            3 -> DATA.variables?.get(rowIndex)
             else -> throw IllegalStateException()
-        }
+        }!!
     }
 
     override fun getColumnName(columnIndex: Int): String {
@@ -68,8 +68,8 @@ class VariableTableModel(data: HasVariables?) : TableModel {
             return false
         }
         assert(0 <= rowIndex && rowIndex < this.rowCount)
-        val `var` = DATA.variables[rowIndex]
-        return when (`var`.type) {
+        val `var` = DATA.variables?.get(rowIndex)
+        return when (`var`?.type) {
             Type.STRING, Type.INTEGER, Type.FLOAT, Type.BOOLEAN, Type.REF -> true
             else -> false
         }

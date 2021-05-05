@@ -33,7 +33,7 @@ import kotlin.experimental.and
  *
  * @author Mark Fairchild
  */
-class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?, context: PapyrusContext) :
+class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusContext) :
     GameElement(input, scripts, context), SeparateData, HasVariables {
     /**
      * @see resaver.ess.Element.write
@@ -95,15 +95,15 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
      * @return The name of the corresponding `Script`.
      */
     val scriptName: TString
-        get() = super.getDefinitionName()
+        get() = super.definitionName
 
     /**
      * @return The corresponding `Script`.
      */
     val script: Script
         get() {
-            assert(super.getDefinition() is Script)
-            return super.getDefinition() as Script
+            assert(super.definition is Script)
+            return super.definition as Script
         }
 
     /**
@@ -136,29 +136,30 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
      * @see HasVariables.getVariables
      * @return
      */
-    override fun getVariables(): List<Variable> {
-        return if (data == null) emptyList() else Collections.unmodifiableList(data!!.VARIABLES)
-    }
+    override val variables: List<Variable>
+        get()= if (data == null) emptyList() else Collections.unmodifiableList(data!!.VARIABLES)
 
     /**
      * @see HasVariables.getDescriptors
      * @return
      */
-    override fun getDescriptors(): List<MemberDesc> {
-        return script.extendedMembers
-    }
+    override val descriptors: List<MemberDesc>
+        get()= script.extendedMembers
+
 
     /**
      * @see HasVariables.setVariable
      * @param index
      * @param newVar
      */
-    override fun setVariable(index: Int, newVar: Variable) {
+    override fun setVariable(index: Int, newVar: Variable?) {
         if (data == null || data!!.VARIABLES == null) {
             throw NullPointerException("The variable list is missing.")
         }
         require((index < 0 || index >= data!!.VARIABLES!!.size).not()) { "Invalid variable index: $index" }
-        data!!.VARIABLES!![index] = newVar
+        if (newVar != null) {
+            data!!.VARIABLES!![index] = newVar
+        }
     }
 
     /**
@@ -168,13 +169,13 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
      */
     override fun toHTML(target: Element?): String {
         return if (null == target || null == data) {
-            Linkable.makeLink("scriptinstance", this.id, this.toString())
+            Linkable.makeLink("scriptinstance", this.iD, this.toString())
         } else if (target is Variable) {
             val index = this.variables.indexOf(target)
             if (index >= 0) {
-                Linkable.makeLink("scriptinstance", this.id, index, this.toString())
+                Linkable.makeLink("scriptinstance", this.iD, index, this.toString())
             } else {
-                Linkable.makeLink("scriptinstance", this.id, this.toString())
+                Linkable.makeLink("scriptinstance", this.iD, this.toString())
             }
         } else {
             this.variables.stream()
@@ -183,8 +184,8 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
                 .map { `var`: Variable -> this.variables.indexOf(`var`) }
                 .filter { index: Int -> index >= 0 }
                 .findFirst()
-                .map { index: Int? -> Linkable.makeLink("scriptinstance", this.id, index!!, this.toString()) }
-                .orElse(Linkable.makeLink("scriptinstance", this.id, this.toString()))
+                .map { index: Int? -> Linkable.makeLink("scriptinstance", this.iD, index!!, this.toString()) }
+                .orElse(Linkable.makeLink("scriptinstance", this.iD, this.toString()))
         }
     }
 
@@ -202,7 +203,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
             BUF.append("*")
         }
         BUF.append(refID.toString())
-        BUF.append(" (").append(this.id).append(")")
+        BUF.append(" (").append(this.iD).append(")")
         return BUF.toString()
     }
 
@@ -243,7 +244,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
             }
         }
         BUILDER.append("<p>")
-        BUILDER.append(String.format("ID: %s<br/>", this.id))
+        BUILDER.append(String.format("ID: %s<br/>", this.iD))
         BUILDER.append(String.format("Type: %s<br/>", type))
         val mysteryFlag = unknown.toInt() == -1
         if (save!!.changeForms.containsKey(refID)) {
@@ -304,9 +305,9 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
      * @return A flag indicating if the `ScriptInstance` is
      * undefined.
      */
-    override fun isUndefined(): Boolean {
-        return script.isUndefined
-    }
+    override val isUndefined: Boolean
+        get()= script.isUndefined
+
 
     private val UNKNOWN2BITS: Short
 
@@ -343,7 +344,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {
-            id.write(output)
+            iD.write(output)
             output!!.put(FLAG)
             this.type.write(output)
             output.putInt(UNKNOWN1)
@@ -360,7 +361,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
          */
         override fun calculateSize(): Int {
             var sum = 9
-            sum += id.calculateSize()
+            sum += iD.calculateSize()
             sum += if ((FLAG and 0x04.toByte()).toInt() != 0) 4 else 0
             sum += this.type.calculateSize()
             sum += VARIABLES!!.stream().mapToInt { obj: Variable -> obj.calculateSize() }.sum()
@@ -374,7 +375,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap?
         override fun toString(): String {
             val BUILDER = StringBuilder()
             BUILDER.append("SCRIPTDATA\n")
-            BUILDER.append(String.format("ID = %s\n", id))
+            BUILDER.append(String.format("ID = %s\n", iD))
             BUILDER.append(String.format("flag= %d\n", FLAG))
             BUILDER.append(String.format("type = %s\n", this.type))
             BUILDER.append(String.format("unknown1 = %d\n", UNKNOWN1))

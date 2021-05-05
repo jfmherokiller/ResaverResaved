@@ -13,39 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.util.List;
 
 /**
  *
  * @author Mark Fairchild
  */
-public interface HasVariables extends PapyrusElement {
-
+interface HasVariables : PapyrusElement {
     /**
-     * @return The <code>Variable</code> <code>List</code> stored by the
-     * <code>PapyrusElement</code>.
+     * @return The `Variable` `List` stored by the
+     * `PapyrusElement`.
      */
-    public List<Variable> getVariables();
+    val variables: List<Variable?>?
 
     /**
-     * @return The <code>MemberDesc</code> <code>List</code> for the
-     * <code>PapyrusElement</code>.
+     * @return The `MemberDesc` `List` for the
+     * `PapyrusElement`.
      */
-    public List<MemberDesc> getDescriptors();
+    val descriptors: List<MemberDesc?>?
 
     /**
-     * Changes a <code>Variable</code>.
+     * Changes a `Variable`.
      *
-     * @param index The index of the <code>Variable</code> to replace.
-     * @param newVar The new <code>Variable</code>.
+     * @param index The index of the `Variable` to replace.
+     * @param newVar The new `Variable`.
      */
-    public void setVariable(int index, Variable newVar);
-
+    fun setVariable(index: Int, newVar: Variable?)
     /**
-     * @return A new <code>List</code> made by pairing each
-     * <code>Variable</code> with its corresponding <code>MemberDesc</code>.
+     * @return A new `List` made by pairing each
+     * `Variable` with its corresponding `MemberDesc`.
      */
     /*default public java.util.List<Member> getMembers() {
         final List<MemberDesc> DESCRIPTORS = this.getDescriptors();
@@ -78,5 +75,4 @@ public interface HasVariables extends PapyrusElement {
 
         return MEMBERS;
     }*/
-
 }

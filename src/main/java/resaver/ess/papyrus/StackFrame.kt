@@ -135,29 +135,31 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @see HasVariables.getVariables
      * @return
      */
-    override fun getVariables(): List<Variable> {
-        return if (VARIABLES == null) emptyList() else Collections.unmodifiableList(VARIABLES)
-    }
+    override val variables: List<Variable>
+        get() = if (VARIABLES == null) emptyList() else Collections.unmodifiableList(VARIABLES)
+
 
     /**
      * @see HasVariables.getDescriptors
      * @return
      */
-    override fun getDescriptors(): List<MemberDesc> {
-        return Stream.concat(functionParams.stream(), functionLocals.stream()).collect(Collectors.toList())
-    }
+    override val descriptors: List<MemberDesc>
+        get() = Stream.concat(functionParams.stream(), functionLocals.stream()).collect(Collectors.toList())
+
 
     /**
      * @see HasVariables.setVariable
      * @param index
      * @param newVar
      */
-    override fun setVariable(index: Int, newVar: Variable) {
+    override fun setVariable(index: Int, newVar: Variable?) {
         if (VARIABLES == null) {
             throw NullPointerException("The variable list is missing.")
         }
         require(!(index <= 0 || index >= VARIABLES!!.size)) { "Invalid variable index: $index" }
-        VARIABLES!![index] = newVar
+        if (newVar != null) {
+            VARIABLES!![index] = newVar
+        }
     }
 
     /**
