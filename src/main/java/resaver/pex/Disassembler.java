@@ -15,10 +15,7 @@
  */
 package resaver.pex;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -211,10 +208,21 @@ final public class Disassembler {
             }
 
             // Look for a subclause.
-            boolean subclause = !end && block.subList(ptr + 1, ptr + offset)
-                    .stream()
-                    .filter(Objects::nonNull)
-                    .anyMatch(v -> v.OPCODE.isConditional());
+            boolean subclause;
+            boolean b = false;
+            for (Instruction v : block.subList(ptr + 1, ptr + offset)) {
+                if (v != null) {
+                    if (v.OPCODE.isConditional()) {
+                        b = true;
+                        break;
+                    }
+                }
+            }
+            if (b) {
+                subclause = !end;
+            } else {
+                subclause = false;
+            }
 
             if (subclause) {
                 stack1.push(rhs);
@@ -573,13 +581,13 @@ final public class Disassembler {
             S.append(tab(indent));
 
             // Insert variable declaration.
-            types.stream()
-                    .filter(v -> v.name.equals(var.getValue()) && v.isLocal())
-                    .findAny()
-                    .ifPresent(v -> {
-                        types.remove(v);
-                        S.append(v.TYPE).append(" ");
-                    });
+            for (VariableType type : types) {
+                if (type.name.equals(var.getValue()) && type.isLocal()) {
+                    types.remove(type);
+                    S.append(type.TYPE).append(" ");
+                    break;
+                }
+            }
 
             S.append(String.format("%s = %s", lhs, rhs));
             return S.toString();
@@ -649,22 +657,28 @@ final public class Disassembler {
                 replaceVariables(args, terms, 2);
                 method = (VData.ID) args.get(0);
                 obj = args.get(1);
-                subArgs = args
-                        .subList(4, args.size())
-                        .stream()
-                        .map(Object::toString)//.paren())
-                        .collect(Collectors.toList());
+                //.paren())
+                List<String> list = new ArrayList<>();
+                for (VData vData : args
+                        .subList(4, args.size())) {
+                    String toString = vData.toString();
+                    list.add(toString);
+                }
+                subArgs = list;
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
 
             case CALLPARENT:
                 replaceVariables(args, terms, 1);
                 method = (VData.ID) args.get(0);
-                subArgs = args
-                        .subList(3, args.size())
-                        .stream()
-                        .map(Object::toString)//.paren())
-                        .collect(Collectors.toList());
+                //.paren())
+                List<String> result = new ArrayList<>();
+                for (VData vData : args
+                        .subList(3, args.size())) {
+                    String toString = vData.toString();
+                    result.add(toString);
+                }
+                subArgs = result;
                 term = String.format("parent.%s%s", method, paramList(subArgs));
                 return processTerm(args, terms, 1, term);
 
@@ -672,11 +686,13 @@ final public class Disassembler {
                 replaceVariables(args, terms, 2);
                 obj = args.get(0);
                 method = (VData.ID) args.get(1);
-                subArgs = args
-                        .subList(4, args.size())
-                        .stream()
-                        .map(Object::toString)
-                        .collect(Collectors.toList());
+                List<String> list1 = new ArrayList<>();
+                for (VData vData : args
+                        .subList(4, args.size())) {
+                    String toString = vData.toString();
+                    list1.add(toString);
+                }
+                subArgs = list1;
                 term = String.format("%s.%s%s", obj, method, paramList(subArgs));
                 return processTerm(args, terms, 2, term);
 
@@ -701,7 +717,14 @@ final public class Disassembler {
                 VData.ID dest = (VData.ID) args.get(0);
                 VData arg = args.get(1);
                 IString name = dest.getValue();
-                IString type = types.stream().filter(t -> t.name.equals(name)).findFirst().get().TYPE;
+                Optional<VariableType> found = Optional.empty();
+                for (VariableType t : types) {
+                    if (t.name.equals(name)) {
+                        found = Optional.of(t);
+                        break;
+                    }
+                }
+                IString type = found.get().TYPE;
 
                 if (type.equals(IString.get("bool"))) {
                     term = arg.toString();
@@ -763,7 +786,14 @@ final public class Disassembler {
                 VData size = args.get(1);
                 VData.ID dest = (VData.ID) args.get(0);
                 IString name = dest.getValue();
-                IString type = types.stream().filter(t -> t.name.equals(name)).findFirst().get().TYPE;
+                Optional<VariableType> found = Optional.empty();
+                for (VariableType t : types) {
+                    if (t.name.equals(name)) {
+                        found = Optional.of(t);
+                        break;
+                    }
+                }
+                IString type = found.get().TYPE;
                 String subtype = type.toString().substring(0, type.length() - 2);
                 term = String.format("new %s[%s]", subtype, size);
                 return processTerm(args, terms, 0, term);
@@ -851,32 +881,38 @@ final public class Disassembler {
             case CALLMETHOD: {
                 VData.ID method = (VData.ID) inst.ARGS.get(0);
                 VData obj = inst.ARGS.get(1);
-                List<String> subArgs = inst.ARGS
-                        .subList(4, inst.ARGS.size())
-                        .stream()
-                        .map(Object::toString)//.paren())
-                        .collect(Collectors.toList());
+                //.paren())
+                List<String> subArgs = new ArrayList<>();
+                for (VData vData : inst.ARGS
+                        .subList(4, inst.ARGS.size())) {
+                    String toString = vData.toString();
+                    subArgs.add(toString);
+                }
                 return String.format("%s.%s%s", obj, method, paramList(subArgs));
             }
 
             case CALLPARENT: {
                 VData.ID method = (VData.ID) inst.ARGS.get(0);
-                List<String> subArgs = inst.ARGS
-                        .subList(3, inst.ARGS.size())
-                        .stream()
-                        .map(Object::toString)//.paren())
-                        .collect(Collectors.toList());
+                //.paren())
+                List<String> subArgs = new ArrayList<>();
+                for (VData vData : inst.ARGS
+                        .subList(3, inst.ARGS.size())) {
+                    String toString = vData.toString();
+                    subArgs.add(toString);
+                }
                 return String.format("parent.%s%s", method, paramList(subArgs));
             }
 
             case CALLSTATIC: {
                 VData obj = inst.ARGS.get(0);
                 VData.ID method = (VData.ID) inst.ARGS.get(1);
-                List<String> subArgs = inst.ARGS
-                        .subList(4, inst.ARGS.size())
-                        .stream()
-                        .map(Object::toString)//.paren())
-                        .collect(Collectors.toList());
+                //.paren())
+                List<String> subArgs = new ArrayList<>();
+                for (VData vData : inst.ARGS
+                        .subList(4, inst.ARGS.size())) {
+                    String toString = vData.toString();
+                    subArgs.add(toString);
+                }
                 return String.format("%s.%s%s", obj, method, paramList(subArgs));
             }
 
@@ -894,7 +930,14 @@ final public class Disassembler {
                 VData.ID dest = (VData.ID) inst.ARGS.get(0);
                 VData arg = inst.ARGS.get(1);
                 IString name = dest.getValue();
-                IString type = types.stream().filter(t -> t.name.equals(name)).findFirst().get().TYPE;
+                Optional<VariableType> found = Optional.empty();
+                for (VariableType t : types) {
+                    if (t.name.equals(name)) {
+                        found = Optional.of(t);
+                        break;
+                    }
+                }
+                IString type = found.get().TYPE;
                 return String.format("%s as %s", arg.paren(), type);
             }
 
@@ -942,7 +985,14 @@ final public class Disassembler {
                 VData size = inst.ARGS.get(1);
                 VData.ID dest = (VData.ID) inst.ARGS.get(0);
                 IString name = dest.getValue();
-                IString type = types.stream().filter(t -> t.name.equals(name)).findFirst().get().TYPE;
+                Optional<VariableType> found = Optional.empty();
+                for (VariableType t : types) {
+                    if (t.name.equals(name)) {
+                        found = Optional.of(t);
+                        break;
+                    }
+                }
+                IString type = found.get().TYPE;
                 String subtype = type.toString().substring(0, type.length() - 2);
                 return String.format("new %s[%s]", subtype, size);
             }
@@ -1033,9 +1083,12 @@ final public class Disassembler {
      * @return
      */
     static <T> String paramList(List<T> params) {
-        return params.stream()
-                .map(Object::toString)
-                .collect(Collectors.joining(", ", "(", ")"));
+        StringJoiner joiner = new StringJoiner(", ", "(", ")");
+        for (T param : params) {
+            String toString = param.toString();
+            joiner.add(toString);
+        }
+        return joiner.toString();
     }
 
     /**
