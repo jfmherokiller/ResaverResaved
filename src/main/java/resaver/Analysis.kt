@@ -18,7 +18,6 @@ package resaver
 import resaver.esp.PluginData
 import resaver.esp.StringTable
 import resaver.ess.Plugin
-import kotlin.streams.toList
 /**
  * Combines the results of script analysis and ESP analysis.
  *
@@ -31,14 +30,14 @@ class Analysis(profileAnalysis: Mod.Analysis, espInfos: MutableMap<Plugin?, Plug
     }
 
     fun find(searchTerm: String?): Set<Int> {
-        return ESP_INFOS.values.stream()
+        return ESP_INFOS.values
             .map { v: PluginData -> v.getID(searchTerm, STRINGS) }
             .filter { obj: Set<Int>? -> obj.isNullOrEmpty() }
-            .flatMap { obj: Set<Int> -> obj.stream() }.toList().toSet()
+            .flatten().toSet()
     }
 
     val scriptDataSize: Long
-        get() = ESP_INFOS.values.stream().mapToLong { obj: PluginData -> obj.scriptDataSize }.sum()
+        get() = ESP_INFOS.values.sumOf { obj: PluginData -> obj.scriptDataSize }
     val ESP_INFOS: MutableMap<Plugin?, PluginData> = espInfos
     val STRINGS: StringTable = strings
 
