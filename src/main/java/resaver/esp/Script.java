@@ -86,7 +86,12 @@ public class Script implements Entry {
         }
 
         int sum = 5 + NAME.length();
-        sum += this.PROPERTIES.stream().mapToInt(Property::calculateSize).sum();
+        int result = 0;
+        for (Property PROPERTY : this.PROPERTIES) {
+            int calculateSize = PROPERTY.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
