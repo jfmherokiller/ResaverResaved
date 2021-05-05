@@ -52,10 +52,10 @@ class PluginInfo(input: ByteBuffer, supportsESL: Boolean) : Element {
     override fun calculateSize(): Int {
         var sum = 4
         sum += 1
-        sum += PLUGINS_FULL!!.stream().mapToInt { obj: Plugin -> obj.calculateSize() }.sum()
+        sum += PLUGINS_FULL!!.sumBy { obj: Plugin -> obj.calculateSize() }
         if (hasLite()) {
             sum += 2
-            sum += PLUGINS_LITE!!.stream().mapToInt { obj: Plugin -> obj.calculateSize() }.sum()
+            sum += PLUGINS_LITE!!.sumBy { obj: Plugin -> obj.calculateSize() }
         }
         return sum
     }
