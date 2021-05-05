@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import mf.BufferUtil;
 import resaver.IString;
 import resaver.ess.Plugin;
 import static resaver.esp.Entry.advancingSlice;
@@ -68,21 +70,30 @@ public class RecordTes4 extends Record {
             this.FIELDS.addAll(newFields);
         }
 
-        List<String> masters = this.FIELDS.stream()
-                .filter(f -> f.getCode().equals(IString.get("MAST")))
-                .filter(f -> f instanceof FieldSimple)
-                .map(f -> (FieldSimple) f)
-                .map(FieldSimple::getByteBuffer)
-                .map(mf.BufferUtil::getZString)
-                .collect(Collectors.toList());
+        List<String> masters = new ArrayList<>();
+        for (Field FIELD : this.FIELDS) {
+            if (FIELD.getCode().equals(IString.get("MAST"))) {
+                if (FIELD instanceof FieldSimple) {
+                    FieldSimple fieldSimple = (FieldSimple) FIELD;
+                    ByteBuffer byteBuffer = fieldSimple.getByteBuffer();
+                    String zString = BufferUtil.getZString(byteBuffer);
+                    masters.add(zString);
+                }
+            }
+        }
         this.MASTERS = java.util.Collections.unmodifiableList(new ArrayList<>(masters));
 
-        final Optional<ByteBuffer> HEDR = this.FIELDS.stream()
-                .filter(f -> f.getCode().equals(IString.get("HEDR")))
-                .filter(f -> f instanceof FieldSimple)
-                .map(f -> (FieldSimple) f)
-                .map(FieldSimple::getByteBuffer)
-                .findFirst();
+        Optional<ByteBuffer> HEDR = Optional.empty();
+        for (Field f : this.FIELDS) {
+            if (f.getCode().equals(IString.get("HEDR"))) {
+                if (f instanceof FieldSimple) {
+                    FieldSimple fieldSimple = (FieldSimple) f;
+                    ByteBuffer byteBuffer = fieldSimple.getByteBuffer();
+                    HEDR = Optional.of(byteBuffer);
+                    break;
+                }
+            }
+        }
 
         if (HEDR.isPresent()) {
             this.VERSION = HEDR.get().getFloat();
@@ -121,7 +132,12 @@ public class RecordTes4 extends Record {
     @Override
     public int calculateSize() {
         int sum = 24;
-        sum += this.FIELDS.stream().mapToInt(Entry::calculateSize).sum();
+        int result = 0;
+        for (Field FIELD : this.FIELDS) {
+            int calculateSize = FIELD.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
