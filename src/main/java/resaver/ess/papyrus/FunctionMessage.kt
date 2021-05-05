@@ -23,7 +23,6 @@ import resaver.ess.Linkable
 import resaver.ess.papyrus.EID.Companion.pad8
 import java.nio.ByteBuffer
 import java.util.*
-import java.util.function.Predicate
 
 /**
  * Describes a function message in a Skyrim savegame.
@@ -37,9 +36,7 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
      */
     override fun write(output: ByteBuffer?) {
         output!!.put(UNKNOWN)
-        if (iD != null) {
-            iD.write(output)
-        }
+        iD?.write(output)
         output.put(FLAG)
         message?.write(output)
     }
@@ -73,20 +70,21 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
      * @param target A target within the `Linkable`.
      * @return
      */
-    override fun toHTML(target: Element): String {
-        if (null != message) {
-            val result: Optional<Variable?>? = message!!.variables?.stream()
-                ?.filter { obj: Variable? -> obj!!.hasRef() }
-                ?.filter { v: Variable? -> v!!.referent === target }
-                ?.findFirst()
-            if (result != null) {
-                if (result.isPresent) {
-                    val i: Int? = message!!.variables?.indexOf(result.get())
-                    if (i != null) {
-                        if (i >= 0) {
-                            return Linkable.makeLink("message", iD, i, this.toString())
-                        }
+    override fun toHTML(target: Element?): String {
+        if (null != target && null != message) {
+            var result: Optional<Variable> = Optional.empty()
+            for (v in message!!.variables!!) {
+                if (v?.hasRef() == true) {
+                    if (v.referent === target) {
+                        result = Optional.of(v)
+                        break
                     }
+                }
+            }
+            if (result.isPresent) {
+                val i: Int = message!!.variables?.indexOf(result.get()) ?: 0
+                if (i >= 0) {
+                    return Linkable.makeLink("message", iD, i, this.toString())
                 }
             }
         }
@@ -111,9 +109,9 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
                 "MSG $scriptName"
             }
         } else if (iD != null) {
-            "MSG $FLAG,${pad8(UNKNOWN.toInt())} ($iD)"
+            "MSG " + FLAG + "," + pad8(UNKNOWN.toInt()) + " (" + iD + ")"
         } else {
-            "MSG $FLAG,${pad8(UNKNOWN.toInt())}"
+            "MSG " + FLAG + "," + pad8(UNKNOWN.toInt())
         }
     }
 
@@ -123,7 +121,7 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
      * @param save
      * @return
      */
-    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         BUILDER.append("<html><h3>FUNCTIONMESSAGE</h3>")
         if (null != analysis && null != message) {
@@ -131,21 +129,21 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
             val mods = analysis.SCRIPT_ORIGINS[scriptName]
             if (null != mods) {
                 val mod = mods.last()
-                BUILDER.append(String.format("<p>Probably running code from mod %s.</p>", mod))
+                BUILDER.append("<p>Probably running code from mod $mod.</p>")
             }
         }
         BUILDER.append("<p>")
         if (message != null) {
-            BUILDER.append(String.format("Function: %s<br/>", message!!.fName))
+            BUILDER.append("Function: ${message!!.fName}<br/>")
         }
-        BUILDER.append(String.format("ID: %s<br/>", iD))
+        BUILDER.append("ID: $iD<br/>")
         if (THREAD != null) {
-            BUILDER.append(String.format("ActiveScript: %s<br/>", THREAD.toHTML(null)))
+            BUILDER.append("ActiveScript: ${THREAD.toHTML(null)}<br/>")
         } else {
             BUILDER.append("ActiveScript: NONE<br/>")
         }
-        BUILDER.append(String.format("Flag: %s<br/>", FLAG))
-        BUILDER.append(String.format("Unknown: %d<br/>", UNKNOWN))
+        BUILDER.append("Flag: $FLAG<br/>")
+        BUILDER.append("Unknown: $UNKNOWN<br/>")
         BUILDER.append("</p>")
         if (hasMessage()) {
             BUILDER.append("<hr/>")
