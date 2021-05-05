@@ -107,7 +107,12 @@ final public class OpcodeData implements PapyrusElement {
     @Override
     public int calculateSize() {
         int sum = 1;
-        sum += this.PARAMETERS.stream().mapToInt(Element::calculateSize).sum();
+        int result = 0;
+        for (Parameter PARAMETER : this.PARAMETERS) {
+            int calculateSize = PARAMETER.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
