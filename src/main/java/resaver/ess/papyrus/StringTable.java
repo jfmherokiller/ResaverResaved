@@ -203,7 +203,12 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * @return
      */
     public TString resolve(String str) {
-        return this.stream().filter(tstr -> tstr.equals(str)).findFirst().orElse(null);
+        for (TString tstr : this) {
+            if (tstr.equals(str)) {
+                return tstr;
+            }
+        }
+        return null;
     }
 
     /**
@@ -215,7 +220,12 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * <code>TString</code>, false otherwise.
      */
     public boolean containsMatching(String val) {
-        return this.stream().anyMatch(v -> v.equals(val));
+        for (TString v : this) {
+            if (v.equals(val)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -227,7 +237,13 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * <code>StringTable</code> already contained a match.
      */
     public TString addString(String val) {
-        Optional<TString> match = this.stream().filter(v -> v.equals(val)).findFirst();
+        Optional<TString> match = Optional.empty();
+        for (TString v : this) {
+            if (v.equals(val)) {
+                match = Optional.of(v);
+                break;
+            }
+        }
         if (match.isPresent()) {
             return match.get();
         }
