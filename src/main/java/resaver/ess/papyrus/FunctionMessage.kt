@@ -111,9 +111,9 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
                 "MSG $scriptName"
             }
         } else if (iD != null) {
-            "MSG " + FLAG + "," + pad8(UNKNOWN.toInt()) + " (" + iD + ")"
+            "MSG $FLAG,${pad8(UNKNOWN.toInt())} ($iD)"
         } else {
-            "MSG " + FLAG + "," + pad8(UNKNOWN.toInt())
+            "MSG $FLAG,${pad8(UNKNOWN.toInt())}"
         }
     }
 

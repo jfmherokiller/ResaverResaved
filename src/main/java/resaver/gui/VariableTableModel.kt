@@ -47,7 +47,7 @@ class VariableTableModel(data: HasVariables?) : TableModel {
             0 -> rowIndex
             1 -> DATA.variables?.get(rowIndex)?.toTypeString()
             2 -> {
-                val mb = DATA.descriptors?.get(rowIndex)
+                val mb = DATA.descriptors?.getOrNull(rowIndex)
                 if (null == mb) "" else mb.name
             }
             3 -> DATA.variables?.get(rowIndex)
