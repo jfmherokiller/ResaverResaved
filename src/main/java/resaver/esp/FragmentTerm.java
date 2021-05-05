@@ -54,7 +54,12 @@ public class FragmentTerm extends FragmentBase {
     public int calculateSize() {
         int sum = 3;
         sum += this.SCRIPT.calculateSize();
-        sum += this.FRAGMENTS.stream().mapToInt(Fragment::calculateSize).sum();
+        int result = 0;
+        for (Fragment FRAGMENT : this.FRAGMENTS) {
+            int calculateSize = FRAGMENT.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
