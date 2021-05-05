@@ -73,7 +73,12 @@ public class FragmentPerk extends FragmentBase {
         int sum = 3;
         sum += (null != this.SCRIPT ? this.SCRIPT.calculateSize() : 0);
         sum += (null != this.FILENAME ? 2 + this.FILENAME.length() : 0);
-        sum += this.FRAGMENTS.stream().mapToInt(Fragment::calculateSize).sum();
+        int result = 0;
+        for (Fragment FRAGMENT : this.FRAGMENTS) {
+            int calculateSize = FRAGMENT.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
