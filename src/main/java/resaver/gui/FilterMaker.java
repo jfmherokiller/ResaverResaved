@@ -15,12 +15,7 @@
  */
 package resaver.gui;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -54,11 +49,14 @@ public class FilterMaker {
         final String MODNAME = mod.getName();
 
         final Set<Plugin> PLUGINS = new HashSet<>();
-        mod.getESPNames().forEach(espName -> plugins.getFullPlugins()
-                .stream()
-                .filter(p -> p.NAME.equalsIgnoreCase(espName))
-                .findAny()
-                .ifPresent(PLUGINS::add));
+        mod.getESPNames().forEach(espName -> {
+            for (Plugin p : plugins.getFullPlugins()) {
+                if (p.NAME.equalsIgnoreCase(espName)) {
+                    PLUGINS.add(p);
+                    break;
+                }
+            }
+        });
 
         Predicate<Node> modFilter = node -> node.hasElement()
                 && node.getElement() instanceof AnalyzableElement
@@ -635,14 +633,31 @@ public class FilterMaker {
 
         // Combine the filters.
         // OR the subfilters together.
-        SUBFILTERS.stream()
-                .reduce(Predicate::or)
+        boolean seen = false;
+        Predicate<Node> acc = null;
+        for (Predicate<Node> SUBFILTER : SUBFILTERS) {
+            if (!seen) {
+                seen = true;
+                acc = SUBFILTER;
+            } else {
+                acc = acc.or(SUBFILTER);
+            }
+        }
+        (seen ? Optional.of(acc) : Optional.<Predicate<Node>>empty())
                 .ifPresent(FILTERS::add);
 
         // AND the main filters together.
-        return FILTERS.stream()
-                .reduce(Predicate::and)
-                .orElse(null);
+        boolean seen1 = false;
+        Predicate<Node> result = null;
+        for (Predicate<Node> FILTER : FILTERS) {
+            if (!seen1) {
+                seen1 = true;
+                result = FILTER;
+            } else {
+                result = result.and(FILTER);
+            }
+        }
+        return seen1 ? result : null;
     }
 
     /**
