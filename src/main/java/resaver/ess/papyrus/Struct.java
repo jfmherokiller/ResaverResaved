@@ -18,6 +18,7 @@ package resaver.ess.papyrus;
 import resaver.ListException;
 import resaver.ess.AnalyzableElement;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.SortedSet;
@@ -77,7 +78,12 @@ final public class Struct extends Definition {
     public int calculateSize() {
         int sum = 4;
         sum += this.NAME.calculateSize();
-        sum += this.MEMBERS.stream().mapToInt(MemberDesc::calculateSize).sum();
+        int result = 0;
+        for (MemberDesc MEMBER : this.MEMBERS) {
+            int calculateSize = MEMBER.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
         return sum;
     }
 
@@ -153,12 +159,14 @@ final public class Struct extends Definition {
 
         BUILDER.append(String.format("<p>Contains %d member variables.</p>", this.MEMBERS.size()));
 
-        final List<StructInstance> STRUCTS = save.getPapyrus()
+        final List<StructInstance> STRUCTS = new ArrayList<>();
+        for (StructInstance instance : save.getPapyrus()
                 .getStructInstances()
-                .values()
-                .stream()
-                .filter(instance -> instance.getStruct() == this)
-                .collect(Collectors.toList());
+                .values()) {
+            if (instance.getStruct() == this) {
+                STRUCTS.add(instance);
+            }
+        }
 
         BUILDER.append(String.format("<p>There are %d instances of this structure definition.</p>", STRUCTS.size()));
         if (STRUCTS.size() < 20) {
