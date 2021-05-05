@@ -225,16 +225,16 @@ abstract public class TString implements PapyrusElement, AnalyzableElement, Link
         final List<String> LINKS = new java.util.LinkedList<>();
 
         // Check definitions (Scripts and Structs).
-        Stream.concat(
-                PAPYRUS.getScripts().values().stream(),
-                PAPYRUS.getStructs().values().stream()).parallel().forEach(def -> {
+        Stream.concat(PAPYRUS.getScripts().values().stream(), PAPYRUS.getStructs().values().stream()).parallel().forEach(def -> {
 
             if (this == def.getName()) {
                 LINKS.add(def.toHTML(null));
             }
-            def.getMembers().stream()
-                    .filter(member -> this.equals(member.getName()))
-                    .forEach(member -> LINKS.add(def.toHTML(member)));
+            for (MemberDesc member : def.getMembers()) {
+                if (this.equals(member.getName())) {
+                    LINKS.add(def.toHTML(member));
+                }
+            }
         });
 
         /*
