@@ -103,8 +103,18 @@ public class FieldVMAD implements Field {
     @Override
     public int calculateSize() {
         int sum = 12;
-        sum += this.SCRIPTS.stream().mapToInt(Script::calculateSize).sum();
-        sum += this.FRAGMENTS.stream().mapToInt(Entry::calculateSize).sum();
+        int result = 0;
+        for (Script SCRIPT : this.SCRIPTS) {
+            int calculateSize = SCRIPT.calculateSize();
+            result += calculateSize;
+        }
+        sum += result;
+        int sum1 = 0;
+        for (FragmentBase FRAGMENT : this.FRAGMENTS) {
+            int calculateSize = FRAGMENT.calculateSize();
+            sum1 += calculateSize;
+        }
+        sum += sum1;
         return sum;
     }
 
