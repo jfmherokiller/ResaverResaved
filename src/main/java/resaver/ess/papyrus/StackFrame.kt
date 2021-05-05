@@ -15,6 +15,7 @@
  */
 package resaver.ess.papyrus
 
+import org.jetbrains.annotations.Contract
 import resaver.Analysis
 import resaver.IString
 import resaver.IString.Companion.format
@@ -23,7 +24,6 @@ import resaver.ess.*
 import resaver.pex.Opcode
 import java.nio.ByteBuffer
 import java.util.*
-import java.util.function.Consumer
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -54,14 +54,14 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         FN_USERFLAGS.write(output)
         FN_FLAGS!!.write(output)
         output.putShort(FN_PARAMS.size.toShort())
-        FN_PARAMS.forEach(Consumer { param: FunctionParam -> param.write(output) })
+        FN_PARAMS.forEach { param: FunctionParam -> param.write(output) }
         output.putShort(FN_LOCALS.size.toShort())
-        FN_LOCALS.forEach(Consumer { local: FunctionLocal -> local.write(output) })
+        FN_LOCALS.forEach { local: FunctionLocal -> local.write(output) }
         output.putShort(CODE!!.size.toShort())
-        CODE!!.forEach(Consumer { opcode: OpcodeData -> opcode.write(output) })
+        CODE!!.forEach { opcode: OpcodeData -> opcode.write(output) }
         output.putInt(PTR)
         owner!!.write(output)
-        VARIABLES!!.forEach(Consumer { `var`: Variable -> `var`.write(output) })
+        VARIABLES!!.forEach { `var`: Variable? -> `var`!!.write(output) }
     }
 
     /**
@@ -74,21 +74,26 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         sum += scriptName.calculateSize()
         sum += BASENAME.calculateSize()
         sum += event.calculateSize()
-        sum += STATUS.map { obj: TString? -> obj!!.calculateSize() }.orElse(0)
+        sum += STATUS.map { s: TString? -> s!!.calculateSize() }.orElse(0)
         sum += 2
         sum += RETURNTYPE.calculateSize()
         sum += docString.calculateSize()
         sum += 5
         sum += 2
-        sum += FN_PARAMS.parallelStream().mapToInt { obj: FunctionParam -> obj.calculateSize() }.sum()
+        sum += FN_PARAMS.parallelStream().mapToInt { param: FunctionParam -> param.calculateSize() }.sum()
         sum += 2
-        sum += FN_LOCALS.parallelStream().mapToInt { obj: FunctionLocal -> obj.calculateSize() }.sum()
+        sum += FN_LOCALS.parallelStream().mapToInt { local: FunctionLocal -> local.calculateSize() }.sum()
         sum += 2
-        sum += CODE!!.parallelStream().mapToInt { obj: OpcodeData -> obj.calculateSize() }.sum()
+        sum += CODE!!.parallelStream().mapToInt { opcode: OpcodeData -> opcode.calculateSize() }.sum()
         sum += 4
         sum += owner?.calculateSize() ?: 0
         sum += 4
-        sum += VARIABLES!!.stream().mapToInt { obj: Variable -> obj.calculateSize() }.sum()
+        var result = 0
+        for (`var` in VARIABLES!!) {
+            val i = `var`!!.calculateSize()
+            result += i
+        }
+        sum += result
         return sum
     }
 
@@ -96,7 +101,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * Replaces the opcodes of the `StackFrame` with NOPs.
      */
     fun zero() {
-        for (i in CODE!!.indices) {
+        CODE!!.indices.forEach { i ->
             CODE!![i] = OpcodeData.NOP
         }
     }
@@ -116,36 +121,36 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
     /**
      * @return The function parameter list.
      */
-    val functionParams: List<FunctionParam>
-        get() = Collections.unmodifiableList(FN_PARAMS)
+    @get:Contract(pure = true)
+    val functionParams:  List<FunctionParam>
+        get() = FN_PARAMS
 
     /**
      * @return The function locals list.
      */
+    @get:Contract(pure = true)
     val functionLocals: List<FunctionLocal>
-        get() = Collections.unmodifiableList(FN_LOCALS)
+        get() = FN_LOCALS
 
     /**
      * @return The function opcode data list.
      */
     val opcodeData: List<OpcodeData>
-        get() = Collections.unmodifiableList(CODE)
+        get() = CODE?.toList()!!
 
     /**
-     * @see HasVariables.getVariables
+     * @see HasVariables.variables
      * @return
      */
     override val variables: List<Variable>
-        get() = if (VARIABLES == null) emptyList() else Collections.unmodifiableList(VARIABLES)
-
+        get() = if (VARIABLES == null) emptyList() else VARIABLES?.filterNotNull()!!
 
     /**
-     * @see HasVariables.getDescriptors
+     * @see HasVariables.descriptors
      * @return
      */
     override val descriptors: List<MemberDesc>
         get() = Stream.concat(functionParams.stream(), functionLocals.stream()).collect(Collectors.toList())
-
 
     /**
      * @see HasVariables.setVariable
@@ -157,9 +162,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
             throw NullPointerException("The variable list is missing.")
         }
         require(!(index <= 0 || index >= VARIABLES!!.size)) { "Invalid variable index: $index" }
-        if (newVar != null) {
-            VARIABLES!![index] = newVar
-        }
+        VARIABLES!![index] = newVar
     }
 
     /**
@@ -193,8 +196,15 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @return A flag indicating if the `StackFrame` zeroed.
      */
     val isZeroed: Boolean
-        get() = (!isNative && null != CODE && CODE!!.isNotEmpty()
-                && CODE!!.stream().allMatch { obj: OpcodeData? -> OpcodeData.NOP.equals(obj) })
+        get() {
+            if (isNative || null == CODE || CODE!!.isEmpty()) return false
+            CODE!!.forEach { op ->
+                if (OpcodeData.NOP != op) {
+                    return false
+                }
+            }
+            return true
+        }
 
     /**
      * @see resaver.ess.Linkable.toHTML
@@ -214,10 +224,15 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     return Linkable.makeLink("frame", THREAD.id, frameIndex, varIndex, this.toString())
                 }
             } else {
-                val result = VARIABLES!!.stream()
-                    .filter { obj: Variable -> obj.hasRef() }
-                    .filter { v: Variable -> v.referent === target }
-                    .findFirst()
+                var result: Optional<Variable> = Optional.empty()
+                for (v in VARIABLES!!) {
+                    if (v!!.hasRef()) {
+                        if (v.referent === target) {
+                            result = Optional.of(v)
+                            break
+                        }
+                    }
+                }
                 if (result.isPresent) {
                     val varIndex = VARIABLES!!.indexOf(result.get())
                     if (varIndex >= 0) {
@@ -255,7 +270,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @param save
      * @return
      */
-    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
 
         //BUILDER.append("<html><h3>STACKFRAME</h3>");
@@ -296,14 +311,19 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     BUILDER.append("</ul>");
                 }
             }
-        }*/if (owner is Variable.Null) {
-            BUILDER.append("<p>Owner: <em>UNOWNED</em></p>")
-        } else if (null != OWNER) {
-            BUILDER.append(String.format("<p>Owner: %s</p>", OWNER!!.toHTML(this)))
-        } else if (isStatic) {
-            BUILDER.append("<p>Static method, no owner.</p>")
-        } else {
-            BUILDER.append(String.format("<p>Owner: %s</p>", owner!!.toHTML(this)))
+        }*/when {
+            owner is Variable.Null -> {
+                BUILDER.append("<p>Owner: <em>UNOWNED</em></p>")
+            }
+            null != OWNER -> {
+                BUILDER.append(String.format("<p>Owner: %s</p>", OWNER!!.toHTML(this)))
+            }
+            isStatic -> {
+                BUILDER.append("<p>Static method, no owner.</p>")
+            }
+            else -> {
+                BUILDER.append(String.format("<p>Owner: %s</p>", owner!!.toHTML(this)))
+            }
         }
         BUILDER.append("<p>")
         BUILDER.append(String.format("Script: %s<br/>", if (null == script) scriptName else script.toHTML(this)))
@@ -330,11 +350,11 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         if (CODE!!.size > 0) {
             BUILDER.append("<hr/><p>PAPYRUS BYTECODE:</p>")
             BUILDER.append("<code><pre>")
-            val OPS: List<OpcodeData> = ArrayList(CODE)
-            OPS.subList(0, PTR).forEach(Consumer { v: OpcodeData? -> BUILDER.append(String.format("   %s\n", v)) })
+            val OPS: List<OpcodeData> = mutableListOf()
+            OPS.subList(0, PTR).forEach { v: OpcodeData? -> BUILDER.append("   $v\n") }
             BUILDER.append(String.format("==><b>%s</b>\n", OPS[PTR]))
             OPS.subList(PTR + 1, CODE!!.size)
-                .forEach(Consumer { v: OpcodeData? -> BUILDER.append(String.format("   %s\n", v)) })
+                .forEach { v: OpcodeData? -> BUILDER.append("   $v\n") }
             BUILDER.append("</pre></code>")
         } else {
             BUILDER.append("<p><em>Papyrus bytecode not available.</em></p>")
@@ -395,7 +415,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @return The owner, which should be a form or an instance.
      */
     val owner: Variable?
-    private var VARIABLES: MutableList<Variable>? = null
+    private var VARIABLES: MutableList<Variable?>? = null
     private var OWNER: GameElement? = null
 
     companion object {
@@ -423,20 +443,20 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     BUF.append(if (i == ptr) "<b>==></b>" else "   ")
                     BUF.append("<em><font color=\"lightgray\">")
                     BUF.append(op.opcode)
-                    params.forEach(Consumer { p: Parameter? ->
+                    params.forEach { p: Parameter? ->
                         BUF.append(", ").append(
                             p!!.toValueString()
                         )
-                    })
+                    }
                     BUF.append("<font color=\"black\"></em>\n")
                 } else {
                     BUF.append(if (i == ptr) "<b>==>" else "   ")
                     BUF.append(op.opcode)
-                    params.forEach(Consumer { p: Parameter? ->
+                    params.forEach { p: Parameter? ->
                         BUF.append(", ").append(
                             p!!.toValueString()
                         )
-                    })
+                    }
                     BUF.append(if (i == ptr) "</b>\n" else "\n")
                 }
             }
@@ -503,7 +523,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     term = String.format("%s %% %s", operand1, operand2)
                     processTerm(args, terms, 0, term)
                 }
-                Opcode.RETURN -> {
+                Opcode.RETURN, Opcode.ARR_SET, Opcode.JMPT, Opcode.JMPF, Opcode.PROPSET -> {
                     replaceVariables(args, terms, -1)
                     false
                 }
@@ -511,22 +531,26 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 2)
                     method = args[0]!!.toValueString()
                     obj = args[1]!!.toValueString()
-                    subArgs = args
-                        .subList(3, args.size)
-                        .stream()
-                        .map { obj: Parameter? -> obj!!.paren() }
-                        .collect(Collectors.toList())
+                    val list: MutableList<String> = ArrayList()
+                    for (parameter in args
+                        .subList(3, args.size)) {
+                        val paren = parameter!!.paren()
+                        list.add(paren)
+                    }
+                    subArgs = list
                     term = String.format("%s.%s%s", obj, method, paramList(subArgs))
                     processTerm(args, terms, 2, term)
                 }
                 Opcode.CALLPARENT -> {
                     replaceVariables(args, terms, 1)
                     method = args[0]!!.toValueString()
-                    subArgs = args
-                        .subList(3, args.size)
-                        .stream()
-                        .map { obj: Parameter? -> obj!!.paren() }
-                        .collect(Collectors.toList())
+                    val result: MutableList<String> = ArrayList()
+                    for (parameter in args
+                        .subList(3, args.size)) {
+                        val paren = parameter!!.paren()
+                        result.add(paren)
+                    }
+                    subArgs = result
                     term = String.format("parent.%s%s", method, paramList(subArgs))
                     processTerm(args, terms, 1, term)
                 }
@@ -534,11 +558,13 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 2)
                     obj = args[0]!!.toValueString()
                     method = args[1]!!.toValueString()
-                    subArgs = args
-                        .subList(3, args.size)
-                        .stream()
-                        .map { obj: Parameter? -> obj!!.paren() }
-                        .collect(Collectors.toList())
+                    val list1: MutableList<String> = ArrayList()
+                    for (v in args
+                        .subList(3, args.size)) {
+                        val paren = v!!.paren()
+                        list1.add(paren)
+                    }
+                    subArgs = list1
                     term = String.format("%s.%s%s", obj, method, paramList(subArgs))
                     processTerm(args, terms, 2, term)
                 }
@@ -561,8 +587,14 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 0)
                     dest = args[0]!!.toValueString()
                     arg = args[1]!!.paren()
-                    type = types.stream().filter { t: MemberDesc -> t.name.equals(dest) }.findFirst()
-                        .get().type.toWString()
+                    var found: Optional<MemberDesc> = Optional.empty()
+                    for (memberDesc in types) {
+                        if (memberDesc.name.equals(dest)) {
+                            found = Optional.of(memberDesc)
+                            break
+                        }
+                    }
+                    type = found.get().type.toWString()
                     term = if (type.equals("bool")) {
                         arg
                     } else {
@@ -576,10 +608,6 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     prop = args[0]!!.toValueString()
                     term = String.format("%s.%s", obj, prop)
                     processTerm(args, terms, 2, term)
-                }
-                Opcode.PROPSET -> {
-                    replaceVariables(args, terms, -1)
-                    false
                 }
                 Opcode.CMP_EQ -> {
                     replaceVariables(args, terms, 0)
@@ -619,8 +647,14 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                 Opcode.ARR_CREATE -> {
                     val size = args[1]!!.intValue
                     dest = args[0]!!.toValueString()
-                    type = types.stream().filter { t: MemberDesc -> t.name.equals(dest) }.findFirst()
-                        .get().type.toWString()
+                    var found1: Optional<MemberDesc> = Optional.empty()
+                    for (t in types) {
+                        if (t.name.equals(dest)) {
+                            found1 = Optional.of(t)
+                            break
+                        }
+                    }
+                    type = found1.get().type.toWString()
                     val subtype = type.toString().substring(0, type.length - 2)
                     term = String.format("new %s[%s]", subtype, size)
                     processTerm(args, terms, 0, term)
@@ -636,14 +670,6 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     operand2 = args[1]!!.toValueString()
                     term = String.format("%s[%s]", operand2, operand1)
                     processTerm(args, terms, 0, term)
-                }
-                Opcode.ARR_SET -> {
-                    replaceVariables(args, terms, -1)
-                    false
-                }
-                Opcode.JMPT, Opcode.JMPF -> {
-                    replaceVariables(args, terms, -1)
-                    false
                 }
                 Opcode.JMP, Opcode.ARR_FIND, Opcode.ARR_RFIND -> false
                 else -> false
@@ -706,12 +732,15 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
          * @return
         </T> */
         fun <T> paramList(params: List<T>): String {
-            return params.stream()
-                .map { obj: T -> obj.toString() }
-                .collect(Collectors.joining(", ", "(", ")"))
+            val joiner = StringJoiner(", ", "(", ")")
+            params
+                .asSequence()
+                .map { it.toString() }
+                .forEach { joiner.add(it) }
+            return joiner.toString()
         }
 
-        val AUTOVAR_REGEX = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE)
+        val AUTOVAR_REGEX: Pattern = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE)
     }
 
     /**
@@ -754,14 +783,14 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         val functionParameterCount = java.lang.Short.toUnsignedInt(input.short)
         assert(functionParameterCount in 0..2047) { "Invalid functionParameterCount $functionParameterCount" }
         FN_PARAMS = ArrayList(functionParameterCount)
-        for (i in 0 until functionParameterCount) {
+        (0 until functionParameterCount).forEach { _ ->
             val param = FunctionParam(input, context)
             FN_PARAMS.add(param)
         }
         val functionLocalCount = java.lang.Short.toUnsignedInt(input.short)
         assert(functionLocalCount in 0..2047) { "Invalid functionLocalCount $functionLocalCount" }
         FN_LOCALS = ArrayList(functionLocalCount)
-        for (i in 0 until functionLocalCount) {
+        (0 until functionLocalCount).forEach { _ ->
             val local = FunctionLocal(input, context)
             FN_LOCALS.add(local)
         }
