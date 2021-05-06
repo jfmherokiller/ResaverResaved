@@ -35,7 +35,7 @@ class Hex32Formatter : AbstractFormatter() {
     }
 
     @Throws(ParseException::class)
-    override fun valueToString(value: Any): String {
+    override fun valueToString(value: Any?): String {
         return if (value is Number) {
             val i = value.toInt()
             String.format("%08x", i)
