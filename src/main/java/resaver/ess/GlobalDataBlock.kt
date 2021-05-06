@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
 /**
- * Describes the data stored in a <code>GlobalData</code>.
+ * Describes the data stored in a `GlobalData`.
  *
  * @author Mark Fairchild
  */
-public interface GlobalDataBlock extends Element {
-
-}
+interface GlobalDataBlock : Element
