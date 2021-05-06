@@ -135,7 +135,7 @@ class FilterTree : JTree(FilterTreeModel()) {
                     }
                 } else if (element is ArrayInfo) {
                     if (null != element.holder) {
-                        findHandler!!.accept(element.holder)
+                        findHandler!!.accept(element.holder!!)
                     }
                 }
             }
