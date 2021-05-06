@@ -542,8 +542,8 @@ final public class Mod implements java.io.Serializable {
         /**
          * Merges analyses.
          *
-         * @param sub
-         * @return
+         * @param sub anaysis to merge
+         * @return Analysis
          */
         public Analysis merge(Analysis sub) {
             this.MODS.addAll(sub.MODS);
@@ -583,13 +583,13 @@ final public class Mod implements java.io.Serializable {
          * Creates a new <code>StringsReadError</code> with a list of
          * stringtable files and archive files that were corrupt.
          *
-         * @param scripts
-         * @param strings
-         * @param archives The list of names of the archives that were
+         * @param scriptOrigins the origin of the script
+         * @param strings list of strings files
+         * @param archiveErrors The list of names of the archives that were
          * unreadable.
-         * @param scriptNames The list of names of the script files that were
+         * @param scriptErrors The list of names of the script files that were
          * unreadable.
-         * @param stringsNames The list of names of the stringtables that were
+         * @param stringsErrors The list of names of the stringtables that were
          * unreadable.
          * @see Exception#Exception()
          */
