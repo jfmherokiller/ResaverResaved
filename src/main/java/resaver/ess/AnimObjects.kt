@@ -13,129 +13,115 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.Objects;
+import resaver.ess.ESS.ESSContext
+import java.nio.ByteBuffer
+
+
 
 /**
  *
  * @author Mark
  */
-public class AnimObjects implements GlobalDataBlock {
-
+class AnimObjects : GlobalDataBlock {
     /**
-     * Creates a new <code>AnimObjects</code> by reading from a
-     * <code>LittleEndianInput</code>. No error handling is performed.
+     * Creates a new `AnimObjects` by reading from a
+     * `LittleEndianInput`. No error handling is performed.
      *
      * @param input The input data.
-     * @param context The <code>ESSContext</code> info.
-     * 
+     * @param context The `ESSContext` info.
      */
-    public AnimObjects(ByteBuffer input, ESS.ESSContext context) {
-        final int COUNT = input.getInt();
-        if (COUNT < 0 || COUNT > 1e6) {
-            throw new IllegalArgumentException("AnimObject count was an illegal value: " + COUNT);
-        }
-
-        this.ANIMATIONS = new java.util.ArrayList<>(COUNT);
-
-        for (int i = 0; i < COUNT; i++) {
-            AnimObject var = new AnimObject(input, context);
-            this.ANIMATIONS.add(var);
+    constructor(input: ByteBuffer, context: ESSContext?) {
+        val COUNT = input.int
+        require(!(COUNT < 0 || COUNT > 1e6)) { "AnimObject count was an illegal value: $COUNT" }
+        ANIMATIONS = mutableListOf()
+        for (i in 0 until COUNT) {
+            val `var` = AnimObject(input, context)
+            ANIMATIONS.add(`var`)
         }
     }
 
     /**
-     * Creates a new empty <code>AnimObjects</code>.
+     * Creates a new empty `AnimObjects`.
      */
-    public AnimObjects() {
-        this.ANIMATIONS = Collections.emptyList();
+    constructor() {
+        ANIMATIONS = emptyList()
     }
-    
+
     /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.putInt(this.ANIMATIONS.size());
-        this.ANIMATIONS.forEach(var -> var.write(output));
+    override fun write(output: ByteBuffer?) {
+        output!!.putInt(ANIMATIONS.size)
+        ANIMATIONS.forEach { `var`: AnimObject -> `var`.write(output) }
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 4;
-        int result = 0;
-        for (AnimObject ANIMATION : this.ANIMATIONS) {
-            int calculateSize = ANIMATION.calculateSize();
-            result += calculateSize;
+    override fun calculateSize(): Int {
+        var sum = 4
+        var result = 0
+        for (ANIMATION in ANIMATIONS) {
+            val calculateSize = ANIMATION.calculateSize()
+            result += calculateSize
         }
-        sum += result;
-        return sum;
+        sum += result
+        return sum
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 17 * hash + Objects.hashCode(this.ANIMATIONS);
-        return hash;
+    override fun hashCode(): Int {
+        var hash = 3
+        hash = 17 * hash + ANIMATIONS.hashCode()
+        return hash
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        if (obj == null) {
-            return false;
+        if (other == null) {
+            return false
         }
-        if (getClass() != obj.getClass()) {
-            return false;
+        if (javaClass != other.javaClass) {
+            return false
         }
-        final AnimObjects other = (AnimObjects) obj;
-
-        for (int i = 0; i < this.ANIMATIONS.size(); i++) {
-            AnimObject ao1 = this.ANIMATIONS.get(i);
-            AnimObject ao2 = other.ANIMATIONS.get(i);
-            if (!ao1.equals(ao2)) {
-                return ao1.equals(ao2);
+        val other2 = other as AnimObjects
+        for (i in ANIMATIONS.indices) {
+            val ao1 = ANIMATIONS[i]
+            val ao2 = other2.ANIMATIONS[i]
+            if (ao1 != ao2) {
+                return ao1 == ao2
             }
         }
-        return Objects.equals(this.ANIMATIONS, other.ANIMATIONS);
+        return ANIMATIONS == other.ANIMATIONS
     }
 
     /**
-     * @return The <code>AnimObject</code> list.
+     * @return The `AnimObject` list.
      */
-    public java.util.List<AnimObject> getAnimations() {
-        return java.util.Collections.unmodifiableList(this.ANIMATIONS);
-    }
-
-    final private java.util.List<AnimObject> ANIMATIONS;
+    val animations: List<AnimObject>
+        get() = ANIMATIONS
+    private val ANIMATIONS: List<AnimObject>
 
     /**
      *
      */
-    static public class AnimObject extends GeneralElement {
-
+    class AnimObject(input: ByteBuffer?, context: ESSContext?) : GeneralElement() {
         /**
-         * Creates a new <code>AnimObject</code> by reading from a
-         * <code>LittleEndianInput</code>. No error handling is performed.
+         * Creates a new `AnimObject` by reading from a
+         * `LittleEndianInput`. No error handling is performed.
          *
          * @param input The input data.
-         * @param context The <code>ESSContext</code>.
+         * @param context The `ESSContext`.
          */
-        public AnimObject(ByteBuffer input, ESS.ESSContext context) {
-            super.readRefID(input, "ACHR", context);
-            super.readRefID(input, "ANIM", context);
-            super.readByte(input, "UNKNOWN");
+        init {
+            super.readRefID(input, "ACHR", context)
+            super.readRefID(input, "ANIM", context)
+            super.readByte(input, "UNKNOWN")
         }
     }
-
 }
