@@ -13,56 +13,81 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
+
+import resaver.ess.papyrus.EID
+import resaver.ess.papyrus.TString
 
 /**
  * Describes anything that can produce a block of HTML containing a link.
  *
  * @author Mark Fairchild
  */
-public interface Linkable {
-
+interface Linkable {
     /**
      * Creates an HTML link representation.
      *
-     * @param target A target within the <code>Linkable</code>.
+     * @param target A target within the `Linkable`.
      * @return HTML link representation.
      */
-    abstract public String toHTML(Element target);
+    fun toHTML(target: Element?): String?
 
-    /**
-     * Makes a link url in a standard way, with a target.
-     * @param type
-     * @param address
-     * @param text
-     * @return 
-     */
-    static public String makeLink(String type, Object address, String text) {
-        return String.format("<a href=\"%s://%s\">%s</a>", type, address, text);
-    }
-    
-    /**
-     * Makes a link url in a standard way, with a target.
-     * @param type
-     * @param address
-     * @param target
-     * @param text
-     * @return 
-     */
-    static public String makeLink(String type, Object address, int target, String text) {
-        return String.format("<a href=\"%s://%s[%d]\">%s</a>", type, address, target, text);
-    }
+    companion object {
+        /**
+         * Makes a link url in a standard way, with a target.
+         * @param type
+         * @param address
+         * @param text
+         * @return
+         */
+        fun makeLink(type: String?, address: Any?, text: String?): String {
+            return String.format("<a href=\"%s://%s\">%s</a>", type, address, text)
+        }
 
-    /**
-     * Makes a link url in a standard way, with two target2.
-     * @param type
-     * @param address
-     * @param target1
-     * @param target2
-     * @param text
-     * @return 
-     */
-    static public String makeLink(String type, Object address, int target1, int target2, String text) {
-        return String.format("<a href=\"%s://%s[%d][%d]\">%s</a>", type, address, target1, target2, text);
+        /**
+         * Makes a link url in a standard way, with a target.
+         * @param type
+         * @param address
+         * @param target
+         * @param text
+         * @return
+         */
+        fun makeLink(type: String?, address: Any?, target: Int, text: String?): String {
+            return String.format("<a href=\"%s://%s[%d]\">%s</a>", type, address, target, text)
+        }
+
+        /**
+         * Makes a link url in a standard way, with two target2.
+         * @param type
+         * @param address
+         * @param target1
+         * @param target2
+         * @param text
+         * @return
+         */
+        @JvmStatic
+        fun makeLink(type: String?, address: Any?, target1: Int, target2: Int, text: String?): String {
+            return String.format("<a href=\"%s://%s[%d][%d]\">%s</a>", type, address, target1, target2, text)
+        }
+
+        @JvmStatic
+        fun makeLink(thread: String, ID: EID, toString: String): String {
+            return String.format("<a href=\"%s://%s\">%s</a>", thread, ID, toString)
+        }
+
+        @JvmStatic
+        fun makeLink(frame: String, ID: EID, frameIndex: Int, toString: String): String {
+            return String.format("<a href=\"%s://%s[%d]\">%s</a>", frame, ID, frameIndex, toString)
+        }
+
+        @JvmStatic
+        fun makeLink(script: String, REFTYPE: TString, toString: String): String {
+            return String.format("<a href=\"%s://%s\">%s</a>", script, REFTYPE, toString)
+        }
+
+        @JvmStatic
+        fun makeLink(string: String, INDEX: Int, toString: String): String {
+            return String.format("<a href=\"%s://%s\">%s</a>", string, INDEX, toString)
+        }
     }
 }
