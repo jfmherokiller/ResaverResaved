@@ -191,13 +191,28 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         sum += 5;
 
         sum += 2;
-        sum += this.FN_PARAMS.parallelStream().mapToInt(MemberDesc::calculateSize).sum();
+        int sum1 = 0;
+        for (FunctionParam FN_PARAM : this.FN_PARAMS) {
+            int calculateSize = FN_PARAM.calculateSize();
+            sum1 += calculateSize;
+        }
+        sum += sum1;
 
         sum += 2;
-        sum += this.FN_LOCALS.parallelStream().mapToInt(MemberDesc::calculateSize).sum();
+        int result1 = 0;
+        for (FunctionLocal FN_LOCAL : this.FN_LOCALS) {
+            int calculateSize = FN_LOCAL.calculateSize();
+            result1 += calculateSize;
+        }
+        sum += result1;
 
         sum += 2;
-        sum += this.CODE.parallelStream().mapToInt(OpcodeData::calculateSize).sum();
+        int sum2 = 0;
+        for (OpcodeData opcodeData : this.CODE) {
+            int calculateSize = opcodeData.calculateSize();
+            sum2 += calculateSize;
+        }
+        sum += sum2;
 
         sum += 4;
 

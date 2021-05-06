@@ -192,15 +192,21 @@ final public class Worrier {
         }
 
         // Get a map of namespaces to scriptInstances in that namespace.
-        Map<String, List<ScriptInstance>> currentNamespaces = result.ESS.getPapyrus().getScriptInstances().values()
-                .parallelStream()
-                .filter(instance -> instance.getScriptName().toString().contains(":"))
-                .collect(Collectors.groupingBy(instance -> instance.getScriptName().toString().split(":")[0]));
+        Map<String, List<ScriptInstance>> currentNamespaces = new HashMap<>();
+        for (ScriptInstance instance : result.ESS.getPapyrus().getScriptInstances().values()) {
+            if (instance.getScriptName().toString().contains(":")) {
+                currentNamespaces.computeIfAbsent(instance.getScriptName().toString().split(":")[0], k -> new ArrayList<>()).add(instance);
+            }
+        }
 
-        Map<Script, Integer> currentCanaries = result.ESS.getPapyrus().getScriptInstances().values()
-                .parallelStream()
-                .filter(ScriptInstance::hasCanary)
-                .collect(Collectors.toMap(ScriptInstance::getScript, ScriptInstance::getCanary));
+        Map<Script, Integer> currentCanaries = new HashMap<>();
+        for (ScriptInstance instance : result.ESS.getPapyrus().getScriptInstances().values()) {
+            if (instance.hasCanary()) {
+                if (currentCanaries.put(instance.getScript(), instance.getCanary()) != null) {
+                    throw new IllegalStateException("Duplicate key");
+                }
+            }
+        }
 
         if (previousESS != null) {
             Header H1 = previousESS.getHeader();
@@ -256,10 +262,12 @@ final public class Worrier {
             }
         }
 
-        List<ScriptInstance> memberless = result.ESS.getPapyrus().getScriptInstances().values()
-                .parallelStream()
-                .filter(ScriptInstance::hasMemberlessError)
-                .collect(Collectors.toList());
+        List<ScriptInstance> memberless = new ArrayList<>();
+        for (ScriptInstance scriptInstance : result.ESS.getPapyrus().getScriptInstances().values()) {
+            if (scriptInstance.hasMemberlessError()) {
+                memberless.add(scriptInstance);
+            }
+        }
 
         if (!memberless.isEmpty()) {
             String msg = "This savefile has %d script instances whose data is missing.";
@@ -267,10 +275,12 @@ final public class Worrier {
             this.shouldWorry = true;
         }
 
-        List<ScriptInstance> definitionErrors = result.ESS.getPapyrus().getScriptInstances().values()
-                .parallelStream()
-                .filter(ScriptInstance::hasDefinitionError)
-                .collect(Collectors.toList());
+        List<ScriptInstance> definitionErrors = new ArrayList<>();
+        for (ScriptInstance scriptInstance : result.ESS.getPapyrus().getScriptInstances().values()) {
+            if (scriptInstance.hasDefinitionError()) {
+                definitionErrors.add(scriptInstance);
+            }
+        }
 
         if (!definitionErrors.isEmpty()) {
             String msg = "This savefile has %d script instances with mismatched member data.";

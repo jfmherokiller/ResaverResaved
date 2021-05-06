@@ -20,7 +20,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * Stores the data for a script property. Basically a fancy VarArg.

@@ -322,7 +322,12 @@ final public class Reference extends GameElement implements SeparateData, HasVar
             sum += getID().calculateSize();
             sum += ((this.FLAG & 0x04) != 0 ? 4 : 0);
             sum += this.TYPE.calculateSize();
-            sum += this.VARIABLES.parallelStream().mapToInt(Element::calculateSize).sum();
+            int result = 0;
+            for (Variable VARIABLE : this.VARIABLES) {
+                int calculateSize = VARIABLE.calculateSize();
+                result += calculateSize;
+            }
+            sum += result;
             return sum;
         }
 

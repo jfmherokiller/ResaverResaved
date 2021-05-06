@@ -47,7 +47,12 @@ public class PapyrusDefinitionMap<T extends Definition> extends java.util.Linked
 
     @Override
     public int calculateSize() {
-        return 4 + this.values().parallelStream().mapToInt(Element::calculateSize).sum();
+        int sum = 0;
+        for (T t : this.values()) {
+            int calculateSize = t.calculateSize();
+            sum += calculateSize;
+        }
+        return 4 + sum;
     }
 
     @Override

@@ -24,10 +24,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.function.Predicate;
@@ -783,11 +780,14 @@ abstract public class Configurator {
                 LOG.fine(String.format("\"ModList.txt\" contained %d mod names.", MODNAMES.size()));
             }
 
-            final List<Mod> MODS = MODNAMES.parallelStream()
-                    .map(modDir::resolve)
-                    .map(path -> Mod.createMod(game, path))
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+            final List<Mod> MODS = new ArrayList<>();
+            for (String MODNAME : MODNAMES) {
+                Path path = modDir.resolve(MODNAME);
+                Mod mod = Mod.createMod(game, path);
+                if (mod != null) {
+                    MODS.add(mod);
+                }
+            }
 
             LOG.info(String.format("analyzeModDirectory: checked %d mods.", MODS.size()));
             return MODS;

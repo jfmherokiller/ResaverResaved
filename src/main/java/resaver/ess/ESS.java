@@ -170,7 +170,7 @@ final public class ESS implements Element {
         this.COSAVE = Files.exists(cosaveFile) ? Files.readAllBytes(cosaveFile) : null;
 
         // Store the offset where the header ends and the body begins.
-        int startingOffset = ((Buffer) buffer).position();
+        int startingOffset = buffer.position();
 
         // This is the stream that will be used for the remainder of the 
         // constructor.

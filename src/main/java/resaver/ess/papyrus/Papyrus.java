@@ -284,7 +284,12 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                     FunctionMessage message = new FunctionMessage(input, CONTEXT);
                     this.FUNCTIONMESSAGES.add(message);
                 }
-                SUM.click(4 + this.FUNCTIONMESSAGES.parallelStream().mapToInt(FunctionMessage::calculateSize).sum());
+                int sum = 0;
+                for (FunctionMessage FUNCTIONMESSAGE : this.FUNCTIONMESSAGES) {
+                    int calculateSize = FUNCTIONMESSAGE.calculateSize();
+                    sum += calculateSize;
+                }
+                SUM.click(4 + sum);
             } catch (ListException ex) {
                 throw new PapyrusException("Failed to read FunctionMessage table.", ex, this);
             }
@@ -332,7 +337,12 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             }
 
             model.addUnknownIDList(this.UNKS);
-            SUM.click(4 + this.UNKS.parallelStream().mapToInt(Element::calculateSize).sum());
+            int sum = 0;
+            for (EID UNK : this.UNKS) {
+                int calculateSize = UNK.calculateSize();
+                sum += calculateSize;
+            }
+            SUM.click(4 + sum);
 
             UnbindMap unbinds = null;
             try {
@@ -475,12 +485,22 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         sum += this.getArrays().calculateSize();
         sum += this.PAPYRUS_RUNTIME == null ? 0 : this.PAPYRUS_RUNTIME.calculateSize();
         sum += this.getActiveScripts().calculateSize();
-        sum += 4 + this.getFunctionMessages().parallelStream().mapToInt(FunctionMessage::calculateSize).sum();
+        int result = 0;
+        for (FunctionMessage functionMessage : this.getFunctionMessages()) {
+            int calculateSize = functionMessage.calculateSize();
+            result += calculateSize;
+        }
+        sum += 4 + result;
         sum += this.getSuspendedStacks1().calculateSize();
         sum += this.getSuspendedStacks2().calculateSize();
         sum += 4; // UNK1
         sum += this.UNK2 != null && this.UNK2.isPresent() ? 4 : 0;
-        sum += 4 + this.getUnknownIDList().parallelStream().mapToInt(Element::calculateSize).sum();
+        int sum1 = 0;
+        for (EID eid : this.getUnknownIDList()) {
+            int calculateSize = eid.calculateSize();
+            sum1 += calculateSize;
+        }
+        sum += 4 + sum1;
         sum += this.getUnbinds().calculateSize();
         sum += this.SAVE_FILE_VERSION != null && this.SAVE_FILE_VERSION.isPresent() ? 2 : 0;
         sum += this.ARRAYSBLOCK == null ? 0 : this.ARRAYSBLOCK.length;
@@ -675,7 +695,13 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             }
         }
         count += result;
-        count += this.getScriptInstances().values().parallelStream().filter(ScriptInstance::isUndefined).count();
+        long count3 = 0L;
+        for (ScriptInstance scriptInstance : this.getScriptInstances().values()) {
+            if (scriptInstance.isUndefined()) {
+                count3++;
+            }
+        }
+        count += count3;
         long count1 = 0L;
         for (Reference reference : this.getReferences().values()) {
             if (reference.isUndefined()) {
@@ -818,12 +844,24 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
 
             if (ELEMENT instanceof Script) {
                 final Definition DEF = (Definition) ELEMENT;
-                ELEMENTS.addAll(this.getScriptInstances().values().parallelStream().filter(v -> v.getDefinition() == DEF).collect(Collectors.toSet()));
+                Set<ScriptInstance> set = new HashSet<>();
+                for (ScriptInstance v : this.getScriptInstances().values()) {
+                    if (v.getDefinition() == DEF) {
+                        set.add(v);
+                    }
+                }
+                ELEMENTS.addAll(set);
                 REMOVED.add(this.getScripts().remove(DEF.getName()));
 
             } else if (ELEMENT instanceof Struct) {
                 final Struct DEF = (Struct) ELEMENT;
-                ELEMENTS.addAll(this.getStructInstances().values().parallelStream().filter(v -> v.getDefinition() == DEF).collect(Collectors.toSet()));
+                Set<StructInstance> set = new HashSet<>();
+                for (StructInstance v : this.getStructInstances().values()) {
+                    if (v.getDefinition() == DEF) {
+                        set.add(v);
+                    }
+                }
+                ELEMENTS.addAll(set);
                 REMOVED.add(this.getStructs().remove(DEF.getName()));
 
             } else if (ELEMENT instanceof ScriptInstance) {

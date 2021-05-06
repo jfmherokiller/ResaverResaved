@@ -144,11 +144,15 @@ final public class FilterTreeModel implements TreeModel {
      */
     private TreePath findPath(Node node, Element element) {
         if (node == this.root) {
-            return node.getChildren().parallelStream()
-                    .filter(Node::isVisible)
-                    .map(c -> findPath(c, element))
-                    .filter(Objects::nonNull)
-                    .findFirst().orElse(null);
+            for (Node c : node.getChildren()) {
+                if (c.isVisible()) {
+                    TreePath path = findPath(c, element);
+                    if (path != null) {
+                        return path;
+                    }
+                }
+            }
+            return null;
 
         } else if (!node.isLeaf()) {
             for (Node child : node.getChildren()) {
@@ -179,10 +183,13 @@ final public class FilterTreeModel implements TreeModel {
      */
     private TreePath findPathUnfiltered(Node node, Element element) {
         if (node == this.root) {
-            return node.getChildren().parallelStream()
-                    .map(v -> findPathUnfiltered(v, element))
-                    .filter(Objects::nonNull)
-                    .findFirst().orElse(null);
+            for (Node v : node.getChildren()) {
+                TreePath pathUnfiltered = findPathUnfiltered(v, element);
+                if (pathUnfiltered != null) {
+                    return pathUnfiltered;
+                }
+            }
+            return null;
 
         } else if (!node.isLeaf()) {
             for (Node child : node.getChildren()) {
@@ -305,7 +312,9 @@ final public class FilterTreeModel implements TreeModel {
             return;
         }
 
-        this.root.getChildren().parallelStream().forEach(node -> this.setFilter(node, filter));
+        for (Node node : this.root.getChildren()) {
+            this.setFilter(node, filter);
+        }
         this.root.countLeaves();
 
         this.LISTENERS.forEach(l -> l.treeStructureChanged(new TreeModelEvent(this.root, this.getPath(this.root))));
@@ -337,7 +346,9 @@ final public class FilterTreeModel implements TreeModel {
 
         } else {
             // For folders, determine which children to setFilter.
-            node.getChildren().parallelStream().forEach(child -> this.setFilter(child, filter));
+            for (Node child : node.getChildren()) {
+                this.setFilter(child, filter);
+            }
             boolean hasVisibleChildren = false;
             for (Node node1 : node.getChildren()) {
                 if (node1.isVisible()) {

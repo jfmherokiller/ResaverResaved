@@ -87,7 +87,11 @@ public final class FileLocationTable implements Element {
             int calculateSize = globalData.calculateSize();
             table3Size += calculateSize;
         }
-        int changeFormsSize = ess.getChangeForms().values().parallelStream().mapToInt(ChangeForm::calculateSize).sum();
+        int changeFormsSize = 0;
+        for (ChangeForm changeForm : ess.getChangeForms().values()) {
+            int calculateSize = changeForm.calculateSize();
+            changeFormsSize += calculateSize;
+        }
 
         this.table1Offset = 0;
         this.table1Offset += ess.getHeader().calculateSize();
@@ -130,8 +134,12 @@ public final class FileLocationTable implements Element {
             int calculateSize = globalData.calculateSize();
             table3Size += calculateSize;
         }
-        int changeFormsSize = ess.getChangeForms().values().parallelStream().mapToInt(ChangeForm::calculateSize).sum();
-        
+        int changeFormsSize = 0;
+        for (ChangeForm changeForm : ess.getChangeForms().values()) {
+            int calculateSize = changeForm.calculateSize();
+            changeFormsSize += calculateSize;
+        }
+
         this.table1Offset = 0;
         this.table1Offset += ess.getHeader().calculateSize();
         this.table1Offset += 1;
