@@ -13,50 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.util.Objects;
-import java.nio.ByteBuffer;
+import resaver.ess.papyrus.EID.Companion.pad8
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
-final public class UnknownThing implements PapyrusElement {
-
+class UnknownThing(input: ByteBuffer) : PapyrusElement {
     /**
-     * @param input The input stream.
-     */
-    public UnknownThing(ByteBuffer input) {
-        this.VALUE = input.getInt();
-    }
-
-    /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        Objects.requireNonNull(output);
-        output.putInt(this.VALUE);
+    override fun write(output: ByteBuffer?) {
+        output!!.putInt(VALUE)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return 4;
+    override fun calculateSize(): Int {
+        return 4
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return EID.pad8(this.VALUE);
+    override fun toString(): String {
+        return pad8(VALUE)
     }
 
-    final private int VALUE;
+    private val VALUE: Int = input.int
+
 }
