@@ -15,15 +15,12 @@
  */
 package resaver.ess.papyrus;
 
-import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.jetbrains.annotations.Nullable;
-import resaver.Analysis;
 import resaver.ess.ESS;
 import resaver.ess.WStringElement;
 
@@ -119,7 +116,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
                     final WStringElement WSTR = WStringElement.read(input);
                     final TString TSTR = this.STR32
                             ? new TString32(WSTR, i)
-                            : new TString16(WSTR, i);
+                            : new TString16(this, WSTR, i);
                     this.add(TSTR);
 
                 } catch (BufferUnderflowException ex) {
@@ -255,7 +252,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
 
         TString tstr = this.STR32
                 ? new TString32(val, this.size())
-                : new TString16(val, this.size());
+                : new TString16(this, val, this.size());
         this.add(tstr);
         return tstr;
     }
@@ -288,7 +285,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
     /**
      * A flag indicating that the string-table-bug correction is in effect.
      */
-    final private boolean STBCORRECTION;
+    final public boolean STBCORRECTION;
 
     /**
      * Stores the truncated condition.
@@ -306,111 +303,4 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      */
     final private int STRCOUNT;
 
-    /**
-     * TString implementation for 16 bit TStrings.
-     */
-    final private class TString16 extends TString {
-
-        /**
-         * Creates a new <code>TString16</code> from a <code>WStringElement</code> and
-         * an index.
-         *
-         * @param wstr The <code>WStringElement</code>.
-         * @param index The index of the <code>TString</code>.
-         */
-        private TString16(WStringElement wstr, int index) {
-            super(wstr, index);
-        }
-
-        /**
-         * Creates a new <code>TString16</code> from a character sequence and an
-         * index.
-         *
-         * @param cs The <code>CharSequence</code>.
-         * @param index The index of the <code>TString</code>.
-         */
-        private TString16(CharSequence cs, int index) {
-            super(cs, index);
-        }
-
-        /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
-         * @param output The output stream.
-         */
-        @Override
-        public void write(ByteBuffer output) {
-            if (this.getIndex() > 0xFFF0 && !STBCORRECTION) {
-                output.putShort((short) 0xFFFF);
-                output.putInt(this.getIndex());
-            } else {
-                output.putShort((short) this.getIndex());
-            }
-        }
-
-        /**
-         * @see resaver.ess.Element#calculateSize()
-         * @return The size of the <code>Element</code> in bytes.
-         */
-        @Override
-        public int calculateSize() {
-            return (this.getIndex() > 0xFFF0 && !STBCORRECTION ? 6 : 2);
-        }
-
-        @Override
-        public boolean matches(@Nullable Analysis analysis, @Nullable String mod) {
-            return false;
-        }
-    }
-
-    /**
-     * TString implementation for 32 bit TStrings.
-     */
-    static final private class TString32 extends TString {
-
-        /**
-         * Creates a new <code>TString32</code> from a <code>WStringElement</code> and
-         * an index.
-         *
-         * @param wstr The <code>WStringElement</code>.
-         * @param index The index of the <code>TString</code>.
-         */
-        private TString32(WStringElement wstr, int index) {
-            super(wstr, index);
-        }
-
-        /**
-         * Creates a new <code>TString32</code> from a character sequence and an
-         * index.
-         *
-         * @param cs The <code>CharSequence</code>.
-         * @param index The index of the <code>TString</code>.
-         */
-        private TString32(CharSequence cs, int index) {
-            super(cs, index);
-        }
-
-        /**
-         * @see resaver.ess.Element#write(resaver.ByteBuffer)
-         * @param output The output stream.
-         * @throws IOException
-         */
-        @Override
-        public void write(ByteBuffer output) {
-            output.putInt(this.getIndex());
-        }
-
-        /**
-         * @see resaver.ess.Element#calculateSize()
-         * @return The size of the <code>Element</code> in bytes.
-         */
-        @Override
-        public int calculateSize() {
-            return 4;
-        }
-
-        @Override
-        public boolean matches(@Nullable Analysis analysis, @Nullable String mod) {
-            return false;
-        }
-    }
 }
