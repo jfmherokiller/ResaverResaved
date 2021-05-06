@@ -17,7 +17,6 @@ package resaver.ess;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.stream.Collectors;
 import resaver.IString;
 import resaver.ess.papyrus.EID;
 import resaver.ess.papyrus.PapyrusContext;
@@ -653,8 +652,8 @@ public class GeneralElement implements Element {
     }
 
     /**
-     * @see Element#write(resaver.ByteBuffer)
-     * @param output
+     * @see Element#write(ByteBuffer)
+     * @param output output buffer
      */
     @Override
     public void write(ByteBuffer output) {
