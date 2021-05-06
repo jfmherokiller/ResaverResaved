@@ -13,133 +13,111 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.swing.BorderFactory;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.SwingWorker;
-import resaver.ess.ESS;
-import resaver.ess.papyrus.ActiveScript;
-import resaver.ess.papyrus.Definition;
-import resaver.ess.papyrus.Reference;
-import resaver.ess.papyrus.ScriptInstance;
-import resaver.ess.papyrus.Papyrus;
-import resaver.ess.papyrus.PapyrusContext;
-import resaver.ess.papyrus.PapyrusElement;
-import resaver.ess.papyrus.Script;
-import resaver.ess.papyrus.Struct;
-import resaver.ess.papyrus.StructInstance;
-import resaver.ess.papyrus.TString;
+import resaver.ess.ESS
+import resaver.ess.papyrus.*
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
+import java.util.*
+
+import java.util.logging.Logger
+import java.util.regex.Pattern
+import javax.swing.*
 
 /**
  *
  * @author Mark
  */
-public class BatchCleaner extends SwingWorker<Boolean, Double> {
-
-    /**
-     *
-     * @param window
-     * @param save
-     */
-    public BatchCleaner(SaveWindow window, ESS save) {
-        this.WINDOW = Objects.requireNonNull(window, "The window field must not be null.");
-        this.SAVE = Objects.requireNonNull(save, "The save field must not be null.");
-        this.CONTEXT = this.SAVE.getPapyrus().getContext();
-    }
-
+class BatchCleaner(window: SaveWindow?, save: ESS?) : SwingWorker<Boolean, Double?>() {
     /**
      *
      * @return @throws Exception
      */
-    @Override
-    protected Boolean doInBackground() throws Exception {
-        this.WINDOW.getProgressIndicator().start("Batch cleaning");
-        this.WINDOW.addWindowListener(this.LISTENER);
-
-        try {
-            String batch = null;
+    @Throws(Exception::class)
+    override fun doInBackground(): Boolean {
+        WINDOW.progressIndicator.start("Batch cleaning")
+        WINDOW.addWindowListener(LISTENER)
+        return try {
+            var batch: String? = null
 
             // If no batch script was provided, throw up a dialog with a 
             // text area and let the user paste one in.
             if (null == batch) {
-                final JTextArea TEXT = new JTextArea();
-                TEXT.setColumns(50);
-                TEXT.setRows(10);
-                TEXT.setLineWrap(false);
-                TEXT.setWrapStyleWord(false);
-
-                final JScrollPane SCROLLER = new JScrollPane(TEXT);
-                SCROLLER.setBorder(BorderFactory.createTitledBorder("Enter Scripts"));
-                final String TITLE = "Batch Clean";
-                int result = JOptionPane.showConfirmDialog(this.WINDOW, SCROLLER, TITLE, JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-
+                val TEXT = JTextArea()
+                TEXT.columns = 50
+                TEXT.rows = 10
+                TEXT.lineWrap = false
+                TEXT.wrapStyleWord = false
+                val SCROLLER = JScrollPane(TEXT)
+                SCROLLER.border = BorderFactory.createTitledBorder("Enter Scripts")
+                val TITLE = "Batch Clean"
+                val result = JOptionPane.showConfirmDialog(
+                    WINDOW,
+                    SCROLLER,
+                    TITLE,
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
+                )
                 if (result == JOptionPane.CANCEL_OPTION) {
-                    return false;
+                    return false
                 }
-
-                batch = TEXT.getText();
+                batch = TEXT.text
             }
 
             // If we still have no batch script, just exit.
             if (null == batch || batch.isEmpty()) {
-                return false;
+                return false
             }
 
             // Split the input into lines.
-            final String[] LINES = batch.split("\n");
-            final java.util.Set<Definition> CLEAN_NAMES = new java.util.TreeSet<>();
+            val LINES = batch.split("\n".toRegex()).toTypedArray()
+            val CLEAN_NAMES: MutableSet<Definition> = TreeSet()
 
             // I had 99 problems, so I used regular expressions. Now I have 100 problems.
             // (script name)(optional .pex extension)(@@ followed by deletion prompt)
-            final String PATTERN = "^([^\\.@\\s]+)(?:\\.pex)?(?:\\s*@@\\s*(.*))?";
-            final Pattern REGEX = Pattern.compile(PATTERN, Pattern.CASE_INSENSITIVE);
+            val PATTERN = "^([^.@\\s]+)(?:\\.pex)?(?:\\s*@@\\s*(.*))?"
+            val REGEX = Pattern.compile(PATTERN, Pattern.CASE_INSENSITIVE)
 
             // Now iterate through the lines.
-            for (String line : LINES) {
+            for (line in LINES) {
                 // Match the regex.
-                final Matcher MATCHER = REGEX.matcher(line);
+                val MATCHER = REGEX.matcher(line)
                 if (!MATCHER.find()) {
-                    assert false;
+                    assert(false)
                 }
 
                 // For debugging.
-                java.util.List<String> groups = new java.util.LinkedList<>();
-                for (int i = 0; i <= MATCHER.groupCount(); i++) {
-                    groups.add(MATCHER.group(i));
+                val groups: MutableList<String> = LinkedList()
+                for (i in 0..MATCHER.groupCount()) {
+                    groups.add(MATCHER.group(i))
                 }
-                System.out.printf("Groups = %d: %s\n", MATCHER.groupCount(), groups);
+                System.out.printf("Groups = %d: %s\n", MATCHER.groupCount(), groups)
 
                 // Retrieve group 1, the definition name.
-                final String NAME = MATCHER.group(1).trim();
-                final Definition DEF = this.CONTEXT.findAny(TString.makeUnindexed(NAME));
-
+                val NAME = MATCHER.group(1).trim { it <= ' ' }
+                val DEF = CONTEXT.findAny(TString.makeUnindexed(NAME))
                 if (DEF != null) {
                     // Group 2 is an optional deletion prompt.
                     if (null == MATCHER.group(2)) {
-                        CLEAN_NAMES.add(DEF);
-                        LOG.info(String.format("Definition present, adding to cleaning list: %s", DEF));
-
+                        CLEAN_NAMES.add(DEF)
+                        LOG.info(String.format("Definition present, adding to cleaning list: %s", DEF))
                     } else {
-                        LOG.info(String.format("Definition present, prompting for deletion: %s", DEF));
-                        final String PROMPT = MATCHER.group(2).trim();
-                        final String MSG = String.format("Delete %s?\n%s", DEF, PROMPT);
-                        final String TITLE = "Confirm";
-                        int result = JOptionPane.showConfirmDialog(this.WINDOW, MSG, TITLE, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                        LOG.info(String.format("Definition present, prompting for deletion: %s", DEF))
+                        val PROMPT = MATCHER.group(2).trim { it <= ' ' }
+                        val MSG = String.format("Delete %s?\n%s", DEF, PROMPT)
+                        val TITLE = "Confirm"
+                        val result = JOptionPane.showConfirmDialog(
+                            WINDOW,
+                            MSG,
+                            TITLE,
+                            JOptionPane.YES_NO_CANCEL_OPTION,
+                            JOptionPane.QUESTION_MESSAGE
+                        )
                         if (result == JOptionPane.OK_OPTION) {
-                            CLEAN_NAMES.add(DEF);
+                            CLEAN_NAMES.add(DEF)
                         } else if (result == JOptionPane.CANCEL_OPTION) {
-                            return false;
+                            return false
                         }
                     }
                 }
@@ -147,99 +125,104 @@ public class BatchCleaner extends SwingWorker<Boolean, Double> {
 
             // If no scripts matched, abort.
             if (CLEAN_NAMES.isEmpty()) {
-                final String MSG = "There were no matches.";
-                final String TITLE = "No matches";
-                JOptionPane.showMessageDialog(this.WINDOW, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
-                return false;
+                val MSG = "There were no matches."
+                val TITLE = "No matches"
+                JOptionPane.showMessageDialog(WINDOW, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
+                return false
             }
-
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append("The following scripts will be cleaned: \n\n");
-            CLEAN_NAMES.forEach(v -> BUF.append(v).append('\n'));
-
-            final JTextArea TEXT = new JTextArea(BUF.toString());
-            TEXT.setColumns(40);
-            TEXT.setEditable(false);
-            final JScrollPane SCROLLER = new JScrollPane(TEXT);
-            final String TITLE = "Batch Clean";
-
-            int result = JOptionPane.showConfirmDialog(this.WINDOW, SCROLLER, TITLE, JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            val BUF = StringBuilder()
+            BUF.append("The following scripts will be cleaned: \n\n")
+            CLEAN_NAMES.forEach { v: Definition? -> BUF.append(v).append('\n') }
+            val TEXT = JTextArea(BUF.toString())
+            TEXT.columns = 40
+            TEXT.isEditable = false
+            val SCROLLER = JScrollPane(TEXT)
+            val TITLE = "Batch Clean"
+            val result = JOptionPane.showConfirmDialog(
+                WINDOW,
+                SCROLLER,
+                TITLE,
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            )
             if (result == JOptionPane.NO_OPTION) {
-                return false;
+                return false
             }
-
-            final Papyrus PAPYRUS = this.SAVE.getPapyrus();
-
-            final Set<ActiveScript> THREADS = new HashSet<>();
-            for (Definition def : CLEAN_NAMES) {
-                if ((def instanceof Script)) {
-                    for (ActiveScript activeScript : PAPYRUS.getActiveScripts().values()) {
-                        if (activeScript.hasScript((Script) def)) {
-                            THREADS.add(activeScript);
+            val PAPYRUS = SAVE.papyrus
+            val THREADS: MutableSet<ActiveScript> = HashSet()
+            for (def in CLEAN_NAMES) {
+                if (def is Script) {
+                    for (activeScript in PAPYRUS.activeScripts.values) {
+                        if (activeScript.hasScript(def)) {
+                            THREADS.add(activeScript)
                         }
                     }
                 }
             }
-
-            THREADS.forEach(ActiveScript::zero);
-            final Set<PapyrusElement> REMOVED = this.SAVE.getPapyrus().removeElements(CLEAN_NAMES);
-            this.WINDOW.deleteNodesFor(REMOVED);
-
-            long scripts = 0L;
-            for (PapyrusElement papyrusElement : REMOVED) {
-                if (papyrusElement instanceof Script) {
-                    scripts++;
+            THREADS.forEach { obj: ActiveScript -> obj.zero() }
+            val REMOVED = SAVE.papyrus.removeElements(CLEAN_NAMES)
+            WINDOW.deleteNodesFor(REMOVED)
+            var scripts = 0L
+            for (papyrusElement in REMOVED) {
+                if (papyrusElement is Script) {
+                    scripts++
                 }
             }
-            long scriptInstances = 0L;
-            for (PapyrusElement papyrusElement : REMOVED) {
-                if (papyrusElement instanceof ScriptInstance) {
-                    scriptInstances++;
+            var scriptInstances = 0L
+            for (papyrusElement in REMOVED) {
+                if (papyrusElement is ScriptInstance) {
+                    scriptInstances++
                 }
             }
-            long structs = 0L;
-            for (PapyrusElement papyrusElement : REMOVED) {
-                if (papyrusElement instanceof Struct) {
-                    structs++;
+            var structs = 0L
+            for (papyrusElement in REMOVED) {
+                if (papyrusElement is Struct) {
+                    structs++
                 }
             }
-            long structsInstances = 0L;
-            for (PapyrusElement papyrusElement : REMOVED) {
-                if (papyrusElement instanceof StructInstance) {
-                    structsInstances++;
+            var structsInstances = 0L
+            for (papyrusElement in REMOVED) {
+                if (papyrusElement is StructInstance) {
+                    structsInstances++
                 }
             }
-            long references = 0L;
-            for (PapyrusElement v : REMOVED) {
-                if (v instanceof Reference) {
-                    references++;
+            var references = 0L
+            for (v in REMOVED) {
+                if (v is Reference) {
+                    references++
                 }
             }
-            long threads = THREADS.size();
-
-            final String MSG = String.format("Cleaned %d scripts and %d corresponding instances.\nCleaned %s structs and %d corresponding instances.\nCleaned %d references.\n%d threads were terminated.", scripts, scriptInstances, structs, structsInstances, references, threads);
-            JOptionPane.showMessageDialog(this.WINDOW, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
-            return true;
-
+            val threads = THREADS.size.toLong()
+            val MSG = String.format(
+                "Cleaned %d scripts and %d corresponding instances.\nCleaned %s structs and %d corresponding instances.\nCleaned %d references.\n%d threads were terminated.",
+                scripts,
+                scriptInstances,
+                structs,
+                structsInstances,
+                references,
+                threads
+            )
+            JOptionPane.showMessageDialog(WINDOW, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
+            true
         } finally {
-            this.WINDOW.removeWindowListener(this.LISTENER);
-            this.WINDOW.getProgressIndicator().stop();
+            WINDOW.removeWindowListener(LISTENER)
+            WINDOW.progressIndicator.stop()
         }
     }
 
-    final private SaveWindow WINDOW;
-    final private ESS SAVE;
-    final private PapyrusContext CONTEXT;
-    
-    static final private Logger LOG = Logger.getLogger(Saver.class.getCanonicalName());
-
-    final private WindowAdapter LISTENER = new WindowAdapter() {
-        @Override
-        public void windowClosing(WindowEvent e) {
-            if (!isDone()) {
-                cancel(true);
+    private val WINDOW: SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
+    private val SAVE: ESS = Objects.requireNonNull(save, "The save field must not be null.")!!
+    private val CONTEXT: PapyrusContext = SAVE.papyrus.context
+    private val LISTENER: WindowAdapter = object : WindowAdapter() {
+        override fun windowClosing(e: WindowEvent) {
+            if (!isDone) {
+                cancel(true)
             }
         }
-    };
+    }
+
+    companion object {
+        private val LOG = Logger.getLogger(Saver::class.java.canonicalName)
+    }
 
 }
