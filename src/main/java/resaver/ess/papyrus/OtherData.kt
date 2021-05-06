@@ -13,339 +13,285 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.List;
-import java.util.logging.Logger;
-import resaver.ess.Flags;
-import resaver.ess.GeneralElement;
-import resaver.ess.Element;
+import resaver.ess.Element
+import resaver.ess.Flags
+import resaver.ess.GeneralElement
+import java.nio.ByteBuffer
+import java.util.logging.Logger
 
 /**
  *
  * @author Mark Fairchild
  */
-public class OtherData extends GeneralElement implements PapyrusElement {
+class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(), PapyrusElement {
+    val arrays: List<Array<Element>>
+        get() = listOfNotNull(
+            ARRAY1,
+            ARRAY2,
+            ARRAY3,
+            ARRAY4,
+            SCRIPTS,
+            ARRAY4A,
+            ARRAY4B,
+            ARRAY4C,
+            ARRAY4D,
+            ARRAY5,
+            ARRAY6,
+            ARRAY7,
+            ARRAY8,
+            ARRAY9,
+            ARRAY10,
+            ARRAY11,
+            ARRAY12,
+            ARRAY13,
+            ARRAY14,
+            ARRAY15
+        )
+    val ARRAY1: Array<Element> = read32ElemArray(input, "Array1") { `in`: ByteBuffer? -> Array1(`in`, context) }
+    val ARRAY1A: Array<Element>
+    val ARRAY2: Array<Element>
+    val ARRAY3: Array<Element>
+    val ARRAY4: Array<Element>
+    val SCRIPTS: Array<Element>
+    val ARRAY4A: Array<Element>
+    val ARRAY4B: Array<Element>
+    val ARRAY4C: Array<Element>
+    val ARRAY4D: Array<Element>
+    val ARRAY5: Array<Element>
+    val ARRAY6: Array<Element>
+    val ARRAY7: Array<Element>
+    val ARRAY8: Array<Element>
+    val ARRAY9: Array<Element>?
+    val ARRAY10: Array<Element>?
+    val ARRAY11: Array<Element>?
+    val ARRAY12: Array<Element>?
+    val ARRAY13: Array<Element>?
+    val ARRAY14: Array<Element>?
+    val ARRAY15: Array<Element>?
+
+    internal class Array1(input: ByteBuffer?, context: PapyrusContext) : GeneralElement() {
+        override fun toString(): String {
+            return if (null == THREAD) {
+                "INVALID (" + super.toString() + ")"
+            } else {
+                THREAD.toString() + "(" + super.toString() + ")"
+            }
+        }
+
+        private val THREAD: ActiveScript?
+
+        init {
+            val ID1 = super.readID32(input, "ID1", context)
+            val ID2 = super.readID32(input, "ID2", context)
+            THREAD = context.findActiveScript(ID2)
+        }
+    }
+
+    internal class Array1A(input: ByteBuffer?, context: PapyrusContext) : GeneralElement() {
+        override fun toString(): String {
+            return if (null == THREAD) {
+                "INVALID (" + super.toString() + ")"
+            } else {
+                THREAD.toString() + "(" + super.toString() + ")"
+            }
+        }
+
+        private val THREAD: ActiveScript?
+
+        init {
+            super.readID32(input, "ID1", context)
+            val ID =
+                if (context.game.isFO4) super.readID64(input, "ID2", context) else super.readID32(input, "ID2", context)
+            THREAD = context.findActiveScript(ID)
+        }
+    }
+
+    internal class Array2(input: ByteBuffer?, context: PapyrusContext) : GeneralElement() {
+        override fun toString(): String {
+            return if (THREAD == null) {
+                "null(" + super.toString() + ")"
+            } else {
+                THREAD.toString() + "(" + super.toString() + ")"
+            }
+        }
+
+        private val THREAD: ActiveScript?
+
+        init {
+            super.readID32(input, "ID1", context)
+            val ID =
+                if (context.game.isFO4) super.readID64(input, "ID2", context) else super.readID32(input, "ID2", context)
+            THREAD = context.findActiveScript(ID)
+        }
+    }
+
+    internal class Array3(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
+        init {
+            super.readByte(input, "type")
+            super.readShort(input, "str1")
+            super.readShort(input, "unk1")
+            super.readShort(input, "str2")
+            super.readInt(input, "unk2")
+            super.readElement(input, "flags") { input: ByteBuffer? -> Flags.readShortFlags(input) }
+            super.readRefID(input, "refID", context)
+        }
+    }
+
+    internal class Array4(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
+        init {
+            super.readShort(input, "str1")
+            super.readShort(input, "unk1")
+            super.readByte(input, "unk2")
+            super.readShort(input, "str2")
+            super.readInt(input, "unk3")
+            super.readElement(input, "flags") { input: ByteBuffer? -> Flags.readShortFlags(input) }
+            super.readRefID(input, "refID", context)
+        }
+    }
+
+    internal class Array4A(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement()
+    internal class Array4B(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
+        init {
+            super.readByte(input, "unk1")
+            super.readShort(input, "unk2")
+            super.readShort(input, "unk3")
+            super.readRefID(input, "ref1", context)
+            super.readRefID(input, "ref2", context)
+            super.readRefID(input, "ref3", context)
+            super.readRefID(input, "ref4", context)
+        }
+    }
+
+    internal class Array4C(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
+        init {
+            val FLAG = super.readByte(input, "flag")
+            super.readInt(input, "data")
+            super.readRefID(input, "ref", context)
+            if (FLAG in 0..6) {
+                super.readInts(input, "data1array", 3)
+            }
+            if (FLAG.toInt() == 0) {
+                super.readInts(input, "data2array", 4)
+            }
+            if (FLAG in 0..3) {
+                super.readByte(input, "unk")
+            }
+        }
+    }
+
+    internal class Array4D(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
+        init {
+            super.readByte(input, "flag1")
+            super.readInt(input, "unk2")
+            super.readByte(input, "flag2")
+            super.readRefID(input, "ref", context)
+        }
+    }
+
+    internal class Array5(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
+        init {
+            super.readShort(input, "unk1")
+            super.readShort(input, "unk2")
+            super.readRefID(input, "ref1", context)
+            super.readRefID(input, "ref2", context)
+            super.readRefID(input, "ref3", context)
+            super.readShort(input, "unk4")
+        }
+    }
+
+    internal class Array6(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
+        init {
+            super.readShort(input, "unk")
+            super.readElement(input, "flags") { input: ByteBuffer? -> Flags.readShortFlags(input) }
+            super.readRefID(input, "ref", context)
+        }
+    }
+
+    internal class Array7(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
+        init {
+            super.readShort(input, "unk")
+            super.readElement(input, "flags") { input: ByteBuffer? -> Flags.readShortFlags(input) }
+            super.readRefID(input, "ref", context)
+        }
+    }
+
+    internal class Array8(input: ByteBuffer?, context: PapyrusContext) : GeneralElement() {
+        init {
+            super.readShort(input, "unk")
+            super.readShort(input, "type")
+            super.readRefID(input, "ref", context)
+            val COUNT1 = super.readInt(input, "count1")
+            val COUNT2 = super.readInt(input, "count2")
+            super.readElements(input, "refArray1", COUNT1) { input: ByteBuffer? -> context.readRefID(input) }
+            super.readElements(input, "refArray2", COUNT2) { input: ByteBuffer? -> context.readRefID(input) }
+        }
+    }
+
+    internal class LString(input: ByteBuffer?) : GeneralElement() {
+        override fun toString(): String {
+            return STRING
+        }
+
+        val STRING: String
+
+        init {
+            val COUNT = readInt(input, "COUNT")
+            assert(0 <= COUNT)
+            val BYTES = super.readBytes(input, "MEMBERS", COUNT)
+            STRING = String(BYTES)
+        }
+    }
+
+    companion object {
+        private val LOG = Logger.getLogger(OtherData::class.java.canonicalName)
+    }
 
     /*static final private int[] SIZES_SLE = {8, 8, 8, 16, 16, -1, 17, };
     static final private int[] SIZES_SSE = {};
     static final private int[] SIZES_FO4 = {};*/
-    public OtherData(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
-        this.ARRAY1 = this.read32ElemArray(input, "Array1", (in) -> new Array1(in, context));
-        LOG.info(String.format("Read ARRAY1, %d elements.", this.ARRAY1.length));
-
-        this.ARRAY1A = this.read32ElemArray(input, "Array1a", (in) -> new Array1A(in, context));
-        LOG.info(String.format("Read ARRAY1A, %d elements.", this.ARRAY1A.length));
-
-        this.ARRAY2 = this.read32ElemArray(input, "Array2", (in) -> new Array2(in, context));
-        LOG.info(String.format("Read ARRAY2, %d elements.", this.ARRAY2.length));
-
-        this.ARRAY3 = this.read32ElemArray(input, "Array3", (in) -> new Array3(in, context));
-        LOG.info(String.format("Read ARRAY3, %d elements.", this.ARRAY3.length));
-
-        this.ARRAY4 = this.read32ElemArray(input, "Array4", (in) -> new Array4(in, context));
-        LOG.info(String.format("Read ARRAY4, %d elements.", this.ARRAY4.length));
-
-        this.SCRIPTS = this.read32ElemArray(input, "Scripts", LString::new);
-        LOG.info(String.format("Read SCRIPTS, %d element.", this.SCRIPTS.length));
-
-        this.ARRAY4A = this.read32ElemArray(input, "Array4A", (in) -> new Array4A(in, context));
-        LOG.info(String.format("Read ARRAY4A, %d elements.", this.ARRAY4A.length));
-
-        this.ARRAY4B = this.read32ElemArray(input, "Array4b", (in) -> new Array4B(in, context));
-        LOG.info(String.format("Read ARRAY4B, %d elements.", this.ARRAY4B.length));
-
-        this.ARRAY4C = this.read32ElemArray(input, "Array4c", (in) -> new Array4C(in, context));
-        LOG.info(String.format("Read ARRAY4C, %d elements.", this.ARRAY4C.length));
-
-        this.ARRAY4D = this.read32ElemArray(input, "Array4d", (in) -> new Array4D(in, context));
-        LOG.info(String.format("Read ARRAY4D, %d elements.", this.ARRAY4D.length));
-
-        this.ARRAY5 = this.read32ElemArray(input, "Array5", (in) -> new Array5(in, context));
-        LOG.info(String.format("Read ARRAY5, %d elements.", this.ARRAY5.length));
-
-        this.ARRAY6 = this.read32ElemArray(input, "Array6", (in) -> new Array6(in, context));
-        LOG.info(String.format("Read ARRAY6, %d elements.", this.ARRAY6.length));
-
-        this.ARRAY7 = this.read32ElemArray(input, "Array7", (in) -> new Array7(in, context));
-        LOG.info(String.format("Read ARRAY7, %d elements.", this.ARRAY7.length));
-
-        this.ARRAY8 = this.read32ElemArray(input, "Array8", (in) -> new Array8(in, context));
-        LOG.info(String.format("Read ARRAY8, %d elements.", this.ARRAY8.length));
-
-        this.ARRAY9 = null;
+    init {
+        LOG.info(String.format("Read ARRAY1, %d elements.", ARRAY1.size))
+        ARRAY1A = read32ElemArray(input, "Array1a") { `in`: ByteBuffer? -> Array1A(`in`, context) }
+        LOG.info(String.format("Read ARRAY1A, %d elements.", ARRAY1A.size))
+        ARRAY2 = read32ElemArray(input, "Array2") { `in`: ByteBuffer? -> Array2(`in`, context) }
+        LOG.info(String.format("Read ARRAY2, %d elements.", ARRAY2.size))
+        ARRAY3 = read32ElemArray(input, "Array3") { `in`: ByteBuffer? -> Array3(`in`, context) }
+        LOG.info(String.format("Read ARRAY3, %d elements.", ARRAY3.size))
+        ARRAY4 = read32ElemArray(input, "Array4") { `in`: ByteBuffer? -> Array4(`in`, context) }
+        LOG.info(String.format("Read ARRAY4, %d elements.", ARRAY4.size))
+        SCRIPTS = read32ElemArray(input, "Scripts") { input: ByteBuffer? -> LString(input) }
+        LOG.info(String.format("Read SCRIPTS, %d element.", SCRIPTS.size))
+        ARRAY4A = read32ElemArray(input, "Array4A") { `in`: ByteBuffer? -> Array4A(`in`, context) }
+        LOG.info(String.format("Read ARRAY4A, %d elements.", ARRAY4A.size))
+        ARRAY4B = read32ElemArray(input, "Array4b") { `in`: ByteBuffer? -> Array4B(`in`, context) }
+        LOG.info(String.format("Read ARRAY4B, %d elements.", ARRAY4B.size))
+        ARRAY4C = read32ElemArray(input, "Array4c") { `in`: ByteBuffer? -> Array4C(`in`, context) }
+        LOG.info(String.format("Read ARRAY4C, %d elements.", ARRAY4C.size))
+        ARRAY4D = read32ElemArray(input, "Array4d") { `in`: ByteBuffer? -> Array4D(`in`, context) }
+        LOG.info(String.format("Read ARRAY4D, %d elements.", ARRAY4D.size))
+        ARRAY5 = read32ElemArray(input, "Array5") { `in`: ByteBuffer? -> Array5(`in`, context) }
+        LOG.info(String.format("Read ARRAY5, %d elements.", ARRAY5.size))
+        ARRAY6 = read32ElemArray(input, "Array6") { `in`: ByteBuffer? -> Array6(`in`, context) }
+        LOG.info(String.format("Read ARRAY6, %d elements.", ARRAY6.size))
+        ARRAY7 = read32ElemArray(input, "Array7") { `in`: ByteBuffer? -> Array7(`in`, context) }
+        LOG.info(String.format("Read ARRAY7, %d elements.", ARRAY7.size))
+        ARRAY8 = read32ElemArray(input, "Array8") { `in`: ByteBuffer? -> Array8(`in`, context) }
+        LOG.info(String.format("Read ARRAY8, %d elements.", ARRAY8.size))
+        ARRAY9 = null
         //LOG.info(String.format("Read ARRAY9, %d elements.", this.ARRAY9.length));
-
-        this.ARRAY10 = null;
+        ARRAY10 = null
         //LOG.info(String.format("Read ARRAY10, %d elements.", this.ARRAY10.length));
-
-        this.ARRAY11 = null;
+        ARRAY11 = null
         //LOG.info(String.format("Read ARRAY11, %d elements.", this.ARRAY11.length));
-
-        this.ARRAY12 = null;
+        ARRAY12 = null
         //LOG.info(String.format("Read ARRAY12, %d elements.", this.ARRAY12.length));
-
-        this.ARRAY13 = null;
+        ARRAY13 = null
         //LOG.info(String.format("Read ARRAY13, %d elements.", this.ARRAY13.length));
-
-        this.ARRAY14 = null;
+        ARRAY14 = null
         //.info(String.format("Read ARRAY14, %d elements.", this.ARRAY14.length));
-
-        this.ARRAY15 = null;
+        ARRAY15 = null
         //LOG.info(String.format("Read ARRAY15, %d elements.", this.ARRAY15.length));
-
     }
-
-    public List<Element[]> getArrays() {
-        return Arrays.asList(
-                this.ARRAY1,
-                this.ARRAY2,
-                this.ARRAY3,
-                this.ARRAY4,
-                this.SCRIPTS,
-                this.ARRAY4A,
-                this.ARRAY4B,
-                this.ARRAY4C,
-                this.ARRAY4D,
-                this.ARRAY5,
-                this.ARRAY6,
-                this.ARRAY7,
-                this.ARRAY8,
-                this.ARRAY9,
-                this.ARRAY10,
-                this.ARRAY11,
-                this.ARRAY12,
-                this.ARRAY13,
-                this.ARRAY14,
-                this.ARRAY15
-        );
-    }
-
-    final public Element[] ARRAY1;
-    final public Element[] ARRAY1A;
-    final public Element[] ARRAY2;
-    final public Element[] ARRAY3;
-    final public Element[] ARRAY4;
-    final public Element[] SCRIPTS;
-    final public Element[] ARRAY4A;
-    final public Element[] ARRAY4B;
-    final public Element[] ARRAY4C;
-    final public Element[] ARRAY4D;
-    final public Element[] ARRAY5;
-    final public Element[] ARRAY6;
-    final public Element[] ARRAY7;
-    final public Element[] ARRAY8;
-    final public Element[] ARRAY9;
-    final public Element[] ARRAY10;
-    final public Element[] ARRAY11;
-    final public Element[] ARRAY12;
-    final public Element[] ARRAY13;
-    final public Element[] ARRAY14;
-    final public Element[] ARRAY15;
-
-    static class Array1 extends GeneralElement {
-
-        public Array1(ByteBuffer input, PapyrusContext context) {
-            final EID ID1 = super.readID32(input, "ID1", context);
-            final EID ID2 = super.readID32(input, "ID2", context);
-            this.THREAD = context.findActiveScript(ID2);
-        }
-
-        @Override
-        public String toString() {
-            if (null == this.THREAD) {
-                return "INVALID (" + super.toString() + ")";
-            } else {
-                return this.THREAD + "(" + super.toString() + ")";
-            }
-        }
-
-        final private ActiveScript THREAD;
-    }
-
-    static class Array1A extends GeneralElement {
-
-        public Array1A(ByteBuffer input, PapyrusContext context) {
-            super.readID32(input, "ID1", context);
-            final EID ID = context.getGame().isFO4()
-                    ? super.readID64(input, "ID2", context)
-                    : super.readID32(input, "ID2", context);
-
-            this.THREAD = context.findActiveScript(ID);
-        }
-
-        @Override
-        public String toString() {
-            if (null == this.THREAD) {
-                return "INVALID (" + super.toString() + ")";
-            } else {
-                return this.THREAD + "(" + super.toString() + ")";
-            }
-        }
-
-        final private ActiveScript THREAD;
-    }
-
-    static class Array2 extends GeneralElement {
-
-        public Array2(ByteBuffer input, PapyrusContext context) {
-            super.readID32(input, "ID1", context);
-            final EID ID = context.getGame().isFO4()
-                    ? super.readID64(input, "ID2", context)
-                    : super.readID32(input, "ID2", context);
-
-            this.THREAD = context.findActiveScript(ID);
-        }
-
-        @Override
-        public String toString() {
-            if (this.THREAD == null) {
-                return "null(" + super.toString() + ")";
-            } else {
-                return this.THREAD + "(" + super.toString() + ")";
-            }
-        }
-
-        final private ActiveScript THREAD;
-    }
-
-    static class Array3 extends GeneralElement {
-
-        public Array3(ByteBuffer input, PapyrusContext context) {
-            super.readByte(input, "type");
-            super.readShort(input, "str1");
-            super.readShort(input, "unk1");
-            super.readShort(input, "str2");
-            super.readInt(input, "unk2");
-            super.readElement(input, "flags", Flags::readShortFlags);
-            super.readRefID(input, "refID", context);
-        }
-    }
-
-    static class Array4 extends GeneralElement {
-
-        public Array4(ByteBuffer input, PapyrusContext context) {
-            super.readShort(input, "str1");
-            super.readShort(input, "unk1");
-            super.readByte(input, "unk2");
-            super.readShort(input, "str2");
-            super.readInt(input, "unk3");
-            super.readElement(input, "flags", Flags::readShortFlags);
-            super.readRefID(input, "refID", context);
-        }
-    }
-
-    static class Array4A extends GeneralElement {
-
-        public Array4A(ByteBuffer input, PapyrusContext context) {
-        }
-    }
-
-    static class Array4B extends GeneralElement {
-
-        public Array4B(ByteBuffer input, PapyrusContext context) {
-            super.readByte(input, "unk1");
-            super.readShort(input, "unk2");
-            super.readShort(input, "unk3");
-            super.readRefID(input, "ref1", context);
-            super.readRefID(input, "ref2", context);
-            super.readRefID(input, "ref3", context);
-            super.readRefID(input, "ref4", context);
-        }
-    }
-
-    static class Array4C extends GeneralElement {
-
-        public Array4C(ByteBuffer input, PapyrusContext context) {
-            final byte FLAG = super.readByte(input, "flag");
-            super.readInt(input, "data");
-            super.readRefID(input, "ref", context);
-
-            if (FLAG >= 0 && FLAG <= 6) {
-                super.readInts(input, "data1array", 3);
-            }
-
-            if (FLAG == 0) {
-                super.readInts(input, "data2array", 4);
-            }
-
-            if (FLAG >= 0 && FLAG <= 3) {
-                super.readByte(input, "unk");
-            }
-        }
-    }
-
-    static class Array4D extends GeneralElement {
-
-        public Array4D(ByteBuffer input, PapyrusContext context) {
-            super.readByte(input, "flag1");
-            super.readInt(input, "unk2");
-            super.readByte(input, "flag2");
-            super.readRefID(input, "ref", context);
-        }
-    }
-
-    static class Array5 extends GeneralElement {
-
-        public Array5(ByteBuffer input, PapyrusContext context) {
-            super.readShort(input, "unk1");
-            super.readShort(input, "unk2");
-            super.readRefID(input, "ref1", context);
-            super.readRefID(input, "ref2", context);
-            super.readRefID(input, "ref3", context);
-            super.readShort(input, "unk4");
-        }
-    }
-
-    static class Array6 extends GeneralElement {
-
-        public Array6(ByteBuffer input, PapyrusContext context) {
-            super.readShort(input, "unk");
-            super.readElement(input, "flags", Flags::readShortFlags);
-            super.readRefID(input, "ref", context);
-        }
-    }
-
-    static class Array7 extends GeneralElement {
-
-        public Array7(ByteBuffer input, PapyrusContext context) {
-            super.readShort(input, "unk");
-            super.readElement(input, "flags", Flags::readShortFlags);
-            super.readRefID(input, "ref", context);
-        }
-    }
-
-    static class Array8 extends GeneralElement {
-
-        public Array8(ByteBuffer input, PapyrusContext context) {
-            super.readShort(input, "unk");
-            super.readShort(input, "type");
-            super.readRefID(input, "ref", context);
-            final int COUNT1 = super.readInt(input, "count1");
-            final int COUNT2 = super.readInt(input, "count2");
-            super.readElements(input, "refArray1", COUNT1, context::readRefID);
-            super.readElements(input, "refArray2", COUNT2, context::readRefID);
-        }
-    }
-
-    static class LString extends GeneralElement {
-
-        public LString(ByteBuffer input) {
-            final int COUNT = this.readInt(input, "COUNT");
-            assert 0 <= COUNT;
-            final byte[] BYTES = super.readBytes(input, "MEMBERS", COUNT);
-            this.STRING = new String(BYTES);
-        }
-
-        @Override
-        public String toString() {
-            return this.STRING;
-        }
-
-        final public String STRING;
-    }
-
-    static final private Logger LOG = Logger.getLogger(OtherData.class.getCanonicalName());
 }
