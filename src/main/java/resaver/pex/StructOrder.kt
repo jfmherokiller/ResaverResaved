@@ -13,52 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import resaver.IString;
+import resaver.IString
+import resaver.IString.Companion.format
+import java.io.IOException
+import java.nio.ByteBuffer
 
 /**
  * Describes the debugging information for a property group.
  *
  */
-final class StructOrder {
-
+internal class StructOrder(input: ByteBuffer, strings: StringTable) {
     /**
-     * Creates a DebugFunction by reading from a DataInput.
+     * Write the object to a `ByteBuffer`.
      *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param strings The <code>StringTable</code> for the <code>PexFile</code>.
-     * @throws IOException Exceptions aren't handled.
-     */
-    StructOrder(ByteBuffer input, StringTable strings) throws IOException {
-        this.OBJECTNAME = strings.read(input);
-        this.ORDERNAME = strings.read(input);
-
-        int nameCount = Short.toUnsignedInt(input.getShort());
-        this.NAMES = new ArrayList<>(nameCount);
-        for (int i = 0; i < nameCount; i++) {
-            this.NAMES.add(strings.read(input));
-        }
-    }
-
-    /**
-     * Write the object to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      * @throws IOException IO errors aren't handled at all, they are simply
      * passed on.
      */
-    void write(ByteBuffer output) throws IOException {
-        this.OBJECTNAME.write(output);
-        this.ORDERNAME.write(output);
-        output.putShort((short) this.NAMES.size());
-        for (TString prop : this.NAMES) {
-            prop.write(output);
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer) {
+        OBJECTNAME.write(output)
+        ORDERNAME.write(output)
+        output.putShort(NAMES.size.toShort())
+        for (prop in NAMES) {
+            prop.write(output)
         }
     }
 
@@ -68,42 +48,51 @@ final class StructOrder {
      *
      * @param strings The set of strings.
      */
-    public void collectStrings(Set<TString> strings) {
-        strings.add(this.OBJECTNAME);
-        strings.add(this.ORDERNAME);
-        strings.addAll(this.NAMES);
+    fun collectStrings(strings: MutableSet<TString>) {
+        strings.add(OBJECTNAME)
+        strings.add(ORDERNAME)
+        strings.addAll(NAMES)
     }
 
     /**
      * Generates a qualified name for the object of the form "OBJECT.FUNCTION".
      *
      * @return A qualified name.
-     *
      */
-    public IString getFullName() {
-        return IString.format("%s.%s", this.OBJECTNAME, this.ORDERNAME);
-    }
+    val fullName: IString
+        get() = format("%s.%s", OBJECTNAME, ORDERNAME)
 
     /**
-     * @return The size of the <code>StructOrder</code>, in bytes.
-     *
+     * @return The size of the `StructOrder`, in bytes.
      */
-    public int calculateSize() {
-        return 6 + 2 * this.NAMES.size();
+    fun calculateSize(): Int {
+        return 6 + 2 * NAMES.size
     }
-    
+
     /**
      * Pretty-prints the DebugFunction.
      *
      * @return A string representation of the DebugFunction.
      */
-    @Override
-    public String toString() {
-        return String.format("%s.%s [%s]", this.OBJECTNAME, this.ORDERNAME, this.NAMES.toString());
+    override fun toString(): String {
+        return String.format("%s.%s [%s]", OBJECTNAME, ORDERNAME, NAMES.toString())
     }
 
-    final private TString OBJECTNAME;
-    final private TString ORDERNAME;
-    private final List<TString> NAMES;
+    private val OBJECTNAME: TString = strings.read(input)
+    private val ORDERNAME: TString = strings.read(input)
+    private val NAMES: MutableList<TString> = mutableListOf()
 
+    /**
+     * Creates a DebugFunction by reading from a DataInput.
+     *
+     * @param input A datainput for a Skyrim PEX file.
+     * @param strings The `StringTable` for the `PexFile`.
+     * @throws IOException Exceptions aren't handled.
+     */
+    init {
+        val nameCount = input.short.toUInt()
+        for (i in 0 until nameCount.toInt()) {
+            NAMES.add(strings.read(input))
+        }
+    }
 }
