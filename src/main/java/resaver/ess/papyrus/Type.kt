@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.util.Objects;
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Describes the eleven types of variable data.
  *
  * @author Mark Fairchild
  */
-public enum Type implements PapyrusElement {
+/**
+ * Create a new `Type`.
+ *
+ * @param VALID
+ */
+enum class Type(private val VALID: Boolean = true) : PapyrusElement {
     NULL,
     REF,
     STRING,
@@ -44,83 +48,59 @@ public enum Type implements PapyrusElement {
     STRUCT_ARRAY;
 
     /**
-     * Read a <code>Type</code> from an input stream.
-     *
-     * @param input The input stream.
-     * @return The <code>Type</code>.
-     * @throws PapyrusFormatException
-     */
-    static Type read(ByteBuffer input) throws PapyrusFormatException {
-        Objects.requireNonNull(input);
-
-        int val = input.get();
-        if (val < 0 || val >= VALUES.length) {
-            throw new PapyrusFormatException("Invalid type value: " + val);
-        }
-
-        final Type T = VALUES[val];
-        if (!T.VALID) {
-            throw new PapyrusFormatException("Invalid type value: " + T);
-        }
-
-        return T;
-    }
-
-    /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        Objects.requireNonNull(output);
-        output.put((byte) this.CODE);
+    override fun write(output: ByteBuffer?) {
+        output!!.put(CODE.toByte())
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return 1;
+    override fun calculateSize(): Int {
+        return 1
     }
 
     /**
-     * @return True if the <code>Type</code> is an array type, false otherwise.
+     * @return True if the `Type` is an array type, false otherwise.
      */
-    public boolean isArray() {
-        return (this.CODE >= 10);
-    }
+    val isArray: Boolean
+        get() = CODE >= 10//|| this == UNKNOWN6 || this == UNKNOWN6_ARRAY;
 
     /**
-     * @return True iff the <code>Type</code> is a reference type.
+     * @return True iff the `Type` is a reference type.
      */
-    public boolean isRefType() {
-        return this == REF || this == REF_ARRAY
-                || this == STRUCT || this == STRUCT_ARRAY;
-        //|| this == UNKNOWN6 || this == UNKNOWN6_ARRAY;
+    val isRefType: Boolean
+        get() = this == REF || this == REF_ARRAY || this == STRUCT || this == STRUCT_ARRAY
+
+    //|| this == UNKNOWN6 || this == UNKNOWN6_ARRAY;
+    private val CODE: Int = ordinal
+
+    companion object {
+        /**
+         * Read a `Type` from an input stream.
+         *
+         * @param input The input stream.
+         * @return The `Type`.
+         * @throws PapyrusFormatException
+         */
+        @JvmStatic
+        @Throws(PapyrusFormatException::class)
+        fun read(input: ByteBuffer): Type {
+            val `val` = input.get().toInt()
+            if (`val` < 0 || `val` >= VALUES.size) {
+                throw PapyrusFormatException("Invalid type value: $`val`")
+            }
+            val T = VALUES[`val`]
+            if (!T.VALID) {
+                throw PapyrusFormatException("Invalid type value: $T")
+            }
+            return T
+        }
+
+        private val VALUES = values()
     }
 
-    /**
-     * Create a new <code>Type</code>.
-     *
-     * @param val
-     */
-    private Type() {
-        this(true);
-    }
-
-    /**
-     * Create a new <code>Type</code>.
-     *
-     * @param valid
-     */
-    private Type(boolean valid) {
-        this.VALID = valid;
-        this.CODE = this.ordinal();
-    }
-
-    final private boolean VALID;
-    final private int CODE;
-    static final private Type[] VALUES = values();
 }
