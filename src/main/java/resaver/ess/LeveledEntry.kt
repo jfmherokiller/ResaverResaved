@@ -13,110 +13,100 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import resaver.ess.ESS.ESSContext
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Describes an entry in a leveled list.
  *
  * @author Mark Fairchild
  */
-public class LeveledEntry implements Element, Linkable {
-
+class LeveledEntry(input: ByteBuffer, context: ESSContext) : Element, Linkable {
     /**
-     * Creates a new <code>Plugin</code> by reading from an input stream.
-     *
-     * @param input The input stream.
-     * @param context The <code>ESSContext</code> info.
-     */
-    public LeveledEntry(ByteBuffer input, ESS.ESSContext context) {
-        Objects.requireNonNull(input);
-        this.REFID = context.readRefID(input);
-        this.LEVEL = input.get();
-        this.COUNT = input.getShort();
-        this.CHANCE = input.get();
-    }
-
-    /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer) 
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        Objects.requireNonNull(output);
-        output.put((byte) this.LEVEL);
-        this.REFID.write(output);
-        output.putShort((short) this.COUNT);
-        output.put((byte) this.CHANCE);
+    override fun write(output: ByteBuffer?) {
+        Objects.requireNonNull(output)
+        output!!.put(LEVEL.toByte())
+        REFID.write(output)
+        output.putShort(COUNT.toShort())
+        output.put(CHANCE.toByte())
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return 3 + this.REFID.calculateSize();
+    override fun calculateSize(): Int {
+        return 3 + REFID.calculateSize()
     }
 
     /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        return String.format("%d (%s) = %d", this.LEVEL, this.REFID.toHTML(target), this.COUNT);
+    override fun toHTML(target: Element?): String {
+        return String.format("%d (%s) = %d", LEVEL, REFID.toHTML(target), COUNT)
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return String.format("%d (%s) = %d", this.LEVEL, this.REFID, this.COUNT);
+    override fun toString(): String {
+        return String.format("%d (%s) = %d", LEVEL, REFID, COUNT)
     }
 
     /**
-     * @see Object#hashCode()
+     * @see Object.hashCode
      * @return
      */
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 29 * hash + Objects.hashCode(this.REFID);
-        hash = 29 * hash + Integer.hashCode(this.LEVEL);
-        hash = 29 * hash + Integer.hashCode(this.COUNT);
-        hash = 29 * hash + Integer.hashCode(this.CHANCE);
-        return hash;
+    override fun hashCode(): Int {
+        var hash = 3
+        hash = 29 * hash + Objects.hashCode(REFID)
+        hash = 29 * hash + Integer.hashCode(LEVEL)
+        hash = 29 * hash + Integer.hashCode(COUNT)
+        hash = 29 * hash + Integer.hashCode(CHANCE)
+        return hash
     }
 
     /**
-     * @see Object#equals(java.lang.Object)
+     * @see Object.equals
      * @return
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        return if (this === obj) {
+            true
         } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+            false
+        } else if (javaClass != obj.javaClass) {
+            false
         } else {
-            final LeveledEntry other = (LeveledEntry) obj;
-            return this.LEVEL == other.LEVEL
-                    && this.COUNT == other.COUNT
-                    && this.CHANCE == other.CHANCE
-                    && Objects.equals(this.REFID, other.REFID);
+            val other = obj as LeveledEntry
+            LEVEL == other.LEVEL && COUNT == other.COUNT && CHANCE == other.CHANCE && REFID == other.REFID
         }
     }
 
-    final public RefID REFID;
-    final public int LEVEL;
-    final public int COUNT;
-    final public int CHANCE;
+    val REFID: RefID
+    val LEVEL: Int
+    val COUNT: Int
+    val CHANCE: Int
 
+    /**
+     * Creates a new `Plugin` by reading from an input stream.
+     *
+     * @param input The input stream.
+     * @param context The `ESSContext` info.
+     */
+    init {
+        Objects.requireNonNull(input)
+        REFID = context.readRefID(input)
+        LEVEL = input.get().toInt()
+        COUNT = input.short.toInt()
+        CHANCE = input.get().toInt()
+    }
 }
