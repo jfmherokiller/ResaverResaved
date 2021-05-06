@@ -13,149 +13,167 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
-import java.awt.*;
-import java.nio.file.Path;
-import java.util.concurrent.Callable;
-import java.util.logging.*;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import picocli.CommandLine;
-import picocli.CommandLine.Command;
-import picocli.CommandLine.Option;
-import picocli.CommandLine.Parameters;
-import resaver.gui.Configurator;
-import resaver.gui.SaveWindow;
+import picocli.CommandLine
+import resaver.gui.Configurator
+import resaver.gui.SaveWindow
+import java.awt.Color
+import java.awt.EventQueue
+import java.nio.file.Path
+import java.util.concurrent.Callable
+import java.util.logging.Formatter
+import java.util.logging.Level
+import java.util.logging.LogRecord
+import java.util.logging.Logger
+import java.util.prefs.Preferences
+import javax.swing.UIManager
+import javax.swing.UnsupportedLookAndFeelException
 
 /**
  * Entry class for ReSaver.
  *
  * @author Mark Fairchild
  */
-@Command(name = "ReSaver", mixinStandardHelpOptions = true, version = "ReSaver 0.5.9.9", description = "")
-public class ReSaver implements Callable<Integer> {
-
-    public ReSaver() {
-    }
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String[] args) {
-        int exitCode = new CommandLine(new ReSaver()).execute(args);
-        //System.exit(exitCode);
-    }
-
+@CommandLine.Command(
+    name = "ReSaver",
+    mixinStandardHelpOptions = true,
+    version = ["ReSaver 0.5.9.9"],
+    description = [""]
+)
+class ReSaver : Callable<Int> {
     /**
      */
-    @Override
-    public Integer call() {
+    override fun call(): Int {
         // Use the dark nimbus theme if specified.
         try {
             if (DARKTHEME_OPTION || PREFS.getBoolean("settings.darktheme", false)) {
-                javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
-                setDarkNimus();
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
+                setDarkNimus()
             } else {
-                javax.swing.UIManager.setLookAndFeel(javax.swing.UIManager.getSystemLookAndFeelClassName());
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
-            LOG.log(Level.WARNING, "Couldn't set theme.", ex);
+        } catch (ex: ClassNotFoundException) {
+            LOG.log(Level.WARNING, "Couldn't set theme.", ex)
+        } catch (ex: InstantiationException) {
+            LOG.log(Level.WARNING, "Couldn't set theme.", ex)
+        } catch (ex: IllegalAccessException) {
+            LOG.log(Level.WARNING, "Couldn't set theme.", ex)
+        } catch (ex: UnsupportedLookAndFeelException) {
+            LOG.log(Level.WARNING, "Couldn't set theme.", ex)
         }
 
         // Set the font scaling.
-        float fontScale = Math.max(0.5f, PREFS.getFloat("settings.fontScale", 1.0f));
-
-        for (Object key : UIManager.getLookAndFeelDefaults().keySet()) {
+        val fontScale = Math.max(0.5f, PREFS.getFloat("settings.fontScale", 1.0f))
+        for (key in UIManager.getLookAndFeelDefaults().keys) {
             if (key.toString().endsWith(".font")) {
-                Font font = UIManager.getFont(key);
-                Font biggerFont = font.deriveFont(fontScale * font.getSize2D());
-                UIManager.put(key, biggerFont);
+                val font = UIManager.getFont(key)
+                val biggerFont = font.deriveFont(fontScale * font.size2D)
+                UIManager.put(key, biggerFont)
             }
         }
 
         // Set up logging stuff.
-        LOG.getParent().getHandlers()[0].setFormatter(new java.util.logging.Formatter() {
-            @Override
-            public String format(LogRecord record) {
-                final java.util.logging.Level LEVEL = record.getLevel();
-                final String MSG = record.getMessage();
-                final String SRC = record.getSourceClassName() + "." + record.getSourceMethodName();
-                return String.format("%s: %s: %s\n", SRC, LEVEL, MSG);
+        LOG.parent.handlers[0].formatter = object : Formatter() {
+            override fun format(record: LogRecord): String {
+                val LEVEL = record.level
+                val MSG = record.message
+                val SRC = record.sourceClassName + "." + record.sourceMethodName
+                return String.format("%s: %s: %s\n", SRC, LEVEL, MSG)
             }
-        });
-
-        LOG.getParent().getHandlers()[0].setLevel(Level.INFO);
+        }
+        LOG.parent.handlers[0].level = Level.INFO
 
         // Check the autoparse setting.
-        final Path PREVIOUS = Configurator.getPreviousSave();
-        final SaveWindow WINDOW;
-
-        if (PATH_PARAMETER != null && !PATH_PARAMETER.isEmpty() && Configurator.validateSavegame(PATH_PARAMETER.get(0))) {
-            WINDOW = new SaveWindow(PATH_PARAMETER.get(0), AUTOPARSE_OPTION);
-        } else if (REOPEN_OPTION && Configurator.validateSavegame(PREVIOUS)) {
-            WINDOW = new SaveWindow(PREVIOUS, AUTOPARSE_OPTION);
-        } else {
-            WINDOW = new SaveWindow(null, false);
-        }
-
-        if (WATCH_OPTION) {
-            WINDOW.setWatching(true);
-        }
-
-        java.awt.EventQueue.invokeLater(() -> WINDOW.setVisible(true));
-        return 0;
-    }
-
-    /**
-     * Sets swing to use a dark version of Nimbus.
-     */
-    static public void setDarkNimus() {
-        UIManager.put("control", new Color(128, 128, 128));
-        UIManager.put("info", new Color(128, 128, 128));
-        UIManager.put("nimbusBase", new Color(18, 30, 49));
-        UIManager.put("nimbusAlertYellow", new Color(248, 187, 0));
-        UIManager.put("nimbusDisabledText", new Color(128, 128, 128));
-        UIManager.put("nimbusFocus", new Color(115, 164, 209));
-        UIManager.put("nimbusGreen", new Color(176, 179, 50));
-        UIManager.put("nimbusInfoBlue", new Color(66, 139, 221));
-        UIManager.put("nimbusLightBackground", new Color(18, 30, 49));
-        UIManager.put("nimbusOrange", new Color(191, 98, 4));
-        UIManager.put("nimbusRed", new Color(169, 46, 34));
-        UIManager.put("nimbusSelectedText", new Color(255, 255, 255));
-        UIManager.put("nimbusSelectionBackground", new Color(104, 93, 156));
-        UIManager.put("text", new Color(230, 230, 230));
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
+        val PREVIOUS = Configurator.getPreviousSave()
+        val WINDOW: SaveWindow = if (PATH_PARAMETER != null && PATH_PARAMETER!!.isNotEmpty() && Configurator.validateSavegame(
+                PATH_PARAMETER!![0])) {
+                SaveWindow(PATH_PARAMETER!![0], AUTOPARSE_OPTION)
+            } else if (REOPEN_OPTION && Configurator.validateSavegame(PREVIOUS)) {
+                SaveWindow(PREVIOUS, AUTOPARSE_OPTION)
+            } else {
+                SaveWindow(null, false)
             }
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex);
+        if (WATCH_OPTION) {
+            WINDOW.setWatching(true)
         }
+        EventQueue.invokeLater { WINDOW.isVisible = true }
+        return 0
     }
-
-    static final Logger LOG = Logger.getLogger(ReSaver.class.getCanonicalName());
-    static final private java.util.prefs.Preferences PREFS = java.util.prefs.Preferences.userNodeForPackage(resaver.ReSaver.class);
 
     //@Option(names = {"-e", "--decompile"}, description = "Tries to decompile a script file. It's NOT as good as Champollion, but it can sometimes handle sabotaged pex files.")
     //private String DECOMPILE;
+    @CommandLine.Option(
+        names = ["-r", "--reopen"],
+        description = ["Reopen the most recently opened savefile (ignored if a valid savefile is specified)."]
+    )
+    public var REOPEN_OPTION = false
 
-    @Option(names = {"-r", "--reopen"}, description = "Reopen the most recently opened savefile (ignored if a valid savefile is specified).")
-    private boolean REOPEN_OPTION;
+    @CommandLine.Option(
+        names = ["-p", "--autoparse"],
+        description = ["Automatically scan plugins for the specified savefile (ignored unless a savefile is specified or the -r option is used."]
+    )
+    public var AUTOPARSE_OPTION = false
 
-    @Option(names = {"-p", "--autoparse"}, description = "Automatically scan plugins for the specified savefile (ignored unless a savefile is specified or the -r option is used.")
-    private boolean AUTOPARSE_OPTION;
+    @CommandLine.Option(names = ["-d", "--darktheme"], description = ["Use the custom Dark Nimbus theme."])
+    public var DARKTHEME_OPTION = false
 
-    @Option(names = {"-d", "--darktheme"}, description = "Use the custom Dark Nimbus theme.")
-    private boolean DARKTHEME_OPTION;
+    @CommandLine.Option(
+        names = ["-w", "--watch"],
+        description = ["Automatically start watching the savefile directories."]
+    )
+    public var WATCH_OPTION = false
 
-    @Option(names = {"-w", "--watch"}, description = "Automatically start watching the savefile directories.")
-    private boolean WATCH_OPTION;
+    @CommandLine.Parameters(description = ["The savefile to open (optional)."])
+    private var PATH_PARAMETER: List<Path>? = null
 
-    @Parameters(description = "The savefile to open (optional).")
-    private java.util.List<Path> PATH_PARAMETER;
+    companion object {
+        /**
+         * @param args the command line arguments
+         */
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val exitCode = CommandLine(ReSaver()).execute(*args)
+            //System.exit(exitCode);
+        }
 
+        /**
+         * Sets swing to use a dark version of Nimbus.
+         */
+        fun setDarkNimus() {
+            UIManager.put("control", Color(128, 128, 128))
+            UIManager.put("info", Color(128, 128, 128))
+            UIManager.put("nimbusBase", Color(18, 30, 49))
+            UIManager.put("nimbusAlertYellow", Color(248, 187, 0))
+            UIManager.put("nimbusDisabledText", Color(128, 128, 128))
+            UIManager.put("nimbusFocus", Color(115, 164, 209))
+            UIManager.put("nimbusGreen", Color(176, 179, 50))
+            UIManager.put("nimbusInfoBlue", Color(66, 139, 221))
+            UIManager.put("nimbusLightBackground", Color(18, 30, 49))
+            UIManager.put("nimbusOrange", Color(191, 98, 4))
+            UIManager.put("nimbusRed", Color(169, 46, 34))
+            UIManager.put("nimbusSelectedText", Color(255, 255, 255))
+            UIManager.put("nimbusSelectionBackground", Color(104, 93, 156))
+            UIManager.put("text", Color(230, 230, 230))
+            try {
+                for (info in UIManager.getInstalledLookAndFeels()) {
+                    if ("Nimbus" == info.name) {
+                        UIManager.setLookAndFeel(info.className)
+                        break
+                    }
+                }
+            } catch (ex: ClassNotFoundException) {
+                LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex)
+            } catch (ex: InstantiationException) {
+                LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex)
+            } catch (ex: IllegalAccessException) {
+                LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex)
+            } catch (ex: UnsupportedLookAndFeelException) {
+                LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex)
+            }
+        }
+
+        val LOG = Logger.getLogger(ReSaver::class.java.canonicalName)
+        private val PREFS = Preferences.userNodeForPackage(ReSaver::class.java)
+    }
 }
