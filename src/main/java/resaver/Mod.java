@@ -16,6 +16,8 @@
 package resaver;
 
 import java.io.*;
+import java.nio.BufferUnderflowException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -55,8 +57,7 @@ final public class Mod implements java.io.Serializable {
      */
     static public Mod createMod(Game game, Path dir) {
         try {
-            final Mod MOD = new Mod(game, dir);
-            return MOD;
+            return new Mod(game, dir);
         } catch (FileNotFoundException ex) {
             LOG.warning(String.format("Couldn't read mod: %s\n%s", dir, ex.getMessage()));
             return null;
@@ -163,7 +164,8 @@ final public class Mod implements java.io.Serializable {
     public double getSize() {
         if (null == this.size) {
 
-            ToDoubleFunction<Path> toSize = f -> {
+            ToDoubleFunction<Path> toSize;
+            toSize = f -> {
                 try {
                     return Math.sqrt(Files.size(f));
                 } catch (IOException ex) {
@@ -263,7 +265,9 @@ final public class Mod implements java.io.Serializable {
      */
     public List<String> getESPNames() {
         final List<String> NAMES = new ArrayList<>(this.PLUGIN_FILES.size());
-        this.PLUGIN_FILES.forEach(v -> NAMES.add(v.getFileName().toString()));
+        for (Path v : this.PLUGIN_FILES) {
+            NAMES.add(v.getFileName().toString());
+        }
         return NAMES;
     }
 
@@ -280,13 +284,18 @@ final public class Mod implements java.io.Serializable {
         final String SSREGEX = String.format("_%s\\.(il|dl)?strings", language);
         final String FILENAME = stringsFilePath.getFileName().toString();
 
-        return Stream.of(
+        Map<Path, Plugin> pathPluginMap = plugins.getPaths();
+        Map<Path, Plugin> pathPluginMap1 = plugins.getPaths();
+        for (Path path : Arrays.asList(
                 Paths.get(FILENAME.replaceAll(SSREGEX, ".esm")),
                 Paths.get(FILENAME.replaceAll(SSREGEX, ".esp")),
-                Paths.get(FILENAME.replaceAll(SSREGEX, ".esl")))
-                .filter(plugins.getPaths()::containsKey)
-                .map(plugins.getPaths()::get)
-                .findFirst().orElse(null);
+                Paths.get(FILENAME.replaceAll(SSREGEX, ".esl")))) {
+            if (pathPluginMap1.containsKey(path)) {
+                Plugin plugin = pathPluginMap.get(path);
+                return plugin;
+            }
+        }
+        return null;
     }
 
     /**
@@ -311,27 +320,29 @@ final public class Mod implements java.io.Serializable {
         final List<StringsFile> STRINGSFILES = new LinkedList<>();
         final Map<Path, Path> SCRIPT_ORIGINS = new LinkedHashMap<>();
 
-        this.ARCHIVE_FILES.forEach(archivePath -> {
+        for (Path archivePath : this.ARCHIVE_FILES) {
             try (FileChannel channel = FileChannel.open(archivePath, StandardOpenOption.READ);
-                    final ArchiveParser PARSER = ArchiveParser.createParser(archivePath, channel)) {
+                 final ArchiveParser PARSER = ArchiveParser.createParser(archivePath, channel)) {
 
                 final List<StringsFile> ARCHIVE_STRINGSFILES = new LinkedList<>();
 
-                PARSER.getFiles(Paths.get("strings"), MATCHER).forEach((path, input) -> {
+                for (Map.Entry<Path, Optional<ByteBuffer>> entry : PARSER.getFiles(Paths.get("strings"), MATCHER).entrySet()) {
+                    Path path = entry.getKey();
+                    Optional<ByteBuffer> input = entry.getValue();
                     if (input.isPresent()) {
                         final Plugin PLUGIN = this.getStringsFilePlugin(path, language, plugins);
                         if (PLUGIN != null) {
                             try {
                                 final StringsFile STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN, input.get());
                                 ARCHIVE_STRINGSFILES.add(STRINGSFILE);
-                            } catch (java.nio.BufferUnderflowException ex) {
+                            } catch (BufferUnderflowException ex) {
                                 STRINGSFILE_ERRORS.add(archivePath.getFileName());
                             }
                         }
                     } else {
                         STRINGSFILE_ERRORS.add(archivePath.getFileName());
                     }
-                });
+                }
 
                 Map<Path, Path> ARCHIVE_SCRIPTS = PARSER.getFilenames(Paths.get("scripts"), GLOB_SCRIPT);
 
@@ -354,7 +365,7 @@ final public class Mod implements java.io.Serializable {
             } catch (IOException ex) {
                 ARCHIVE_ERRORS.add(archivePath.getFileName());
             }
-        });
+        }
 
         // Read the loose stringtable files.
         final List<StringsFile> LOOSE_STRINGSFILES = this.STRINGS_FILES.stream()
@@ -549,26 +560,32 @@ final public class Mod implements java.io.Serializable {
             this.MODS.addAll(sub.MODS);
             this.SCRIPTS.putAll(sub.SCRIPTS);
 
-            sub.ESPS.forEach((name, list) -> {
-                this.ESPS.merge(name, list, (l1, l2) -> {
+            for (Map.Entry<String, SortedSet<String>> mapEntry : sub.ESPS.entrySet()) {
+                String k = mapEntry.getKey();
+                SortedSet<String> v = mapEntry.getValue();
+                this.ESPS.merge(k, v, (l1, l2) -> {
                     l1.addAll(l2);
                     return l1;
                 });
-            });
+            }
 
-            sub.SCRIPT_ORIGINS.forEach((name, list) -> {
-                this.SCRIPT_ORIGINS.merge(name, list, (l1, l2) -> {
+            for (Map.Entry<IString, SortedSet<String>> e : sub.SCRIPT_ORIGINS.entrySet()) {
+                IString key = e.getKey();
+                SortedSet<String> value = e.getValue();
+                this.SCRIPT_ORIGINS.merge(key, value, (l1, l2) -> {
                     l1.addAll(l2);
                     return l1;
                 });
-            });
+            }
 
-            sub.STRUCT_ORIGINS.forEach((name, list) -> {
+            for (Map.Entry<IString, SortedSet<String>> entry : sub.STRUCT_ORIGINS.entrySet()) {
+                IString name = entry.getKey();
+                SortedSet<String> list = entry.getValue();
                 this.STRUCT_ORIGINS.merge(name, list, (l1, l2) -> {
                     l1.addAll(l2);
                     return l1;
                 });
-            });
+            }
 
             return this;
         }
