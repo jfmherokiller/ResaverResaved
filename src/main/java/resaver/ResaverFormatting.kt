@@ -13,57 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
-import java.util.List;
-import java.util.function.Function;
+
+import java.util.function.Function
 
 /**
  *
  * @author Mark
  */
-abstract public class ResaverFormatting {
-
-    static public <T> CharSequence makeHTMLList(String msg, List<T> items, int limit, Function<T, CharSequence> namer) {
-        final StringBuilder BUF = new StringBuilder();
+object ResaverFormatting {
+    @JvmStatic
+    fun <T> makeHTMLList(msg: String?, items: List<T>, limit: Int, namer: Function<T, CharSequence?>): CharSequence {
+        val BUF = StringBuilder()
         BUF.append("<p>")
-                .append(String.format(msg, items.size()))
-                .append("<ol>");
-
-        long limit1 = limit;
-        for (T item : items) {
-            if (limit1-- == 0) break;
-            CharSequence charSequence = namer.apply(item);
-            BUF.append("<li>").append(charSequence).append("</li>");
+            .append(String.format(msg!!, items.size))
+            .append("<ol>")
+        var limit1 = limit.toLong()
+        for (item in items) {
+            if (limit1-- == 0L) break
+            val charSequence = namer.apply(item)
+            BUF.append("<li>").append(charSequence).append("</li>")
         }
-        BUF.append("</ol>");
-        
-        int excess = items.size() - limit;
+        BUF.append("</ol>")
+        val excess = items.size - limit
         if (excess > 0) {
-            BUF.append(String.format("(+ %d more)", excess));
+            BUF.append(String.format("(+ %d more)", excess))
         }
-        BUF.append("</p>");
-
-        return BUF;
+        BUF.append("</p>")
+        return BUF
     }
 
-    static public <T> CharSequence makeTextList(String msg, List<T> items, int limit, Function<T, CharSequence> namer) {
-        final StringBuilder BUF = new StringBuilder();
-        BUF.append(String.format(msg, items.size()));
-
-        long limit1 = limit;
-        for (T item : items) {
-            if (limit1-- == 0) break;
-            CharSequence charSequence = namer.apply(item);
-            BUF.append(NLDOT).append(charSequence);
+    fun <T> makeTextList(msg: String?, items: List<T>, limit: Int, namer: Function<T, CharSequence>): CharSequence {
+        val BUF = StringBuilder()
+        BUF.append(String.format(msg!!, items.size))
+        var limit1 = limit.toLong()
+        for (item in items) {
+            if (limit1-- == 0L) break
+            val charSequence = namer.apply(item)
+            BUF.append(NLDOT).append(charSequence)
         }
-
-        int excess = items.size() - limit;
+        val excess = items.size - limit
         if (excess > 0) {
-            BUF.append(String.format("\n(+ %d more", excess));
+            BUF.append(String.format("\n(+ %d more", excess))
         }
-
-        return BUF;
+        return BUF
     }
 
     /**
@@ -73,10 +67,10 @@ abstract public class ResaverFormatting {
      * @param val The value to convert to hexadecimal and pad.
      * @return The zero-padded string.
      */
-    static public String zeroPad8(int val) {
-        String hex = Integer.toHexString(val);
-        int length = hex.length();
-        return ZEROES[8 - length] + hex;
+    fun zeroPad8(`val`: Int): String {
+        val hex = Integer.toHexString(`val`)
+        val length = hex.length
+        return ZEROES[8 - length].toString() + hex
     }
 
     /**
@@ -86,31 +80,28 @@ abstract public class ResaverFormatting {
      * @param val The value to convert to hexadecimal and pad.
      * @return The zero-padded string.
      */
-    static public String zeroPad6(int val) {
-        String hex = Long.toHexString(val);
-        int length = hex.length();
-        return ZEROES[6 - length] + hex;
+    fun zeroPad6(`val`: Int): String {
+        val hex = java.lang.Long.toHexString(`val`.toLong())
+        val length = hex.length
+        return ZEROES[6 - length].toString() + hex
     }
 
     /**
      *
      * @return
      */
-    static private String[] makeZeroes() {
-        String[] zeroes = new String[16];
-        zeroes[0] = "";
-
-        for (int i = 1; i < zeroes.length; i++) {
-            zeroes[i] = zeroes[i - 1] + "0";
+    private fun makeZeroes(): Array<String?> {
+        val zeroes = arrayOfNulls<String>(16)
+        zeroes[0] = ""
+        for (i in 1 until zeroes.size) {
+            zeroes[i] = zeroes[i - 1].toString() + "0"
         }
-
-        return zeroes;
+        return zeroes
     }
 
     /**
      * An array of strings of zeroes with the length matching the index.
      */
-    static final private String[] ZEROES = makeZeroes();
-
-    static final private String NLDOT = "\n\u00b7 ";
+    private val ZEROES = makeZeroes()
+    private const val NLDOT = "\n\u00b7 "
 }
