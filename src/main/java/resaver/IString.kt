@@ -17,6 +17,7 @@ package resaver
 
 import java.io.Serializable
 import java.nio.charset.StandardCharsets
+import java.util.*
 import java.util.regex.Pattern
 
 /**
@@ -35,7 +36,7 @@ open class IString : CharSequence, Serializable, Comparable<IString> {
      */
     protected constructor(`val`: String) {
         STRING = `val`
-        HASHCODE = STRING.toLowerCase().hashCode()
+        HASHCODE = STRING.lowercase(Locale.getDefault()).hashCode()
     }
 
     /**
@@ -45,7 +46,7 @@ open class IString : CharSequence, Serializable, Comparable<IString> {
      */
     protected constructor(`val`: CharSequence) {
         STRING = `val`.toString()
-        HASHCODE = STRING.toLowerCase().hashCode()
+        HASHCODE = STRING.lowercase(Locale.getDefault()).hashCode()
     }
 
     /**

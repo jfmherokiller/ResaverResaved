@@ -19,6 +19,7 @@ import java.io.File
 import resaver.archive.BSAHash
 import java.lang.IllegalArgumentException
 import java.lang.UnsupportedOperationException
+import java.util.*
 import java.util.regex.Pattern
 
 /**
@@ -39,29 +40,29 @@ object BSAHash {
         var hash2: Long = 0
         val MATCHER = FILENAME_PATTERN.matcher(file.name)
         require(MATCHER.matches()) { "Filename does not have the form \"filename.extension\"" }
-        val fileName = if (MATCHER.matches()) MATCHER.group(1).toLowerCase() else file.name.toLowerCase()
-        val fileExt = if (MATCHER.matches()) MATCHER.group(2).toLowerCase() else ""
+        val fileName = if (MATCHER.matches()) MATCHER.group(1).lowercase(Locale.getDefault()) else file.name.lowercase(Locale.getDefault())
+        val fileExt = if (MATCHER.matches()) MATCHER.group(2).lowercase(Locale.getDefault()) else ""
         for (ch in fileExt.toCharArray()) {
             hash *= 0x1003f
-            hash += ch.toLong()
+            hash += ch.code.toLong()
         }
         val len = fileName.length
         val chars = fileName.toCharArray()
         for (i in 1 until len - 2) {
             hash2 *= 0x1003f
-            hash2 += chars[i].toInt()
+            hash2 += chars[i].code
         }
         hash += hash2
         hash2 = 0
         hash = hash shl 32
-        hash2 = chars[len - 1].toLong()
+        hash2 = chars[len - 1].code.toLong()
         hash2 = if (len > 2) {
-            hash2 or chars[len - 2].toLong()
+            hash2 or chars[len - 2].code.toLong()
         } else {
             hash2 or 0
         }
         hash2 = hash2 or (len.toLong() shl 16)
-        hash2 = hash2 or (chars[0].toLong() shl 24)
+        hash2 = hash2 or (chars[0].code.toLong() shl 24)
         throw UnsupportedOperationException()
     }
 

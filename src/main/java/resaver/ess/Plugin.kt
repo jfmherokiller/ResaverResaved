@@ -21,6 +21,7 @@ import resaver.ess.papyrus.ScriptInstance
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
+import java.util.*
 
 /**
  * Abstraction for plugins.
@@ -203,7 +204,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      */
     override fun hashCode(): Int {
         var hash = 3
-        hash = 29 * hash + (NAME.toLowerCase()).hashCode()
+        hash = 29 * hash + (NAME.lowercase(Locale.getDefault())).hashCode()
         return hash
     }
 

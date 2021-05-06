@@ -15,6 +15,7 @@
  */
 package resaver.gui
 
+
 import mf.BufferUtil
 import resaver.Analysis
 import resaver.ess.ESS
@@ -30,7 +31,6 @@ import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
-import java.util.function.Consumer
 import javax.swing.*
 import javax.swing.border.TitledBorder
 import javax.swing.event.CaretEvent
@@ -112,7 +112,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
     }
 
     fun addHyperlinkListener(listener: HyperlinkListener?) {
-        FIELDS.values.forEach(Consumer { field: JTextPane -> field.addHyperlinkListener(listener) })
+        FIELDS.values.forEach { field: JTextPane -> field.addHyperlinkListener(listener) }
     }
 
     fun refill() {
@@ -155,14 +155,14 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
                 TEXTPANE.caretPosition = TEXT_START
                 return
             }
-            HIGHLIGHTS.forEach(Consumer { h: Highlight ->
+            HIGHLIGHTS.forEach { h: Highlight ->
                 val style = COLORS.computeIfAbsent(h.COLOR) { color: Color ->
                     val s = DOC.addStyle("binary_$color", BINARY)
                     StyleConstants.setBackground(s, color)
                     s
                 }
                 DOC.setCharacterAttributes(h.C1 * 3, h.C2 * 3, style, false)
-            })
+            }
             DOC.setCharacterAttributes(0, DOC.length, BINARY, true)
             DOC.setCharacterAttributes(BUFFER_POS, 2, DATAPOS, false)
             DOC.setCharacterAttributes(TEXT_START, 2, CURSOR, false)
@@ -173,7 +173,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
                     StyleConstants.setBackground(s, c)
                     s
                 }
-                val text = field.text.toLowerCase()
+                val text = field.text.lowercase(locale = Locale.getDefault())
                 val length = text.length
                 if (length > 0) {
                     var i = 0
@@ -232,7 +232,20 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
      * Data types that will be interpreted.
      */
     private enum class DataType {
-        Integer_10, Integer_16, Integer_2, Float, Boolean, RefID, EID32, EID64, TString, BString, WString, LString, ZString, Variable
+        Integer_10,
+        Integer_16,
+        Integer_2,
+        Float,
+        Boolean,
+        RefID,
+        EID32,
+        EID64,
+        TString,
+        BString,
+        WString,
+        LString,
+        ZString,
+        Variable
     }
 
     /**
@@ -242,7 +255,6 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
      * @param color
      */
     fun addHighlight(c1: Int, c2: Int, color: Color) {
-        Objects.requireNonNull(color)
         val len = TEXTPANE.document.length
         require(!(c1 < 0 || c1 >= len))
         require(!(c2 < 0 || c2 >= len))
@@ -401,7 +413,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
     private val SAVE: ESS?
     private val ESS_CONTEXT: ESSContext?
     private val PAPYRUS_CONTEXT: PapyrusContext?
-    private val ANALYSIS: Optional<Analysis>
+    private val ANALYSIS: Analysis?
     private var currentSlice: ByteBuffer
     private val SIZE: Int
     private val SCROLLER: JScrollPane
@@ -457,9 +469,9 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
     }
 
     init {
-        DATA = Objects.requireNonNull(newData.duplicate()).order(ByteOrder.LITTLE_ENDIAN)
-        SAVE = Objects.requireNonNull(save)
-        ANALYSIS = if (save.analysis == null) Optional.empty() else Optional.of(save.analysis)
+        DATA = newData.duplicate().order(ByteOrder.LITTLE_ENDIAN)
+        SAVE = save
+        ANALYSIS = if (save.analysis == null) null else save.analysis
         ESS_CONTEXT = save.context
         PAPYRUS_CONTEXT = if (save.papyrus == null) null else save.papyrus.context
         currentSlice = DATA.slice()
@@ -469,10 +481,10 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
         TEXTPANE = JTextPane()
         SCROLLER = JScrollPane(TEXTPANE)
         SIDEPANE = JPanel()
-        HIGHLIGHTS = LinkedList()
-        FIELDS = EnumMap(DataType::class.java)
-        SEARCH = HashMap()
-        COLORS = HashMap()
+        HIGHLIGHTS = mutableListOf()
+        FIELDS = mutableMapOf()
+        SEARCH = hashMapOf()
+        COLORS = hashMapOf()
         TEXTPANE.document = DefaultStyledDocument()
         val DOC = TEXTPANE.styledDocument
         BINARY = DOC.addStyle("default", null)
