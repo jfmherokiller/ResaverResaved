@@ -22,7 +22,7 @@ import resaver.ess.ESS
 import resaver.ess.Element
 import resaver.ess.Linkable
 import java.nio.ByteBuffer
-import java.util.function.Consumer
+
 
 /**
  * Describes a script in a Skyrim savegame.
@@ -47,7 +47,7 @@ class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
         name.write(output)
         type.write(output)
         output!!.putInt(MEMBERS!!.size)
-        MEMBERS!!.forEach(Consumer { member: MemberDesc -> member.write(output) })
+        MEMBERS!!.forEach { member: MemberDesc -> member.write(output) }
     }
 
     /**
@@ -119,18 +119,18 @@ class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
      * @param save
      * @return
      */
-    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         BUILDER.append("<html>")
         when {
             type.isEmpty -> {
-                BUILDER.append(String.format("<h3>SCRIPT %s</h3>", name))
+                BUILDER.append("<h3>SCRIPT $name</h3>")
             }
             null != parent -> {
-                BUILDER.append(String.format("<h3>SCRIPT %s extends %s</h3>", name, parent!!.toHTML(this)))
+                BUILDER.append("<h3>SCRIPT $name extends ${parent!!.toHTML(this)}</h3>")
             }
             else -> {
-                BUILDER.append(String.format("<h3>SCRIPT %s extends %s</h3>", name, type))
+                BUILDER.append("<h3>SCRIPT $name extends $type</h3>")
             }
         }
         if (isUndefined) {
@@ -143,10 +143,10 @@ class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
                     BUILDER.append("<p>WARNING: MORE THAN ONE MOD PROVIDES THIS SCRIPT!<br />Exercise caution when editing or deleting this script!</p>")
                 }
                 val probablyProvider = mods.last()
-                BUILDER.append(String.format("<p>This script probably came from \"%s\".</p>", probablyProvider))
+                BUILDER.append("<p>This script probably came from \"$probablyProvider\".</p>")
                 BUILDER.append("<p>Full list of providers:</p>")
                 BUILDER.append("<ul>")
-                mods.forEach(Consumer { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) })
+                mods.forEach { mod: String? -> BUILDER.append("<li>$mod") }
                 BUILDER.append("</ul>")
             }
         }
@@ -182,19 +182,19 @@ class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
         BUILDER.append(String.format("<p>There are %d instances of this script.</p>", INSTANCES.size))
         if (INSTANCES.size < 20) {
             BUILDER.append("<ul>")
-            INSTANCES.forEach(Consumer { i: ScriptInstance ->
-                val s = String.format("<li>%s</a>", i.toHTML(null))
+            INSTANCES.forEach { i: ScriptInstance ->
+                val s = "<li>${i.toHTML(null)}</a>"
                 BUILDER.append(s)
-            })
+            }
             BUILDER.append("</ul>")
         }
         BUILDER.append(String.format("<p>There are %d references of this script.</p>", REFERENCES.size))
         if (REFERENCES.size < 20) {
             BUILDER.append("<ul>")
-            REFERENCES.forEach(Consumer { i: Reference ->
-                val s = String.format("<li>%s</a>", i.toHTML(null))
+            REFERENCES.forEach { i: Reference ->
+                val s = "<li>${i.toHTML(null)}</a>"
                 BUILDER.append(s)
-            })
+            }
             BUILDER.append("</ul>")
         }
 
