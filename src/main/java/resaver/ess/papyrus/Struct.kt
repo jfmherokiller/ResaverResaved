@@ -13,169 +13,119 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import resaver.ListException;
-import resaver.ess.AnalyzableElement;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.SortedSet;
-import java.util.stream.Collectors;
-import resaver.Analysis;
-import resaver.ess.Element;
-import resaver.ess.ESS;
-import resaver.ess.Linkable;
+import resaver.Analysis
+import resaver.ListException
+import resaver.ess.ESS
+import resaver.ess.Element
+import resaver.ess.Linkable
+import java.nio.ByteBuffer
+
+
 
 /**
  * Describes a structure in a Fallout 4 savegame.
  *
  * @author Mark Fairchild
  */
-final public class Struct extends Definition {
-
+class Struct(input: ByteBuffer, context: PapyrusContext) : Definition() {
     /**
-     * Creates a new <code>Structure</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     * @throws PapyrusElementException
-     */
-    public Struct(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException, PapyrusElementException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-
-        this.NAME = context.readTString(input);
-
-        try {
-            int count = input.getInt();
-            this.MEMBERS = MemberDesc.readList(input, count, context);
-        } catch (ListException ex) {
-            throw new PapyrusElementException("Failed to read Struct members.", ex, this);
-        }
-    }
-
-    /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        assert null != output;
-        this.NAME.write(output);
-        output.putInt(this.MEMBERS.size());
-        this.MEMBERS.forEach(member -> member.write(output));
+    override fun write(output: ByteBuffer?) {
+        assert(null != output)
+        name.write(output)
+        output!!.putInt(MEMBERS!!.size)
+        MEMBERS!!.forEach { member: MemberDesc -> member.write(output) }
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 4;
-        sum += this.NAME.calculateSize();
-        int result = 0;
-        for (MemberDesc MEMBER : this.MEMBERS) {
-            int calculateSize = MEMBER.calculateSize();
-            result += calculateSize;
+    override fun calculateSize(): Int {
+        var sum = 4
+        sum += name.calculateSize()
+        var result = 0
+        for (MEMBER in MEMBERS!!) {
+            val calculateSize = MEMBER.calculateSize()
+            result += calculateSize
         }
-        sum += result;
-        return sum;
+        sum += result
+        return sum
     }
 
     /**
-     * @return The ID of the papyrus element.
+     * @return The list of `MemberDesc`.
      */
-    @Override
-    public TString getName() {
-        return this.NAME;
-    }
+    override val members: List<MemberDesc>
+        get() = MEMBERS!!
 
     /**
-     * @return The list of <code>MemberDesc</code>.
-     */
-    @Override
-    public List<MemberDesc> getMembers() {
-        return java.util.Collections.unmodifiableList(this.MEMBERS);
-    }
-
-    /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        if (target instanceof MemberDesc) {
-            int i = this.getMembers().indexOf(target);
+    override fun toHTML(target: Element): String {
+        if (target is MemberDesc) {
+            val i = members.indexOf(target)
             if (i >= 0) {
-                return Linkable.makeLink("struct", this.NAME, i, this.NAME.toString());
+                return Linkable.makeLink("struct", name, i, name.toString())
             }
         }
-        return Linkable.makeLink("struct", this.NAME, this.NAME.toString());
+        return Linkable.makeLink("struct", name, name.toString())
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return this.NAME.toString();
+    override fun toString(): String {
+        return name.toString()
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append("<html>");
-
-        BUILDER.append(String.format("<h3>STRUCTURE DEFINITION %ss</h3>", this.NAME));
-
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
+        val BUILDER = StringBuilder()
+        BUILDER.append("<html>")
+        BUILDER.append("<h3>STRUCTURE DEFINITION ${name}s</h3>")
         if (null != analysis) {
-            SortedSet<String> mods = analysis.SCRIPT_ORIGINS.get(this.NAME.toIString());
-
+            val mods = analysis.SCRIPT_ORIGINS[name.toIString()]
             if (null != mods) {
-                if (mods.size() > 1) {
-                    BUILDER.append("<p>WARNING: MORE THAN ONE MOD PROVIDES THIS SCRIPT!<br />Exercise caution when editing or deleting this script!</p>");
+                if (mods.size > 1) {
+                    BUILDER.append("<p>WARNING: MORE THAN ONE MOD PROVIDES THIS SCRIPT!<br />Exercise caution when editing or deleting this script!</p>")
                 }
-
-                String probablyProvider = mods.last();
-                BUILDER.append(String.format("<p>This script probably came from \"%s\".</p>", probablyProvider));
-                BUILDER.append("<p>Full list of providers:</p>");
-                BUILDER.append("<ul>");
-                mods.forEach(mod -> BUILDER.append(String.format("<li>%s", mod)));
-                BUILDER.append("</ul>");
+                val probablyProvider = mods.last()
+                BUILDER.append("<p>This script probably came from \"$probablyProvider\".</p>")
+                BUILDER.append("<p>Full list of providers:</p>")
+                BUILDER.append("<ul>")
+                mods.forEach { mod: String? -> BUILDER.append("<li>$mod") }
+                BUILDER.append("</ul>")
             }
         }
-
-        BUILDER.append(String.format("<p>Contains %d member variables.</p>", this.MEMBERS.size()));
-
-        final List<StructInstance> STRUCTS = new ArrayList<>();
-        for (StructInstance instance : save.getPapyrus()
-                .getStructInstances()
-                .values()) {
-            if (instance.getStruct() == this) {
-                STRUCTS.add(instance);
+        BUILDER.append(String.format("<p>Contains %d member variables.</p>", MEMBERS!!.size))
+        val STRUCTS: MutableList<StructInstance> = ArrayList()
+        for (instance in save!!.papyrus
+            .structInstances
+            .values) {
+            if (instance.struct == this) {
+                STRUCTS.add(instance)
             }
         }
-
-        BUILDER.append(String.format("<p>There are %d instances of this structure definition.</p>", STRUCTS.size()));
-        if (STRUCTS.size() < 20) {
-            BUILDER.append("<ul>");
-            STRUCTS.forEach(i -> {
-                String s = String.format("<li>%s</a>", i.toHTML(this));
-                BUILDER.append(s);
-            });
-            BUILDER.append("</ul>");
+        BUILDER.append(String.format("<p>There are %d instances of this structure definition.</p>", STRUCTS.size))
+        if (STRUCTS.size < 20) {
+            BUILDER.append("<ul>")
+            STRUCTS.forEach { i: StructInstance ->
+                val s = "<li>${i.toHTML(this)}</a>"
+                BUILDER.append(s)
+            }
+            BUILDER.append("</ul>")
         }
 
         /*if (null != analysis && analysis.STRUCT_ORIGINS.containsKey(this.NAME)) {
@@ -225,37 +175,52 @@ final public class Struct extends Definition {
                 }
             }
         }
-         */
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+         */BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(Analysis analysis, String mod) {
-        Objects.requireNonNull(analysis);
-        Objects.requireNonNull(mod);
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+
 
         //final SortedSet<String> OWNERS = analysis.SCRIPT_ORIGINS.get(this.NAME);
         //return null != OWNERS && OWNERS.contains(mod);
-        return false;
+        return false
     }
 
     /**
-     * @return A flag indicating if the <code>Script</code> is undefined.
-     *
+     * @return A flag indicating if the `Script` is undefined.
      */
-    @Override
-    public boolean isUndefined() {
-        return false;
+    override val isUndefined: Boolean
+        get() = false
+
+    /**
+     * @return The ID of the papyrus element.
+     */
+    override val name: TString
+    private var MEMBERS: List<MemberDesc>? = null
+
+    /**
+     * Creates a new `Structure` by reading from a
+     * `ByteBuffer`. No error handling is performed.
+     *
+     * @param input The input stream.
+     * @param context The `PapyrusContext` info.
+     * @throws PapyrusFormatException
+     * @throws PapyrusElementException
+     */
+    init {
+        name = context.readTString(input)
+        try {
+            val count = input.int
+            MEMBERS = MemberDesc.readList(input, count, context)
+        } catch (ex: ListException) {
+            throw PapyrusElementException("Failed to read Struct members.", ex, this)
+        }
     }
-
-    final private TString NAME;
-    final private List<MemberDesc> MEMBERS;
-
 }
