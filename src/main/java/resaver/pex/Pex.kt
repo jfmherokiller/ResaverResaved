@@ -13,140 +13,61 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import resaver.Game;
-import resaver.IString;
-import resaver.Scheme;
-import resaver.pex.StringTable.TString;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.*;
+import resaver.Game
+import resaver.IString
+import resaver.IString.Companion.format
+import resaver.Scheme
+import resaver.pex.Opcode.Companion.read
+import resaver.pex.VariableType.Companion.readLocal
+import resaver.pex.VariableType.Companion.readParam
+import java.io.IOException
+import java.nio.ByteBuffer
+import kotlin.experimental.and
 
 /**
  * Describes an object from a PEX file.
  *
  * @author Mark Fairchild
  */
-final public class Pex {
-
+class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFlag?>?, strings: StringTable) {
     /**
-     * Creates a PexObject by reading from a DataInput.
+     * Write the object to a `ByteBuffer`.
      *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param game The game for which the script was compiled.
-     * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-     * @param flags The <code>UserFlag</code> list.
-     * @throws IOException Exceptions aren't handled.
-     */
-    Pex(ByteBuffer input, Game game, List<UserFlag> flags, StringTable strings) throws IOException {
-        Objects.requireNonNull(input);
-        this.GAME = game;
-        this.USERFLAGDEFS = Objects.requireNonNull(flags);
-        this.STRINGS = Objects.requireNonNull(strings);
-
-        this.NAME = strings.read(input);
-        this.size = input.getInt();
-        this.PARENTNAME = strings.read(input);
-        this.DOCSTRING = strings.read(input);
-
-        if (game.isFO4()) {
-            this.CONSTFLAG = input.get();
-        } else {
-            this.CONSTFLAG = -1;
-        }
-
-        this.USERFLAGS = input.getInt();
-        this.AUTOSTATENAME = strings.read(input);
-        this.AUTOVARMAP = new java.util.HashMap<>();
-
-        if (game.isFO4()) {
-            int numStructs = Short.toUnsignedInt(input.getShort());
-            this.STRUCTS = new ArrayList<>(numStructs);
-            for (int i = 0; i < numStructs; i++) {
-                this.STRUCTS.add(new Struct(input, strings));
-            }
-        } else {
-            this.STRUCTS = new ArrayList<>(0);
-        }
-
-        int numVariables = Short.toUnsignedInt(input.getShort());
-        this.VARIABLES = new ArrayList<>(numVariables);
-        for (int i = 0; i < numVariables; i++) {
-            this.VARIABLES.add(new Variable(input, strings));
-        }
-
-        int numProperties = Short.toUnsignedInt(input.getShort());
-        this.PROPERTIES = new ArrayList<>(numProperties);
-        for (int i = 0; i < numProperties; i++) {
-            this.PROPERTIES.add(new Property(input, strings));
-        }
-
-        int numStates = Short.toUnsignedInt(input.getShort());
-        this.STATES = new ArrayList<>(numStates);
-        for (int i = 0; i < numStates; i++) {
-            this.STATES.add(new State(input, strings));
-        }
-
-        for (Property prop : this.PROPERTIES) {
-            if (prop.hasAutoVar()) {
-                for (Variable var : this.VARIABLES) {
-                    if (prop.AUTOVARNAME.equals(var.NAME)) {
-                        this.AUTOVARMAP.put(prop, var);
-                        break;
-                    }
-                }
-                assert this.AUTOVARMAP.containsKey(prop);
-            }
-
-        }
-    }
-
-    /**
-     * Write the object to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      * @throws IOException IO errors aren't handled at all, they are simply
      * passed on.
-     *
      */
-    void write(ByteBuffer output) throws IOException {
-        this.NAME.write(output);
-
-        this.size = this.calculateSize();
-        output.putInt(this.size);
-
-        this.PARENTNAME.write(output);
-        this.DOCSTRING.write(output);
-
-        if (this.GAME.isFO4()) {
-            output.put(this.CONSTFLAG);
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer) {
+        NAME.write(output)
+        size = calculateSize()
+        output.putInt(size)
+        PARENTNAME!!.write(output)
+        DOCSTRING!!.write(output)
+        if (GAME.isFO4) {
+            output.put(CONSTFLAG)
         }
-
-        output.putInt(this.USERFLAGS);
-        this.AUTOSTATENAME.write(output);
-
-        if (this.GAME.isFO4()) {
-            output.putShort((short) this.STRUCTS.size());
-            for (Struct struct : this.STRUCTS) {
-                struct.write(output);
+        output.putInt(USERFLAGS)
+        AUTOSTATENAME.write(output)
+        if (GAME.isFO4) {
+            output.putShort(STRUCTS!!.size.toShort())
+            STRUCTS!!.forEach { struct ->
+                struct.write(output)
             }
         }
-
-        output.putShort((short) this.VARIABLES.size());
-        for (Variable var : this.VARIABLES) {
-            var.write(output);
+        output.putShort(VARIABLES.size.toShort())
+        VARIABLES.forEach { `var` ->
+            `var`.write(output)
         }
-
-        output.putShort((short) this.PROPERTIES.size());
-        for (Property prop : this.PROPERTIES) {
-            prop.write(output);
+        output.putShort(PROPERTIES.size.toShort())
+        PROPERTIES.forEach { prop ->
+            prop.write(output)
         }
-
-        output.putShort((short) this.STATES.size());
-        for (State state : this.STATES) {
-            state.write(output);
+        output.putShort(STATES.size.toShort())
+        STATES.forEach { state ->
+            state.write(output)
         }
     }
 
@@ -154,47 +75,28 @@ final public class Pex {
      * Calculates the size of the Pex, in bytes.
      *
      * @return The size of the Pex.
-     *
      */
-    public int calculateSize() {
-        int sum = 0;
-        sum += 4; // size
-        sum += 2; // parentClassName
-        sum += 2; // DOCSTRING
-        sum += 4; // userFlags
-        sum += 2; // autoStateName
-        sum += 6; // array sizes
-        int sum2 = 0;
-        for (Variable VARIABLE : this.VARIABLES) {
-            int size1 = VARIABLE.calculateSize();
-            sum2 += size1;
+    fun calculateSize(): Int {
+        var sum = 0
+        sum += 4 // size
+        sum += 2 // parentClassName
+        sum += 2 // DOCSTRING
+        sum += 4 // userFlags
+        sum += 2 // autoStateName
+        sum += 6 // array sizes
+        val sum2 = VARIABLES.sumOf { it.calculateSize() }
+        sum += sum2
+        val result1 = PROPERTIES.sumOf { it.calculateSize() }
+        sum += result1
+        val sum1 = STATES.sumOf { it.calculateSize() }
+        sum += sum1
+        if (GAME.isFO4) {
+            sum += 1
+            sum += 2
+            val result = STRUCTS!!.sumOf { it.calculateSize() }
+            sum += result
         }
-        sum += sum2;
-        int result1 = 0;
-        for (Property PROPERTY : this.PROPERTIES) {
-            int calculateSize1 = PROPERTY.calculateSize();
-            result1 += calculateSize1;
-        }
-        sum += result1;
-        int sum1 = 0;
-        for (State STATE : this.STATES) {
-            int i = STATE.calculateSize();
-            sum1 += i;
-        }
-        sum += sum1;
-
-        if (this.GAME.isFO4()) {
-            sum += 1;
-            sum += 2;
-            int result = 0;
-            for (Struct STRUCT : this.STRUCTS) {
-                int calculateSize = STRUCT.calculateSize();
-                result += calculateSize;
-            }
-            sum += result;
-        }
-
-        return sum;
+        return sum
     }
 
     /**
@@ -202,85 +104,77 @@ final public class Pex {
      *
      * @param strings The set of strings.
      */
-    public void collectStrings(Set<TString> strings) {
-        strings.add(this.NAME);
-        strings.add(this.PARENTNAME);
-        strings.add(this.DOCSTRING);
-        strings.add(this.AUTOSTATENAME);
-        for (Struct STRUCT : this.STRUCTS) {
-            STRUCT.collectStrings(strings);
+    fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        strings.add(NAME)
+        strings.add(PARENTNAME)
+        strings.add(DOCSTRING)
+        strings.add(AUTOSTATENAME)
+        STRUCTS!!.forEach { STRUCT ->
+            STRUCT.collectStrings(strings)
         }
-        for (Variable VARIABLE : this.VARIABLES) {
-            VARIABLE.collectStrings(strings);
+        VARIABLES.forEach { VARIABLE ->
+            VARIABLE.collectStrings(strings)
         }
-        for (Property PROPERTY : this.PROPERTIES) {
-            PROPERTY.collectStrings(strings);
+        PROPERTIES.forEach { PROPERTY ->
+            PROPERTY.collectStrings(strings)
         }
-        for (State f : this.STATES) {
-            f.collectStrings(strings);
+        STATES.forEach { f ->
+            f.collectStrings(strings)
         }
     }
 
     /**
-     * Retrieves a set of the struct names in this <code>Pex</code>.
+     * Retrieves a set of the struct names in this `Pex`.
      *
-     * @return A <code>Set</code> of struct names.
-     *
+     * @return A `Set` of struct names.
      */
-    public Set<IString> getStructNames() {
-        Set<IString> set = new HashSet<>();
-        for (Struct p : this.STRUCTS) {
-            TString name = p.NAME;
-            set.add(name);
+    val structNames: Set<IString>
+        get() {
+            val set: MutableSet<IString> = hashSetOf()
+            STRUCTS!!.mapTo(set) { it.NAME }
+            return set
         }
-        return set;
-    }
 
     /**
-     * Retrieves a set of the property names in this <code>Pex</code>.
+     * Retrieves a set of the property names in this `Pex`.
      *
-     * @return A <code>Set</code> of property names.
-     *
+     * @return A `Set` of property names.
      */
-    public Set<IString> getPropertyNames() {
-        Set<IString> set = new HashSet<>();
-        for (Property p : this.PROPERTIES) {
-            TString name = p.NAME;
-            set.add(name);
+    val propertyNames: Set<IString>
+        get() {
+            return PROPERTIES
+                .asSequence()
+                .map { it.NAME }
+                .toSet()
         }
-        return set;
-    }
 
     /**
-     * Retrieves a set of the variable names in this <code>Pex</code>.
+     * Retrieves a set of the variable names in this `Pex`.
      *
-     * @return A <code>Set</code> of property names.
-     *
+     * @return A `Set` of property names.
      */
-    public Set<IString> getVariableNames() {
-        Set<IString> set = new HashSet<>();
-        for (Variable p : this.VARIABLES) {
-            TString name = p.NAME;
-            set.add(name);
+    val variableNames: Set<IString>
+        get() {
+            val set: MutableSet<IString> = hashSetOf()
+            VARIABLES.mapTo(set) { it.NAME }
+            return set
         }
-        return set;
-    }
 
     /**
-     * Retrieves a set of the function names in this <code>Pex</code>.
+     * Retrieves a set of the function names in this `Pex`.
      *
-     * @return A <code>Set</code> of function names.
-     *
+     * @return A `Set` of function names.
      */
-    public Set<IString> getFunctionNames() {
-        final Set<IString> NAMES = new java.util.HashSet<>();
-        for (State state : this.STATES) {
-            for (Function func : state.FUNCTIONS) {
-                NAMES.add(func.getFullName());
+    val functionNames: Set<IString>
+        get() {
+            val NAMES: MutableSet<IString> = HashSet()
+            for (state in STATES) {
+                for (func in state.FUNCTIONS) {
+                    NAMES.add(func.fullName)
+                }
             }
+            return NAMES
         }
-        return NAMES;
-    }
 
     /**
      * Returns a set of UserFlag objects matching a userFlags field.
@@ -288,16 +182,14 @@ final public class Pex {
      * @param userFlags The flags to match.
      * @return The matching UserFlag objects.
      */
-    public Set<UserFlag> getFlags(int userFlags) {
-        final Set<UserFlag> FLAGS = new java.util.HashSet<>();
-
-        for (UserFlag flag : this.USERFLAGDEFS) {
+    fun getFlags(userFlags: Int): Set<UserFlag> {
+        val FLAGS: MutableSet<UserFlag> = HashSet()
+        for (flag in USERFLAGDEFS) {
             if (flag.matches(userFlags)) {
-                FLAGS.add(flag);
+                FLAGS.add(flag)
             }
         }
-
-        return FLAGS;
+        return FLAGS
     }
 
     /**
@@ -306,67 +198,58 @@ final public class Pex {
      * @param code The code strings.
      * @param level Partial disassembly flag.
      */
-    public void disassemble(List<String> code, AssemblyLevel level) {
-        final StringBuilder S = new StringBuilder();
-
-        if (this.PARENTNAME == null) {
-            S.append(String.format("ScriptName %s", this.NAME));
+    fun disassemble(code: MutableList<String?>, level: AssemblyLevel?) {
+        val S = StringBuilder()
+        if (PARENTNAME == null) {
+            S.append("ScriptName $NAME")
         } else {
-            S.append(String.format("ScriptName %s extends %s", this.NAME, this.PARENTNAME));
+            S.append("ScriptName $NAME extends $PARENTNAME")
         }
-
-        final Set<UserFlag> FLAGOBJS = this.getFlags(this.USERFLAGS);
-        for (UserFlag flag : FLAGOBJS) {
-            S.append(" ").append(flag);
+        val FLAGOBJS = getFlags(USERFLAGS)
+        for (flag in FLAGOBJS) {
+            S.append(" ").append(flag)
         }
-        code.add(S.toString());
-
-        if (null != this.DOCSTRING && !this.DOCSTRING.isEmpty()) {
-            code.add(String.format("{%s}\n", this.DOCSTRING));
+        code.add(S.toString())
+        if (null != DOCSTRING && DOCSTRING.isNotEmpty()) {
+            code.add(String.format("{%s}\n", DOCSTRING))
         }
-
-        code.add("");
-
-        final Map<Property, Variable> AUTOVARS = new java.util.HashMap<>();
-        for (Property p : this.PROPERTIES) {
+        code.add("")
+        val AUTOVARS: MutableMap<Property, Variable> = hashMapOf()
+        for (p in PROPERTIES) {
             if (p.hasAutoVar()) {
-                for (Variable v : this.VARIABLES) {
-                    if (v.NAME.equals(p.AUTOVARNAME)) {
-                        AUTOVARS.put(p, v);
+                for (v in VARIABLES) {
+                    if (v.NAME == p.AUTOVARNAME) {
+                        AUTOVARS[p] = v
                     }
                 }
             }
         }
-
-        List<Property> sortedProp = new ArrayList<>(this.PROPERTIES);
-        sortedProp.sort(Comparator.comparing(a -> a.NAME));
-        sortedProp.sort(Comparator.comparing(a -> a.TYPE));
-
-        List<Variable> sortedVars = new ArrayList<>(this.VARIABLES);
-        sortedVars.sort(Comparator.comparing(a -> a.NAME));
-        sortedVars.sort(Comparator.comparing(a -> a.TYPE));
-
-        code.add(";");
-        code.add("; PROPERTIES");
-        code.add(";");
-        for (Property property : sortedProp) {
-            property.disassemble(code, level, AUTOVARS);
+        val sortedProp: List<Property> = listOf()
+        sortedProp.sortedBy { a: Property -> a.NAME }
+        sortedProp.sortedBy { a: Property -> a.TYPE }
+        val sortedVars: List<Variable> = listOf()
+        sortedVars.sortedBy  { a: Variable -> a.NAME }
+        sortedVars.sortedBy { a: Variable -> a.TYPE }
+        code.add(";")
+        code.add("; PROPERTIES")
+        code.add(";")
+        sortedProp.forEach { property ->
+            property.disassemble(code, level, AUTOVARS)
         }
-        code.add("");
-        code.add(";");
-        code.add("; VARIABLES");
-        code.add(";");
-        for (Variable sortedVar : sortedVars) {
-            if (!AUTOVARS.containsValue(sortedVar)) {
-                sortedVar.disassemble(code, level);
-            }
-        }
-        code.add("");
-        code.add(";");
-        code.add("; STATES");
-        code.add(";");
-        for (State v : this.STATES) {
-            v.disassemble(code, level, this.AUTOSTATENAME.equals(v.NAME), AUTOVARS);
+        code.add("")
+        code.add(";")
+        code.add("; VARIABLES")
+        code.add(";")
+        sortedVars
+            .asSequence()
+            .filterNot { AUTOVARS.containsValue(it) }
+            .forEach { it.disassemble(code, level) }
+        code.add("")
+        code.add(";")
+        code.add("; STATES")
+        code.add(";")
+        for (v in STATES) {
+            v.disassemble(code, level, AUTOSTATENAME == v.NAME, AUTOVARS)
         }
     }
 
@@ -375,81 +258,59 @@ final public class Pex {
      *
      * @return A string representation of the Pex.
      */
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append(String.format("ScriptName %s extends %s %s\n", this.NAME, this.PARENTNAME, getFlags(this.USERFLAGS)));
-        buf.append(String.format("{%s}\n", this.DOCSTRING));
-        buf.append(String.format("\tInitial state: %s\n", this.AUTOSTATENAME));
-        buf.append("\n");
-
-        for (Property prop : this.PROPERTIES) {
-            buf.append(prop.toString());
+    override fun toString(): String {
+        val buf = StringBuilder()
+        buf.append(String.format("ScriptName %s extends %s %s\n", NAME, PARENTNAME, getFlags(USERFLAGS)))
+        buf.append(String.format("{%s}\n", DOCSTRING))
+        buf.append(String.format("\tInitial state: %s\n", AUTOSTATENAME))
+        buf.append("\n")
+        for (prop in PROPERTIES) {
+            buf.append(prop.toString())
         }
-        for (Variable var : this.VARIABLES) {
-            buf.append(var.toString());
+        for (`var` in VARIABLES) {
+            buf.append(`var`.toString())
         }
-        for (State state : this.STATES) {
-            buf.append(state.toString());
+        for (state in STATES) {
+            buf.append(state.toString())
         }
-
-        return buf.toString();
+        return buf.toString()
     }
 
-    final public Game GAME;
-    final public TString NAME;
-    public int size;
-    final public TString PARENTNAME;
-    final public TString DOCSTRING;
-    final public byte CONSTFLAG;
-    final public int USERFLAGS;
-    final public TString AUTOSTATENAME;
-    final private List<Struct> STRUCTS;
-    final private List<Variable> VARIABLES;
-    final private List<Property> PROPERTIES;
-    final private List<State> STATES;
-    final private Map<Property, Variable> AUTOVARMAP;
-
-    final private List<UserFlag> USERFLAGDEFS;
-    final private StringTable STRINGS;
+    val GAME: Game
+    val NAME: StringTable.TString
+    var size: Int
+    val PARENTNAME: StringTable.TString?
+    val DOCSTRING: StringTable.TString?
+    var CONSTFLAG: Byte = 0
+    val USERFLAGS: Int
+    val AUTOSTATENAME: StringTable.TString
+    private var STRUCTS: MutableList<Struct>? = null
+    private val VARIABLES: MutableList<Variable>
+    private val PROPERTIES: MutableList<Property>
+    private val STATES: MutableList<State>
+    private val AUTOVARMAP: MutableMap<Property, Variable>
+    private val USERFLAGDEFS: List<UserFlag>
+    private val STRINGS: StringTable
 
     /**
      * Describes a Struct from a PEX file.
      *
      */
-    public final class Struct {
-
+    inner class Struct(input: ByteBuffer, strings: StringTable) {
         /**
-         * Creates a Struct by reading from a DataInput.
-         *
-         * @param input A datainput for a Skyrim PEX file.
-         * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-         * @throws IOException Exceptions aren't handled.
-         */
-        private Struct(ByteBuffer input, StringTable strings) throws IOException {
-            this.NAME = strings.read(input);
-
-            int numMembers = Short.toUnsignedInt(input.getShort());
-            this.MEMBERS = new ArrayList<>(numMembers);
-            for (int i = 0; i < numMembers; i++) {
-                this.MEMBERS.add(new Member(input, strings));
-            }
-        }
-
-        /**
-         * Write the this Struct to a <code>ByteBuffer</code>. No IO error
+         * Write the this Struct to a `ByteBuffer`. No IO error
          * handling is performed.
          *
-         * @param output The <code>ByteBuffer</code> to write.
+         * @param output The `ByteBuffer` to write.
          * @throws IOException IO errors aren't handled at all, they are simply
          * passed on.
          */
-        private void write(ByteBuffer output) throws IOException {
-            this.NAME.write(output);
-
-            output.putShort((short) this.MEMBERS.size());
-            for (Member member : this.MEMBERS) {
-                member.write(output);
+        @Throws(IOException::class)
+        fun write(output: ByteBuffer) {
+            this.NAME.write(output)
+            output.putShort(MEMBERS.size.toShort())
+            for (member in MEMBERS) {
+                member.write(output)
             }
         }
 
@@ -457,19 +318,18 @@ final public class Pex {
          * Calculates the size of the Property, in bytes.
          *
          * @return The size of the Property.
-         *
          */
-        public int calculateSize() {
-            int sum = 0;
-            sum += 2; // NAME
-            sum += 2; // Count
-            int result = 0;
-            for (Member MEMBER : this.MEMBERS) {
-                int calculateSize = MEMBER.calculateSize();
-                result += calculateSize;
+        fun calculateSize(): Int {
+            var sum = 0
+            sum += 2 // NAME
+            sum += 2 // Count
+            var result = 0
+            for (MEMBER in MEMBERS) {
+                val calculateSize = MEMBER.calculateSize()
+                result += calculateSize
             }
-            sum += result;
-            return sum;
+            sum += result
+            return sum
         }
 
         /**
@@ -478,10 +338,10 @@ final public class Pex {
          *
          * @param strings The set of strings.
          */
-        public void collectStrings(Set<TString> strings) {
-            strings.add(this.NAME);
-            for (Member f : this.MEMBERS) {
-                f.collectStrings(strings);
+        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+            strings.add(this.NAME)
+            for (f in MEMBERS) {
+                f.collectStrings(strings)
             }
         }
 
@@ -490,68 +350,48 @@ final public class Pex {
          *
          * @return A qualified NAME.
          */
-        public IString getFullName() {
-            return IString.format("%s.%s", Pex.this.NAME, this.NAME);
-        }
-
-        final public TString NAME;
-        final private List<Member> MEMBERS;
+        val fullName: IString
+            get() = format("%s.%s", this@Pex.NAME, this.NAME)
+        val NAME: StringTable.TString
+        private val MEMBERS: MutableList<Member>
 
         /**
          * Describes a Member of a Struct.
          *
          */
-        public final class Member {
-
+        inner class Member(input: ByteBuffer, strings: StringTable) {
             /**
-             * Creates a Member by reading from a DataInput.
-             *
-             * @param input A datainput for a Skyrim PEX file.
-             * @param strings The <code>StringTable</code> for the
-             * <code>Pex</code>.
-             * @throws IOException Exceptions aren't handled.
-             */
-            private Member(ByteBuffer input, StringTable strings) throws IOException {
-                this.NAME = strings.read(input);
-                this.TYPE = strings.read(input);
-                this.USERFLAGS = input.getInt();
-                this.VALUE = VData.readVariableData(input, strings);
-                this.CONSTFLAG = input.get();
-                this.DOC = strings.read(input);
-            }
-
-            /**
-             * Write the this.ct to a <code>ByteBuffer</code>. No IO error
+             * Write the this.ct to a `ByteBuffer`. No IO error
              * handling is performed.
              *
-             * @param output The <code>ByteBuffer</code> to write.
+             * @param output The `ByteBuffer` to write.
              * @throws IOException IO errors aren't handled at all, they are
              * simply passed on.
              */
-            private void write(ByteBuffer output) throws IOException {
-                this.NAME.write(output);
-                this.TYPE.write(output);
-                output.putInt(this.USERFLAGS);
-                this.VALUE.write(output);
-                output.put(this.CONSTFLAG);
-                this.DOC.write(output);
+            @Throws(IOException::class)
+            fun write(output: ByteBuffer) {
+                this.NAME.write(output)
+                TYPE.write(output)
+                output.putInt(this.USERFLAGS)
+                VALUE.write(output)
+                output.put(this.CONSTFLAG)
+                DOC.write(output)
             }
 
             /**
              * Calculates the size of the Property, in bytes.
              *
              * @return The size of the Property.
-             *
              */
-            public int calculateSize() {
-                int sum = 0;
-                sum += 2; // NAME
-                sum += 2; // type
-                sum += 2; // docstring
-                sum += 4; // userflags;
-                sum += 1; // const flag
-                sum += this.VALUE.calculateSize();
-                return sum;
+            fun calculateSize(): Int {
+                var sum = 0
+                sum += 2 // NAME
+                sum += 2 // type
+                sum += 2 // docstring
+                sum += 4 // userflags;
+                sum += 1 // const flag
+                sum += VALUE.calculateSize()
+                return sum
             }
 
             /**
@@ -560,11 +400,11 @@ final public class Pex {
              *
              * @param strings The set of strings.
              */
-            public void collectStrings(Set<TString> strings) {
-                strings.add(this.NAME);
-                strings.add(this.TYPE);
-                strings.add(this.DOC);
-                this.VALUE.collectStrings(strings);
+            fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+                strings.add(this.NAME)
+                strings.add(TYPE)
+                strings.add(DOC)
+                VALUE.collectStrings(strings)
             }
 
             /**
@@ -572,105 +412,97 @@ final public class Pex {
              *
              * @return A qualified NAME.
              */
-            public IString getFullName() {
-                return IString.format("%s.%s.%s", Pex.this.NAME, Struct.this.NAME, this.NAME);
-            }
+            val fullName: IString
+                get() = format("%s.%s.%s", this@Pex.NAME, this@Struct.NAME, this.NAME)
 
             /**
              * Pretty-prints the Member.
              *
              * @return A string representation of the Member.
              */
-            @Override
-            public String toString() {
-                StringBuilder buf = new StringBuilder();
-
-                if (this.CONSTFLAG != 0) {
-                    buf.append("const ");
+            override fun toString(): String {
+                val buf = StringBuilder()
+                if (this.CONSTFLAG.toInt() != 0) {
+                    buf.append("const ")
                 }
-
-                buf.append(this.TYPE);
-                buf.append(" ");
-                buf.append(this.NAME);
-                buf.append(" = ");
-                buf.append(this.VALUE);
-                return buf.toString();
+                buf.append(TYPE)
+                buf.append(" ")
+                buf.append(this.NAME)
+                buf.append(" = ")
+                buf.append(VALUE)
+                return buf.toString()
             }
 
-            final public TString NAME;
-            final public TString TYPE;
-            final public TString DOC;
-            final public int USERFLAGS;
-            final public byte CONSTFLAG;
-            final public VData VALUE;
+            val NAME: StringTable.TString
+            val TYPE: StringTable.TString
+            val DOC: StringTable.TString
+            val USERFLAGS: Int
+            val CONSTFLAG: Byte
+            val VALUE: VData
+
+            /**
+             * Creates a Member by reading from a DataInput.
+             *
+             * @param input A datainput for a Skyrim PEX file.
+             * @param strings The `StringTable` for the
+             * `Pex`.
+             * @throws IOException Exceptions aren't handled.
+             */
+            init {
+                this.NAME = strings.read(input)
+                TYPE = strings.read(input)
+                this.USERFLAGS = input.int
+                VALUE = VData.readVariableData(input, strings)
+                this.CONSTFLAG = input.get()
+                DOC = strings.read(input)
+            }
         }
 
+        /**
+         * Creates a Struct by reading from a DataInput.
+         *
+         * @param input A datainput for a Skyrim PEX file.
+         * @param strings The `StringTable` for the `Pex`.
+         * @throws IOException Exceptions aren't handled.
+         */
+        init {
+            this.NAME = strings.read(input)
+            val numMembers = java.lang.Short.toUnsignedInt(input.short)
+            MEMBERS = ArrayList(numMembers)
+            for (i in 0 until numMembers) {
+                MEMBERS.add(Member(input, strings))
+            }
+        }
     }
 
     /**
      * Describes a Property from a PEX file.
      *
      */
-    public final class Property {
-
+    inner class Property(input: ByteBuffer, strings: StringTable) {
         /**
-         * Creates a Property by reading from a DataInput.
-         *
-         * @param input A datainput for a Skyrim PEX file.
-         * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-         * @throws IOException Exceptions aren't handled.
-         */
-        private Property(ByteBuffer input, StringTable strings) throws IOException {
-            this.NAME = strings.read(input);
-            this.TYPE = strings.read(input);
-            this.DOC = strings.read(input);
-            this.USERFLAGS = input.getInt();
-            this.FLAGS = input.get();
-
-            if (this.hasAutoVar()) {
-                this.AUTOVARNAME = strings.read(input);
-            } else {
-                this.AUTOVARNAME = null;
-            }
-
-            if (this.hasReadHandler()) {
-                this.READHANDLER = new Function(input, false, strings);
-            } else {
-                this.READHANDLER = null;
-            }
-
-            if (this.hasWriteHandler()) {
-                this.WRITEHANDLER = new Function(input, false, strings);
-            } else {
-                this.WRITEHANDLER = null;
-            }
-        }
-
-        /**
-         * Write the this.ct to a <code>ByteBuffer</code>. No IO error handling
+         * Write the this.ct to a `ByteBuffer`. No IO error handling
          * is performed.
          *
-         * @param output The <code>ByteBuffer</code> to write.
+         * @param output The `ByteBuffer` to write.
          * @throws IOException IO errors aren't handled at all, they are simply
          * passed on.
          */
-        private void write(ByteBuffer output) throws IOException {
-            this.NAME.write(output);
-            this.TYPE.write(output);
-            this.DOC.write(output);
-            output.putInt(this.USERFLAGS);
-            output.put(this.FLAGS);
-
-            if (this.hasAutoVar()) {
-                this.AUTOVARNAME.write(output);
+        @Throws(IOException::class)
+        fun write(output: ByteBuffer) {
+            this.NAME.write(output)
+            TYPE.write(output)
+            DOC!!.write(output)
+            output.putInt(this.USERFLAGS)
+            output.put(FLAGS)
+            if (hasAutoVar()) {
+                AUTOVARNAME!!.write(output)
             }
-
-            if (this.hasReadHandler()) {
-                this.READHANDLER.write(output);
+            if (hasReadHandler()) {
+                READHANDLER!!.write(output)
             }
-
-            if (this.hasWriteHandler()) {
-                this.WRITEHANDLER.write(output);
+            if (hasWriteHandler()) {
+                WRITEHANDLER!!.write(output)
             }
         }
 
@@ -678,80 +510,74 @@ final public class Pex {
          * Calculates the size of the Property, in bytes.
          *
          * @return The size of the Property.
-         *
          */
-        public int calculateSize() {
-            int sum = 0;
-            sum += 2; // NAME
-            sum += 2; // type
-            sum += 2; // docstring
-            sum += 4; // userflags;
-            sum += 1; // flags
-
-            if (this.hasAutoVar()) {
-                sum += 2; // autovarname
+        fun calculateSize(): Int {
+            var sum = 0
+            sum += 2 // NAME
+            sum += 2 // type
+            sum += 2 // docstring
+            sum += 4 // userflags;
+            sum += 1 // flags
+            if (hasAutoVar()) {
+                sum += 2 // autovarname
             }
-
-            if (this.hasReadHandler()) {
-                sum += this.READHANDLER.calculateSize();
+            if (hasReadHandler()) {
+                sum += READHANDLER!!.calculateSize()
             }
-            if (this.hasWriteHandler()) {
-                sum += this.WRITEHANDLER.calculateSize();
+            if (hasWriteHandler()) {
+                sum += WRITEHANDLER!!.calculateSize()
             }
-
-            return sum;
+            return sum
         }
 
         /**
-         * Indicates whether the <code>Property</code> is conditional.
+         * Indicates whether the `Property` is conditional.
          *
-         * @return True if the <code>Property</code> is conditional, false
+         * @return True if the `Property` is conditional, false
          * otherwise.
          */
-        public boolean isConditional() {
-            return (this.USERFLAGS & 2) != 0;
-        }
+        val isConditional: Boolean
+            get() = this.USERFLAGS and 2 != 0
 
         /**
-         * Indicates whether the <code>Property</code> is conditional.
+         * Indicates whether the `Property` is conditional.
          *
-         * @return True if the <code>Property</code> is conditional, false
+         * @return True if the `Property` is conditional, false
          * otherwise.
          */
-        public boolean isHidden() {
-            return (this.USERFLAGS & 1) != 0;
-        }
+        val isHidden: Boolean
+            get() = this.USERFLAGS and 1 != 0
 
         /**
-         * Indicates whether the <code>Property</code> has an autovar.
+         * Indicates whether the `Property` has an autovar.
          *
-         * @return True if the <code>Property</code> has an autovar, false
+         * @return True if the `Property` has an autovar, false
          * otherwise.
          */
-        public boolean hasAutoVar() {
-            return (this.FLAGS & 4) != 0;
+        fun hasAutoVar(): Boolean {
+            return (FLAGS and 4.toByte()).toInt() != 0
         }
 
         /**
-         * Indicates whether the <code>Property</code> has a read handler
+         * Indicates whether the `Property` has a read handler
          * function or not.
          *
-         * @return True if the <code>Property</code> has a read handler, false
+         * @return True if the `Property` has a read handler, false
          * otherwise.
          */
-        public boolean hasReadHandler() {
-            return (this.FLAGS & 5) == 1;
+        fun hasReadHandler(): Boolean {
+            return (FLAGS and 5.toByte()).toInt() == 1
         }
 
         /**
-         * Indicates whether the <code>Property</code> has a write handler
+         * Indicates whether the `Property` has a write handler
          * function or not.
          *
-         * @return True if the <code>Property</code> has a write handler, false
+         * @return True if the `Property` has a write handler, false
          * otherwise.
          */
-        public boolean hasWriteHandler() {
-            return (this.FLAGS & 6) == 2;
+        fun hasWriteHandler(): Boolean {
+            return (FLAGS and 6.toByte()).toInt() == 2
         }
 
         /**
@@ -760,21 +586,18 @@ final public class Pex {
          *
          * @param strings The set of strings.
          */
-        public void collectStrings(Set<TString> strings) {
-            strings.add(this.NAME);
-            strings.add(this.TYPE);
-            strings.add(this.DOC);
-
-            if (this.hasAutoVar()) {
-                strings.add(this.AUTOVARNAME);
+        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+            strings.add(this.NAME)
+            strings.add(TYPE)
+            strings.add(DOC)
+            if (hasAutoVar()) {
+                strings.add(AUTOVARNAME)
             }
-
-            if (this.hasReadHandler()) {
-                this.READHANDLER.collectStrings(strings);
+            if (hasReadHandler()) {
+                READHANDLER!!.collectStrings(strings)
             }
-
-            if (this.hasWriteHandler()) {
-                this.WRITEHANDLER.collectStrings(strings);
+            if (hasWriteHandler()) {
+                WRITEHANDLER!!.collectStrings(strings)
             }
         }
 
@@ -783,9 +606,8 @@ final public class Pex {
          *
          * @return A qualified NAME.
          */
-        public IString getFullName() {
-            return IString.format("%s.%s", Pex.this.NAME, this.NAME);
-        }
+        val fullName: IString
+            get() = format("%s.%s", this@Pex.NAME, this.NAME)
 
         /**
          * Tries to disassemble the Property.
@@ -794,57 +616,45 @@ final public class Pex {
          * @param level Partial disassembly flag.
          * @param autovars Map of properties to their autovariable.
          */
-        public void disassemble(List<String> code, AssemblyLevel level, Map<Property, Variable> autovars) {
-            Objects.requireNonNull(autovars);
-            final StringBuilder S = new StringBuilder();
-
-            S.append(String.format("%s Property %s", this.TYPE, this.NAME));
-
-            if (autovars.containsKey(this) || this.hasAutoVar()) {
-                assert autovars.containsKey(this);
-                assert this.hasAutoVar();
-                assert autovars.get(this).NAME.equals(this.AUTOVARNAME);
-
-                final Variable AUTOVAR = autovars.get(this);
-                if (AUTOVAR.DATA.getType() != DataType.NONE) {
-                    S.append(" = ").append(AUTOVAR.DATA);
+        fun disassemble(code: MutableList<String?>, level: AssemblyLevel?, autovars: Map<Property, Variable>) {
+            val S = StringBuilder()
+            S.append("$TYPE Property ${this.NAME}")
+            if (autovars.containsKey(this) || hasAutoVar()) {
+                assert(autovars.containsKey(this))
+                assert(hasAutoVar())
+                assert(autovars[this]!!.NAME == AUTOVARNAME)
+                val AUTOVAR = autovars[this]
+                if (AUTOVAR!!.DATA.type !== DataType.NONE) {
+                    S.append(" = ").append(AUTOVAR!!.DATA)
                 }
-
-                S.append(" AUTO");
-                final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(AUTOVAR.USERFLAGS);
-                for (UserFlag flag : FLAGOBJS) {
-                    S.append(" ").append(flag.toString());
+                S.append(" AUTO")
+                val FLAGOBJS = getFlags(AUTOVAR!!.USERFLAGS)
+                for (flag in FLAGOBJS) {
+                    S.append(" ").append(flag.toString())
                 }
             }
-
-            final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(this.USERFLAGS);
-            for (UserFlag flag : FLAGOBJS) {
-                S.append(" ").append(flag.toString());
+            val FLAGOBJS = getFlags(this.USERFLAGS)
+            for (flag in FLAGOBJS) {
+                S.append(" ").append(flag.toString())
             }
-
-            if (autovars.containsKey(this) || this.hasAutoVar()) {
-                final Variable AUTOVAR = autovars.get(this);
-                S.append("  ;; --> ").append(AUTOVAR.NAME);
+            if (autovars.containsKey(this) || hasAutoVar()) {
+                val AUTOVAR = autovars[this]
+                S.append("  ;; --> ").append(AUTOVAR!!.NAME)
             }
-
-            code.add(S.toString());
-
-            if (null != this.DOC && !this.DOC.isEmpty()) {
-                code.add(String.format("{%s}", this.DOC));
+            code.add(S.toString())
+            if (null != DOC && DOC.isNotEmpty()) {
+                code.add(String.format("{%s}", DOC))
             }
-
-            if (this.hasReadHandler()) {
-                assert null != this.READHANDLER;
-                this.READHANDLER.disassemble(code, level, "GET", autovars, 1);
+            if (hasReadHandler()) {
+                assert(null != READHANDLER)
+                READHANDLER!!.disassemble(code, level, "GET", autovars, 1)
             }
-
-            if (this.hasWriteHandler()) {
-                assert null != this.WRITEHANDLER;
-                this.WRITEHANDLER.disassemble(code, level, "SET", autovars, 1);
+            if (hasWriteHandler()) {
+                assert(null != WRITEHANDLER)
+                WRITEHANDLER!!.disassemble(code, level, "SET", autovars, 1)
             }
-
-            if (this.hasReadHandler() || this.hasWriteHandler()) {
-                code.add("EndProperty");
+            if (hasReadHandler() || hasWriteHandler()) {
+                code.add("EndProperty")
             }
         }
 
@@ -853,79 +663,85 @@ final public class Pex {
          *
          * @return A string representation of the Property.
          */
-        @Override
-        public String toString() {
-            StringBuilder buf = new StringBuilder();
-            buf.append(String.format("\tProperty %s %s", this.TYPE.toString(), this.NAME.toString()));
-
-            if (this.hasAutoVar()) {
-                buf.append(String.format(" AUTO(%s) ", this.AUTOVARNAME));
+        override fun toString(): String {
+            val buf = StringBuilder()
+            buf.append(String.format("\tProperty %s %s", TYPE.toString(), this.NAME.toString()))
+            if (hasAutoVar()) {
+                buf.append(String.format(" AUTO(%s) ", AUTOVARNAME))
             }
-
-            buf.append(getFlags(this.USERFLAGS));
-
-            buf.append(String.format("\n\t\tDoc: %s\n", this.DOC));
-            buf.append(String.format("\t\tFlags: %d\n", this.FLAGS));
-
-            if (this.hasReadHandler()) {
-                buf.append("ReadHandler: ");
-                buf.append(this.READHANDLER.toString());
+            buf.append(getFlags(this.USERFLAGS))
+            buf.append(String.format("\n\t\tDoc: %s\n", DOC))
+            buf.append(String.format("\t\tFlags: %d\n", FLAGS))
+            if (hasReadHandler()) {
+                buf.append("ReadHandler: ")
+                buf.append(READHANDLER.toString())
             }
-
-            if (this.hasWriteHandler()) {
-                buf.append("WriteHandler: ");
-                buf.append(this.WRITEHANDLER.toString());
+            if (hasWriteHandler()) {
+                buf.append("WriteHandler: ")
+                buf.append(WRITEHANDLER.toString())
             }
-
-            buf.append("\n");
-            return buf.toString();
+            buf.append("\n")
+            return buf.toString()
         }
 
-        final public TString NAME;
-        final public TString TYPE;
-        final public TString DOC;
-        final public int USERFLAGS;
-        final public byte FLAGS;
-        final public TString AUTOVARNAME;
-        final private Function READHANDLER;
-        final private Function WRITEHANDLER;
+        val NAME: StringTable.TString
+        val TYPE: StringTable.TString
+        val DOC: StringTable.TString?
+        val USERFLAGS: Int
+        val FLAGS: Byte
+        var AUTOVARNAME: StringTable.TString? = null
+        private var READHANDLER: Function? = null
+        private var WRITEHANDLER: Function? = null
+
+        /**
+         * Creates a Property by reading from a DataInput.
+         *
+         * @param input A datainput for a Skyrim PEX file.
+         * @param strings The `StringTable` for the `Pex`.
+         * @throws IOException Exceptions aren't handled.
+         */
+        init {
+            this.NAME = strings.read(input)
+            TYPE = strings.read(input)
+            DOC = strings.read(input)
+            this.USERFLAGS = input.int
+            FLAGS = input.get()
+            AUTOVARNAME = if (hasAutoVar()) {
+                strings.read(input)
+            } else {
+                null
+            }
+            READHANDLER = if (hasReadHandler()) {
+                Function(input, false, strings)
+            } else {
+                null
+            }
+            WRITEHANDLER = if (hasWriteHandler()) {
+                Function(input, false, strings)
+            } else {
+                null
+            }
+        }
     }
 
     /**
      * Describes a State in a PEX file.
      *
      */
-    public final class State {
-
+    inner class State(input: ByteBuffer, strings: StringTable) {
         /**
-         * Creates a State by reading from a DataInput.
+         * Write the object to a `ByteBuffer`.
          *
-         * @param input A datainput for a Skyrim PEX file.
-         * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-         * @throws IOException Exceptions aren't handled.
-         */
-        private State(ByteBuffer input, StringTable strings) throws IOException {
-            this.NAME = strings.read(input);
-
-            int numFunctions = Short.toUnsignedInt(input.getShort());
-            this.FUNCTIONS = new ArrayList<>(numFunctions);
-            for (int i = 0; i < numFunctions; i++) {
-                this.FUNCTIONS.add(new Function(input, true, strings));
-            }
-        }
-
-        /**
-         * Write the object to a <code>ByteBuffer</code>.
-         *
-         * @param output The <code>ByteBuffer</code> to write.
+         * @param output The `ByteBuffer` to write.
          * @throws IOException IO errors aren't handled at all, they are simply
          * passed on.
          */
-        private void write(ByteBuffer output) throws IOException {
-            this.NAME.write(output);
-            output.putShort((short) this.FUNCTIONS.size());
-            for (Function function : this.FUNCTIONS) {
-                function.write(output);
+        @Throws(IOException::class)
+        fun write(output: ByteBuffer) {
+            this.NAME!!.write(output)
+            output.putShort(FUNCTIONS.size.toShort())
+            for (function in FUNCTIONS) {
+                function.write(output)
             }
         }
 
@@ -933,19 +749,18 @@ final public class Pex {
          * Calculates the size of the State, in bytes.
          *
          * @return The size of the State.
-         *
          */
-        public int calculateSize() {
-            int sum = 0;
-            sum += 2; // NAME
-            sum += 2; // array size
-            int result = 0;
-            for (Function FUNCTION : this.FUNCTIONS) {
-                int calculateSize = FUNCTION.calculateSize();
-                result += calculateSize;
+        fun calculateSize(): Int {
+            var sum = 0
+            sum += 2 // NAME
+            sum += 2 // array size
+            var result = 0
+            for (FUNCTION in FUNCTIONS) {
+                val calculateSize = FUNCTION.calculateSize()
+                result += calculateSize
             }
-            sum += result;
-            return sum;
+            sum += result
+            return sum
         }
 
         /**
@@ -953,10 +768,10 @@ final public class Pex {
          *
          * @param strings The set of strings.
          */
-        public void collectStrings(Set<TString> strings) {
-            strings.add(this.NAME);
-            for (Function function : this.FUNCTIONS) {
-                function.collectStrings(strings);
+        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+            strings.add(this.NAME)
+            for (function in FUNCTIONS) {
+                function.collectStrings(strings)
             }
         }
 
@@ -968,42 +783,39 @@ final public class Pex {
          * @param autostate A flag indicating if this state is the autostate.
          * @param autovars Map of properties to their autovariable.
          */
-        public void disassemble(List<String> code, AssemblyLevel level, boolean autostate, Map<Property, Variable> autovars) {
-            final Set<IString> RESERVED = new java.util.HashSet<>();
-            RESERVED.add(IString.get("GoToState"));
-            RESERVED.add(IString.get("GetState"));
-
-            final StringBuilder S = new StringBuilder();
-
+        fun disassemble(
+            code: MutableList<String?>,
+            level: AssemblyLevel?,
+            autostate: Boolean,
+            autovars: Map<Property, Variable>
+        ) {
+            val RESERVED: MutableSet<IString?> = hashSetOf()
+            RESERVED.add(IString["GoToState"])
+            RESERVED.add(IString["GetState"])
+            val S = StringBuilder()
             if (null == this.NAME || this.NAME.isEmpty()) {
-                S.append(";");
+                S.append(";")
             }
-
             if (autostate) {
-                S.append("AUTO ");
+                S.append("AUTO ")
             }
-
-            S.append("State ");
-            S.append(this.NAME);
-            code.add(S.toString());
-            code.add("");
-
-            final int INDENT = (autostate ? 0 : 1);
-
-            for (Function f : this.FUNCTIONS) {
+            S.append("State ")
+            S.append(this.NAME)
+            code.add(S.toString())
+            code.add("")
+            val INDENT = if (autostate) 0 else 1
+            for (f in FUNCTIONS) {
                 if (!RESERVED.contains(f.NAME)) {
-                    f.disassemble(code, level, null, autovars, INDENT);
-                    code.add("");
+                    f.disassemble(code, level, null, autovars, INDENT)
+                    code.add("")
                 }
             }
-
             if (null == this.NAME || this.NAME.isEmpty()) {
-                code.add(";EndState");
+                code.add(";EndState")
             } else {
-                code.add("EndState");
+                code.add("EndState")
             }
-
-            code.add("");
+            code.add("")
         }
 
         /**
@@ -1011,98 +823,68 @@ final public class Pex {
          *
          * @return A string representation of the State.
          */
-        @Override
-        public String toString() {
-            StringBuilder buf = new StringBuilder();
-            buf.append(String.format("\tState %s\n", this.NAME));
-            for (Function function : this.FUNCTIONS) {
-                buf.append(function.toString());
+        override fun toString(): String {
+            val buf = StringBuilder()
+            buf.append(String.format("\tState %s\n", this.NAME))
+            for (function in FUNCTIONS) {
+                buf.append(function.toString())
             }
-            return buf.toString();
+            return buf.toString()
         }
 
-        final public TString NAME;
-        final public List<Function> FUNCTIONS;
+        val NAME: StringTable.TString?
+        val FUNCTIONS: MutableList<Function>
 
+        /**
+         * Creates a State by reading from a DataInput.
+         *
+         * @param input A datainput for a Skyrim PEX file.
+         * @param strings The `StringTable` for the `Pex`.
+         * @throws IOException Exceptions aren't handled.
+         */
+        init {
+            this.NAME = strings.read(input)
+            val numFunctions = java.lang.Short.toUnsignedInt(input.short)
+            FUNCTIONS = ArrayList(numFunctions)
+            for (i in 0 until numFunctions) {
+                FUNCTIONS.add(Function(input, true, strings))
+            }
+        }
     }
 
     /**
      * Describes a Function and it's code.
      *
      */
-    public final class Function {
-
+    inner class Function(input: ByteBuffer, named: Boolean, strings: StringTable) {
         /**
-         * Creates a Function by reading from a DataInput.
-         *
-         * @param input A datainput for a Skyrim PEX file.
-         * @param named A flag indicating whether to read a named function or a
-         * nameless function.
-         * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-         * @throws IOException Exceptions aren't handled.
-         */
-        private Function(ByteBuffer input, boolean named, StringTable strings) throws IOException {
-            if (named) {
-                this.NAME = strings.read(input);
-            } else {
-                this.NAME = null;
-            }
-
-            this.RETURNTYPE = strings.read(input);
-            this.DOC = strings.read(input);
-            this.USERFLAGS = input.getInt();
-            this.FLAGS = input.get();
-
-            int paramsCount = Short.toUnsignedInt(input.getShort());
-            this.PARAMS = new ArrayList<>(paramsCount);
-            for (int i = 0; i < paramsCount; i++) {
-                this.PARAMS.add(VariableType.readParam(input, strings));
-            }
-
-            int localsCount = Short.toUnsignedInt(input.getShort());
-            this.LOCALS = new ArrayList<>(localsCount);
-            for (int i = 0; i < localsCount; i++) {
-                this.LOCALS.add(VariableType.readLocal(input, strings));
-            }
-
-            int instructionsCount = Short.toUnsignedInt(input.getShort());
-            this.INSTRUCTIONS = new ArrayList<>(instructionsCount);
-            for (int i = 0; i < instructionsCount; i++) {
-                this.INSTRUCTIONS.add(new Instruction(input, strings));
-            }
-        }
-
-        /**
-         * Write the object to a <code>ByteBuffer</code>. No IO error handling
+         * Write the object to a `ByteBuffer`. No IO error handling
          * is performed.
          *
-         * @param output The <code>ByteBuffer</code> to write.
+         * @param output The `ByteBuffer` to write.
          * @throws IOException IO errors aren't handled at all, they are simply
          * passed on.
          */
-        private void write(ByteBuffer output) throws IOException {
+        @Throws(IOException::class)
+        fun write(output: ByteBuffer) {
             if (null != this.NAME) {
-                this.NAME.write(output);
+                this.NAME!!.write(output)
             }
-
-            this.RETURNTYPE.write(output);
-            this.DOC.write(output);
-            output.putInt(this.USERFLAGS);
-            output.put(this.FLAGS);
-
-            output.putShort((short) this.PARAMS.size());
-            for (VariableType vt : this.PARAMS) {
-                vt.write(output);
+            RETURNTYPE!!.write(output)
+            DOC!!.write(output)
+            output.putInt(this.USERFLAGS)
+            output.put(FLAGS)
+            output.putShort(PARAMS.size.toShort())
+            for (vt in PARAMS) {
+                vt.write(output)
             }
-
-            output.putShort((short) this.LOCALS.size());
-            for (VariableType vt : this.LOCALS) {
-                vt.write(output);
+            output.putShort(LOCALS.size.toShort())
+            for (vt in LOCALS) {
+                vt.write(output)
             }
-
-            output.putShort((short) this.INSTRUCTIONS.size());
-            for (Instruction inst : this.INSTRUCTIONS) {
-                inst.write(output);
+            output.putShort(INSTRUCTIONS.size.toShort())
+            for (inst in INSTRUCTIONS) {
+                inst.write(output)
             }
         }
 
@@ -1110,40 +892,36 @@ final public class Pex {
          * Calculates the size of the Function, in bytes.
          *
          * @return The size of the Function.
-         *
          */
-        public int calculateSize() {
-            int sum = 0;
-
+        fun calculateSize(): Int {
+            var sum = 0
             if (null != this.NAME) {
-                sum += 2; // NAME
+                sum += 2 // NAME
             }
-
-            sum += 2; // returntype
-            sum += 2; // docstring
-            sum += 4; // userflags
-            sum += 1; // flags
-            sum += 6; // array sizes
-            int result1 = 0;
-            for (VariableType PARAM : this.PARAMS) {
-                int calculateSize1 = PARAM.calculateSize();
-                result1 += calculateSize1;
+            sum += 2 // returntype
+            sum += 2 // docstring
+            sum += 4 // userflags
+            sum += 1 // flags
+            sum += 6 // array sizes
+            var result1 = 0
+            for (PARAM in PARAMS) {
+                val calculateSize1 = PARAM.calculateSize()
+                result1 += calculateSize1
             }
-            sum += result1;
-            int sum1 = 0;
-            for (VariableType LOCAL : this.LOCALS) {
-                int i = LOCAL.calculateSize();
-                sum1 += i;
+            sum += result1
+            var sum1 = 0
+            for (LOCAL in LOCALS) {
+                val i = LOCAL.calculateSize()
+                sum1 += i
             }
-            sum += sum1;
-            int result = 0;
-            for (Instruction INSTRUCTION : this.INSTRUCTIONS) {
-                int calculateSize = INSTRUCTION.calculateSize();
-                result += calculateSize;
+            sum += sum1
+            var result = 0
+            for (INSTRUCTION in INSTRUCTIONS) {
+                val calculateSize = INSTRUCTION.calculateSize()
+                result += calculateSize
             }
-            sum += result;
-
-            return sum;
+            sum += result
+            return sum
         }
 
         /**
@@ -1152,24 +930,21 @@ final public class Pex {
          *
          * @param strings The set of strings.
          */
-        public void collectStrings(Set<TString> strings) {
+        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
             if (null != this.NAME) {
-                strings.add(this.NAME);
+                strings.add(this.NAME)
             }
-
-            strings.add(this.RETURNTYPE);
-            strings.add(this.DOC);
-
-            for (VariableType param : this.PARAMS) {
-                param.collectStrings(strings);
+            strings.add(RETURNTYPE)
+            strings.add(DOC)
+            for (param in PARAMS) {
+                param.collectStrings(strings)
             }
-            for (VariableType local : this.LOCALS) {
-                local.collectStrings(strings);
+            for (local in LOCALS) {
+                local.collectStrings(strings)
             }
-            for (Instruction instr : this.INSTRUCTIONS) {
-                instr.collectStrings(strings);
+            for (instr in INSTRUCTIONS) {
+                instr.collectStrings(strings)
             }
-
         }
 
         /**
@@ -1178,27 +953,24 @@ final public class Pex {
          *
          * @return A qualified NAME.
          */
-        public IString getFullName() {
-            if (this.NAME != null) {
-                return IString.format("%s.%s", Pex.this.NAME, this.NAME);
+        val fullName: IString
+            get() = if (this.NAME != null) {
+                format("%s.%s", this@Pex.NAME, this.NAME)
             } else {
-                return IString.format("%s.()", Pex.this.NAME);
+                format("%s.()", this@Pex.NAME)
             }
-        }
 
         /**
          * @return True if the function is global, false otherwise.
          */
-        public boolean isGlobal() {
-            return (this.FLAGS & 0x01) != 0;
-        }
+        val isGlobal: Boolean
+            get() = (FLAGS and 0x01.toByte()).toInt() != 0
 
         /**
          * @return True if the function is native, false otherwise.
          */
-        public boolean isNative() {
-            return (this.FLAGS & 0x02) != 0;
-        }
+        val isNative: Boolean
+            get() = (FLAGS and 0x02.toByte()).toInt() != 0
 
         /**
          * Tries to disassembleInstruction the script.
@@ -1210,102 +982,86 @@ final public class Pex {
          * @param autovars A map of properties to their autovars.
          * @param indent The indent level.
          */
-        public void disassemble(List<String> code, AssemblyLevel level, String nameOverride, Map<Property, Variable> autovars, int indent) {
-            final StringBuilder S = new StringBuilder();
-
-            S.append(Disassembler.tab(indent));
-
-            if (null != this.RETURNTYPE && !this.RETURNTYPE.isEmpty() && !this.RETURNTYPE.equals("NONE")) {
-                S.append(this.RETURNTYPE).append(" ");
+        fun disassemble(
+            code: MutableList<String?>,
+            level: AssemblyLevel?,
+            nameOverride: String?,
+            autovars: Map<Property, Variable>,
+            indent: Int
+        ) {
+            val S = StringBuilder()
+            S.append(Disassembler.tab(indent))
+            if (null != RETURNTYPE && RETURNTYPE.isNotEmpty() && !RETURNTYPE.equals("NONE")) {
+                S.append(RETURNTYPE).append(" ")
             }
-
             if (null != nameOverride) {
-                S.append(String.format("Function %s%s", nameOverride, Disassembler.paramList(this.PARAMS)));
+                S.append(String.format("Function %s%s", nameOverride, Disassembler.paramList(PARAMS)))
             } else {
-                S.append(String.format("Function %s%s", this.NAME, Disassembler.paramList(this.PARAMS)));
+                S.append(String.format("Function %s%s", this.NAME, Disassembler.paramList(PARAMS)))
             }
-
-            final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(this.USERFLAGS);
-            for (UserFlag flag : FLAGOBJS) {
-                S.append(" ").append(flag.toString());
+            val FLAGOBJS = getFlags(this.USERFLAGS)
+            for (flag in FLAGOBJS) {
+                S.append(" ").append(flag.toString())
             }
-
-            if (this.isGlobal()) {
-                S.append(" GLOBAL");
+            if (isGlobal) {
+                S.append(" GLOBAL")
             }
-            if (this.isNative()) {
-                S.append(" NATIVE");
+            if (isNative) {
+                S.append(" NATIVE")
             }
-
-            code.add(S.toString());
-
-            if (null != this.DOC && !this.DOC.isEmpty()) {
-                code.add(String.format("%s{%s}", Disassembler.tab(indent + 1), this.DOC));
+            code.add(S.toString())
+            if (null != DOC && DOC.isNotEmpty()) {
+                code.add(String.format("%s{%s}", Disassembler.tab(indent + 1), DOC))
             }
-
-            Set<IString> GROUPS = new HashSet<>();
-            for (VariableType LOCAL : this.LOCALS) {
-                if (LOCAL.isTemp()) {
-                    TString type = LOCAL.TYPE;
-                    GROUPS.add(type);
+            val GROUPS: MutableSet<IString> = HashSet()
+            for (LOCAL in LOCALS) {
+                if (LOCAL.isTemp) {
+                    val type = LOCAL.TYPE
+                    GROUPS.add(type)
                 }
             }
-
-            for (IString t : GROUPS) {
-                final StringBuilder DECL = new StringBuilder();
-                DECL.append(Disassembler.tab(indent + 1));
-                DECL.append("; ").append(t).append(' ');
-                StringJoiner joiner = new StringJoiner(", ");
-                for (VariableType v : this.LOCALS) {
-                    if (v.isTemp()) {
-                        if (v.TYPE == t) {
-                            TString name = v.name;
-                            joiner.add(name);
-                        }
-                    }
-                }
-                DECL.append(joiner);
-                code.add(DECL.toString());
+            for (t in GROUPS) {
+                val DECL = StringBuilder()
+                DECL.append(Disassembler.tab(indent + 1))
+                DECL.append("; ").append(t).append(' ')
+                val output = LOCALS
+                    .filter { it.isTemp && it.TYPE === t }
+                    .joinToString { it.name }
+                DECL.append(output)
+                code.add(DECL.toString())
             }
 
             /*this.LOCALS.forEach(v -> {
                 code.add(String.format("%s%s %s", Disassembler.tab(indent + 1), v.TYPE, v.NAME));
             });*/
-            List<VariableType> types = new java.util.ArrayList<>(this.PARAMS);
-            types.addAll(this.LOCALS);
-
-            TermMap terms = new TermMap();
-            for (Map.Entry<Property, Variable> entry : autovars.entrySet()) {
-                Property p = entry.getKey();
-                Variable value = entry.getValue();
-                terms.put(new VData.ID(value.NAME), new VData.Term(p.NAME.toString()));
+            val types: MutableList<VariableType> = ArrayList(PARAMS)
+            types.addAll(LOCALS)
+            val terms = TermMap()
+            for ((p, value) in autovars) {
+                terms[VData.ID(value.NAME)] = VData.Term(p.NAME.toString())
             }
-
-            List<Instruction> block = new ArrayList<>(this.INSTRUCTIONS);
-
-            switch (level) {
-                case STRIPPED:
-                    Disassembler.preMap(block, types, terms);
-                    break;
-                case BYTECODE:
-                    Disassembler.preMap(block, types, terms);
-                    for (Instruction v : block) {
-                        code.add(String.format("%s%s", Disassembler.tab(indent + 1), v));
+            val block: List<Instruction> = ArrayList(
+                INSTRUCTIONS
+            )
+            when (level) {
+                AssemblyLevel.STRIPPED -> Disassembler.preMap(block, types, terms)
+                AssemblyLevel.BYTECODE -> {
+                    Disassembler.preMap(block, types, terms)
+                    for (v in block) {
+                        code.add(String.format("%s%s", Disassembler.tab(indent + 1), v))
                     }
-                    break;
-                case FULL:
-                    try {
-                    Disassembler.preMap(block, types, terms);
-                    List<String> code2 = Disassembler.disassemble(block, types, indent + 1);
-                    code.addAll(code2);
-                } catch (DisassemblyException ex) {
-                    code.addAll(ex.getPartial());
-                    final String MSG = String.format("Error disassembling %s.", this.getFullName());
-                    throw new IllegalStateException(MSG, ex);
+                }
+                AssemblyLevel.FULL -> try {
+                    Disassembler.preMap(block, types, terms)
+                    val code2 = Disassembler.disassemble(block, types, indent + 1)
+                    code.addAll(code2)
+                } catch (ex: DisassemblyException) {
+                    code.addAll(ex.partial)
+                    val MSG = String.format("Error disassembling %s.", fullName)
+                    throw IllegalStateException(MSG, ex)
                 }
             }
-
-            code.add(String.format("%sEndFunction", Disassembler.tab(indent)));
+            code.add(String.format("%sEndFunction", Disassembler.tab(indent)))
         }
 
         /**
@@ -1313,112 +1069,102 @@ final public class Pex {
          *
          * @return A string representation of the Function.
          */
-        @Override
-        public String toString() {
-            StringBuilder buf = new StringBuilder();
-
+        override fun toString(): String {
+            val buf = StringBuilder()
             if (this.NAME != null) {
-                buf.append(String.format("Function %s ", this.NAME));
+                buf.append(String.format("Function %s ", this.NAME))
             } else {
-                buf.append("Function (UNNAMED) ");
+                buf.append("Function (UNNAMED) ")
             }
-
-            buf.append(this.PARAMS.toString());
-            buf.append(String.format(" returns %s\n", this.RETURNTYPE.toString()));
-            buf.append(String.format("\tDoc: %s\n", this.DOC.toString()));
-            buf.append(String.format("\tFlags: %s\n", getFlags(this.USERFLAGS)));
-            buf.append("\tLocals: ");
-            buf.append(this.LOCALS.toString());
-            buf.append("\n\tBEGIN\n");
-
-            for (Instruction instruction : this.INSTRUCTIONS) {
-                buf.append("\t\t");
-                buf.append(instruction.toString());
-                buf.append("\n");
+            buf.append(PARAMS.toString())
+            buf.append(String.format(" returns %s\n", RETURNTYPE.toString()))
+            buf.append(String.format("\tDoc: %s\n", DOC.toString()))
+            buf.append(String.format("\tFlags: %s\n", getFlags(this.USERFLAGS)))
+            buf.append("\tLocals: ")
+            buf.append(LOCALS.toString())
+            buf.append("\n\tBEGIN\n")
+            for (instruction in INSTRUCTIONS) {
+                buf.append("\t\t")
+                buf.append(instruction.toString())
+                buf.append("\n")
             }
-
-            buf.append("\tEND\n\n");
-
-            return buf.toString();
+            buf.append("\tEND\n\n")
+            return buf.toString()
         }
 
-        final public TString NAME;
-        final public TString RETURNTYPE;
-        final public TString DOC;
-        final public int USERFLAGS;
-        final public byte FLAGS;
-        final private List<VariableType> PARAMS;
-        final private List<VariableType> LOCALS;
-        final private List<Instruction> INSTRUCTIONS;
+        var NAME: StringTable.TString? = null
+        val RETURNTYPE: StringTable.TString?
+        val DOC: StringTable.TString?
+        val USERFLAGS: Int
+        val FLAGS: Byte
+        private val PARAMS: MutableList<VariableType>
+        private val LOCALS: MutableList<VariableType>
+        private val INSTRUCTIONS: MutableList<Instruction>
 
         /**
          * Describes a single executable Instruction in a Function.
          *
          */
-        public final class Instruction {
-
+        inner class Instruction {
             /**
              * Creates a new Instruction.
              *
              * @param code
              * @param args
              */
-            public Instruction(Opcode code, List<VData> args) {
-                this.OP = (byte) code.ordinal();
-                this.OPCODE = code;
-                this.ARGS = new ArrayList<>(args);
+            constructor(code: Opcode, args: List<VData>?) {
+                OP = code.ordinal.toByte()
+                OPCODE = code
+                ARGS = ArrayList(args)
             }
 
             /**
              * Creates an Instruction by reading from a DataInput.
              *
              * @param input A datainput for a Skyrim PEX file.
-             * @param strings The <code>StringTable</code> for the
-             * <code>Pex</code>.
+             * @param strings The `StringTable` for the
+             * `Pex`.
              * @throws IOException Exceptions aren't handled.
              */
-            private Instruction(ByteBuffer input, StringTable strings) throws IOException {
-                this.OPCODE = Opcode.read(input);
-                this.OP = (byte) this.OPCODE.ordinal();
-
-                if (this.OPCODE.getARGS() > 0) {
-                    this.ARGS = new ArrayList<>(this.OPCODE.getARGS());
-                    for (int i = 0; i < OPCODE.getARGS(); i++) {
-                        this.ARGS.add(VData.readVariableData(input, strings));
+            constructor(input: ByteBuffer, strings: StringTable) {
+                OPCODE = read(input)
+                OP = OPCODE.ordinal.toByte()
+                when {
+                    OPCODE.ARGS > 0 -> {
+                        ARGS = ArrayList(OPCODE.ARGS)
+                        for (i in 0 until OPCODE.ARGS) {
+                            ARGS.add(VData.readVariableData(input, strings))
+                        }
                     }
-                } else if (this.OPCODE.getARGS() < 0) {
-                    this.ARGS = new ArrayList<>(-this.OPCODE.getARGS());
-                    for (int i = 0; i < 1 - this.OPCODE.getARGS(); i++) {
-                        this.ARGS.add(VData.readVariableData(input, strings));
+                    OPCODE.ARGS < 0 -> {
+                        ARGS = ArrayList(-OPCODE.ARGS)
+                        for (i in 0 until 1 - OPCODE.ARGS) {
+                            ARGS.add(VData.readVariableData(input, strings))
+                        }
+                        val count = ARGS[-OPCODE.ARGS] as? VData.Int ?: throw IOException("Invalid instruction")
+                        val numVargs = count.value
+                        for (i in 0 until numVargs) {
+                            ARGS.add(VData.readVariableData(input, strings))
+                        }
                     }
-
-                    VData count = this.ARGS.get(-this.OPCODE.getARGS());
-                    if (!(count instanceof VData.Int)) {
-                        throw new IOException("Invalid instruction");
+                    else -> {
+                        ARGS = mutableListOf()
                     }
-
-                    int numVargs = ((VData.Int) count).getValue();
-                    for (int i = 0; i < numVargs; i++) {
-                        this.ARGS.add(VData.readVariableData(input, strings));
-                    }
-
-                } else {
-                    this.ARGS = new ArrayList<>(0);
                 }
             }
 
             /**
-             * Write the object to a <code>ByteBuffer</code>.
+             * Write the object to a `ByteBuffer`.
              *
-             * @param output The <code>ByteBuffer</code> to write.
+             * @param output The `ByteBuffer` to write.
              * @throws IOException IO errors aren't handled at all, they are
              * simply passed on.
              */
-            private void write(ByteBuffer output) throws IOException {
-                output.put(this.OP);
-
-                for (VData vd : this.ARGS) {
-                    vd.write(output);
+            @Throws(IOException::class)
+            fun write(output: ByteBuffer) {
+                output.put(OP)
+                for (vd in ARGS) {
+                    vd.write(output)
                 }
             }
 
@@ -1426,18 +1172,17 @@ final public class Pex {
              * Calculates the size of the Instruction, in bytes.
              *
              * @return The size of the Instruction.
-             *
              */
-            public int calculateSize() {
-                int sum = 0;
-                sum += 1; // opcode
-                int result = 0;
-                for (VData ARG : ARGS) {
-                    int calculateSize = ARG.calculateSize();
-                    result += calculateSize;
+            fun calculateSize(): Int {
+                var sum = 0
+                sum += 1 // opcode
+                var result = 0
+                for (ARG in ARGS) {
+                    val calculateSize = ARG.calculateSize()
+                    result += calculateSize
                 }
-                sum += result;
-                return sum;
+                sum += result
+                return sum
             }
 
             /**
@@ -1446,9 +1191,9 @@ final public class Pex {
              *
              * @param strings The set of strings.
              */
-            public void collectStrings(Set<TString> strings) {
-                for (VData arg : this.ARGS) {
-                    arg.collectStrings(strings);
+            fun collectStrings(strings: Set<StringTable.TString?>?) {
+                for (arg in ARGS) {
+                    arg.collectStrings(strings)
                 }
             }
 
@@ -1457,10 +1202,9 @@ final public class Pex {
              *
              * @return A string representation of the Instruction.
              */
-            @Override
-            public String toString() {
-                final String FORMAT = "%s %s";
-                return String.format(FORMAT, this.OPCODE, this.ARGS);
+            override fun toString(): String {
+                val FORMAT = "%s %s"
+                return String.format(FORMAT, OPCODE, ARGS)
             }
 
             /**
@@ -1468,48 +1212,70 @@ final public class Pex {
              * scheme, and replaces them.
              *
              * @param scheme The replacement scheme.
-             *
              */
-            public void remapVariables(Scheme scheme) {
-                int firstArg;
-
-                // These five instruction types include identifiers to
-                // properties or functions, which are separate 
-                // namespaces. We use firstArg to skip over those 
-                // identifiers
-                switch (this.OPCODE) {
-                    case CALLSTATIC:
-                        firstArg = 2;
-                        break;
-                    case CALLMETHOD:
-                    case CALLPARENT:
-                    case PROPGET:
-                    case PROPSET:
-                        firstArg = 1;
-                        break;
-                    default:
-                        firstArg = 0;
-                        break;
+            fun remapVariables(scheme: Scheme) {
+                val firstArg: Int
+                firstArg = when (OPCODE) {
+                    Opcode.CALLSTATIC -> 2
+                    Opcode.CALLMETHOD, Opcode.CALLPARENT, Opcode.PROPGET, Opcode.PROPSET -> 1
+                    else -> 0
                 }
 
                 // Remap identifiers 
-                for (int i = firstArg; i < this.ARGS.size(); i++) {
-                    VData arg = this.ARGS.get(i);
-
-                    if (arg.getType() == DataType.IDENTIFIER) {
-                        VData.ID id = (VData.ID) arg;
-                        if (scheme.containsKey(id.getValue())) {
-                            IString newValue = scheme.get(id.getValue());
-                            TString newStr = Pex.this.STRINGS.addString(newValue);
-                            id.setValue(newStr);
+                for (i in firstArg until ARGS.size) {
+                    val arg = ARGS[i]
+                    if (arg.type === DataType.IDENTIFIER) {
+                        val id = arg as VData.ID
+                        if (scheme.containsKey(id.value)) {
+                            val newValue = scheme[id.value]
+                            val newStr = STRINGS.addString(newValue)
+                            id.value = newStr
                         }
                     }
                 }
             }
 
-            final public byte OP;
-            final public Opcode OPCODE;
-            final public List<VData> ARGS;
+            val OP: Byte
+            @JvmField
+            val OPCODE: Opcode
+            @JvmField
+            val ARGS: MutableList<VData>
+        }
+
+        /**
+         * Creates a Function by reading from a DataInput.
+         *
+         * @param input A datainput for a Skyrim PEX file.
+         * @param named A flag indicating whether to read a named function or a
+         * nameless function.
+         * @param strings The `StringTable` for the `Pex`.
+         * @throws IOException Exceptions aren't handled.
+         */
+        init {
+            if (named) {
+                this.NAME = strings.read(input)
+            } else {
+                this.NAME = null
+            }
+            RETURNTYPE = strings.read(input)
+            DOC = strings.read(input)
+            this.USERFLAGS = input.int
+            FLAGS = input.get()
+            val paramsCount = java.lang.Short.toUnsignedInt(input.short)
+            PARAMS = ArrayList(paramsCount)
+            for (i in 0 until paramsCount) {
+                PARAMS.add(readParam(input, strings))
+            }
+            val localsCount = java.lang.Short.toUnsignedInt(input.short)
+            LOCALS = ArrayList(localsCount)
+            for (i in 0 until localsCount) {
+                LOCALS.add(readLocal(input, strings))
+            }
+            val instructionsCount = java.lang.Short.toUnsignedInt(input.short)
+            INSTRUCTIONS = ArrayList(instructionsCount)
+            for (i in 0 until instructionsCount) {
+                INSTRUCTIONS.add(Instruction(input, strings))
+            }
         }
     }
 
@@ -1518,43 +1284,22 @@ final public class Pex {
      * type, user flags, and VData.
      *
      */
-    public final class Variable {
-
+    inner class Variable(input: ByteBuffer, strings: StringTable) {
         /**
-         * Creates a Variable by reading from a DataInput.
+         * Write the object to a `ByteBuffer`.
          *
-         * @param input A datainput for a Skyrim PEX file.
-         * @param strings The <code>StringTable</code> for the <code>Pex</code>.
-         * @throws IOException Exceptions aren't handled.
-         */
-        private Variable(ByteBuffer input, StringTable strings) throws IOException {
-            this.NAME = strings.read(input);
-            this.TYPE = strings.read(input);
-            this.USERFLAGS = input.getInt();
-            this.DATA = VData.readVariableData(input, strings);
-
-            if (Pex.this.GAME.isFO4()) {
-                this.CONST = input.get();
-            } else {
-                this.CONST = 0;
-            }
-        }
-
-        /**
-         * Write the object to a <code>ByteBuffer</code>.
-         *
-         * @param output The <code>ByteBuffer</code> to write.
+         * @param output The `ByteBuffer` to write.
          * @throws IOException IO errors aren't handled at all, they are simply
          * passed on.
          */
-        private void write(ByteBuffer output) throws IOException {
-            this.NAME.write(output);
-            this.TYPE.write(output);
-            output.putInt(this.USERFLAGS);
-            this.DATA.write(output);
-
-            if (Pex.this.GAME.isFO4()) {
-                output.put(this.CONST);
+        @Throws(IOException::class)
+        fun write(output: ByteBuffer) {
+            this.NAME.write(output)
+            TYPE.write(output)
+            output.putInt(this.USERFLAGS)
+            DATA.write(output)
+            if (GAME.isFO4) {
+                output.put(CONST)
             }
         }
 
@@ -1562,18 +1307,17 @@ final public class Pex {
          * Calculates the size of the VData, in bytes.
          *
          * @return The size of the VData.
-         *
          */
-        public int calculateSize() {
-            int sum = 0;
-            sum += 2; // NAME
-            sum += 2; // type
-            sum += 4; // userflags
-            sum += this.DATA.calculateSize();
-            if (Pex.this.GAME.isFO4()) {
-                sum += 1;
+        fun calculateSize(): Int {
+            var sum = 0
+            sum += 2 // NAME
+            sum += 2 // type
+            sum += 4 // userflags
+            sum += DATA.calculateSize()
+            if (GAME.isFO4) {
+                sum += 1
             }
-            return sum;
+            return sum
         }
 
         /**
@@ -1582,21 +1326,20 @@ final public class Pex {
          *
          * @param strings The set of strings.
          */
-        public void collectStrings(Set<TString> strings) {
-            strings.add(this.NAME);
-            strings.add(this.TYPE);
-            this.DATA.collectStrings(strings);
+        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+            strings.add(this.NAME)
+            strings.add(TYPE)
+            DATA.collectStrings(strings)
         }
 
         /**
-         * Indicates whether the <code>Property</code> is conditional.
+         * Indicates whether the `Property` is conditional.
          *
-         * @return True if the <code>Property</code> is conditional, false
+         * @return True if the `Property` is conditional, false
          * otherwise.
          */
-        public boolean isConditional() {
-            return (this.USERFLAGS & 2) != 0;
-        }
+        val isConditional: Boolean
+            get() = this.USERFLAGS and 2 != 0
 
         /**
          * Tries to disassemble Instruction the script.
@@ -1604,24 +1347,21 @@ final public class Pex {
          * @param code The code strings.
          * @param level Partial disassembly flag.
          */
-        public void disassemble(List<String> code, AssemblyLevel level) {
-            final StringBuilder S = new StringBuilder();
-
-            if (this.DATA.getType() != DataType.NONE) {
-                S.append(String.format("%s %s = %s", this.TYPE, this.NAME, this.DATA));
+        fun disassemble(code: MutableList<String?>, level: AssemblyLevel?) {
+            val S = StringBuilder()
+            if (DATA.type !== DataType.NONE) {
+                S.append(String.format("%s %s = %s", TYPE, this.NAME, DATA))
             } else {
-                S.append(String.format("%s %s", this.TYPE, this.NAME));
+                S.append(String.format("%s %s", TYPE, this.NAME))
             }
-
-            if (this.CONST != 0) {
-                S.append(" ").append("const");
+            if (CONST.toInt() != 0) {
+                S.append(" ").append("const")
             }
-
-            final Set<UserFlag> FLAGOBJS = Pex.this.getFlags(this.USERFLAGS);
-            for (UserFlag flag : FLAGOBJS) {
-                S.append(" ").append(flag.toString());
+            val FLAGOBJS = getFlags(this.USERFLAGS)
+            for (flag in FLAGOBJS) {
+                S.append(" ").append(flag.toString())
             }
-            code.add(S.toString());
+            code.add(S.toString())
         }
 
         /**
@@ -1629,19 +1369,101 @@ final public class Pex {
          *
          * @return A string representation of the Variable.
          */
-        @Override
-        public String toString() {
-            final String FORMAT = "\tVariable %s %s = %s %s\n\n";
-            return String.format(FORMAT, this.TYPE, this.NAME, this.DATA, getFlags(this.USERFLAGS));
+        override fun toString(): String {
+            val FORMAT = "\tVariable %s %s = %s %s\n\n"
+            return String.format(FORMAT, TYPE, this.NAME, DATA, getFlags(this.USERFLAGS))
         }
 
-        final public TString NAME;
-        final public TString TYPE;
-        final public int USERFLAGS;
-        final public VData DATA;
-        final public byte CONST;
+        val NAME: StringTable.TString
+        val TYPE: StringTable.TString
+        val USERFLAGS: Int
+        val DATA: VData
+        var CONST: Byte = 0
+
+        /**
+         * Creates a Variable by reading from a DataInput.
+         *
+         * @param input A datainput for a Skyrim PEX file.
+         * @param strings The `StringTable` for the `Pex`.
+         * @throws IOException Exceptions aren't handled.
+         */
+        init {
+            this.NAME = strings.read(input)
+            TYPE = strings.read(input)
+            this.USERFLAGS = input.int
+            DATA = VData.readVariableData(input, strings)
+            CONST = if (GAME.isFO4) {
+                input.get()
+            } else {
+                0
+            }
+        }
     }
 
-    static final private IString[] _EXCLUDED = new IString[]{IString.get("player"), IString.get("playerref")};
-    static final java.util.Set<IString> EXCLUDED = new java.util.HashSet<>(Arrays.asList(_EXCLUDED));
+    companion object {
+        private val _EXCLUDED = arrayOf(IString["player"], IString["playerref"])
+        val EXCLUDED: Set<IString> = hashSetOf(*_EXCLUDED)
+    }
+
+    /**
+     * Creates a PexObject by reading from a DataInput.
+     *
+     * @param input A datainput for a Skyrim PEX file.
+     * @param game The game for which the script was compiled.
+     * @param strings The `StringTable` for the `Pex`.
+     * @param flags The `UserFlag` list.
+     * @throws IOException Exceptions aren't handled.
+     */
+    init {
+        GAME = game
+        USERFLAGDEFS = flags!!.filterNotNull()
+        STRINGS = strings
+        NAME = strings.read(input)
+        size = input.int
+        PARENTNAME = strings.read(input)
+        DOCSTRING = strings.read(input)
+        CONSTFLAG = if (game.isFO4) {
+            input.get()
+        } else {
+            -1
+        }
+        USERFLAGS = input.int
+        AUTOSTATENAME = strings.read(input)
+        AUTOVARMAP = hashMapOf()
+        if (game.isFO4) {
+            val numStructs = java.lang.Short.toUnsignedInt(input.short)
+            STRUCTS = arrayListOf()
+            for (i in 0 until numStructs) {
+                STRUCTS!!.add(Struct(input, strings))
+            }
+        } else {
+            STRUCTS = arrayListOf()
+        }
+        val numVariables = java.lang.Short.toUnsignedInt(input.short)
+        VARIABLES = ArrayList(numVariables)
+        for (i in 0 until numVariables) {
+            VARIABLES.add(Variable(input, strings))
+        }
+        val numProperties = java.lang.Short.toUnsignedInt(input.short)
+        PROPERTIES = ArrayList(numProperties)
+        for (i in 0 until numProperties) {
+            PROPERTIES.add(Property(input, strings))
+        }
+        val numStates = java.lang.Short.toUnsignedInt(input.short)
+        STATES = ArrayList(numStates)
+        for (i in 0 until numStates) {
+            STATES.add(State(input, strings))
+        }
+        for (prop in PROPERTIES) {
+            if (prop.hasAutoVar()) {
+                for (`var` in VARIABLES) {
+                    if (prop.AUTOVARNAME!!.equals(`var`.NAME)) {
+                        AUTOVARMAP[prop] = `var`
+                        break
+                    }
+                }
+                assert(AUTOVARMAP.containsKey(prop))
+            }
+        }
+    }
 }
