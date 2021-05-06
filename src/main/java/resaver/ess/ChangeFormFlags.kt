@@ -13,94 +13,77 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import java.util.Objects
+import java.lang.StringBuilder
+import java.nio.ByteBuffer
 
 /**
  * Describes the ChangeForm flags for a ChangeForm.
  *
  * @author Mark Fairchild
  */
-final public class ChangeFormFlags implements Element {
-
+class ChangeFormFlags(input: ByteBuffer) : Element {
     /**
-     * Creates a new <code>ChangeFormFlags</code>.
-     *
-     * @param input The input stream.
-     */
-    public ChangeFormFlags(ByteBuffer input) {
-        this.FLAG = input.getInt();
-        this.UNKNOWN = input.getShort();
-    }
-
-    /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer) 
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        Objects.requireNonNull(output);
-        output.putInt(this.FLAG);
-        output.putShort(this.UNKNOWN);
+    override fun write(output: ByteBuffer?) {
+        Objects.requireNonNull(output)
+        output!!.putInt(flags)
+        output.putShort(unknown)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return 6;
-    }
-
-    /**
-     * @return The flag field.
-     */
-    public int getFlags() {
-        return this.FLAG;
-    }
-
-    /**
-     * @return The unknown field.
-     */
-    public short getUnknown() {
-        return this.UNKNOWN;
+    override fun calculateSize(): Int {
+        return 6
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        final StringBuilder BUF = new StringBuilder();
-        final String S = Integer.toUnsignedString(this.FLAG, 2);
-
-        int idx = 0;
-
-        while (idx < 32 - S.length()) {
+    override fun toString(): String {
+        val BUF = StringBuilder()
+        val S = Integer.toUnsignedString(flags, 2)
+        var idx = 0
+        while (idx < 32 - S.length) {
             if (idx > 0 && idx % 4 == 0) {
-                BUF.append(' ');
+                BUF.append(' ')
             }
-
-            BUF.append('0');
-            idx++;
+            BUF.append('0')
+            idx++
         }
-
         while (idx < 32) {
             if (idx > 0 && idx % 4 == 0) {
-                BUF.append(' ');
+                BUF.append(' ')
             }
-            
-            BUF.append(S.charAt(idx - 32 + S.length()));
-            idx++;
+            BUF.append(S[idx - 32 + S.length])
+            idx++
         }
-
-        return BUF.toString();
+        return BUF.toString()
     }
 
-    final private int FLAG;
-    final private short UNKNOWN;
+    /**
+     * @return The flag field.
+     */
+    val flags: Int
 
+    /**
+     * @return The unknown field.
+     */
+    val unknown: Short
+
+    /**
+     * Creates a new `ChangeFormFlags`.
+     *
+     * @param input The input stream.
+     */
+    init {
+        flags = input.int
+        unknown = input.short
+    }
 }
