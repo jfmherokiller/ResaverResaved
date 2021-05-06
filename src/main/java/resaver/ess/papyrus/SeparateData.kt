@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import kotlin.Throws
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark
  */
-public interface SeparateData {
-
-    void readData(java.nio.ByteBuffer input, PapyrusContext context) throws PapyrusFormatException, PapyrusElementException;
-
-    void writeData(java.nio.ByteBuffer input);
-
+interface SeparateData {
+    @Throws(PapyrusFormatException::class, PapyrusElementException::class)
+    fun readData(input: ByteBuffer?, context: PapyrusContext?)
+    fun writeData(input: ByteBuffer?)
 }
