@@ -173,11 +173,11 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         (BODYDATA as Buffer).position(0)
         try {
             parsedData = when (type) {
-                ChangeFormType.FLST -> ChangeFormFLST(BODYDATA, changeFlags, context)
+                ChangeFormType.FLST -> context?.let { ChangeFormFLST(BODYDATA, changeFlags, it) }
                 ChangeFormType.LVLN -> ChangeFormLVLN(BODYDATA, changeFlags, context)
                 ChangeFormType.REFR -> ChangeFormRefr(BODYDATA, changeFlags, refID, analysis, context)
                 ChangeFormType.ACHR -> ChangeFormACHR(BODYDATA, changeFlags, refID, analysis, context)
-                ChangeFormType.NPC_ -> ChangeFormNPC(BODYDATA, changeFlags, context)
+                ChangeFormType.NPC_ -> context?.let { ChangeFormNPC(BODYDATA, changeFlags, it) }
                 else -> if (bestEffort) {
                     ChangeFormDefault(BODYDATA, length1)
                 } else {
