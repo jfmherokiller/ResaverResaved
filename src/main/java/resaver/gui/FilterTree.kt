@@ -243,7 +243,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      * @param model A `FilterTreeModel`.
      * @param filter An optional setFilter.
      */
-    fun setESS(ess: ESS?, model: FilterTreeModel?, filter: Predicate<FilterTreeModel.Node?>?) {
+    fun setESS(ess: ESS?, model: FilterTreeModel?, filter: Predicate<FilterTreeModel.Node>?) {
         val PATHS = this.selectionPaths
         if (null != filter) {
             model!!.setFilter(filter)
@@ -267,8 +267,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      * @return The corresponding `Node` or null if the
      * `Element` was not found.
      */
-    fun findPath(element: Element?): TreePath {
-        Objects.requireNonNull(element)
+    fun findPath(element: Element?): TreePath? {
         return this.model?.findPath(element)!!
     }
 
