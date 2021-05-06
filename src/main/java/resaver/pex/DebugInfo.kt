@@ -62,7 +62,7 @@ class DebugInfo internal constructor(private val pexFile: PexFile, input: ByteBu
                 PROPERTYGROUP.collectStrings(strings.filterNotNull().toMutableSet())
             }
             for (f in STRUCTORDERS) {
-                f.collectStrings(strings)
+                f.collectStrings(strings.filterNotNull().toMutableSet())
             }
         }
     }
@@ -149,7 +149,7 @@ class DebugInfo internal constructor(private val pexFile: PexFile, input: ByteBu
                 val orderCount = java.lang.Short.toUnsignedInt(input.short)
                 STRUCTORDERS.ensureCapacity(orderCount)
                 for (i in 0 until orderCount) {
-                    STRUCTORDERS.add(StructOrder(input, strings))
+                    strings?.let { StructOrder(input, it) }?.let { STRUCTORDERS.add(it) }
                 }
             }
         }
