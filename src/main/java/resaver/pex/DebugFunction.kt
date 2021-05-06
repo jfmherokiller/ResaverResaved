@@ -50,7 +50,7 @@ internal class DebugFunction(input: ByteBuffer, strings: StringTable) {
      *
      * @param strings The set of strings.
      */
-    fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+    fun collectStrings(strings: MutableSet<TString?>) {
         strings.add(OBJECTNAME)
         strings.add(STATENAME)
         strings.add(FUNCNAME)
@@ -83,9 +83,9 @@ internal class DebugFunction(input: ByteBuffer, strings: StringTable) {
         return buf.toString()
     }
 
-    private val OBJECTNAME: StringTable.TString = strings.read(input)
-    private val STATENAME: StringTable.TString = strings.read(input)
-    private val FUNCNAME: StringTable.TString = strings.read(input)
+    private val OBJECTNAME: TString = strings.read(input)
+    private val STATENAME: TString = strings.read(input)
+    private val FUNCNAME: TString = strings.read(input)
     private val FUNCTYPE: Byte = input.get()
     private val INSTRUCTIONS: MutableList<Int>
 

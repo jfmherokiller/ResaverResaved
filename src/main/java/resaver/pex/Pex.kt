@@ -104,7 +104,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
      *
      * @param strings The set of strings.
      */
-    fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+    fun collectStrings(strings: MutableSet<TString?>) {
         strings.add(NAME)
         strings.add(PARENTNAME)
         strings.add(DOCSTRING)
@@ -277,13 +277,13 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
     }
 
     val GAME: Game
-    val NAME: StringTable.TString
+    val NAME: TString
     var size: Int
-    val PARENTNAME: StringTable.TString?
-    val DOCSTRING: StringTable.TString?
+    val PARENTNAME: TString?
+    val DOCSTRING: TString?
     var CONSTFLAG: Byte = 0
     val USERFLAGS: Int
-    val AUTOSTATENAME: StringTable.TString
+    val AUTOSTATENAME: TString
     private var STRUCTS: MutableList<Struct>? = null
     private val VARIABLES: MutableList<Variable>
     private val PROPERTIES: MutableList<Property>
@@ -338,7 +338,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
          *
          * @param strings The set of strings.
          */
-        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        fun collectStrings(strings: MutableSet<TString?>) {
             strings.add(this.NAME)
             for (f in MEMBERS) {
                 f.collectStrings(strings)
@@ -352,7 +352,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
          */
         val fullName: IString
             get() = format("%s.%s", this@Pex.NAME, this.NAME)
-        val NAME: StringTable.TString
+        val NAME: TString
         private val MEMBERS: MutableList<Member>
 
         /**
@@ -400,7 +400,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
              *
              * @param strings The set of strings.
              */
-            fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+            fun collectStrings(strings: MutableSet<TString?>) {
                 strings.add(this.NAME)
                 strings.add(TYPE)
                 strings.add(DOC)
@@ -433,9 +433,9 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
                 return buf.toString()
             }
 
-            val NAME: StringTable.TString
-            val TYPE: StringTable.TString
-            val DOC: StringTable.TString
+            val NAME: TString
+            val TYPE: TString
+            val DOC: TString
             val USERFLAGS: Int
             val CONSTFLAG: Byte
             val VALUE: VData
@@ -586,7 +586,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
          *
          * @param strings The set of strings.
          */
-        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        fun collectStrings(strings: MutableSet<TString?>) {
             strings.add(this.NAME)
             strings.add(TYPE)
             strings.add(DOC)
@@ -684,12 +684,12 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
             return buf.toString()
         }
 
-        val NAME: StringTable.TString
-        val TYPE: StringTable.TString
-        val DOC: StringTable.TString?
+        val NAME: TString
+        val TYPE: TString
+        val DOC: TString?
         val USERFLAGS: Int
         val FLAGS: Byte
-        var AUTOVARNAME: StringTable.TString? = null
+        var AUTOVARNAME: TString? = null
         private var READHANDLER: Function? = null
         private var WRITEHANDLER: Function? = null
 
@@ -768,7 +768,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
          *
          * @param strings The set of strings.
          */
-        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        fun collectStrings(strings: MutableSet<TString?>) {
             strings.add(this.NAME)
             for (function in FUNCTIONS) {
                 function.collectStrings(strings)
@@ -832,7 +832,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
             return buf.toString()
         }
 
-        val NAME: StringTable.TString?
+        val NAME: TString?
         val FUNCTIONS: MutableList<Function>
 
         /**
@@ -930,7 +930,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
          *
          * @param strings The set of strings.
          */
-        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        fun collectStrings(strings: MutableSet<TString?>) {
             if (null != this.NAME) {
                 strings.add(this.NAME)
             }
@@ -1092,9 +1092,9 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
             return buf.toString()
         }
 
-        var NAME: StringTable.TString? = null
-        val RETURNTYPE: StringTable.TString?
-        val DOC: StringTable.TString?
+        var NAME: TString? = null
+        val RETURNTYPE: TString?
+        val DOC: TString?
         val USERFLAGS: Int
         val FLAGS: Byte
         private val PARAMS: MutableList<VariableType>
@@ -1191,7 +1191,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
              *
              * @param strings The set of strings.
              */
-            fun collectStrings(strings: Set<StringTable.TString?>?) {
+            fun collectStrings(strings: Set<TString?>?) {
                 for (arg in ARGS) {
                     arg.collectStrings(strings)
                 }
@@ -1326,7 +1326,7 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
          *
          * @param strings The set of strings.
          */
-        fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+        fun collectStrings(strings: MutableSet<TString?>) {
             strings.add(this.NAME)
             strings.add(TYPE)
             DATA.collectStrings(strings)
@@ -1374,8 +1374,8 @@ class Pex internal constructor(input: ByteBuffer, game: Game, flags: List<UserFl
             return String.format(FORMAT, TYPE, this.NAME, DATA, getFlags(this.USERFLAGS))
         }
 
-        val NAME: StringTable.TString
-        val TYPE: StringTable.TString
+        val NAME: TString
+        val TYPE: TString
         val USERFLAGS: Int
         val DATA: VData
         var CONST: Byte = 0

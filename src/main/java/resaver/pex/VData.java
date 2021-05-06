@@ -21,7 +21,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import resaver.pex.StringTable.TString;
 
 /**
  * Describes the data stored by a variable, property, or parameter.

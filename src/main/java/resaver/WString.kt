@@ -13,115 +13,101 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import mf.BufferUtil
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
- * Extends <code>IString</code> by handling charsets and storing the original
+ * Extends `IString` by handling charsets and storing the original
  * byte sequence.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-public class WString extends IString{
-
-    /**
-     * Creates a new <code>WString</code> by reading from a <code>ByteBuffer</code>.
-     *
-     * @param input The input stream.
-     * @return The new <code>WString</code>.
-     */
-    static public WString read(ByteBuffer input) {
-        final byte[] BYTES = mf.BufferUtil.getWStringRaw(input);
-        return new WString(BYTES);
-    }
-
+open class WString : IString {
     /**
      * Copy constructor.
      *
-     * @param other The original <code>WString</code>.
+     * @param other The original `WString`.
      */
-    public WString(WString other) {
-        super(other);
-        this.RAW_BYTES = other.RAW_BYTES;
+    constructor(other: WString) : super(other) {
+        RAW_BYTES = other.RAW_BYTES
     }
 
     /**
-     * Creates a new <code>WString</code> from a character sequence; the byte
+     * Creates a new `WString` from a character sequence; the byte
      * array is generated from the string using UTF-8 encoding.
      *
-     * @param cs The <code>CharSequence</code>.
+     * @param cs The `CharSequence`.
      */
-    public WString(CharSequence cs) {
-        super(cs);
-        this.RAW_BYTES = null;
+    constructor(cs: CharSequence?) : super(cs!!) {
+        RAW_BYTES = null
     }
 
     /**
-     * Creates a new <code>WString</code> from a character sequence and a byte
+     * Creates a new `WString` from a character sequence and a byte
      * array.
      *
      * @param bytes The byte array.
      */
-    protected WString(byte[] bytes) {
-        super(mf.BufferUtil.mozillaString(bytes));
-        this.RAW_BYTES = Arrays.equals(super.getUTF8(), bytes)
-                ? null
-                : bytes;
+    protected constructor(bytes: ByteArray?) : super(BufferUtil.mozillaString(bytes)) {
+        RAW_BYTES = if (Arrays.equals(super.uTF8, bytes)) null else bytes
     }
 
     /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    public void write(ByteBuffer output) {
-        final byte[] BYTES = this.getUTF8();
-        
-        if (BYTES.length > 0xFFFF) {
-            output.putShort((short)0xFFFF);
-            output.put(BYTES, 0, 0xFFFF);
+    open fun write(output: ByteBuffer) {
+        val BYTES = uTF8
+        if (BYTES!!.size > 0xFFFF) {
+            output.putShort(0xFFFF.toShort())
+            output.put(BYTES, 0, 0xFFFF)
         } else {
-            output.putShort((short)BYTES.length);
-            output.put(BYTES);
+            output.putShort(BYTES.size.toShort())
+            output.put(BYTES)
         }
     }
 
     /**
-     * @return The size of the <code>WString</code> in bytes.
+     * @return The size of the `WString` in bytes.
      */
-    public int calculateSize() {
-        final byte[] BYTES = this.getUTF8();
-        return BYTES.length > 0xFFFF
-                ? 2 + 0xFFFF
-                : 2 + BYTES.length;
+    open fun calculateSize(): Int {
+        val BYTES = uTF8
+        return if (BYTES!!.size > 0xFFFF) 2 + 0xFFFF else 2 + BYTES.size
     }
 
     /**
-     * @see java.lang.String#getBytes()
-     * @see resaver.IString#getUTF8()
-     * @return An array of bytes representing the <code>IString</code>.
+     * @see java.lang.String.getBytes
+     * @see resaver.IString.getUTF8
+     * @return An array of bytes representing the `IString`.
      */
-    @Override
-    public byte[] getUTF8() {
-        return this.RAW_BYTES == null
-                ? super.getUTF8()
-                : this.RAW_BYTES;
-    }
-    
-    final private byte[] RAW_BYTES;
-    
+    override val uTF8: ByteArray?
+        get() = RAW_BYTES ?: super.uTF8
+    private val RAW_BYTES: ByteArray?
+
     /**
      * Tests for case-insensitive value-equality with another
-     * <code>TString</code>, <code>IString</code>, or <code>String</code>.
+     * `TString`, `IString`, or `String`.
      *
      * @param obj The object to which to compare.
-     * @see java.lang.String#equalsIgnoreCase(java.lang.String)
+     * @see java.lang.String.equalsIgnoreCase
      */
     //@Override
     //public boolean equals(Object obj) {
     //    return super.equals(obj);
     //}
-
+    companion object {
+        /**
+         * Creates a new `WString` by reading from a `ByteBuffer`.
+         *
+         * @param input The input stream.
+         * @return The new `WString`.
+         */
+        fun read(input: ByteBuffer?): WString {
+            val BYTES = BufferUtil.getWStringRaw(input)
+            return WString(BYTES)
+        }
+    }
 }

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import resaver.IString;
-import resaver.pex.StringTable.TString;
 
 /**
  * Describes the debugging information for a property group.
@@ -69,7 +68,7 @@ final class StructOrder {
      *
      * @param strings The set of strings.
      */
-    public void collectStrings(Set<StringTable.TString> strings) {
+    public void collectStrings(Set<TString> strings) {
         strings.add(this.OBJECTNAME);
         strings.add(this.ORDERNAME);
         strings.addAll(this.NAMES);

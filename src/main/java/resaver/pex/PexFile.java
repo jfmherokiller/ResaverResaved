@@ -31,7 +31,6 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
-import resaver.pex.StringTable.TString;
 
 /**
  * Describes a Skyrim PEX script and will read and write it from streams.

@@ -41,7 +41,7 @@ internal class VariableType private constructor(input: ByteBuffer, strings: Stri
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer?) {
+    fun write(output: ByteBuffer) {
         name.write(output)
         TYPE.write(output)
     }
@@ -68,7 +68,7 @@ internal class VariableType private constructor(input: ByteBuffer, strings: Stri
      *
      * @param strings The set of strings.
      */
-    fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+    fun collectStrings(strings: MutableSet<TString?>) {
         strings.add(name)
         strings.add(TYPE)
     }
@@ -95,9 +95,9 @@ internal class VariableType private constructor(input: ByteBuffer, strings: Stri
     val isParam: Boolean
         get() = ROLE == Role.PARAM
     @JvmField
-    var name: StringTable.TString
+    var name: TString
     @JvmField
-    val TYPE: StringTable.TString
+    val TYPE: TString
     val ROLE: Role
 
     companion object {

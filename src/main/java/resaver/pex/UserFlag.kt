@@ -43,7 +43,7 @@ class UserFlag internal constructor(input: ByteBuffer, strings: StringTable) {
      *
      * @param strings The set of strings.
      */
-    fun collectStrings(strings: MutableSet<StringTable.TString?>) {
+    fun collectStrings(strings: MutableSet<TString?>) {
         strings.add(NAME)
     }
 
@@ -74,7 +74,7 @@ class UserFlag internal constructor(input: ByteBuffer, strings: StringTable) {
         return String.format(FORMAT, NAME)
     }
 
-    private val NAME: StringTable.TString = strings.read(input)
+    private val NAME: TString = strings.read(input)
     private val FLAGINDEX: Byte = input.get()
 
 }

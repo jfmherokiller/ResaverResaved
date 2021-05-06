@@ -13,57 +13,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import resaver.IString;
-import resaver.pex.StringTable.TString;
+import resaver.IString.Companion.format
+import kotlin.Throws
+import java.io.IOException
+import resaver.IString
+import java.nio.ByteBuffer
 
 /**
  * Describes the debugging information for a property group.
  *
  */
-final class PropertyGroup {
-
+internal class PropertyGroup(input: ByteBuffer, strings: StringTable) {
     /**
-     * Creates a DebugFunction by reading from a DataInput.
+     * Write the object to a `ByteBuffer`.
      *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param strings The <code>StringTable</code> for the <code>PexFile</code>.
-     * @throws IOException Exceptions aren't handled.
-     */
-    PropertyGroup(ByteBuffer input, StringTable strings) throws IOException {
-        this.OBJECTNAME = strings.read(input);
-        this.GROUPNAME = strings.read(input);
-        this.DOCSTRING = strings.read(input);
-        this.USERFLAGS = input.getInt();
-
-        int propertyCount = Short.toUnsignedInt(input.getShort());
-        this.PROPERTIES = new ArrayList<>(propertyCount);
-        for (int i = 0; i < propertyCount; i++) {
-            this.PROPERTIES.add(strings.read(input));
-        }
-    }
-
-    /**
-     * Write the object to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      * @throws IOException IO errors aren't handled at all, they are simply
      * passed on.
      */
-    void write(ByteBuffer output) throws IOException {
-        this.OBJECTNAME.write(output);
-        this.GROUPNAME.write(output);
-        this.DOCSTRING.write(output);
-        output.putInt(this.USERFLAGS);
-        output.putShort((short) this.PROPERTIES.size());
-        for (TString prop : this.PROPERTIES) {
-            prop.write(output);
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer) {
+        OBJECTNAME.write(output)
+        GROUPNAME.write(output)
+        DOCSTRING.write(output)
+        output.putInt(USERFLAGS)
+        output.putShort(PROPERTIES.size.toShort())
+        for (prop in PROPERTIES) {
+            prop.write(output)
         }
     }
 
@@ -73,45 +51,59 @@ final class PropertyGroup {
      *
      * @param strings The set of strings.
      */
-    public void collectStrings(Set<StringTable.TString> strings) {
-        strings.add(this.OBJECTNAME);
-        strings.add(this.GROUPNAME);
-        strings.add(this.DOCSTRING);
-        strings.addAll(this.PROPERTIES);
+    fun collectStrings(strings: MutableSet<TString>) {
+        strings.add(OBJECTNAME)
+        strings.add(GROUPNAME)
+        strings.add(DOCSTRING)
+        strings.addAll(PROPERTIES)
     }
 
     /**
      * Generates a qualified name for the object of the form "OBJECT.FUNCTION".
      *
      * @return A qualified name.
-     *
      */
-    public IString getFullName() {
-        return IString.format("%s.%s", this.OBJECTNAME, this.GROUPNAME);
-    }
+    val fullName: IString
+        get() = format("%s.%s", OBJECTNAME, GROUPNAME)
 
     /**
-     * @return The size of the <code>PropertyGroup</code>, in bytes.
-     *
+     * @return The size of the `PropertyGroup`, in bytes.
      */
-    public int calculateSize() {
-        return 12 + 2 * this.PROPERTIES.size();
+    fun calculateSize(): Int {
+        return 12 + 2 * PROPERTIES.size
     }
-    
+
     /**
      * Pretty-prints the DebugFunction.
      *
      * @return A string representation of the DebugFunction.
      */
-    @Override
-    public String toString() {
-        return String.format("%s.%s [%s]", this.OBJECTNAME, this.GROUPNAME, this.PROPERTIES.toString());
+    override fun toString(): String {
+        return "$OBJECTNAME.$GROUPNAME [$PROPERTIES]"
     }
 
-    final private TString OBJECTNAME;
-    final private TString GROUPNAME;
-    final private TString DOCSTRING;
-    final private int USERFLAGS;
-    private final List<TString> PROPERTIES;
+    private val OBJECTNAME: TString
+    private val GROUPNAME: TString
+    private val DOCSTRING: TString
+    private val USERFLAGS: Int
+    private val PROPERTIES: MutableList<TString>
 
+    /**
+     * Creates a DebugFunction by reading from a DataInput.
+     *
+     * @param input A datainput for a Skyrim PEX file.
+     * @param strings The `StringTable` for the `PexFile`.
+     * @throws IOException Exceptions aren't handled.
+     */
+    init {
+        OBJECTNAME = strings.read(input)
+        GROUPNAME = strings.read(input)
+        DOCSTRING = strings.read(input)
+        USERFLAGS = input.int
+        val propertyCount = java.lang.Short.toUnsignedInt(input.short)
+        PROPERTIES = ArrayList(propertyCount)
+        for (i in 0 until propertyCount) {
+            PROPERTIES.add(strings.read(input))
+        }
+    }
 }

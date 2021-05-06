@@ -13,88 +13,59 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.nio.ByteBuffer;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import resaver.IString;
-import resaver.ListException;
-import resaver.WString;
+import mf.BufferUtil
+import resaver.IString
+import resaver.ListException
+import java.io.IOException
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * An abstraction describing a string table.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class StringTable extends ArrayList<StringTable.TString> {
-
+class StringTable(input: ByteBuffer) : ArrayList<TString?>() {
     /**
-     * Creates a new <code>TString</code> by reading from a
-     * <code>DataInput</code>. No error handling is performed.
+     * Creates a new `TString` by reading from a
+     * `DataInput`. No error handling is performed.
      *
      * @param input The input stream.
-     * @return The new <code>TString</code>.
+     * @return The new `TString`.
      * @throws IOException
      */
-    public TString read(ByteBuffer input) throws IOException {
-        Objects.requireNonNull(input);
-
-        int index = Short.toUnsignedInt(input.getShort());
-
-        if (index < 0 || index >= this.size()) {
-            throw new IOException(String.format("Invalid TString index: %d (size %d)", index, this.size()));
+    @Throws(IOException::class)
+    fun read(input: ByteBuffer): TString {
+        Objects.requireNonNull(input)
+        val index = java.lang.Short.toUnsignedInt(input.short)
+        if (index < 0 || index >= this.size) {
+            throw IOException(String.format("Invalid TString index: %d (size %d)", index, this.size))
         }
-
-        TString newString = this.get(index);
-        return newString;
+        return this[index]!!
     }
 
     /**
-     * @return Returns a reusable instance of a blank <code>TString</code>.
+     * @return Returns a reusable instance of a blank `TString`.
      */
-    public TString blank() {
-        return this.addString(IString.BLANK);
+    fun blank(): TString {
+        return addString(IString.BLANK)
     }
 
     /**
-     * Creates a new <code>DataInput</code> by reading from a
-     * <code>LittleEndianByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     */
-    public StringTable(ByteBuffer input) {
-        int strCount = Short.toUnsignedInt(input.getShort());
-        this.ensureCapacity(strCount);
-
-        for (int i = 0; i < strCount; i++) {
-            try {
-                final String STR = mf.BufferUtil.getUTF(input);
-                final TString TSTR = new TString(STR, i);
-                this.add(TSTR);
-            } catch (RuntimeException ex) {
-                throw new ListException("Error reading string", i, strCount, ex);
-            }
-        }
-    }
-
-    /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      * @throws IOException
      */
-    public void write(ByteBuffer output) throws IOException {
-        output.putShort((short) this.size());
-
-        for (TString tstr : this) {
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer) {
+        output.putShort(this.size.toShort())
+        for (tstr in this) {
             try {
-                tstr.writeFull(output);
-            } catch (IOException ex) {
-                throw new IOException("Error writing string #" + tstr.INDEX, ex);
+                tstr?.writeFull(output)
+            } catch (ex: IOException) {
+                throw IOException("Error writing string #" + (tstr?.INDEX ?: 0), ex)
             }
         }
     }
@@ -104,99 +75,73 @@ final public class StringTable extends ArrayList<StringTable.TString> {
      * Pex's members has changed at all. Otherwise, writing the Pex will produce
      * an invalid file.
      *
-     * @param inUse The <code>Set</code> of strings that are still in use.
-     *
+     * @param inUse The `Set` of strings that are still in use.
      */
-    public void rebuildStringTable(Set<TString> inUse) {
-        this.retainAll(this);
+    fun rebuildStringTable(inUse: Set<TString?>?) {
+        this.retainAll(this)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    public int calculateSize() {
-        int sum = 0;
-
-        if (this.size() > 0xFFF0) {
-            sum += 6;
+    fun calculateSize(): Int {
+        var sum = 0
+        sum += if (this.size > 0xFFF0) {
+            6
         } else {
-            sum += 2;
+            2
         }
-
-        int result = 0;
-        for (TString tString : this) {
-            int calculateSize = tString.calculateSize();
-            result += calculateSize;
+        var result = 0
+        for (tString in this) {
+            val calculateSize = tString?.calculateSize()?: 0
+            result += calculateSize
         }
-        sum += result;
-        return sum;
+        sum += result
+        return sum
     }
-    
+
     /**
-     * Adds a new string to the <code>StringTable</code> and returns the
-     * corresponding <code>TString</code>.
+     * Adds a new string to the `StringTable` and returns the
+     * corresponding `TString`.
      *
      * @param val The value of the new string.
-     * @return The new <code>TString</code>, or the existing one if the
-     * <code>StringTable</code> already contained a match.
+     * @return The new `TString`, or the existing one if the
+     * `StringTable` already contained a match.
      */
-    public TString addString(IString val) {
-        Optional<TString> match = Optional.empty();
-        for (TString v : this) {
-            if (v.equals(val)) {
-                match = Optional.of(v);
-                break;
+    fun addString(`val`: IString?): TString {
+        var match: TString? = null
+        for (v in this) {
+            if (v?.equals(`val`) == true) {
+                match = v
+                break
             }
         }
-        if (match.isPresent()) {
-            return match.get();
+        if (match != null) {
+            return match
         }
-
-        TString tstr = new TString(val, this.size());
-        this.add(tstr);
-        return tstr;
+        val tstr = TString(`val`, this.size)
+        this.add(tstr)
+        return tstr
     }
 
     /**
-     * A case-insensitive string with value semantics that reads and writes as a
-     * two-byte index into a string table.
+     * Creates a new `DataInput` by reading from a
+     * `LittleEndianByteBuffer`. No error handling is performed.
      *
-     * @author Mark Fairchild
+     * @param input The input stream.
      */
-    static public class TString extends resaver.WString {
-
-        /**
-         * Creates a new <code>TString</code> from a character sequence and an
-         * index.
-         *
-         * @param cs The <code>CharSequence</code>.
-         * @param index The index of the <code>TString</code>.
-         */
-        private TString(CharSequence cs, int index) {
-            super(cs);
-            this.INDEX = index;
+    init {
+        val strCount = java.lang.Short.toUnsignedInt(input.short)
+        ensureCapacity(strCount)
+        for (i in 0 until strCount) {
+            try {
+                val STR = BufferUtil.getUTF(input)
+                val TSTR = TString(STR, i)
+                this.add(TSTR)
+            } catch (ex: RuntimeException) {
+                throw ListException("Error reading string", i, strCount, ex)
+            }
         }
-
-        /**
-         * @see WString#write(ByteBuffer)
-         * @param output The output stream.
-         * @throws IOException
-         */
-        public void writeFull(ByteBuffer output) throws IOException {
-            mf.BufferUtil.putWString(output, super.toString());
-        }
-
-        /**
-         * @param output The output stream.
-         */
-        @Override
-        public void write(ByteBuffer output) {
-            output.putShort((short) this.INDEX);
-        }
-
-        final private int INDEX;
-
     }
-
 }
