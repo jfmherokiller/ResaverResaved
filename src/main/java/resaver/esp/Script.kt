@@ -13,90 +13,80 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import resaver.IString;
+import mf.BufferUtil
+import resaver.IString
+import java.nio.ByteBuffer
 
 /**
  * Describes a script entry in a VMAD field.
  *
  * @author Mark Fairchild
  */
-public class Script implements Entry {
-
-    /**
-     * Creates a new Script by reading it from a LittleEndianInput.
-     *
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param ctx
-     */
-    public Script(ByteBuffer input, ESPContext ctx) {
-        this.NAME = IString.get(mf.BufferUtil.getWString(input));
-        if (this.NAME.isEmpty()) {
-            this.PROPERTIES = null;
-            this.STATUS = 0;
-            return;
-        }
-
-        ctx.pushContext("script:" + this.NAME);
-
-        this.STATUS = input.get();
-
-        int propertyCount = Short.toUnsignedInt(input.getShort());
-        this.PROPERTIES = new java.util.ArrayList<>(propertyCount);
-
-        try {
-            for (int i = 0; i < propertyCount; i++) {
-                Property prop = new Property(input, ctx);
-                this.PROPERTIES.add(prop);
-            }
-
-        } finally {
-            ctx.popContext();
-        }
-    }
-
+class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
     /**
      * Writes the Script.
      *
      * @param output The ByteBuffer to write.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        if (this.NAME.isEmpty()) {
-            output.put(this.NAME.getUTF8());
-            return;
+    override fun write(output: ByteBuffer?) {
+        if (NAME.isEmpty()) {
+            output!!.put(NAME.uTF8)
+            return
         }
-
-        output.put(this.NAME.getUTF8());
-        output.put(this.STATUS);
-        output.putShort((short) this.PROPERTIES.size());
-        this.PROPERTIES.forEach(prop -> prop.write(output));
+        output!!.put(NAME.uTF8)
+        output.put(STATUS)
+        output.putShort(PROPERTIES!!.size.toShort())
+        PROPERTIES!!.forEach { prop: Property -> prop.write(output) }
     }
 
     /**
      * @return The calculated size of the Script.
      */
-    @Override
-    public int calculateSize() {
-        if (this.NAME.isEmpty()) {
-            return 2;
+    override fun calculateSize(): Int {
+        if (NAME.isEmpty()) {
+            return 2
         }
-
-        int sum = 5 + NAME.length();
-        int result = 0;
-        for (Property PROPERTY : this.PROPERTIES) {
-            int calculateSize = PROPERTY.calculateSize();
-            result += calculateSize;
+        var sum = 5 + NAME.length
+        var result = 0
+        for (PROPERTY in PROPERTIES!!) {
+            val calculateSize = PROPERTY.calculateSize()
+            result += calculateSize
         }
-        sum += result;
-        return sum;
+        sum += result
+        return sum
     }
 
-    final public IString NAME;
-    final private byte STATUS;
-    final List<Property> PROPERTIES;
+    @JvmField
+    val NAME: IString = IString[BufferUtil.getWString(input)]
+    private var STATUS: Byte
+    var PROPERTIES: MutableList<Property>?
 
+    /**
+     * Creates a new Script by reading it from a LittleEndianInput.
+     *
+     * @param input The `ByteBuffer` to read.
+     * @param ctx
+     */
+    init {
+        if (NAME.isEmpty()) {
+            PROPERTIES = null
+            STATUS = 0
+        }
+        else {
+            ctx.pushContext("script:$NAME")
+            STATUS = input.get()
+            val propertyCount = java.lang.Short.toUnsignedInt(input.short)
+            PROPERTIES = mutableListOf()
+            try {
+                for (i in 0 until propertyCount) {
+                    val prop = Property(input, ctx)
+                    PROPERTIES!!.add(prop)
+                }
+            } finally {
+                ctx.popContext()
+            }
+        }
+    }
 }
