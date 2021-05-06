@@ -30,16 +30,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.zip.CRC32;
 import java.util.zip.DataFormatException;
 import mf.BufferUtil;
 import mf.Timer;
 import resaver.ListException;
-import resaver.ess.papyrus.Papyrus;
-import resaver.ess.papyrus.PapyrusElement;
-import resaver.ess.papyrus.PapyrusElementException;
-import resaver.ess.papyrus.PapyrusException;
+import resaver.ess.papyrus.*;
 import resaver.gui.FilterTreeModel;
 
 /**
@@ -94,8 +90,6 @@ final public class ESS implements Element {
         } catch (IOException | DataFormatException ex) {
             String msg = String.format("Failed to load %s\n%s", saveFile, ex.getMessage());
             throw new IOException(msg, ex);
-        } finally {
-
         }
     }
 
@@ -655,15 +649,30 @@ final public class ESS implements Element {
         sum += this.PLUGINS.calculateSize();
         sum += this.FLT.calculateSize();
 
-        sum += this.TABLE1.parallelStream().mapToInt(GlobalData::calculateSize).sum();
-        sum += this.TABLE2.parallelStream().mapToInt(GlobalData::calculateSize).sum();
+        int sum1 = 0;
+        for (GlobalData globalData : this.TABLE1) {
+            int calculateSize = globalData.calculateSize();
+            sum1 += calculateSize;
+        }
+        sum += sum1;
+        int result1 = 0;
+        for (GlobalData globalData : this.TABLE2) {
+            int calculateSize = globalData.calculateSize();
+            result1 += calculateSize;
+        }
+        sum += result1;
         int result = 0;
         for (ChangeForm changeForm : this.CHANGEFORMS.values()) {
             int i = changeForm.calculateSize();
             result += i;
         }
         sum += result;
-        sum += this.TABLE3.parallelStream().mapToInt(GlobalData::calculateSize).sum();
+        int sum2 = 0;
+        for (GlobalData globalData : this.TABLE3) {
+            int calculateSize = globalData.calculateSize();
+            sum2 += calculateSize;
+        }
+        sum += sum2;
 
         sum += 4;
         sum += this.FORMIDARRAY == null ? 0 : 4 * this.FORMIDARRAY.length;
@@ -678,7 +687,9 @@ final public class ESS implements Element {
      * @param analysis The analysis data.
      */
     public void addNames(resaver.Analysis analysis) {
-        this.REFIDS.values().parallelStream().forEach(v -> v.addNames(analysis));
+        for (RefID v : this.REFIDS.values()) {
+            v.addNames(analysis);
+        }
     }
 
     /**
@@ -811,12 +822,15 @@ final public class ESS implements Element {
      * @return The elements that were removed.
      */
     public Set<PapyrusElement> removeNonexistentCreated() {
-        final Set<PapyrusElement> NONEXISTENT = this.PAPYRUS.getScriptInstances()
-                .values()
-                .parallelStream()
-                .filter(v -> v.getRefID().getType() == RefID.Type.CREATED)
-                .filter(v -> !this.getChangeForms().containsKey(v.getRefID()))
-                .collect(Collectors.toSet());
+        final Set<PapyrusElement> NONEXISTENT = new HashSet<>();
+        for (ScriptInstance v : this.PAPYRUS.getScriptInstances()
+                .values()) {
+            if (v.getRefID().getType() == RefID.Type.CREATED) {
+                if (!this.getChangeForms().containsKey(v.getRefID())) {
+                    NONEXISTENT.add(v);
+                }
+            }
+        }
 
         return this.getPapyrus().removeElements(NONEXISTENT);
     }
@@ -975,7 +989,12 @@ final public class ESS implements Element {
 
         float actualSize = this.calculateSize() / 1048576.0f;
         float papyrusSize = this.PAPYRUS.calculateSize() / 1048576.0f;
-        float changeFormsSize = this.CHANGEFORMS.values().parallelStream().mapToInt(ChangeForm::calculateSize).sum() / 1048576.0f;
+        int sum = 0;
+        for (ChangeForm changeForm : this.CHANGEFORMS.values()) {
+            int calculateSize = changeForm.calculateSize();
+            sum += calculateSize;
+        }
+        float changeFormsSize = sum / 1048576.0f;
 
         if (this.HEADER.getCompression().isCompressed()) {
             try {
