@@ -13,167 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.pex;
+package resaver.pex
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import resaver.Game;
-import resaver.IString;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.StandardOpenOption;
+import resaver.Game
+import resaver.IString
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.nio.channels.FileChannel
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
+
+import java.util.regex.Pattern
 
 /**
  * Describes a Skyrim PEX script and will read and write it from streams.
  *
  * @author Mark Fairchild
  */
-final public class PexFile {
-
+class PexFile private constructor(input: ByteBuffer, game: Game) {
     /**
-     * Reads a script file and creates a PexFile object to represent it.
+     * Write the object to a `ByteBuffer`.
      *
-     * Exceptions are not handled. At all. Not even a little bit.
-     *
-     * @param data An array of bytes containing the script data.
-     * @return The PexFile object.
-     *
-     * @throws IOException
-     *
-     */
-    static public PexFile readScript(ByteBuffer data) throws IOException {
-        final int MAGIC = data.getInt(0);
-
-        // Prepare input stream. The DataInput interface just happen to be 
-        // perfect for this kind of thing.
-        switch (MAGIC) {
-            case 0xdec057fa:
-                return new PexFile(data, Game.FALLOUT4);
-            case 0xfa57c0de:
-                return new PexFile(data, Game.SKYRIM_LE);
-            default:
-                throw new IOException("Invalid magic number.");
-        }
-    }
-
-    /**
-     * Reads a script file and creates a PexFile object to represent it.
-     *
-     * Exceptions are not handled. At all. Not even a little bit.
-     *
-     * @param scriptFile The script file to read, which must exist and be
-     * readable.
-     * @return The PexFile object.
-     *
-     * @throws FileNotFoundException
-     * @throws IOException
-     *
-     */
-    static public PexFile readScript(Path scriptFile) throws FileNotFoundException, IOException {
-        try (final FileChannel CHANNEL = FileChannel.open(scriptFile, StandardOpenOption.READ)) {
-            final ByteBuffer input = ByteBuffer.allocate((int) Files.size(scriptFile));
-            CHANNEL.read(input);
-            ((Buffer) input).flip();
-            return readScript(input);
-        }
-    }
-
-    /**
-     * Writes a PexFile object to a script file.
-     *
-     * Exceptions are not handled. At all. Not even a little bit.
-     *
-     * @param script The PexFile object to write.
-     * @param scriptFile The script file to write. If it exists, it must be a
-     * file and it must be writable.
-     *
-     * @throws FileNotFoundException
-     * @throws IOException
-     *
-     */
-    static public void writeScript(PexFile script, Path scriptFile) throws FileNotFoundException, IOException {
-        assert !Files.exists(scriptFile) || Files.isRegularFile(scriptFile);
-        assert !Files.exists(scriptFile) || Files.isWritable(scriptFile);
-
-        try (final FileChannel CHANNEL = FileChannel.open(scriptFile, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            final ByteBuffer output = ByteBuffer.allocate(2 * script.calculateSize());
-            script.write(output);
-            output.flip();
-            CHANNEL.write(output);
-        }
-    }
-
-    /**
-     * Creates a Pex by reading from a DataInput.
-     *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param game The game for which the script was compiled.
-     * @throws IOException Exceptions aren't handled.
-     */
-    private PexFile(ByteBuffer input, Game game) throws IOException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(game);
-
-        try {
-            this.GAME = game;
-            this.HEADER = new Header(input);
-
-            this.STRINGS = new StringTable(input);
-            this.DEBUG = new DebugInfo(this, input, this.STRINGS);
-
-            int flagCount = Short.toUnsignedInt(input.getShort());
-            this.USERFLAGDEFS = new ArrayList<>(flagCount);
-            while (0 < flagCount) {
-                this.USERFLAGDEFS.add(new UserFlag(input, this.STRINGS));
-                flagCount--;
-            }
-
-            int scriptCount = Short.toUnsignedInt(input.getShort());
-            if (scriptCount < 1) {
-                throw new IllegalStateException("Pex files must contain at least one script.");
-            }
-
-            this.SCRIPTS = new ArrayList<>(scriptCount);
-            while (0 < scriptCount) {
-                Pex pex = new Pex(input, game, this.USERFLAGDEFS, this.STRINGS);
-                this.SCRIPTS.add(pex);
-                scriptCount--;
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace(System.err);
-            throw ex;
-        }
-    }
-
-    /**
-     * Write the object to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      * @throws IOException IO errors aren't handled at all, they are simply
      * passed on.
      */
-    public void write(ByteBuffer output) throws IOException {
-        this.HEADER.write(output);
-        this.STRINGS.write(output);
-        this.DEBUG.write(output);
-
-        output.putShort((short) this.USERFLAGDEFS.size());
-        for (UserFlag flag : this.USERFLAGDEFS) {
-            flag.write(output);
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer) {
+        HEADER!!.write(output)
+        STRINGS!!.write(output)
+        DEBUG!!.write(output)
+        output.putShort(USERFLAGDEFS!!.size.toShort())
+        for (flag in USERFLAGDEFS!!) {
+            flag!!.write(output)
         }
-
-        output.putShort((short) this.SCRIPTS.size());
-        for (Pex pex : this.SCRIPTS) {
-            pex.write(output);
+        output.putShort(SCRIPTS!!.size.toShort())
+        for (pex in SCRIPTS!!) {
+            pex.write(output)
         }
 
         /*
@@ -184,27 +63,26 @@ final public class PexFile {
     }
 
     /**
-     * @return The size of the <code>PexFile</code>, in bytes.
-     *
+     * @return The size of the `PexFile`, in bytes.
      */
-    public int calculateSize() {
-        int sum = 0;
-        sum += this.HEADER.calculateSize();
-        sum += this.STRINGS.calculateSize();
-        sum += this.DEBUG.calculateSize();
-        int sum1 = 0;
-        for (UserFlag USERFLAGDEF : this.USERFLAGDEFS) {
-            int size = USERFLAGDEF.calculateSize();
-            sum1 += size;
+    fun calculateSize(): Int {
+        var sum = 0
+        sum += HEADER!!.calculateSize()
+        sum += STRINGS!!.calculateSize()
+        sum += DEBUG!!.calculateSize()
+        var sum1 = 0
+        for (USERFLAGDEF in USERFLAGDEFS!!) {
+            val size = USERFLAGDEF!!.calculateSize()
+            sum1 += size
         }
-        sum += 2 + sum1;
-        int result = 0;
-        for (Pex SCRIPT : this.SCRIPTS) {
-            int calculateSize = SCRIPT.calculateSize();
-            result += calculateSize;
+        sum += 2 + sum1
+        var result = 0
+        for (SCRIPT in SCRIPTS!!) {
+            val calculateSize = SCRIPT.calculateSize()
+            result += calculateSize
         }
-        sum += 2 + result;
-        return sum;
+        sum += 2 + result
+        return sum
     }
 
     /**
@@ -213,16 +91,16 @@ final public class PexFile {
      * produce an invalid file.
      *
      */
-    public void rebuildStringTable() {
-        final Set<TString> INUSE = new java.util.LinkedHashSet<>();
-        this.DEBUG.collectStrings(INUSE);
-        for (UserFlag flag : this.USERFLAGDEFS) {
-            flag.collectStrings(INUSE);
+    fun rebuildStringTable() {
+        val INUSE: MutableSet<TString?> = mutableSetOf()
+        DEBUG!!.collectStrings(INUSE)
+        for (flag in USERFLAGDEFS!!) {
+            flag!!.collectStrings(INUSE)
         }
-        for (Pex obj : this.SCRIPTS) {
-            obj.collectStrings(INUSE);
+        for (obj in SCRIPTS!!) {
+            obj.collectStrings(INUSE)
         }
-        this.STRINGS.rebuildStringTable(INUSE);
+        STRINGS!!.rebuildStringTable(INUSE)
     }
 
     /**
@@ -231,9 +109,11 @@ final public class PexFile {
      * @param level Partial disassembly flag.
      * @param code The code strings.
      */
-    public void disassemble(List<String> code, AssemblyLevel level) {
-        for (Pex v : this.SCRIPTS) {
-            v.disassemble(code, level);
+    fun disassemble(code: MutableList<String?>?, level: AssemblyLevel?) {
+        for (v in SCRIPTS!!) {
+            if (code != null) {
+                v.disassemble(code, level)
+            }
         }
     }
 
@@ -242,50 +122,153 @@ final public class PexFile {
      *
      * @return A string representation of the PexFile.
      */
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append(this.HEADER);
-        buf.append(this.DEBUG);
-        buf.append("USER FLAGS\n");
-        buf.append(this.USERFLAGDEFS);
+    override fun toString(): String {
+        val buf = StringBuilder()
+        buf.append(HEADER)
+        buf.append(DEBUG)
+        buf.append("USER FLAGS\n")
+        buf.append(USERFLAGDEFS)
+        if (SCRIPTS != null) {
+            for (obj in SCRIPTS!!) {
+                buf.append("\n\nOBJECT\n").append(obj).append('\n')
+            }
+        }
+        return buf.toString()
+    }
 
-        if (this.SCRIPTS != null) {
-            for (Pex obj : this.SCRIPTS) {
-                buf.append("\n\nOBJECT\n").append(obj).append('\n');
+    /**
+     * @return The compilation date of the `PexFile`.
+     */
+    val date: Long
+        get() = HEADER!!.compilationTime
+
+    /**
+     * @return The filename of the `PexFile`, determined from the
+     * header.
+     */
+    val filename: IString
+        get() {
+            val SOURCE = HEADER!!.soureFilename
+            val REGEX = "(psc)$"
+            val REPLACEMENT = "pex"
+            val PATTERN = Pattern.compile(REGEX, Pattern.CASE_INSENSITIVE)
+            val MATCHER = PATTERN.matcher(SOURCE)
+            val COMPILED = MATCHER.replaceAll(REPLACEMENT)
+            return IString[COMPILED]
+        }
+    @JvmField
+    var GAME: Game? = null
+    var HEADER: Header? = null
+    var STRINGS: StringTable? = null
+    var DEBUG: DebugInfo? = null
+    var USERFLAGDEFS: MutableList<UserFlag?>? = null
+    var SCRIPTS: MutableList<Pex>? = null
+
+    companion object {
+        /**
+         * Reads a script file and creates a PexFile object to represent it.
+         *
+         * Exceptions are not handled. At all. Not even a little bit.
+         *
+         * @param data An array of bytes containing the script data.
+         * @return The PexFile object.
+         *
+         * @throws IOException
+         */
+        @Throws(IOException::class)
+        fun readScript(data: ByteBuffer): PexFile {
+            return when (data.getInt(0)) {
+                -0x213fa806 -> PexFile(data, Game.FALLOUT4)
+                -0x5a83f22 -> PexFile(data, Game.SKYRIM_LE)
+                else -> throw IOException("Invalid magic number.")
             }
         }
 
-        return buf.toString();
+        /**
+         * Reads a script file and creates a PexFile object to represent it.
+         *
+         * Exceptions are not handled. At all. Not even a little bit.
+         *
+         * @param scriptFile The script file to read, which must exist and be
+         * readable.
+         * @return The PexFile object.
+         *
+         * @throws FileNotFoundException
+         * @throws IOException
+         */
+        @JvmStatic
+        @Throws(FileNotFoundException::class, IOException::class)
+        fun readScript(scriptFile: Path?): PexFile {
+            FileChannel.open(scriptFile, StandardOpenOption.READ).use { CHANNEL ->
+                val input = ByteBuffer.allocate(
+                    Files.size(scriptFile!!).toInt()
+                )
+                CHANNEL.read(input)
+                (input as Buffer).flip()
+                return readScript(input)
+            }
+        }
 
+        /**
+         * Writes a PexFile object to a script file.
+         *
+         * Exceptions are not handled. At all. Not even a little bit.
+         *
+         * @param script The PexFile object to write.
+         * @param scriptFile The script file to write. If it exists, it must be a
+         * file and it must be writable.
+         *
+         * @throws FileNotFoundException
+         * @throws IOException
+         */
+        @Throws(FileNotFoundException::class, IOException::class)
+        fun writeScript(script: PexFile, scriptFile: Path?) {
+            assert(!Files.exists(scriptFile!!) || Files.isRegularFile(scriptFile))
+            assert(!Files.exists(scriptFile) || Files.isWritable(scriptFile))
+            FileChannel.open(
+                scriptFile,
+                StandardOpenOption.CREATE,
+                StandardOpenOption.WRITE,
+                StandardOpenOption.TRUNCATE_EXISTING
+            ).use { CHANNEL ->
+                val output = ByteBuffer.allocate(2 * script.calculateSize())
+                script.write(output)
+                output.flip()
+                CHANNEL.write(output)
+            }
+        }
     }
 
     /**
-     * @return The compilation date of the <code>PexFile</code>.
+     * Creates a Pex by reading from a DataInput.
+     *
+     * @param input A datainput for a Skyrim PEX file.
+     * @param game The game for which the script was compiled.
+     * @throws IOException Exceptions aren't handled.
      */
-    public long getDate() {
-        return this.HEADER.compilationTime;
+    init {
+        try {
+            GAME = game
+            HEADER = Header(input)
+            STRINGS = StringTable(input)
+            DEBUG = DebugInfo(this, input, STRINGS)
+            var flagCount = java.lang.Short.toUnsignedInt(input.short)
+            USERFLAGDEFS = mutableListOf()
+            while (0 < flagCount) {
+                USERFLAGDEFS!!.add(UserFlag(input, STRINGS!!))
+                flagCount--
+            }
+            var scriptCount = java.lang.Short.toUnsignedInt(input.short)
+            check(scriptCount >= 1) { "Pex files must contain at least one script." }
+            SCRIPTS = mutableListOf()
+            while (0 < scriptCount) {
+                val pex = Pex(input, game, USERFLAGDEFS, STRINGS!!)
+                SCRIPTS!!.add(pex)
+                scriptCount--
+            }
+        } catch (ex: IOException) {
+            ex.printStackTrace(System.err)
+            throw ex
+        }
     }
-
-    /**
-     * @return The filename of the <code>PexFile</code>, determined from the
-     * header.
-     */
-    public IString getFilename() {
-        final String SOURCE = this.HEADER.soureFilename;
-        final String REGEX = "(psc)$";
-        final String REPLACEMENT = "pex";
-        final Pattern PATTERN = Pattern.compile(REGEX, Pattern.CASE_INSENSITIVE);
-        final Matcher MATCHER = PATTERN.matcher(SOURCE);
-        final String COMPILED = MATCHER.replaceAll(REPLACEMENT);
-        return IString.get(COMPILED);
-    }
-
-    final public Game GAME;
-    final public Header HEADER;
-    final public StringTable STRINGS;
-    final public DebugInfo DEBUG;
-    final public List<UserFlag> USERFLAGDEFS;
-    final public List<Pex> SCRIPTS;
-
 }

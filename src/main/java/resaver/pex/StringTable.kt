@@ -65,7 +65,7 @@ class StringTable(input: ByteBuffer) : ArrayList<TString?>() {
             try {
                 tstr?.writeFull(output)
             } catch (ex: IOException) {
-                throw IOException("Error writing string #" + (tstr?.INDEX ?: 0), ex)
+                throw IOException("Error writing string #${tstr?.INDEX ?: 0}", ex)
             }
         }
     }

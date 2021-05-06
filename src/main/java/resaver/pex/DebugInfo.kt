@@ -1,87 +1,36 @@
-package resaver.pex;
+package resaver.pex
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Set;
+import java.io.IOException
+import java.nio.ByteBuffer
 
 /**
  * Describe the debugging info section of a PEX file.
  */
-final public class DebugInfo {
-
-    private final PexFile pexFile;
-
+class DebugInfo internal constructor(private val pexFile: PexFile, input: ByteBuffer, strings: StringTable?) {
     /**
-     * Creates a DebugInfo by reading from a DataInput.
+     * Write the object to a `ByteBuffer`.
      *
-     * @param input   A datainput for a Skyrim PEX file.
-     * @param strings The <code>StringTable</code> for the
-     *                <code>PexFile</code>.
-     * @throws IOException Exceptions aren't handled.
-     */
-    DebugInfo(PexFile pexFile, ByteBuffer input, StringTable strings) throws IOException {
-        this.pexFile = pexFile;
-        this.hasDebugInfo = input.get();
-        this.DEBUGFUNCTIONS = new ArrayList<>(0);
-        this.PROPERTYGROUPS = new ArrayList<>(0);
-        this.STRUCTORDERS = new ArrayList<>(0);
-
-        if (this.hasDebugInfo == 0) {
-
-        } else {
-            this.modificationTime = input.getLong();
-
-            int functionCount = Short.toUnsignedInt(input.getShort());
-            this.DEBUGFUNCTIONS.ensureCapacity(functionCount);
-            for (int i = 0; i < functionCount; i++) {
-                this.DEBUGFUNCTIONS.add(new DebugFunction(input, strings));
-            }
-
-            if (pexFile.GAME.isFO4()) {
-                int propertyCount = Short.toUnsignedInt(input.getShort());
-                this.PROPERTYGROUPS.ensureCapacity(propertyCount);
-                for (int i = 0; i < propertyCount; i++) {
-                    this.PROPERTYGROUPS.add(new PropertyGroup(input, strings));
-                }
-
-                int orderCount = Short.toUnsignedInt(input.getShort());
-                this.STRUCTORDERS.ensureCapacity(orderCount);
-                for (int i = 0; i < orderCount; i++) {
-                    this.STRUCTORDERS.add(new StructOrder(input, strings));
-                }
-
-            }
-        }
-    }
-
-    /**
-     * Write the object to a <code>ByteBuffer</code>.
-     *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      * @throws IOException IO errors aren't handled at all, they are simply
-     *                     passed on.
+     * passed on.
      */
-    public void write(ByteBuffer output) throws IOException {
-        output.put(this.hasDebugInfo);
-
-        if (this.hasDebugInfo != 0) {
-            output.putLong(this.modificationTime);
-
-            output.putShort((short) this.DEBUGFUNCTIONS.size());
-            for (DebugFunction function : this.DEBUGFUNCTIONS) {
-                function.write(output);
+    @Throws(IOException::class)
+    fun write(output: ByteBuffer) {
+        output.put(hasDebugInfo)
+        if (hasDebugInfo.toInt() != 0) {
+            output.putLong(modificationTime)
+            output.putShort(DEBUGFUNCTIONS.size.toShort())
+            for (function in DEBUGFUNCTIONS) {
+                function.write(output)
             }
-
-            if (pexFile.GAME.isFO4()) {
-                output.putShort((short) this.PROPERTYGROUPS.size());
-                for (PropertyGroup function : this.PROPERTYGROUPS) {
-                    function.write(output);
+            if (pexFile.GAME!!.isFO4) {
+                output.putShort(PROPERTYGROUPS.size.toShort())
+                for (function in PROPERTYGROUPS) {
+                    function.write(output)
                 }
-
-                output.putShort((short) this.STRUCTORDERS.size());
-                for (StructOrder function : this.STRUCTORDERS) {
-                    function.write(output);
+                output.putShort(STRUCTORDERS.size.toShort())
+                for (function in STRUCTORDERS) {
+                    function.write(output)
                 }
             }
         }
@@ -90,11 +39,11 @@ final public class DebugInfo {
     /**
      * Removes all debug info.
      */
-    public void clear() {
-        this.hasDebugInfo = 0;
-        this.DEBUGFUNCTIONS.clear();
-        this.PROPERTYGROUPS.clear();
-        this.STRUCTORDERS.clear();
+    fun clear() {
+        hasDebugInfo = 0
+        DEBUGFUNCTIONS.clear()
+        PROPERTYGROUPS.clear()
+        STRUCTORDERS.clear()
     }
 
     /**
@@ -103,49 +52,50 @@ final public class DebugInfo {
      *
      * @param strings The set of strings.
      */
-    public void collectStrings(Set<TString> strings) {
-        for (DebugFunction DEBUGFUNCTION : this.DEBUGFUNCTIONS) {
-            DEBUGFUNCTION.collectStrings(strings);
-        }
-        for (PropertyGroup PROPERTYGROUP : this.PROPERTYGROUPS) {
-            PROPERTYGROUP.collectStrings(strings);
-        }
-        for (StructOrder f : this.STRUCTORDERS) {
-            f.collectStrings(strings);
+    fun collectStrings(strings: MutableSet<TString?>?) {
+
+        if(strings != null) {
+            for (DEBUGFUNCTION in DEBUGFUNCTIONS) {
+                DEBUGFUNCTION.collectStrings(strings)
+            }
+            for (PROPERTYGROUP in PROPERTYGROUPS) {
+                PROPERTYGROUP.collectStrings(strings.filterNotNull().toMutableSet())
+            }
+            for (f in STRUCTORDERS) {
+                f.collectStrings(strings)
+            }
         }
     }
 
     /**
-     * @return The size of the <code>DebugInfo</code>, in bytes.
+     * @return The size of the `DebugInfo`, in bytes.
      */
-    public int calculateSize() {
-        int sum = 1;
-        if (this.hasDebugInfo != 0) {
-            sum += 8;
-            int result1 = 0;
-            for (DebugFunction DEBUGFUNCTION : this.DEBUGFUNCTIONS) {
-                int i = DEBUGFUNCTION.calculateSize();
-                result1 += i;
+    fun calculateSize(): Int {
+        var sum = 1
+        if (hasDebugInfo.toInt() != 0) {
+            sum += 8
+            var result1 = 0
+            for (DEBUGFUNCTION in DEBUGFUNCTIONS) {
+                val i = DEBUGFUNCTION.calculateSize()
+                result1 += i
             }
-            sum += 2 + result1;
-
-            if (pexFile.GAME.isFO4()) {
-                int sum1 = 0;
-                for (PropertyGroup PROPERTYGROUP : this.PROPERTYGROUPS) {
-                    int size = PROPERTYGROUP.calculateSize();
-                    sum1 += size;
+            sum += 2 + result1
+            if (pexFile.GAME!!.isFO4) {
+                var sum1 = 0
+                for (PROPERTYGROUP in PROPERTYGROUPS) {
+                    val size = PROPERTYGROUP.calculateSize()
+                    sum1 += size
                 }
-                sum += 2 + sum1;
-                int result = 0;
-                for (StructOrder STRUCTORDER : this.STRUCTORDERS) {
-                    int calculateSize = STRUCTORDER.calculateSize();
-                    result += calculateSize;
+                sum += 2 + sum1
+                var result = 0
+                for (STRUCTORDER in STRUCTORDERS) {
+                    val calculateSize = STRUCTORDER.calculateSize()
+                    result += calculateSize
                 }
-                sum += 2 + result;
+                sum += 2 + result
             }
         }
-
-        return sum;
+        return sum
     }
 
     /**
@@ -153,21 +103,55 @@ final public class DebugInfo {
      *
      * @return A string representation of the DebugInfo.
      */
-    @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder();
-        buf.append("DEBUGINFO\n");
-        for (DebugFunction function : this.DEBUGFUNCTIONS) {
-            buf.append('\t').append(function).append('\n');
+    override fun toString(): String {
+        val buf = StringBuilder()
+        buf.append("DEBUGINFO\n")
+        for (function in DEBUGFUNCTIONS) {
+            buf.append('\t').append(function).append('\n')
         }
-        buf.append('\n');
-        return buf.toString();
+        buf.append('\n')
+        return buf.toString()
     }
 
-    private byte hasDebugInfo;
-    private long modificationTime;
-    final private ArrayList<DebugFunction> DEBUGFUNCTIONS;
-    final private ArrayList<PropertyGroup> PROPERTYGROUPS;
-    final private ArrayList<StructOrder> STRUCTORDERS;
+    private var hasDebugInfo: Byte
+    private var modificationTime: Long = 0
+    private val DEBUGFUNCTIONS: ArrayList<DebugFunction>
+    private val PROPERTYGROUPS: ArrayList<PropertyGroup>
+    private val STRUCTORDERS: ArrayList<StructOrder>
 
+    /**
+     * Creates a DebugInfo by reading from a DataInput.
+     *
+     * @param input   A datainput for a Skyrim PEX file.
+     * @param strings The `StringTable` for the
+     * `PexFile`.
+     * @throws IOException Exceptions aren't handled.
+     */
+    init {
+        hasDebugInfo = input.get()
+        DEBUGFUNCTIONS = ArrayList(0)
+        PROPERTYGROUPS = ArrayList(0)
+        STRUCTORDERS = ArrayList(0)
+        if (hasDebugInfo.toInt() == 0) {
+        } else {
+            modificationTime = input.long
+            val functionCount = java.lang.Short.toUnsignedInt(input.short)
+            DEBUGFUNCTIONS.ensureCapacity(functionCount)
+            for (i in 0 until functionCount) {
+                DEBUGFUNCTIONS.add(DebugFunction(input, strings!!))
+            }
+            if (pexFile.GAME!!.isFO4) {
+                val propertyCount = java.lang.Short.toUnsignedInt(input.short)
+                PROPERTYGROUPS.ensureCapacity(propertyCount)
+                for (i in 0 until propertyCount) {
+                    PROPERTYGROUPS.add(PropertyGroup(input, strings!!))
+                }
+                val orderCount = java.lang.Short.toUnsignedInt(input.short)
+                STRUCTORDERS.ensureCapacity(orderCount)
+                for (i in 0 until orderCount) {
+                    STRUCTORDERS.add(StructOrder(input, strings))
+                }
+            }
+        }
+    }
 }
