@@ -380,7 +380,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 ARRAYSBUFFER.order(ByteOrder.LITTLE_ENDIAN);
 
                 other = new OtherData(input, CONTEXT);
-            } catch (PapyrusFormatException | BufferUnderflowException ex) {
+            } catch (BufferUnderflowException ex) {
 
             } finally {
                 this.OTHER = other;
@@ -389,7 +389,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
 
         } catch (PapyrusException ex) {
             this.truncated = true;
-            final String MSG = String.format("Error while reading the Papyrus section of %s: %s.", context.getPath().getFileName(), ex.getMessage());
+            final String MSG = "Error while reading the Papyrus section of " + context.getPath().getFileName() + ": " + ex.getMessage() + ".";
             throw new PapyrusException(MSG, ex, this);
         }
     }
