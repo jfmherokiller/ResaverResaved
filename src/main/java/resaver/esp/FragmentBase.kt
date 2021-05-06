@@ -13,28 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
 /**
  * The base class for script fragments.
  *
  * @author Mark Fairchild
  */
-abstract public class FragmentBase implements Entry {
-
-    /**
-     * Taken from an algorithm posted on Stack Overflow. Accessed on 2016/04/22.
-     *
-     * @see
-     * http://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer
-     *
-     * @param i The integer to count the bits.
-     * @return The number of bits.
-     */
-    static public int NumberOfSetBits(int i) {
-        i = i - ((i >>> 1) & 0x55555555);
-        i = (i & 0x33333333) + ((i >>> 2) & 0x33333333);
-        return (((i + (i >>> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
+abstract class FragmentBase : Entry {
+    companion object {
+        /**
+         * Taken from an algorithm posted on Stack Overflow. Accessed on 2016/04/22.
+         *
+         * @see  http://stackoverflow.com/questions/109023/how-to-count-the-number-of-set-bits-in-a-32-bit-integer
+         *
+         *
+         * @param i The integer to count the bits.
+         * @return The number of bits.
+         */
+        @JvmStatic
+        fun NumberOfSetBits(i: Int): Int {
+            return i.countOneBits()
+        }
     }
-
 }
