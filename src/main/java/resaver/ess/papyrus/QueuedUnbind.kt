@@ -13,178 +13,149 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import java.util.Objects;
-import java.util.SortedSet;
-import java.nio.ByteBuffer;
-import resaver.Analysis;
-import resaver.ess.AnalyzableElement;
-import resaver.ess.ESS;
-import resaver.ess.Element;
-import resaver.ess.Linkable;
+import resaver.Analysis
+import resaver.ess.AnalyzableElement
+import resaver.ess.ESS
+import resaver.ess.Element
+import resaver.ess.Linkable
+import resaver.ess.papyrus.EID.Companion.pad8
+import java.nio.ByteBuffer
+
+
 
 /**
  * Describes a function parameter in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class QueuedUnbind implements PapyrusElement, AnalyzableElement, Linkable, HasID {
-
+class QueuedUnbind(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
     /**
-     * Creates a new <code>MemberData</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
-     *
-     */
-    public QueuedUnbind(ByteBuffer input, PapyrusContext context) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-        this.ID = context.readEID(input);
-        this.UNKNOWN = input.getInt();
-        this.INSTANCE = context.findScriptInstance(this.ID);
-        assert null != this.INSTANCE : "QueuedUnbind could not be associated with a script instance!";
-    }
-
-    /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        this.ID.write(output);
-        output.putInt(this.UNKNOWN);
+    override fun write(output: ByteBuffer?) {
+        iD.write(output)
+        output!!.putInt(unknown)
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return 4 + this.ID.calculateSize();
+    override fun calculateSize(): Int {
+        return 4 + iD.calculateSize()
     }
 
     /**
-     * @return The ID of the papyrus element.
-     */
-    @Override
-    public EID getID() {
-        return this.ID;
-    }
-
-    /**
-     * @return The unknown field.
-     */
-    public int getUnknown() {
-        return this.UNKNOWN;
-    }
-
-    /**
-     * @return The corresponding <code>ScriptInstance</code>.
-     */
-    public ScriptInstance getScriptInstance() {
-        return this.INSTANCE;
-    }
-
-    /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-        if (null != this.INSTANCE && null != this.INSTANCE.getScript()) {
-            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", this.INSTANCE.getScript().toHTML(this)));
-        } else if (null != this.INSTANCE) {
-            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", this.INSTANCE.getScriptName()));
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
+        val BUILDER = StringBuilder()
+        if (null != scriptInstance && null != scriptInstance.script) {
+            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", scriptInstance.script.toHTML(this)))
+        } else if (null != scriptInstance) {
+            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", scriptInstance.scriptName))
         } else {
-            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", this.ID));
+            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", iD))
         }
-
-        if (null == this.INSTANCE) {
-            BUILDER.append(String.format("<p>Instance: %s</p>", this.ID));
+        if (null == scriptInstance) {
+            BUILDER.append(String.format("<p>Instance: %s</p>", iD))
         } else {
-            BUILDER.append(String.format("<p>Instance: %s</p>", this.INSTANCE.toHTML(this)));
+            BUILDER.append(String.format("<p>Instance: %s</p>", scriptInstance.toHTML(this)))
         }
-
-        BUILDER.append(String.format("<p>Unknown: %s</p>", EID.pad8(this.UNKNOWN)));
-
-        Linkable UNK = save.getPapyrus().getContext().broadSpectrumSearch(this.UNKNOWN);
+        BUILDER.append(String.format("<p>Unknown: %s</p>", pad8(unknown)))
+        val UNK = save!!.papyrus.context.broadSpectrumSearch(unknown)
         if (null != UNK) {
-            BUILDER.append("<p>Potential match for UNKNOWN found using general search:<br/>");
-            BUILDER.append(UNK.toHTML(this));
-            BUILDER.append("</p>");
+            BUILDER.append("<p>Potential match for UNKNOWN found using general search:<br/>")
+            BUILDER.append(UNK.toHTML(this))
+            BUILDER.append("</p>")
         }
-
         if (null != analysis) {
-            SortedSet<String> providers = analysis.SCRIPT_ORIGINS.get(this.INSTANCE.getScriptName().toIString());
+            val providers = analysis.SCRIPT_ORIGINS[scriptInstance!!.scriptName.toIString()]
             if (null != providers) {
-                String probablyProvider = providers.last();
-                BUILDER.append(String.format("The queued unbinding probably came from mod \"%s\".\n\n", probablyProvider));
-
-                if (providers.size() > 1) {
-                    BUILDER.append("<p>Full list of providers:</p><ul>");
-                    providers.forEach(mod -> BUILDER.append(String.format("<li>%s", mod)));
-                    BUILDER.append("</ul>");
+                val probablyProvider = providers.last()
+                BUILDER.append(
+                    String.format(
+                        "The queued unbinding probably came from mod \"%s\".\n\n",
+                        probablyProvider
+                    )
+                )
+                if (providers.size > 1) {
+                    BUILDER.append("<p>Full list of providers:</p><ul>")
+                    providers.forEach { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) }
+                    BUILDER.append("</ul>")
                 }
             }
         }
-
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(Analysis analysis, String mod) {
-        Objects.requireNonNull(analysis);
-        Objects.requireNonNull(mod);
-        return this.INSTANCE.matches(analysis, mod);
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+        return scriptInstance!!.matches(analysis, mod)
     }
 
     /**
-     * @return A flag indicating if the <code>ScriptInstance</code> is
+     * @return A flag indicating if the `ScriptInstance` is
      * undefined.
-     *
      */
-    public boolean isUndefined() {
-        return this.INSTANCE.isUndefined();
-    }
+    val isUndefined: Boolean
+        get() = scriptInstance!!.isUndefined
 
     /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        return Linkable.makeLink("unbind", this.ID, this.toString());
+    override fun toHTML(target: Element): String {
+        return Linkable.makeLink("unbind", iD, this.toString())
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        if (null == this.INSTANCE) {
-            return this.ID + ": " + EID.pad8(this.UNKNOWN) + " (MISSING INSTANCE)";
+    override fun toString(): String {
+        return if (null == scriptInstance) {
+            "$iD: ${pad8(unknown)} (MISSING INSTANCE)"
         } else {
-            return this.ID + ": " + EID.pad8(this.UNKNOWN) + " (" + INSTANCE.getScriptName() + ")";
+            "$iD: ${pad8(unknown)} (${scriptInstance.scriptName})"
         }
     }
 
-    final private EID ID;
-    final private int UNKNOWN;
-    final private ScriptInstance INSTANCE;
+    /**
+     * @return The ID of the papyrus element.
+     */
+    override val iD: EID = context.readEID(input)
 
+    /**
+     * @return The unknown field.
+     */
+    val unknown: Int = input.int
+
+    /**
+     * @return The corresponding `ScriptInstance`.
+     */
+    val scriptInstance: ScriptInstance? = context.findScriptInstance(iD)
+
+    /**
+     * Creates a new `MemberData` by reading from a
+     * `ByteBuffer`. No error handling is performed.
+     *
+     * @param input The input stream.
+     * @param context The `PapyrusContext` info.
+     */
+    init {
+        assert(null != scriptInstance) { "QueuedUnbind could not be associated with a script instance!" }
+    }
 }
