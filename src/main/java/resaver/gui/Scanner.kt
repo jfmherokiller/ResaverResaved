@@ -140,7 +140,7 @@ class Scanner(
             val STRINGTABLE = StringTable()
             PLUGINS
                 .allPlugins.filter { key1: Plugin -> PLUGIN_STRINGS.containsKey(key1) }
-                .forEach { plugin: Plugin -> STRINGTABLE.populateFromFiles(PLUGIN_STRINGS[plugin], plugin) }
+                .forEach { plugin: Plugin -> PLUGIN_STRINGS[plugin]?.let { STRINGTABLE.populateFromFiles(it, plugin) } }
 
             // Create the database for plugin data.
             val ERR_PLUGINS = Collections.synchronizedList(LinkedList<Path>())

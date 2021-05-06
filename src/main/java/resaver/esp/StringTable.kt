@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.regex.Pattern;
-import resaver.ess.Plugin;
+import resaver.ess.Plugin
+import java.util.*
+import java.util.function.Consumer
+import java.util.regex.Pattern
 
 /**
  * A StringTable stores reads and stores strings from the mod stringtables;
@@ -29,22 +26,16 @@ import resaver.ess.Plugin;
  *
  * @author Mark Fairchild
  */
-public class StringTable {
-
-    public StringTable() {
-        this.TABLE = new java.util.HashMap<>();
-    }
-
+class StringTable {
     /**
      *
      * @param stringsFiles
      * @param plugin
      */
-    public void populateFromFiles(Collection<StringsFile> stringsFiles, Plugin plugin) {
-        Objects.requireNonNull(stringsFiles);
-
-        final Map<Integer, String> SUBTABLE = this.TABLE.computeIfAbsent(plugin, p -> new HashMap<>());
-        stringsFiles.forEach(stringsFile -> SUBTABLE.putAll(stringsFile.TABLE));
+    fun populateFromFiles(stringsFiles: Collection<StringsFile>, plugin: Plugin) {
+        Objects.requireNonNull(stringsFiles)
+        val SUBTABLE = TABLE.computeIfAbsent(plugin) { p: Plugin? -> HashMap() }
+        stringsFiles.forEach(Consumer { stringsFile: StringsFile -> SUBTABLE.putAll(stringsFile.TABLE) })
     }
 
     /**
@@ -54,38 +45,48 @@ public class StringTable {
      * @param stringID
      * @return
      */
-    public String get(Plugin plugin, int stringID) {
-        return this.TABLE.getOrDefault(plugin, Collections.emptyMap()).get(stringID);
+    operator fun get(plugin: Plugin?, stringID: Int): String? {
+        return TABLE.getOrDefault(plugin, emptyMap<Int, String>())[stringID]
     }
 
     /**
      * The reference for accessing the stringtable.
      */
-    final public Map<Plugin, Map<Integer, String>> TABLE;
+    val TABLE: MutableMap<Plugin, MutableMap<Int?, String?>>
 
-    static private enum Type {
-        STRINGS(Pattern.compile(".+\\.STRINGS$", Pattern.CASE_INSENSITIVE)),
-        ILSTRINGS(Pattern.compile(".+\\.ILSTRINGS$", Pattern.CASE_INSENSITIVE)),
-        DLSTRINGS(Pattern.compile(".+\\.DLSTRINGS$", Pattern.CASE_INSENSITIVE));
+    private enum class Type(regex: Pattern) {
+        STRINGS(
+            Pattern.compile(
+                ".+\\.STRINGS$",
+                Pattern.CASE_INSENSITIVE
+            )
+        ),
+        ILSTRINGS(Pattern.compile(".+\\.ILSTRINGS$", Pattern.CASE_INSENSITIVE)), DLSTRINGS(
+            Pattern.compile(".+\\.DLSTRINGS$", Pattern.CASE_INSENSITIVE)
+        );
 
-        static Type match(String filename) {
-            if (STRINGS.REGEX.asPredicate().test(filename)) {
-                return STRINGS;
+        val REGEX: Pattern
+
+        companion object {
+            fun match(filename: String?): Type? {
+                if (STRINGS.REGEX.asPredicate().test(filename)) {
+                    return STRINGS
+                }
+                if (ILSTRINGS.REGEX.asPredicate().test(filename)) {
+                    return ILSTRINGS
+                }
+                return if (DLSTRINGS.REGEX.asPredicate().test(filename)) {
+                    DLSTRINGS
+                } else null
             }
-            if (ILSTRINGS.REGEX.asPredicate().test(filename)) {
-                return ILSTRINGS;
-            }
-            if (DLSTRINGS.REGEX.asPredicate().test(filename)) {
-                return DLSTRINGS;
-            }
-            return null;
         }
 
-        private Type(java.util.regex.Pattern regex) {
-            this.REGEX = Objects.requireNonNull(regex);
+        init {
+            REGEX = Objects.requireNonNull(regex)
         }
-
-        final public java.util.regex.Pattern REGEX;
     }
 
+    init {
+        TABLE = hashMapOf()
+    }
 }
