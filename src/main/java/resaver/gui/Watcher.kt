@@ -13,191 +13,166 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.IOException;
-import java.nio.file.ClosedWatchServiceException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.FileSystems;
-import java.nio.file.PathMatcher;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JOptionPane;
-import javax.swing.SwingWorker;
-import resaver.Game;
-import resaver.ess.papyrus.Worrier;
+import resaver.Game
+import resaver.ess.papyrus.Worrier
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
+import java.io.IOException
+import java.nio.file.*
+import java.util.logging.Level
+import java.util.logging.Logger
+import javax.swing.JOptionPane
+import javax.swing.SwingWorker
 
 /**
  *
  * @author Mark
  */
-public class Watcher {
-
-    /**
-     *
-     * @param window
-     * @param worrier
-     *
-     */
-    public Watcher(SaveWindow window, Worrier worrier) {
-        this.WINDOW = Objects.requireNonNull(window);
-        this.WORRIER = Objects.requireNonNull(worrier);
-        this.worker = null;
-        this.watchDir = null;
-
-        this.WINDOW.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                Watcher.this.stop();
-            }
-        });
-
-    }
-
-    synchronized public void start(Path newWatchDir) {
-        if (newWatchDir != null && !Configurator.validDir(newWatchDir)) {
-            throw new IllegalArgumentException("Invalid watch directory.");
-        } else if (!this.isRunning() || !Objects.equals(this.watchDir, newWatchDir)) {
-            this.stop();
-            this.watchDir = newWatchDir;
-            this.worker = new WatchWorker();
-            this.worker.execute();
+class Watcher(window: SaveWindow?, worrier: Worrier?) {
+    @Synchronized
+    fun start(newWatchDir: Path?) {
+        require(!(newWatchDir != null && !Configurator.validDir(newWatchDir))) { "Invalid watch directory." }
+        if (!isRunning || watchDir != newWatchDir) {
+            stop()
+            watchDir = newWatchDir
+            worker = WatchWorker()
+            worker!!.execute()
         }
     }
 
     /**
      *
      */
-    synchronized public void resume() {
-        if (this.isRunning()) {
-            return;
+    @Synchronized
+    fun resume() {
+        if (isRunning) {
+            return
         }
-
-        this.worker = new WatchWorker();
-        this.worker.execute();
+        worker = WatchWorker()
+        worker!!.execute()
     }
 
     /**
      *
      */
-    synchronized public void stop() {
-        while (this.isRunning()) {
-            this.worker.cancel(true);
+    @Synchronized
+    fun stop() {
+        while (isRunning) {
+            worker!!.cancel(true)
         }
-        this.worker = null;
+        worker = null
     }
 
     /**
      *
      * @return
      */
-    public boolean isRunning() {
-        return this.worker != null && !this.worker.isDone();
-    }
+    val isRunning: Boolean
+        get() = worker != null && !worker!!.isDone
 
     /**
      *
      * @author Mark
      */
-    class WatchWorker extends SwingWorker<Path, Double> {
-
+    internal inner class WatchWorker : SwingWorker<Path?, Double?>() {
         /**
          *
          * @return @throws Exception
          */
-        @Override
-        synchronized protected Path doInBackground() throws Exception {
-            List<Path> watchDirectories;
-            if (null != watchDir) {
-                watchDirectories = Collections.singletonList(watchDir);
+        @Synchronized
+        @Throws(Exception::class)
+        override fun doInBackground(): Path? {
+            val watchDirectories: List<Path> = if (null != watchDir) {
+                listOf(watchDir!!)
             } else {
-                List<Path> list = new ArrayList<>();
-                for (Game VALUE : Game.VALUES) {
-                    Path saveDirectory = Configurator.getSaveDirectory(VALUE);
+                val list: MutableList<Path> = ArrayList()
+                for (VALUE in Game.VALUES) {
+                    val saveDirectory = Configurator.getSaveDirectory(VALUE)
                     if (Files.exists(saveDirectory)) {
-                        list.add(saveDirectory);
+                        list.add(saveDirectory)
                     }
                 }
-                watchDirectories = list;
+                list
             }
-
-            final java.nio.file.FileSystem FS = java.nio.file.FileSystems.getDefault();
-
-            try (final WatchService WATCHSERVICE = FS.newWatchService()) {
-                Map<WatchKey, Path> REGKEYS = new HashMap<>();
-                for (Path dir : watchDirectories) {
-                    LOG.info("WATCHER: initializing for " + dir);
-                    REGKEYS.put(dir.register(WATCHSERVICE, StandardWatchEventKinds.ENTRY_CREATE), dir);
-                }
-
-                while (true) {
-                    final WatchKey EVENTKEY = WATCHSERVICE.take();
-                    //final WatchKey EVENTKEY = WATCHSERVICE.poll(1, TimeUnit.SECONDS);
-                    if (EVENTKEY == null || !EVENTKEY.isValid()) {
-                        LOG.info("INVALID EVENTKEY");
-                        break;
+            val FS = FileSystems.getDefault()
+            try {
+                FS.newWatchService().use { WATCHSERVICE ->
+                    val REGKEYS: MutableMap<WatchKey, Path> = HashMap()
+                    for (dir in watchDirectories) {
+                        LOG.info("WATCHER: initializing for $dir")
+                        REGKEYS[dir.register(WATCHSERVICE, StandardWatchEventKinds.ENTRY_CREATE)] = dir
                     }
-
-                    for (WatchEvent<?> event : EVENTKEY.pollEvents()) {
-                        if (event.kind() == java.nio.file.StandardWatchEventKinds.OVERFLOW) {
-                            LOG.info("WATCHER OVERFLOW");
-                            continue;
+                    while (true) {
+                        val EVENTKEY = WATCHSERVICE.take()
+                        //final WatchKey EVENTKEY = WATCHSERVICE.poll(1, TimeUnit.SECONDS);
+                        if (EVENTKEY == null || !EVENTKEY.isValid) {
+                            LOG.info("INVALID EVENTKEY")
+                            break
                         }
-
-                        @SuppressWarnings("unchecked")
-                        final Path NAME = ((WatchEvent<Path>) event).context();
-                        final Path FULL = REGKEYS.get(EVENTKEY).resolve(NAME);
-
-                        if (Files.exists(FULL) && MATCHER.matches(FULL)) {
-                            LOG.info("WATCHER: Trying to open " + FULL + ".");
-
-                            int i = 0;
-                            while (i < 50 && !Files.isReadable(FULL)) {
-                                LOG.info("Waiting for " + FULL + " to be readable.");
-                                this.wait(250,0);
-                                i++;
+                        for (event in EVENTKEY.pollEvents()) {
+                            if (event.kind() === StandardWatchEventKinds.OVERFLOW) {
+                                LOG.info("WATCHER OVERFLOW")
+                                continue
                             }
-
-                            if (Configurator.validateSavegame(FULL)) {
-                                final Opener OPENER = new Opener(WINDOW, FULL, WORRIER, null);
-                                OPENER.execute();
-                            } else {
-                                LOG.info("WATCHER: Invalid file " + FULL + ".");
+                            val NAME = (event as WatchEvent<Path?>).context()
+                            val FULL = REGKEYS[EVENTKEY]!!.resolve(NAME!!)
+                            if (Files.exists(FULL) && MATCHER.matches(FULL)) {
+                                LOG.info("WATCHER: Trying to open $FULL.")
+                                var i = 0
+                                while (i < 50 && !Files.isReadable(FULL)) {
+                                    LOG.info("Waiting for $FULL to be readable.")
+                                    //this.wait(250, 0)
+                                    i++
+                                }
+                                if (Configurator.validateSavegame(FULL)) {
+                                    val OPENER = Opener(WINDOW, FULL, WORRIER, null)
+                                    OPENER.execute()
+                                } else {
+                                    LOG.info("WATCHER: Invalid file $FULL.")
+                                }
                             }
                         }
-                    }
-
-                    if (!EVENTKEY.reset()) {
-                        break;
+                        if (!EVENTKEY.reset()) {
+                            break
+                        }
                     }
                 }
-            } catch (InterruptedException | ClosedWatchServiceException ex) {
-                LOG.info("WatcherService interrupted.");
-
-            } catch (IOException ex) {
-                final String MSG = String.format("Error.\n%s", ex.getMessage());
-                JOptionPane.showMessageDialog(WINDOW, MSG, "Watch Error", JOptionPane.ERROR_MESSAGE);
-                LOG.log(Level.SEVERE, "Watcher Error.", ex);
-
+            } catch (ex: InterruptedException) {
+                LOG.info("WatcherService interrupted.")
+            } catch (ex: ClosedWatchServiceException) {
+                LOG.info("WatcherService interrupted.")
+            } catch (ex: IOException) {
+                val MSG = String.format("Error.\n%s", ex.message)
+                JOptionPane.showMessageDialog(WINDOW, MSG, "Watch Error", JOptionPane.ERROR_MESSAGE)
+                LOG.log(Level.SEVERE, "Watcher Error.", ex)
             } finally {
-                return watchDir;
+                return watchDir
             }
         }
     }
 
-    final private SaveWindow WINDOW;
-    final private Worrier WORRIER;
-    private WatchWorker worker;
-    private Path watchDir;
-    static final private Logger LOG = Logger.getLogger(Opener.class.getCanonicalName());
-    static final private PathMatcher MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{fos,ess}");
+    private val WINDOW: SaveWindow = window!!
+    private val WORRIER: Worrier = worrier!!
+    private var worker: WatchWorker? = null
+    private var watchDir: Path? = null
 
+    companion object {
+        private val LOG = Logger.getLogger(Opener::class.java.canonicalName)
+        private val MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{fos,ess}")
+    }
+
+    /**
+     *
+     * @param window
+     * @param worrier
+     */
+    init {
+        WINDOW.addWindowListener(object : WindowAdapter() {
+            override fun windowClosing(e: WindowEvent) {
+                stop()
+            }
+        })
+    }
 }
