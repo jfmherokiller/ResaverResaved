@@ -521,7 +521,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         BUILDER.append(String.format("Event: %s<br/>", this.EVENT));
         BUILDER.append(String.format("Status: %s<br/>", this.STATUS));
         BUILDER.append(String.format("Flag: %s<br/>", this.FLAG));
-        BUILDER.append(String.format("Function type: %s<br/>", this.FN_TYPE));
+        BUILDER.append(String.format("Function type: %s<br/>", this.FN_TYPE.toString()));
         BUILDER.append(String.format("Function return type: %s<br/>", this.RETURNTYPE));
         BUILDER.append(String.format("Function docstring: %s<br/>", this.FN_DOCSTRING));
         BUILDER.append(String.format("%d parameters, %d locals, %d values.<br/>", this.FN_PARAMS.size(), this.FN_LOCALS.size(), this.VARIABLES.size()));
