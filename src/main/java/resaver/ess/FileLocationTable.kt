@@ -13,254 +13,248 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Objects;
-import resaver.Game;
+import resaver.Game
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Describes the table of file locations.
  *
  * @author Mark Fairchild
  */
-public final class FileLocationTable implements Element {
-
+class FileLocationTable : Element {
     /**
-     * Creates a new <code>FileLocationTable</code> by reading from a
-     * <code>LittleEndianDataOutput</code>. No error handling is performed.
+     * Creates a new `FileLocationTable` by reading from a
+     * `LittleEndianDataOutput`. No error handling is performed.
      *
      * @param input The input stream.
      * @param game Specifies which format to use.
      * @throws IOException
      */
-    public FileLocationTable(ByteBuffer input, Game game) throws IOException {
-        this.GAME = Objects.requireNonNull(game);
-        this.formIDArrayCountOffset = input.getInt();
-        this.unknownTable3Offset = input.getInt();
-        this.table1Offset = input.getInt();
-        this.table2Offset = input.getInt();
-        this.changeFormsOffset = input.getInt();
-        this.table3Offset = input.getInt();
-        this.TABLE1COUNT = input.getInt();
-        this.TABLE2COUNT = input.getInt();
-        int count = input.getInt();
-        this.TABLE3COUNT = (this.GAME.isSkyrim() ? count + 1 : count);
-        this.changeFormCount = input.getInt();
-        this.UNUSED = new int[15];
-        for (int i = 0; i < 15; i++) {
-            this.UNUSED[i] = input.getInt();
+    constructor(input: ByteBuffer, game: Game?) {
+        GAME = Objects.requireNonNull(game)
+        formIDArrayCountOffset = input.int
+        unknownTable3Offset = input.int
+        table1Offset = input.int
+        table2Offset = input.int
+        changeFormsOffset = input.int
+        table3Offset = input.int
+        TABLE1COUNT = input.int
+        TABLE2COUNT = input.int
+        val count = input.int
+        TABLE3COUNT = if (GAME!!.isSkyrim) count + 1 else count
+        changeFormCount = input.int
+        UNUSED = IntArray(15)
+        for (i in 0..14) {
+            UNUSED[i] = input.int
         }
-        this.t1size = table2Offset - table1Offset;
-        this.t2size = changeFormsOffset - table2Offset;
-        this.t3size = table3Offset - changeFormsOffset;
+        t1size = table2Offset - table1Offset
+        t2size = changeFormsOffset - table2Offset
+        t3size = table3Offset - changeFormsOffset
     }
 
     /**
-     * Creates a new <code>FileLocationTable</code> by analyzing an
-     * <code>ESS</code>.
+     * Creates a new `FileLocationTable` by analyzing an
+     * `ESS`.
      *
-     * @param ess The <code>ESS</code> to rebuild for.
+     * @param ess The `ESS` to rebuild for.
      */
-    public FileLocationTable(ESS ess) {
-        this.GAME = ess.getHeader().GAME;
-        this.TABLE1COUNT = ess.getTable1().size();
-        this.TABLE2COUNT = ess.getTable2().size();
-        this.TABLE3COUNT = ess.getTable3().size();
-        this.UNUSED = new int[15];
-        Arrays.fill(this.UNUSED, 0);
-
-        int table1Size = 0;
-        for (GlobalData globalData : ess.getTable1()) {
-            int calculateSize = globalData.calculateSize();
-            table1Size += calculateSize;
+    constructor(ess: ESS) {
+        GAME = ess.header.GAME
+        TABLE1COUNT = ess.table1.size
+        TABLE2COUNT = ess.table2.size
+        TABLE3COUNT = ess.table3.size
+        UNUSED = IntArray(15)
+        Arrays.fill(UNUSED, 0)
+        var table1Size = 0
+        for (globalData in ess.table1) {
+            val calculateSize = globalData.calculateSize()
+            table1Size += calculateSize
         }
-        int table2Size = 0;
-        for (GlobalData globalData : ess.getTable2()) {
-            int calculateSize = globalData.calculateSize();
-            table2Size += calculateSize;
+        var table2Size = 0
+        for (globalData in ess.table2) {
+            val calculateSize = globalData.calculateSize()
+            table2Size += calculateSize
         }
-        int table3Size = 0;
-        for (GlobalData globalData : ess.getTable3()) {
-            int calculateSize = globalData.calculateSize();
-            table3Size += calculateSize;
+        var table3Size = 0
+        for (globalData in ess.table3) {
+            val calculateSize = globalData.calculateSize()
+            table3Size += calculateSize
         }
-        int changeFormsSize = 0;
-        for (ChangeForm changeForm : ess.getChangeForms().values()) {
-            int calculateSize = changeForm.calculateSize();
-            changeFormsSize += calculateSize;
+        var changeFormsSize = 0
+        for (changeForm in ess.changeForms.values) {
+            val calculateSize = changeForm.calculateSize()
+            changeFormsSize += calculateSize
         }
-
-        this.table1Offset = 0;
-        this.table1Offset += ess.getHeader().calculateSize();
-        this.table1Offset += 1;
-        this.table1Offset += ess.getPluginInfo().calculateSize();
-        this.table1Offset += this.calculateSize();
-        if (null != ess.getVersionString()) {
-            this.table1Offset += ess.getVersionString().length() + 2;
+        table1Offset = 0
+        table1Offset += ess.header.calculateSize()
+        table1Offset += 1
+        table1Offset += ess.pluginInfo.calculateSize()
+        table1Offset += calculateSize()
+        if (null != ess.versionString) {
+            table1Offset += ess.versionString.length + 2
         }
-
-        this.table2Offset = this.table1Offset + table1Size;
-        this.changeFormCount = ess.getChangeForms().size();
-        this.changeFormsOffset = this.table2Offset + table2Size;
-        this.table3Offset = this.changeFormsOffset + changeFormsSize;
-        this.formIDArrayCountOffset = this.table3Offset + table3Size;
-        this.unknownTable3Offset = 0;
-        this.unknownTable3Offset += this.formIDArrayCountOffset;
-        this.unknownTable3Offset += 4 + 4 * ess.getFormIDs().length;
-        this.unknownTable3Offset += 4 + 4 * ess.getVisitedWorldspaceArray().length;
+        table2Offset = table1Offset + table1Size
+        changeFormCount = ess.changeForms.size
+        changeFormsOffset = table2Offset + table2Size
+        table3Offset = changeFormsOffset + changeFormsSize
+        formIDArrayCountOffset = table3Offset + table3Size
+        unknownTable3Offset = 0
+        unknownTable3Offset += formIDArrayCountOffset
+        unknownTable3Offset += 4 + 4 * ess.formIDs.size
+        unknownTable3Offset += 4 + 4 * ess.visitedWorldspaceArray.size
     }
 
     /**
-     * Rebuilds the file location table for an <code>ESS</code>.
+     * Rebuilds the file location table for an `ESS`.
      *
-     * @param ess The <code>ESS</code> to rebuild for.
+     * @param ess The `ESS` to rebuild for.
      */
-    public void rebuild(ESS ess) {
-        int table1Size = 0;
-        for (GlobalData globalData : ess.getTable1()) {
-            int calculateSize = globalData.calculateSize();
-            table1Size += calculateSize;
+    fun rebuild(ess: ESS) {
+        var table1Size = 0
+        for (globalData in ess.table1) {
+            val calculateSize = globalData.calculateSize()
+            table1Size += calculateSize
         }
-        int table2Size = 0;
-        for (GlobalData globalData : ess.getTable2()) {
-            int calculateSize = globalData.calculateSize();
-            table2Size += calculateSize;
+        var table2Size = 0
+        for (globalData in ess.table2) {
+            val calculateSize = globalData.calculateSize()
+            table2Size += calculateSize
         }
-        int table3Size = 0;
-        for (GlobalData globalData : ess.getTable3()) {
-            int calculateSize = globalData.calculateSize();
-            table3Size += calculateSize;
+        var table3Size = 0
+        for (globalData in ess.table3) {
+            val calculateSize = globalData.calculateSize()
+            table3Size += calculateSize
         }
-        int changeFormsSize = 0;
-        for (ChangeForm changeForm : ess.getChangeForms().values()) {
-            int calculateSize = changeForm.calculateSize();
-            changeFormsSize += calculateSize;
+        var changeFormsSize = 0
+        for (changeForm in ess.changeForms.values) {
+            val calculateSize = changeForm.calculateSize()
+            changeFormsSize += calculateSize
         }
-
-        this.table1Offset = 0;
-        this.table1Offset += ess.getHeader().calculateSize();
-        this.table1Offset += 1;
-        this.table1Offset += ess.getPluginInfo().calculateSize();
-        this.table1Offset += this.calculateSize();
-        if (null != ess.getVersionString()) {
-            this.table1Offset += ess.getVersionString().length() + 2;
+        table1Offset = 0
+        table1Offset += ess.header.calculateSize()
+        table1Offset += 1
+        table1Offset += ess.pluginInfo.calculateSize()
+        table1Offset += calculateSize()
+        if (null != ess.versionString) {
+            table1Offset += ess.versionString.length + 2
         }
-
-        this.table2Offset = this.table1Offset + table1Size;
-        this.changeFormCount = ess.getChangeForms().size();
-        this.changeFormsOffset = this.table2Offset + table2Size;
-        this.table3Offset = this.changeFormsOffset + changeFormsSize;
-        this.formIDArrayCountOffset = this.table3Offset + table3Size;
-        this.unknownTable3Offset = 0;
-        this.unknownTable3Offset += this.formIDArrayCountOffset;
-        this.unknownTable3Offset += 4 + 4 * ess.getFormIDs().length;
-        this.unknownTable3Offset += 4 + 4 * ess.getVisitedWorldspaceArray().length;
+        table2Offset = table1Offset + table1Size
+        changeFormCount = ess.changeForms.size
+        changeFormsOffset = table2Offset + table2Size
+        table3Offset = changeFormsOffset + changeFormsSize
+        formIDArrayCountOffset = table3Offset + table3Size
+        unknownTable3Offset = 0
+        unknownTable3Offset += formIDArrayCountOffset
+        unknownTable3Offset += 4 + 4 * ess.formIDs.size
+        unknownTable3Offset += 4 + 4 * ess.visitedWorldspaceArray.size
     }
 
     /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.putInt(this.formIDArrayCountOffset);
-        output.putInt(this.unknownTable3Offset);
-        output.putInt(this.table1Offset);
-        output.putInt(this.table2Offset);
-        output.putInt(this.changeFormsOffset);
-        output.putInt(this.table3Offset);
-        output.putInt(this.TABLE1COUNT);
-        output.putInt(this.TABLE2COUNT);
-        output.putInt(this.GAME.isSkyrim() ? this.TABLE3COUNT - 1 : this.TABLE3COUNT);
-        output.putInt(this.changeFormCount);
-        for (int j : this.UNUSED) {
-            output.putInt(j);
+    override fun write(output: ByteBuffer?) {
+        output!!.putInt(formIDArrayCountOffset)
+        output.putInt(unknownTable3Offset)
+        output.putInt(table1Offset)
+        output.putInt(table2Offset)
+        output.putInt(changeFormsOffset)
+        output.putInt(table3Offset)
+        output.putInt(TABLE1COUNT)
+        output.putInt(TABLE2COUNT)
+        output.putInt(if (GAME!!.isSkyrim) TABLE3COUNT - 1 else TABLE3COUNT)
+        output.putInt(changeFormCount)
+        for (j in UNUSED) {
+            output.putInt(j)
         }
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return 100;
+    override fun calculateSize(): Int {
+        return 100
     }
 
     /**
-     * @see Object#hashCode()
+     * @see Object.hashCode
      * @return
      */
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 73 * hash + this.formIDArrayCountOffset;
-        hash = 73 * hash + this.unknownTable3Offset;
-        hash = 73 * hash + this.table1Offset;
-        hash = 73 * hash + this.table2Offset;
-        hash = 73 * hash + this.changeFormsOffset;
-        hash = 73 * hash + this.table3Offset;
-        hash = 73 * hash + this.TABLE1COUNT;
-        hash = 73 * hash + this.TABLE2COUNT;
-        hash = 73 * hash + this.TABLE3COUNT;
-        hash = 73 * hash + this.changeFormCount;
-        hash = 73 * hash + Arrays.hashCode(this.UNUSED);
-        return hash;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 73 * hash + formIDArrayCountOffset
+        hash = 73 * hash + unknownTable3Offset
+        hash = 73 * hash + table1Offset
+        hash = 73 * hash + table2Offset
+        hash = 73 * hash + changeFormsOffset
+        hash = 73 * hash + table3Offset
+        hash = 73 * hash + TABLE1COUNT
+        hash = 73 * hash + TABLE2COUNT
+        hash = 73 * hash + TABLE3COUNT
+        hash = 73 * hash + changeFormCount
+        hash = 73 * hash + UNUSED.contentHashCode()
+        return hash
     }
 
     /**
-     * @see Object#equals(java.lang.Object)
+     * @see Object.equals
      * @return
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null || getClass() != obj.getClass()) {
-            return false;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        } else if (other == null || javaClass != other.javaClass) {
+            return false
         }
-        final FileLocationTable other = (FileLocationTable) obj;
-        if (this.formIDArrayCountOffset != other.formIDArrayCountOffset) {
-            return false;
-        } else if (this.unknownTable3Offset != other.unknownTable3Offset) {
-            return false;
-        } else if (this.table1Offset != other.table1Offset) {
-            return false;
-        } else if (this.table2Offset != other.table2Offset) {
-            return false;
-        } else if (this.changeFormsOffset != other.changeFormsOffset) {
-            return false;
-        } else if (this.table3Offset != other.table3Offset) {
-            return false;
-        } else if (this.TABLE1COUNT != other.TABLE1COUNT) {
-            return false;
-        } else if (this.TABLE2COUNT != other.TABLE2COUNT) {
-            return false;
-        } else if (this.TABLE3COUNT != other.TABLE3COUNT) {
-            return false;
-        } else if (this.changeFormCount != other.changeFormCount) {
-            return false;
+        val other2 = other as FileLocationTable
+        return if (formIDArrayCountOffset != other2.formIDArrayCountOffset) {
+            false
+        } else if (unknownTable3Offset != other2.unknownTable3Offset) {
+            false
+        } else if (table1Offset != other2.table1Offset) {
+            false
+        } else if (table2Offset != other2.table2Offset) {
+            false
+        } else if (changeFormsOffset != other2.changeFormsOffset) {
+            false
+        } else if (table3Offset != other2.table3Offset) {
+            false
+        } else if (TABLE1COUNT != other2.TABLE1COUNT) {
+            false
+        } else if (TABLE2COUNT != other2.TABLE2COUNT) {
+            false
+        } else if (TABLE3COUNT != other2.TABLE3COUNT) {
+            false
+        } else if (changeFormCount != other2.changeFormCount) {
+            false
         } else {
-            return Objects.deepEquals(this.UNUSED, other.UNUSED);
+            Objects.deepEquals(UNUSED, other2.UNUSED)
         }
     }
-    int t1size;
-    int t2size;
-    int t3size;
-    int formIDArrayCountOffset;
-    int unknownTable3Offset;
-    int table1Offset;
-    int table2Offset;
-    int changeFormsOffset;
-    int table3Offset;
-    final int TABLE1COUNT;
-    final int TABLE2COUNT;
-    final int TABLE3COUNT;
-    int changeFormCount;
-    final int[] UNUSED;
-    final Game GAME;
 
+    var t1size = 0
+    var t2size = 0
+    var t3size = 0
+    @JvmField
+    var formIDArrayCountOffset: Int
+    var unknownTable3Offset: Int
+    @JvmField
+    var table1Offset: Int
+    var table2Offset: Int
+    var changeFormsOffset: Int
+    var table3Offset: Int
+    @JvmField
+    val TABLE1COUNT: Int
+    @JvmField
+    val TABLE2COUNT: Int
+    @JvmField
+    val TABLE3COUNT: Int
+    @JvmField
+    var changeFormCount: Int
+    val UNUSED: IntArray
+    val GAME: Game?
 }
