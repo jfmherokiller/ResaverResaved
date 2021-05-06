@@ -13,59 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mf;
+package mf
 
-import javax.swing.JMenuItem;
+import javax.swing.JMenuItem
 
 /**
- * A <code>JMenuItem</code> that has a parameter and whose display string is
+ * A `JMenuItem` that has a parameter and whose display string is
  * formatted.
  *
  * @author Mark Fairchild
  * @since 2018-09-22
  */
-public class JValueMenuItem<T> extends JMenuItem {
-
-    public JValueMenuItem(String initialFormat, T initialValue) {
-        super(String.format(initialFormat, initialValue));
-        this.format = initialFormat;
-        this.value = initialValue;
+class JValueMenuItem<T>(private var format: String, private var value: T) : JMenuItem(
+    String.format(
+        format, value
+    )
+) {
+    override fun setText(newFormat: String) {
+        format = newFormat
+        updateText()
     }
 
-    @Override
-    public void setText(String newFormat) {
-        this.format = newFormat;
-        this.updateText();
+    fun setValue(newValue: T) {
+        value = newValue
+        updateText()
     }
 
-    public void setValue(T newValue) {
-        this.value = newValue;
-        this.updateText();
+    fun getValue(): T {
+        return value
     }
 
-    public T getValue() {
-        return this.value;
-    }
-
-    private void updateText() {
-        if (this.value == null) {
-            final String formatted = String.format(this.format, "none");
-            super.setText(formatted);
+    private fun updateText() {
+        val formatted: String = if (value == null) {
+            String.format(format, "none")
         } else {
-            final String formatted = String.format(this.format, this.value);
-            super.setText(formatted);
+            String.format(format, value)
         }
+        super.setText(formatted)
     }
 
     /**
      *
      */
-    @Override
-    public void updateUI() {
-        this.updateText();
-        super.updateUI();
+    override fun updateUI() {
+        updateText()
+        super.updateUI()
     }
-
-    private String format;
-    private T value;
 }
