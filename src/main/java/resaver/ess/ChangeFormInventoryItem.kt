@@ -13,28 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
+import resaver.ess.ESS.ESSContext
+import java.nio.ByteBuffer
 
 /**
  * Manages an inventory item.
  *
  * @author Mark Fairchild
  */
-public class ChangeFormInventoryItem extends GeneralElement {
-
+class ChangeFormInventoryItem(input: ByteBuffer?, context: ESSContext?) : GeneralElement() {
     /**
-     * Creates a new <code>ChangeFormInventoryItem</code> by reading from a
-     * <code>LittleEndianDataOutput</code>. No error handling is performed.
+     * Creates a new `ChangeFormInventoryItem` by reading from a
+     * `LittleEndianDataOutput`. No error handling is performed.
      *
      * @param input The input stream.
-     * @param context The <code>ESSContext</code> info.
+     * @param context The `ESSContext` info.
      */
-    public ChangeFormInventoryItem(ByteBuffer input, ESS.ESSContext context) {
-        super.readRefID(input, "ITEM", context);
-        super.readInt(input, "COUNT");
-        super.readElement(input, "EXTRA", in -> new ChangeFormExtraData(in, context));
+    init {
+        super.readRefID(input, "ITEM", context)
+        super.readInt(input, "COUNT")
+        super.readElement(input, "EXTRA") { `in`: ByteBuffer? ->
+            ChangeFormExtraData(
+                `in`!!, context!!
+            )
+        }
     }
-
 }
