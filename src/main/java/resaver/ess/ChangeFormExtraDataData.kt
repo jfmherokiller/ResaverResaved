@@ -160,7 +160,7 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : GeneralE
                 super.readRefID(input, "UNK2", context)
                 val flags =
                     super.readElement(input, "NPCChangeFlags") { input: ByteBuffer? -> Flags.readIntFlags(input) }
-                super.readElement(input, "NPC") { `in`: ByteBuffer? -> ChangeFormNPC(`in`, flags, context) }
+                super.readElement(input, "NPC") { `in`: ByteBuffer? -> `in`?.let { ChangeFormNPC(it, flags, context) } }
             }
             46 -> {
                 NAME = "LeveledItem"
