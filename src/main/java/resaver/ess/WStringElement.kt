@@ -13,79 +13,73 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-
-import resaver.WString;
+import mf.BufferUtil
+import resaver.WString
+import java.nio.ByteBuffer
 
 /**
- * Extends <code>IString</code> by handling charsets and storing the original
+ * Extends `IString` by handling charsets and storing the original
  * byte sequence.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-public class WStringElement extends WString implements Element {
-
-    /**
-     * Creates a new <code>WStringElement</code> by reading from a
-     * <code>ByteBuffer</code>.
-     *
-     * @param input The input stream.
-     * @return The new <code>WStringElement</code>.
-     */
-    static public WStringElement read(ByteBuffer input) {
-        final byte[] BYTES = mf.BufferUtil.getWStringRaw(input);
-        return new WStringElement(BYTES);
-    }
-
+class WStringElement : WString, Element {
     /**
      * Copy constructor.
      *
-     * @param other The original <code>WString</code>.
+     * @param other The original `WString`.
      */
-    public WStringElement(WStringElement other) {
-        super(other);
-    }
+    constructor(other: WStringElement?) : super(other) {}
 
     /**
-     * Creates a new <code>WStringElement</code> from a character sequence; the
+     * Creates a new `WStringElement` from a character sequence; the
      * byte array is generated from the string using UTF-8 encoding.
      *
-     * @param cs The <code>CharSequence</code>.
+     * @param cs The `CharSequence`.
      */
-    public WStringElement(CharSequence cs) {
-        super(cs);
-    }
+    constructor(cs: CharSequence?) : super(cs) {}
 
     /**
-     * Creates a new <code>WStringElement</code> from a character sequence and a
+     * Creates a new `WStringElement` from a character sequence and a
      * byte array.
      *
-     * @param cs The <code>CharSequence</code>.
+     * @param cs The `CharSequence`.
      * @param bytes The byte array.
      */
-    private WStringElement(byte[] bytes) {
-        super(bytes);
-    }
+    private constructor(bytes: ByteArray) : super(bytes) {}
 
     /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        super.write(output);
+    override fun write(output: ByteBuffer?) {
+        if (output != null) {
+            super.write(output)
+        }
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        return super.calculateSize();
+    override fun calculateSize(): Int {
+        return super.calculateSize()
     }
 
+    companion object {
+        /**
+         * Creates a new `WStringElement` by reading from a
+         * `ByteBuffer`.
+         *
+         * @param input The input stream.
+         * @return The new `WStringElement`.
+         */
+        @JvmStatic
+        fun read(input: ByteBuffer?): WStringElement {
+            val BYTES = BufferUtil.getWStringRaw(input)
+            return WStringElement(BYTES)
+        }
+    }
 }

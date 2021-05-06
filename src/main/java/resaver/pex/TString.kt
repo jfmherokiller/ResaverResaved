@@ -34,7 +34,7 @@ class TString
     /**
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer) {
-        output.putShort(INDEX.toShort())
+    override fun write(output: ByteBuffer?) {
+        output?.putShort(INDEX.toShort())
     }
 }

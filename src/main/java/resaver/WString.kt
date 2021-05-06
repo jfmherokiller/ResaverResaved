@@ -59,14 +59,16 @@ open class WString : IString {
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    open fun write(output: ByteBuffer) {
-        val BYTES = uTF8
-        if (BYTES!!.size > 0xFFFF) {
-            output.putShort(0xFFFF.toShort())
-            output.put(BYTES, 0, 0xFFFF)
-        } else {
-            output.putShort(BYTES.size.toShort())
-            output.put(BYTES)
+    open fun write(output: ByteBuffer?) {
+        if (output != null) {
+            val BYTES = uTF8
+            if (BYTES!!.size > 0xFFFF) {
+                output.putShort(0xFFFF.toShort())
+                output.put(BYTES, 0, 0xFFFF)
+            } else {
+                output.putShort(BYTES.size.toShort())
+                output.put(BYTES)
+            }
         }
     }
 
