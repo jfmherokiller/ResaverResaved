@@ -13,241 +13,189 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import resaver.ListException;
-import resaver.ess.AnalyzableElement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.SortedSet;
-import java.util.stream.Collectors;
-import resaver.IString;
-import java.nio.ByteBuffer;
-import resaver.Analysis;
-import resaver.ess.Element;
-import resaver.ess.ESS;
-import resaver.ess.Linkable;
+import resaver.Analysis
+import resaver.IString
+import resaver.ListException
+import resaver.ess.ESS
+import resaver.ess.Element
+import resaver.ess.Linkable
+import java.nio.ByteBuffer
+import java.util.function.Consumer
 
 /**
  * Describes a script in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class Script extends Definition {
-
+/**
+ * Creates a new `Script` by reading from a
+ * `ByteBuffer`. No error handling is performed.
+ *
+ * @param input The input stream.
+ * @param context The `PapyrusContext` info.
+ * @throws PapyrusFormatException
+ * @throws PapyrusElementException
+ */
+class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
     /**
-     * Creates a new <code>Script</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     * @throws PapyrusElementException
-     *
-     */
-    public Script(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException, PapyrusElementException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-
-        this.NAME = context.readTString(input);
-        this.TYPE = context.readTString(input);
-
-        try {
-            int count = input.getInt();
-            this.MEMBERS = MemberDesc.readList(input, count, context);
-        } catch (ListException ex) {
-            throw new PapyrusElementException("Failed to read Script members.", ex, this);
-        }
-    }
-
-    /**
-     * @see resaver.ess.Element#write(resaver.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        Objects.requireNonNull(output);
-
-        this.NAME.write(output);
-        this.TYPE.write(output);
-        output.putInt(this.MEMBERS.size());
-        this.MEMBERS.forEach(member -> member.write(output));
+    override fun write(output: ByteBuffer?) {
+        name.write(output)
+        type.write(output)
+        output!!.putInt(MEMBERS!!.size)
+        MEMBERS!!.forEach(Consumer { member: MemberDesc -> member.write(output) })
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 4;
-        sum += this.NAME.calculateSize();
-        sum += this.TYPE.calculateSize();
-        int result = 0;
-        for (MemberDesc MEMBER : this.MEMBERS) {
-            int calculateSize = MEMBER.calculateSize();
-            result += calculateSize;
-        }
-        sum += result;
-        return sum;
+    override fun calculateSize(): Int {
+        var sum = 4
+        sum += name.calculateSize()
+        sum += type.calculateSize()
+        val result = MEMBERS!!.sumOf { it.calculateSize() }
+        sum += result
+        return sum
     }
 
     /**
-     * @return The name of the papyrus element.
+     * @return The list of `MemberDesc`.
      */
-    @Override
-    public TString getName() {
-        return this.NAME;
-    }
+    override val members: List<MemberDesc>
+        get() = MEMBERS!!
 
     /**
-     * @return The type of the array.
+     * @return The list of `MemberDesc` prepended by the
+     * `MemberDesc` objects of all superscripts.
      */
-    public TString getType() {
-        return this.TYPE;
-    }
-
-    /**
-     * @return The list of <code>MemberDesc</code>.
-     */
-    @Override
-    public List<MemberDesc> getMembers() {
-        return java.util.Collections.unmodifiableList(this.MEMBERS);
-    }
-
-    /**
-     * @return The list of <code>MemberDesc</code> prepended by the
-     * <code>MemberDesc</code> objects of all superscripts.
-     */
-    public List<MemberDesc> getExtendedMembers() {
-        if (null != this.parent) {
-            final List<MemberDesc> EXTENDED = this.parent.getExtendedMembers();
-            EXTENDED.addAll(this.MEMBERS);
-            return EXTENDED;
+    val extendedMembers: MutableList<MemberDesc>
+        get() = if (null != parent) {
+            val EXTENDED = parent!!.extendedMembers
+            EXTENDED.addAll(MEMBERS!!)
+            EXTENDED
         } else {
-            final List<MemberDesc> EXTENDED = new ArrayList<>(this.MEMBERS);
-            return EXTENDED;
+            ArrayList(MEMBERS)
         }
-    }
 
     /**
      * @param scripts The ScriptMap.
      */
-    public void resolveParent(ScriptMap scripts) {
-        this.parent = scripts.get(this.TYPE);
+    fun resolveParent(scripts: ScriptMap) {
+        parent = scripts[type]
     }
 
     /**
-     * @see resaver.ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see resaver.ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(Element target) {
-        if (target instanceof MemberDesc) {
-            int i = this.getExtendedMembers().indexOf(target);
+    override fun toHTML(target: Element?): String {
+        if (target is MemberDesc) {
+            val i = extendedMembers.indexOf(target)
             if (i >= 0) {
-                return Linkable.makeLink("script", this.NAME, i, this.NAME.toString());
+                return Linkable.makeLink("script", name, i, name.toString())
             }
         }
-        return Linkable.makeLink("script", this.NAME, this.NAME.toString());
+        return Linkable.makeLink("script", name, name.toString())
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        if (this.isUndefined()) {
-            return "#" + this.NAME + " (" + this.getInstanceCount() + ")";
-        }
-
-        return this.NAME + " (" + this.getInstanceCount() + ")";
+    override fun toString(): String {
+        return if (isUndefined) {
+            "#$name ($instanceCount)"
+        } else "$name ($instanceCount)"
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-        BUILDER.append("<html>");
-
-        if (this.TYPE.isEmpty()) {
-            BUILDER.append(String.format("<h3>SCRIPT %s</h3>", this.NAME));
-        } else if (null != this.parent) {
-            BUILDER.append(String.format("<h3>SCRIPT %s extends %s</h3>", this.NAME, this.parent.toHTML(this)));
-        } else {
-            BUILDER.append(String.format("<h3>SCRIPT %s extends %s</h3>", this.NAME, this.TYPE));
+    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
+        val BUILDER = StringBuilder()
+        BUILDER.append("<html>")
+        when {
+            type.isEmpty -> {
+                BUILDER.append(String.format("<h3>SCRIPT %s</h3>", name))
+            }
+            null != parent -> {
+                BUILDER.append(String.format("<h3>SCRIPT %s extends %s</h3>", name, parent!!.toHTML(this)))
+            }
+            else -> {
+                BUILDER.append(String.format("<h3>SCRIPT %s extends %s</h3>", name, type))
+            }
         }
-
-        if (this.isUndefined()) {
-            BUILDER.append("<p>WARNING: SCRIPT MISSING!<br />Selecting \"Remove Undefined Instances\" will delete this.</p>");
+        if (isUndefined) {
+            BUILDER.append("<p>WARNING: SCRIPT MISSING!<br />Selecting \"Remove Undefined Instances\" will delete this.</p>")
         }
-
         if (null != analysis) {
-            SortedSet<String> mods = analysis.SCRIPT_ORIGINS.get(this.NAME.toIString());
-
+            val mods = analysis.SCRIPT_ORIGINS[name.toIString()]
             if (null != mods) {
-                if (mods.size() > 1) {
-                    BUILDER.append("<p>WARNING: MORE THAN ONE MOD PROVIDES THIS SCRIPT!<br />Exercise caution when editing or deleting this script!</p>");
+                if (mods.size > 1) {
+                    BUILDER.append("<p>WARNING: MORE THAN ONE MOD PROVIDES THIS SCRIPT!<br />Exercise caution when editing or deleting this script!</p>")
                 }
-
-                String probablyProvider = mods.last();
-                BUILDER.append(String.format("<p>This script probably came from \"%s\".</p>", probablyProvider));
-                BUILDER.append("<p>Full list of providers:</p>");
-                BUILDER.append("<ul>");
-                mods.forEach(mod -> BUILDER.append(String.format("<li>%s", mod)));
-                BUILDER.append("</ul>");
+                val probablyProvider = mods.last()
+                BUILDER.append(String.format("<p>This script probably came from \"%s\".</p>", probablyProvider))
+                BUILDER.append("<p>Full list of providers:</p>")
+                BUILDER.append("<ul>")
+                mods.forEach(Consumer { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) })
+                BUILDER.append("</ul>")
             }
         }
-
-        int inheritCount = 0;
-        for (Script p = this.parent; p != null; p = p.parent) {
-            inheritCount += p.MEMBERS.size();
+        var inheritCount = 0
+        var p = parent
+        while (p != null) {
+            inheritCount += p.MEMBERS!!.size
+            p = p.parent
         }
-        BUILDER.append(String.format("<p>Contains %d member variables, %d were inherited.</p>", this.MEMBERS.size() + inheritCount, inheritCount));
-
-        final List<ScriptInstance> INSTANCES = new ArrayList<>();
-        for (ScriptInstance instance : save.getPapyrus()
-                .getScriptInstances()
-                .values()) {
-            if (instance.getScript() == this) {
-                INSTANCES.add(instance);
+        BUILDER.append(
+            String.format(
+                "<p>Contains %d member variables, %d were inherited.</p>",
+                MEMBERS!!.size + inheritCount,
+                inheritCount
+            )
+        )
+        val INSTANCES: MutableList<ScriptInstance> = ArrayList()
+        for (instance in save!!.papyrus
+            .scriptInstances
+            .values) {
+            if (instance.script == this) {
+                INSTANCES.add(instance)
             }
         }
-
-        final List<Reference> REFERENCES = new ArrayList<>();
-        for (Reference ref : save.getPapyrus()
-                .getReferences()
-                .values()) {
-            if (ref.getScript() == this) {
-                REFERENCES.add(ref);
+        val REFERENCES: MutableList<Reference> = ArrayList()
+        for (ref in save.papyrus
+            .references
+            .values) {
+            if (ref.script == this) {
+                REFERENCES.add(ref)
             }
         }
-
-        BUILDER.append(String.format("<p>There are %d instances of this script.</p>", INSTANCES.size()));
-        if (INSTANCES.size() < 20) {
-            BUILDER.append("<ul>");
-            INSTANCES.forEach(i -> {
-                String s = String.format("<li>%s</a>", i.toHTML(null));
-                BUILDER.append(s);
-            });
-            BUILDER.append("</ul>");
+        BUILDER.append(String.format("<p>There are %d instances of this script.</p>", INSTANCES.size))
+        if (INSTANCES.size < 20) {
+            BUILDER.append("<ul>")
+            INSTANCES.forEach(Consumer { i: ScriptInstance ->
+                val s = String.format("<li>%s</a>", i.toHTML(null))
+                BUILDER.append(s)
+            })
+            BUILDER.append("</ul>")
         }
-
-        BUILDER.append(String.format("<p>There are %d references of this script.</p>", REFERENCES.size()));
-        if (REFERENCES.size() < 20) {
-            BUILDER.append("<ul>");
-            REFERENCES.forEach(i -> {
-                String s = String.format("<li>%s</a>", i.toHTML(null));
-                BUILDER.append(s);
-            });
-            BUILDER.append("</ul>");
+        BUILDER.append(String.format("<p>There are %d references of this script.</p>", REFERENCES.size))
+        if (REFERENCES.size < 20) {
+            BUILDER.append("<ul>")
+            REFERENCES.forEach(Consumer { i: Reference ->
+                val s = String.format("<li>%s</a>", i.toHTML(null))
+                BUILDER.append(s)
+            })
+            BUILDER.append("</ul>")
         }
 
         /*if (null != analysis && analysis.SCRIPTS.containsKey(this.NAME.toIString())) {
@@ -308,62 +256,74 @@ final public class Script extends Definition {
                     }
                 }
             }
-        }*/
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        }*/BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(Analysis analysis, String mod) {
-        Objects.requireNonNull(analysis);
-        Objects.requireNonNull(mod);
-
-        final SortedSet<String> OWNERS = analysis.SCRIPT_ORIGINS.get(this.NAME.toIString());
-        return null != OWNERS && OWNERS.contains(mod);
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+        val OWNERS = analysis!!.SCRIPT_ORIGINS[name.toIString()]
+        return null != OWNERS && OWNERS.contains(mod)
     }
 
     /**
-     * @return A flag indicating if the <code>Script</code> is undefined.
-     *
+     * @return A flag indicating if the `Script` is undefined.
      */
-    @Override
-    public boolean isUndefined() {
-        if (null != this.TYPE && !this.TYPE.isEmpty()) {
-            return false;
+    override val isUndefined: Boolean
+        get() = if (null != type && !type.isEmpty) {
+            false
+        } else !NATIVE_SCRIPTS.contains(name.toIString())
+
+    /**
+     * @return The name of the papyrus element.
+     */
+    override val name: TString
+
+    /**
+     * @return The type of the array.
+     */
+    val type: TString
+    private var MEMBERS: List<MemberDesc>? = null
+    private var parent: Script? = null
+
+    companion object {
+        /**
+         * A list of scripts that only exist implicitly.
+         */
+        @JvmField
+        val NATIVE_SCRIPTS = listOf(
+            IString["ActiveMagicEffect"],
+            IString["Alias"],
+            IString["Debug"],
+            IString["Form"],
+            IString["Game"],
+            IString["Input"],
+            IString["Math"],
+            IString["ModEvent"],
+            IString["SKSE"],
+            IString["StringUtil"],
+            IString["UI"],
+            IString["Utility"],
+            IString["CommonArrayFunctions"],
+            IString["ScriptObject"],
+            IString["InputEnableLayer"]
+        )
+    }
+
+
+    init {
+        name = context.readTString(input)
+        type = context.readTString(input)
+        try {
+            val count = input.int
+            MEMBERS = MemberDesc.readList(input, count, context)
+        } catch (ex: ListException) {
+            throw PapyrusElementException("Failed to read Script members.", ex, this)
         }
-
-        return !Script.NATIVE_SCRIPTS.contains(this.NAME.toIString());
     }
-
-    /**
-     * A list of scripts that only exist implicitly.
-     */
-    static final java.util.List<IString> NATIVE_SCRIPTS = java.util.Arrays.asList(IString.get("ActiveMagicEffect"),
-            IString.get("Alias"),
-            IString.get("Debug"),
-            IString.get("Form"),
-            IString.get("Game"),
-            IString.get("Input"),
-            IString.get("Math"),
-            IString.get("ModEvent"),
-            IString.get("SKSE"),
-            IString.get("StringUtil"),
-            IString.get("UI"),
-            IString.get("Utility"),
-            IString.get("CommonArrayFunctions"),
-            IString.get("ScriptObject"),
-            IString.get("InputEnableLayer")
-    );
-
-    final private TString NAME;
-    final private TString TYPE;
-    final private List<MemberDesc> MEMBERS;
-    private Script parent;
-
 }
