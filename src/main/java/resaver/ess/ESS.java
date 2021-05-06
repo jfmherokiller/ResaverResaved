@@ -285,7 +285,7 @@ final public class ESS implements Element {
         this.TABLE1 = new ArrayList<>(this.FLT.TABLE1COUNT);
         this.TABLE2 = new ArrayList<>(this.FLT.TABLE2COUNT);
         this.TABLE3 = new ArrayList<>(this.FLT.TABLE3COUNT);
-        this.CHANGEFORMS = new ChangeFormMap(this.FLT.changeFormCount);
+        this.CHANGEFORMS = new LinkedHashMap<RefID, ChangeForm>(this.FLT.changeFormCount);
 
         SUM.click(this.FLT.calculateSize());
         LOG.fine("Reading savegame: read file location table.");
@@ -718,9 +718,9 @@ final public class ESS implements Element {
     /**
      * @return The list of change forms.
      */
-    public ChangeFormMap getChangeForms() {
+    public LinkedHashMap<RefID, ChangeForm> getChangeForms() {
         return this.CHANGEFORMS == null
-                ? new ChangeFormMap(0)
+                ? new LinkedHashMap<>(0)
                 : this.CHANGEFORMS;
     }
 
@@ -1178,7 +1178,7 @@ final public class ESS implements Element {
     final private FileLocationTable FLT;
     final private List<GlobalData> TABLE1;
     final private List<GlobalData> TABLE2;
-    final private ChangeFormMap CHANGEFORMS;
+    final private LinkedHashMap<RefID, ChangeForm> CHANGEFORMS;
     final private List<GlobalData> TABLE3;
     final private int[] FORMIDARRAY;
     final private int[] VISITEDWORLDSPACEARRAY;
