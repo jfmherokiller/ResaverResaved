@@ -13,28 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import java.lang.Exception
 
 /**
  *
  * @author Mark
  */
-@SuppressWarnings("serial")
-public class PapyrusFormatException extends Exception {
-
-    public PapyrusFormatException() {
-    }
-
-    public PapyrusFormatException(String message) {
-        super(message);
-    }
-
-    public PapyrusFormatException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public PapyrusFormatException(Throwable cause) {
-        super(cause);
-    }
-
+class PapyrusFormatException : Exception {
+    constructor() {}
+    constructor(message: String?) : super(message) {}
+    constructor(message: String?, cause: Throwable?) : super(message, cause) {}
+    constructor(cause: Throwable?) : super(cause) {}
 }

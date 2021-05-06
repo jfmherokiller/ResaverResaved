@@ -13,34 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.papyrus.Papyrus
+import java.lang.RuntimeException
 
 /**
  * An exception that stores a partially loaded Papyrus structure.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-public class PapyrusException extends RuntimeException {
-
-    /**
-     * Constructs an instance of <code>PapyrusException</code> with the
-     * specified detail message, cause, and a partial papyrus structure.
-     *
-     * @param msg the detail message.
-     * @param cause
-     * @param partial
-     *
-     */
-    public PapyrusException(String msg, Throwable cause, Papyrus partial) {
-        super(msg, cause);
-        this.PARTIAL = partial;
-    }
-
-    public Papyrus getPartial() {
-        return this.PARTIAL;
-    }
-
-    final private Papyrus PARTIAL;
-
-}
+class PapyrusException
+/**
+ * Constructs an instance of `PapyrusException` with the
+ * specified detail message, cause, and a partial papyrus structure.
+ *
+ * @param msg the detail message.
+ * @param cause
+ * @param partial
+ */(msg: String?, cause: Throwable?, val partial: Papyrus) : RuntimeException(msg, cause)

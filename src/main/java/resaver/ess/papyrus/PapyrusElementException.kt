@@ -13,34 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
+
+import resaver.ess.papyrus.PapyrusElement
+import java.lang.Exception
 
 /**
  * An exception that stores a partially loaded Papyrus structure.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-public class PapyrusElementException extends Exception {
-
-    /**
-     * Constructs an instance of <code>PapyrusException</code> with the
-     * specified detail message, cause, and a partial papyrus structure.
-     *
-     * @param msg the detail message.
-     * @param cause
-     * @param partial
-     *
-     */
-    public PapyrusElementException(String msg, Throwable cause, PapyrusElement partial) {
-        super(msg, cause);
-        this.PARTIAL = partial;
-    }
-
-    public PapyrusElement getPartial() {
-        return this.PARTIAL;
-    }
-
-    final private PapyrusElement PARTIAL;
-
-}
+class PapyrusElementException
+/**
+ * Constructs an instance of `PapyrusException` with the
+ * specified detail message, cause, and a partial papyrus structure.
+ *
+ * @param msg the detail message.
+ * @param cause
+ * @param partial
+ */(msg: String?, cause: Throwable?, val partial: PapyrusElement) : Exception(msg, cause)
