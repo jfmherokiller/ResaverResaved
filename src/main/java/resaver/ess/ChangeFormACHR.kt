@@ -80,8 +80,7 @@ class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
     init {
         Objects.requireNonNull(input)
         FLAGS = Objects.requireNonNull(flags)
-        val initialType: Int
-        initialType = if (refid.type === RefID.Type.CREATED) {
+        val initialType: Int = if (refid.type === RefID.Type.CREATED) {
             5
         } else if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_PROMOTED) || flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_CELL_CHANGED)) {
             6
@@ -92,11 +91,13 @@ class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
         }
         try {
             super.readElement(input, "INITIAL") { `in`: ByteBuffer? ->
-                ChangeFormInitialData(
-                    `in`,
-                    initialType,
-                    context
-                )
+                `in`?.let {
+                    ChangeFormInitialData(
+                        it,
+                        initialType,
+                        context
+                    )
+                }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_HAVOK_MOVE)) {
                 readBytesVS(input, "HAVOK")
@@ -105,7 +106,7 @@ class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
                 super.readElement(
                     input,
                     ChangeFlagConstantsRef.CHANGE_FORM_FLAGS
-                ) { input: ByteBuffer? -> ChangeFormFlags(input) }
+                ) { input: ByteBuffer? -> input?.let { ChangeFormFlags(it) } }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_BASEOBJECT)) {
                 super.readRefID(input, "BASE_OBJECT", context)
