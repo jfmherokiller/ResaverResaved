@@ -13,16 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
 /**
  *
  * @author Mark Fairchild
  */
-final public class ChangeFormMap extends java.util.LinkedHashMap<RefID, ChangeForm> {
-
-    public ChangeFormMap(int expected) {
-        super(expected);
-    }
-
-}
+typealias ChangeFormMap<k,v> = LinkedHashMap<RefID?, ChangeForm?>
+//class ChangeFormMap(expected: Int) : LinkedHashMap<RefID?, ChangeForm?>(expected)
