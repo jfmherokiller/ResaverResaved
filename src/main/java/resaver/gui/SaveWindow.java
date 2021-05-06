@@ -17,6 +17,7 @@ package resaver.gui;
 
 import mf.Duad;
 import mf.JValueMenuItem;
+import org.jetbrains.annotations.Nullable;
 import resaver.Analysis;
 import resaver.Game;
 import resaver.Mod;
@@ -1485,8 +1486,9 @@ final public class SaveWindow extends JFrame {
      * @param element The <code>Element</code> to select.
      *
      */
+    @Nullable
     void findElement(Element element) {
-        Objects.requireNonNull(element);
+
         if (null == element) {
             return;
         }
@@ -1508,8 +1510,9 @@ final public class SaveWindow extends JFrame {
      *
      * @param var The <code>Variable</code> whose contents should be found.
      */
+    @Nullable
     private void findElement(Variable var) {
-        Objects.requireNonNull(var);
+
 
         if (var == null) {
 
