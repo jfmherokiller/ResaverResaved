@@ -13,38 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mf;
+package mf
 
-import java.text.ParseException;
-import javax.swing.JFormattedTextField;
+import javax.swing.JFormattedTextField.AbstractFormatter
+import kotlin.Throws
+import java.lang.NumberFormatException
+import java.text.ParseException
 
 /**
  *
  * @author Mark
  */
-public class Hex32Formatter extends JFormattedTextField.AbstractFormatter {
-
-    @Override
-    public Integer stringToValue(String text) throws ParseException {
-        try {
-            return Integer.parseUnsignedInt(text, 16);
-        } catch (NumberFormatException ex) {
-            throw new ParseException(text, 0);
+class Hex32Formatter : AbstractFormatter() {
+    @Throws(ParseException::class)
+    override fun stringToValue(text: String): Int {
+        return try {
+            Integer.parseUnsignedInt(text, 16)
+        } catch (ex: NumberFormatException) {
+            throw ParseException(text, 0)
         }
     }
 
-    @Override
-    public String valueToString(Object value) throws ParseException {
-        if (null == value) {
-            return "";
-        } else if (value instanceof Number) {
-            Number num = (Number) value;
-            int i = num.intValue();
-            String s = String.format("%08x", i);
-            return s;
+    @Throws(ParseException::class)
+    override fun valueToString(value: Any): String {
+        return if (value is Number) {
+            val i = value.toInt()
+            String.format("%08x", i)
         } else {
-            throw new ParseException(value.toString(), 0);
+            throw ParseException(value.toString(), 0)
         }
     }
-
 }
