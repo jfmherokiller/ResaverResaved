@@ -378,9 +378,9 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     public void resolveStack(java.util.Map<EID, SuspendedStack> stacks) {
         if (this.hasStack()) {
             Variable ref = this.getStackFrames().get(0).getOwner();
-            if (ref instanceof Variable.Ref) {
+            if (ref instanceof VarRef) {
                 this.owner = ref.getReferent();
-            } else if (ref instanceof Variable.Null) {
+            } else if (ref instanceof VarNull) {
                 this.owner = null;
             }
         }

@@ -62,14 +62,14 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
 
         this.THREAD = thread;
         this.FLAG = new Flags.Byte(input);
-        this.FN_TYPE = Type.read(input);
+        this.FN_Var_TYPE = VarType.read(input);
         this.SCRIPTNAME = context.readTString(input);
         this.SCRIPT = context.findScript(this.SCRIPTNAME);
 
         this.BASENAME = context.readTString(input);
         this.EVENT = context.readTString(input);
 
-        this.STATUS = (!this.FLAG.getFlag(0) && this.FN_TYPE == Type.NULL)
+        this.STATUS = (!this.FLAG.getFlag(0) && this.FN_Var_TYPE == VarType.NULL)
                 ? Optional.of(context.readTString(input))
                 : Optional.empty();
 
@@ -122,8 +122,8 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
             throw new PapyrusElementException("Faileed to read StackFrame variables.", ex, this);
         }
 
-        if (this.OWNERFIELD instanceof Variable.Ref) {
-            Variable.Ref ref = (Variable.Ref) this.OWNERFIELD;
+        if (this.OWNERFIELD instanceof VarRef) {
+            VarRef ref = (VarRef) this.OWNERFIELD;
             this.OWNER = ref.getReferent();
         } else {
             this.OWNER = null;
@@ -138,7 +138,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     public void write(ByteBuffer output) {
         output.putInt(this.VARIABLES.size());
         this.FLAG.write(output);
-        this.FN_TYPE.write(output);
+        this.FN_Var_TYPE.write(output);
         this.SCRIPTNAME.write(output);
         this.BASENAME.write(output);
         this.EVENT.write(output);
@@ -180,7 +180,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     @Override
     public int calculateSize() {
         int sum = 1;
-        sum += this.FN_TYPE.calculateSize();
+        sum += this.FN_Var_TYPE.calculateSize();
         sum += this.SCRIPTNAME.calculateSize();
         sum += this.BASENAME.calculateSize();
         sum += this.EVENT.calculateSize();
@@ -505,7 +505,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                 }
             }
         }*/
-        if (this.OWNERFIELD instanceof Variable.Null) {
+        if (this.OWNERFIELD instanceof VarNull) {
             BUILDER.append("<p>Owner: <em>UNOWNED</em></p>");
         } else if (null != this.OWNER) {
             BUILDER.append(String.format("<p>Owner: %s</p>", this.OWNER.toHTML(this)));
@@ -521,7 +521,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         BUILDER.append(String.format("Event: %s<br/>", this.EVENT));
         BUILDER.append(String.format("Status: %s<br/>", this.STATUS));
         BUILDER.append(String.format("Flag: %s<br/>", this.FLAG));
-        BUILDER.append(String.format("Function type: %s<br/>", this.FN_TYPE.toString()));
+        BUILDER.append(String.format("Function type: %s<br/>", this.FN_Var_TYPE.toString()));
         BUILDER.append(String.format("Function return type: %s<br/>", this.RETURNTYPE));
         BUILDER.append(String.format("Function docstring: %s<br/>", this.FN_DOCSTRING));
         BUILDER.append(String.format("%d parameters, %d locals, %d values.<br/>", this.FN_PARAMS.size(), this.FN_LOCALS.size(), this.VARIABLES.size()));
@@ -841,7 +841,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @param positions
      */
     static boolean processTerm(List<Parameter> args, Map<Parameter, Parameter> terms, int destPos, String term) {
-        if (destPos >= args.size() || !(args.get(destPos).getType() == Parameter.Type.IDENTIFIER)) {
+        if (destPos >= args.size() || !(args.get(destPos).getType() == ParamType.IDENTIFIER)) {
             return false;
         }
         Parameter dest = args.get(destPos);
@@ -896,7 +896,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
 
     final private ActiveScript THREAD;
     final private Flags.Byte FLAG;
-    final private Type FN_TYPE;
+    final private VarType FN_Var_TYPE;
     final private TString SCRIPTNAME;
     final private Script SCRIPT;
     final private TString BASENAME;

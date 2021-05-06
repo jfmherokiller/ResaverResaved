@@ -27,7 +27,7 @@ import java.nio.ByteBuffer
  *
  * @param VALID
  */
-enum class Type(private val VALID: Boolean = true) : PapyrusElement {
+enum class VarType(private val VALID: Boolean = true) : PapyrusElement {
     NULL,
     REF,
     STRING,
@@ -88,7 +88,7 @@ enum class Type(private val VALID: Boolean = true) : PapyrusElement {
          */
         @JvmStatic
         @Throws(PapyrusFormatException::class)
-        fun read(input: ByteBuffer): Type {
+        fun read(input: ByteBuffer): VarType {
             val `val` = input.get().toInt()
             if (`val` < 0 || `val` >= VALUES.size) {
                 throw PapyrusFormatException("Invalid type value: $`val`")

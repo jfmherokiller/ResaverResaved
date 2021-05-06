@@ -16,10 +16,7 @@
 package resaver.gui
 
 import resaver.ess.*
-import resaver.ess.papyrus.ActiveScript
-import resaver.ess.papyrus.ArrayInfo
-import resaver.ess.papyrus.StackFrame
-import resaver.ess.papyrus.Variable
+import resaver.ess.papyrus.*
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
@@ -129,8 +126,8 @@ class FilterTree : JTree(FilterTreeModel()) {
                     }
                 } else if (element is StackFrame) {
                     val owner = element.owner
-                    if (null != owner && owner is Variable.Ref) {
-                        val ref = element.owner as Variable.Ref?
+                    if (null != owner && owner is VarRef) {
+                        val ref = element.owner as VarRef?
                         findHandler!!.accept(ref!!.referent)
                     }
                 } else if (element is ArrayInfo) {

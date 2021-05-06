@@ -15,7 +15,7 @@
  */
 package resaver.gui
 
-import resaver.ess.papyrus.PapyrusContext
+import resaver.ess.papyrus.*
 import javax.swing.AbstractCellEditor
 import javax.swing.table.TableCellEditor
 import javax.swing.JTable
@@ -24,8 +24,6 @@ import javax.swing.JTextField
 import javax.swing.JFormattedTextField
 import java.text.NumberFormat
 import javax.swing.JComboBox
-import resaver.ess.papyrus.EID
-import resaver.ess.papyrus.Variable
 import java.awt.Component
 import javax.swing.JFormattedTextField.AbstractFormatter
 import kotlin.Throws
@@ -51,23 +49,23 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
         column: kotlin.Int
     ): Component {
         return when (value) {
-            is Variable.Str -> {
+            is VarStr -> {
                 subeditor = STR
                 subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
             }
-            is Variable.Int -> {
+            is VarInt -> {
                 subeditor = INT
                 subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
             }
-            is Variable.Flt -> {
+            is VarFlt -> {
                 subeditor = FLT
                 subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
             }
-            is Variable.Bool -> {
+            is VarBool -> {
                 subeditor = BOOL
                 subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
             }
-            is Variable.Ref -> {
+            is VarRef -> {
                 subeditor = REF
                 subeditor.getTableCellEditorComponent(table, value, isSelected, row, column)
             }
@@ -89,9 +87,9 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
      * Subclass that handles strings.
      */
     private inner class Str : AbstractCellEditor(), TableCellEditor {
-        override fun getCellEditorValue(): Variable.Str {
+        override fun getCellEditorValue(): VarStr {
             val text = EDITER.text
-            return Variable.Str(text, CONTEXT)
+            return VarStr(text, CONTEXT)
         }
 
         override fun getTableCellEditorComponent(
@@ -101,7 +99,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
             row: kotlin.Int,
             column: kotlin.Int
         ): Component? {
-            if (value !is Variable.Str) {
+            if (value !is VarStr) {
                 return null
             }
             `var` = value
@@ -109,7 +107,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
             return EDITER
         }
 
-        private var `var`: Variable.Str? = null
+        private var `var`: VarStr? = null
         private val EDITER: JTextField = JTextField(10)
 
     }
@@ -118,9 +116,9 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
      * Subclass that handles integers.
      */
     private inner class Int : AbstractCellEditor(), TableCellEditor {
-        override fun getCellEditorValue(): Variable.Int {
+        override fun getCellEditorValue(): VarInt {
             val value = EDITER.value as Number
-            return Variable.Int(value.toInt())
+            return VarInt(value.toInt())
         }
 
         override fun getTableCellEditorComponent(
@@ -130,7 +128,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
             row: kotlin.Int,
             column: kotlin.Int
         ): Component? {
-            if (value is Variable.Int) {
+            if (value is VarInt) {
                 EDITER.value = value.value
                 return EDITER
             }
@@ -148,9 +146,9 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
      * Subclass that handles floats.
      */
     private inner class Flt : AbstractCellEditor(), TableCellEditor {
-        override fun getCellEditorValue(): Variable.Flt {
+        override fun getCellEditorValue(): VarFlt {
             val value = EDITER.value as Number
-            return Variable.Flt(value.toFloat())
+            return VarFlt(value.toFloat())
         }
 
         override fun getTableCellEditorComponent(
@@ -160,7 +158,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
             row: kotlin.Int,
             column: kotlin.Int
         ): Component? {
-            if (value !is Variable.Flt) {
+            if (value !is VarFlt) {
                 return null
             }
             EDITER.value = value.value
@@ -178,9 +176,9 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
      * Subclass that handles booleans.
      */
     private inner class Bool : AbstractCellEditor(), TableCellEditor {
-        override fun getCellEditorValue(): Variable.Bool {
+        override fun getCellEditorValue(): VarBool {
             val value = EDITER.selectedItem as Boolean
-            return Variable.Bool(value)
+            return VarBool(value)
         }
 
         override fun getTableCellEditorComponent(
@@ -190,7 +188,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
             row: kotlin.Int,
             column: kotlin.Int
         ): Component? {
-            if (value !is Variable.Bool) {
+            if (value !is VarBool) {
                 return null
             }
             EDITER.selectedItem = value.value
@@ -208,7 +206,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
      * Subclass that handles integers.
      */
     private inner class Ref : AbstractCellEditor(), TableCellEditor {
-        override fun getCellEditorValue(): Variable.Ref {
+        override fun getCellEditorValue(): VarRef {
             val v = EDITER.value as Long
             return original!!.derive(v, CONTEXT)
         }
@@ -220,7 +218,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
             row: kotlin.Int,
             column: kotlin.Int
         ): Component? {
-            if (value is Variable.Ref) {
+            if (value is VarRef) {
                 original = value
                 eid = original!!.ref
                 EDITER.value = eid!!.longValue()
@@ -230,7 +228,7 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
         }
 
         private val EDITER: JFormattedTextField
-        private var original: Variable.Ref? = null
+        private var original: VarRef? = null
         private var eid: EID? = null
         private val FORMATTER: AbstractFormatter = object : AbstractFormatter() {
             @Throws(ParseException::class)

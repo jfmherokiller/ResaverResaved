@@ -16,7 +16,7 @@
 package resaver.gui
 
 import resaver.ess.papyrus.ArrayInfo
-import resaver.ess.papyrus.Type
+import resaver.ess.papyrus.VarType
 import resaver.ess.papyrus.Variable
 import javax.swing.event.TableModelEvent
 import javax.swing.event.TableModelListener
@@ -61,7 +61,7 @@ class ArrayTableModel(data: ArrayInfo?) : TableModel {
         assert(0 <= rowIndex && rowIndex < this.rowCount)
         val `var` = DATA.variables?.get(rowIndex)
         return when (`var`?.type) {
-            Type.STRING, Type.INTEGER, Type.FLOAT, Type.BOOLEAN, Type.REF -> true
+            VarType.STRING, VarType.INTEGER, VarType.FLOAT, VarType.BOOLEAN, VarType.REF -> true
             else -> false
         }
     }

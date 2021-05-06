@@ -21,9 +21,7 @@ import resaver.Analysis
 import resaver.ess.ESS
 import resaver.ess.ESS.ESSContext
 import resaver.ess.Flags
-import resaver.ess.papyrus.PapyrusContext
-import resaver.ess.papyrus.PapyrusFormatException
-import resaver.ess.papyrus.Variable
+import resaver.ess.papyrus.*
 import java.awt.*
 import java.awt.event.ActionEvent
 import java.nio.Buffer
@@ -382,16 +380,16 @@ class DataAnalyzer(newData: ByteBuffer, save: ESS) : JSplitPane(HORIZONTAL_SPLIT
                         val `var` = Variable.read(currentSlice, PAPYRUS_CONTEXT)
                         BUF.append(`var`.toHTML(null))
                         when (`var`) {
-                            is Variable.Array -> {
+                            is VarArray -> {
                                 addHighlight(dataPos, `var`.calculateSize(), Color.PINK)
                             }
-                            is Variable.Ref -> {
+                            is VarRef -> {
                                 addHighlight(dataPos, `var`.calculateSize(), Color.GREEN)
                             }
-                            is Variable.Null -> {
+                            is VarNull -> {
                                 //this.addHighlight(dataPos, var.calculateSize(), Color.GREEN);
                             }
-                            is Variable.Null -> {
+                            is VarNull -> {
                                 addHighlight(dataPos, `var`.calculateSize(), Color.YELLOW)
                             }
                         }

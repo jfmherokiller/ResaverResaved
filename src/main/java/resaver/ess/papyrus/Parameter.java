@@ -40,7 +40,7 @@ public abstract class Parameter implements PapyrusElement {
         Objects.requireNonNull(input);
         Objects.requireNonNull(context);
 
-        Type TYPE = Type.read(input);
+        ParamType TYPE = ParamType.read(input);
         switch (TYPE) {
             case NULL:
                 return new Null();
@@ -83,7 +83,7 @@ public abstract class Parameter implements PapyrusElement {
     /**
      * @return The type of the parameter.
      */
-    abstract public Type getType();
+    abstract public ParamType getType();
 
     /**
      * @return A flag indicating if the parameter is an identifier to a temp
@@ -154,7 +154,7 @@ public abstract class Parameter implements PapyrusElement {
      * @return
      */
     public String paren() {
-        if (this.getType() == Type.TERM) {
+        if (this.getType() == ParamType.TERM) {
             return "(" + this.toValueString() + ")";
         } else {
             return this.toValueString();
@@ -174,44 +174,6 @@ public abstract class Parameter implements PapyrusElement {
     static final Predicate<String> AUTOVAR_PATTERN = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE).asPredicate();
 
     /**
-     * Types of parameters. Not quite a perfect overlap with the other Type
-     * class.
-     */
-    static public enum Type implements PapyrusElement {
-        NULL,
-        IDENTIFIER,
-        STRING,
-        INTEGER,
-        FLOAT,
-        BOOLEAN,
-        VARIANT,
-        STRUCT,
-        UNKNOWN8,
-        TERM;
-
-        static public Type read(ByteBuffer input) throws PapyrusFormatException {
-            Objects.requireNonNull(input);
-            int val = Byte.toUnsignedInt(input.get());
-            if (val < 0 || val >= VALUES.length) {
-                throw new PapyrusFormatException("Invalid type: " + val);
-            }
-            return Type.values()[val];
-        }
-
-        @Override
-        public void write(ByteBuffer output) {
-            output.put((byte) this.ordinal());
-        }
-
-        @Override
-        public int calculateSize() {
-            return 1;
-        }
-
-        static final private Type[] VALUES = Type.values();
-    }
-
-    /**
      * An opcode parameter that stores Null.
      */
     static final public class Null extends Parameter {
@@ -220,8 +182,8 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public Type getType() {
-            return Type.NULL;
+        public ParamType getType() {
+            return ParamType.NULL;
         }
 
         @Override
@@ -273,8 +235,8 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public Type getType() {
-            return Type.IDENTIFIER;
+        public ParamType getType() {
+            return ParamType.IDENTIFIER;
         }
 
         @Override
@@ -353,8 +315,8 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public Type getType() {
-            return Type.STRING;
+        public ParamType getType() {
+            return ParamType.STRING;
         }
 
         @Override
@@ -410,8 +372,8 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public Type getType() {
-            return Type.INTEGER;
+        public ParamType getType() {
+            return ParamType.INTEGER;
         }
 
         @Override
@@ -464,8 +426,8 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public Type getType() {
-            return Type.FLOAT;
+        public ParamType getType() {
+            return ParamType.FLOAT;
         }
 
         @Override
@@ -518,8 +480,8 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public Type getType() {
-            return Type.BOOLEAN;
+        public ParamType getType() {
+            return ParamType.BOOLEAN;
         }
 
         @Override
@@ -572,8 +534,8 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public Type getType() {
-            return Type.TERM;
+        public ParamType getType() {
+            return ParamType.TERM;
         }
 
         @Override
@@ -625,8 +587,8 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public Type getType() {
-            return Type.UNKNOWN8;
+        public ParamType getType() {
+            return ParamType.UNKNOWN8;
         }
 
         @Override

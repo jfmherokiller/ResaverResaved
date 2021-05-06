@@ -21,7 +21,7 @@ import resaver.ess.AnalyzableElement
 import resaver.ess.ESS
 import resaver.ess.Element
 import resaver.ess.Linkable
-import resaver.ess.papyrus.Type.Companion.read
+import resaver.ess.papyrus.VarType.Companion.read
 import java.nio.ByteBuffer
 
 
@@ -47,7 +47,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
      */
     override fun write(output: ByteBuffer?) {
         iD.write(output)
-        type.write(output)
+        varType.write(output)
         refType?.write(output)
         output!!.putInt(length)
     }
@@ -90,13 +90,13 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
      * @return Short string representation.
      */
     fun toValueString(): String {
-        return if (type.isRefType) {
+        return if (varType.isRefType) {
             refType.toString() + "[" + length + "]"
-        } else if (type === Type.NULL && variables.isNotEmpty()) {
+        } else if (varType === VarType.NULL && variables.isNotEmpty()) {
             val t = variables[0]?.type
             "$t[$length]"
         } else {
-            "$type[$length]"
+            "$varType[$length]"
         }
     }
 
@@ -177,8 +177,8 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
         }
         BUILDER.append("<p/>")
         BUILDER.append(String.format("<p>ID: %s</p>", iD))
-        BUILDER.append(String.format("<p>Content type: %s</p>", type))
-        if (type.isRefType) {
+        BUILDER.append(String.format("<p>Content type: %s</p>", varType))
+        if (varType.isRefType) {
             val SCRIPT = save!!.papyrus.scripts[refType]
             if (null != SCRIPT) {
                 BUILDER.append(String.format("<p>Reference type: %s</p>", SCRIPT.toHTML(this)))
@@ -256,7 +256,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
     /**
      * @return The type of the array.
      */
-    val type: Type
+    val varType: VarType
 
     /**
      * @return The reference type of the array.
@@ -323,14 +323,14 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
 
     companion object {
         private val VALID_TYPES = listOf(
-            Type.NULL,
-            Type.REF,
-            Type.STRING,
-            Type.INTEGER,
-            Type.FLOAT,
-            Type.BOOLEAN,
-            Type.VARIANT,
-            Type.STRUCT
+            VarType.NULL,
+            VarType.REF,
+            VarType.STRING,
+            VarType.INTEGER,
+            VarType.FLOAT,
+            VarType.BOOLEAN,
+            VarType.VARIANT,
+            VarType.STRUCT
         )
     }
 
@@ -347,8 +347,8 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
         if (!VALID_TYPES.contains(t)) {
             throw PapyrusFormatException("Invalid ArrayInfo type: $t")
         }
-        type = t
-        refType = if (type.isRefType) context.readTString(input) else null
+        varType = t
+        refType = if (varType.isRefType) context.readTString(input) else null
         length = input.int
     }
 }

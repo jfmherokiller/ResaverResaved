@@ -1516,8 +1516,8 @@ final public class SaveWindow extends JFrame {
 
         if (var == null) {
 
-        } else if (var instanceof Variable.Array) {
-            Variable.Array arrayVar = (Variable.Array) var;
+        } else if (var instanceof VarArray) {
+            VarArray arrayVar = (VarArray) var;
             final EID ID = arrayVar.getArrayID();
             if (ID.isZero()) {
                 return;

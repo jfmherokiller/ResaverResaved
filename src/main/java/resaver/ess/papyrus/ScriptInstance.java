@@ -419,8 +419,8 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
 
         if (canary.isPresent()) {
             Variable var = MEMBERS.get(NAMES.indexOf(canary.get()));
-            if (var instanceof Variable.Int) {
-                return ((Variable.Int) var).getValue();
+            if (var instanceof VarInt) {
+                return ((VarInt) var).getValue();
             } else {
                 return 0;
             }
