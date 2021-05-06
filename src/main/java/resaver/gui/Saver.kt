@@ -63,7 +63,10 @@ class Saver(window: SaveWindow?, saveFile: Path, save: ESS?, doAfter: Runnable?)
                 MSG.append(String.format("\nBackup written to %s.", RESULT.BACKUP_FILE))
             }
             if (RESULT.ESS.hasCosave()) {
-                MSG.append(String.format("\n%s co-save was copied.", RESULT.GAME.COSAVE_EXT.toUpperCase()))
+                MSG.append(String.format(
+                    "\n%s co-save was copied.",
+                    RESULT.GAME.COSAVE_EXT.uppercase(Locale.getDefault())
+                ))
             }
             val TITLE = "Save Written"
             JOptionPane.showMessageDialog(WINDOW, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)

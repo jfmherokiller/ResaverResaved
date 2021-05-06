@@ -10,6 +10,7 @@ package resaver.gui
 
 import java.awt.event.*
 import java.beans.PropertyChangeEvent
+import java.util.*
 import javax.swing.ComboBoxEditor
 import javax.swing.ComboBoxModel
 import javax.swing.JComboBox
@@ -144,7 +145,7 @@ class AutoCompletion<T>(var comboBox: JComboBox<T>) : PlainDocument() {
 
     // checks if str1 starts with str2 - ignores case
     private fun startsWithIgnoreCase(str1: String, str2: String): Boolean {
-        return str1.toUpperCase().startsWith(str2.toUpperCase())
+        return str1.uppercase(Locale.getDefault()).startsWith(str2.uppercase(Locale.getDefault()))
     }
 
     companion object {
