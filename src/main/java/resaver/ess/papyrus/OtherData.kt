@@ -134,7 +134,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(),
             super.readShort(input, "unk1")
             super.readShort(input, "str2")
             super.readInt(input, "unk2")
-            super.readElement(input, "flags") { input: ByteBuffer? -> Flags.readShortFlags(input) }
+            super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
             super.readRefID(input, "refID", context)
         }
     }
@@ -146,7 +146,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(),
             super.readByte(input, "unk2")
             super.readShort(input, "str2")
             super.readInt(input, "unk3")
-            super.readElement(input, "flags") { input: ByteBuffer? -> Flags.readShortFlags(input) }
+            super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
             super.readRefID(input, "refID", context)
         }
     }
@@ -204,7 +204,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(),
     internal class Array6(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
         init {
             super.readShort(input, "unk")
-            super.readElement(input, "flags") { input: ByteBuffer? -> Flags.readShortFlags(input) }
+            super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
             super.readRefID(input, "ref", context)
         }
     }
@@ -212,7 +212,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : GeneralElement(),
     internal class Array7(input: ByteBuffer?, context: PapyrusContext?) : GeneralElement() {
         init {
             super.readShort(input, "unk")
-            super.readElement(input, "flags") { input: ByteBuffer? -> Flags.readShortFlags(input) }
+            super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
             super.readRefID(input, "ref", context)
         }
     }
