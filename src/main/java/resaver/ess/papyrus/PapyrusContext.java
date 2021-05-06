@@ -16,8 +16,11 @@
 package resaver.ess.papyrus;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
+
+import resaver.ess.AnalyzableElement;
 import resaver.ess.Linkable;
 
 /**
@@ -173,22 +176,21 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
 
         if (number.intValue() >= 0 && number.intValue() < this.PAPYRUS.getStringTable().size()) {
             TString s = this.PAPYRUS.getStringTable().get(number.intValue());
-            Linkable r4 = this.findAny(s);
-            if (r4 != null) {
-                return r4;
-            }
+            return this.findAny(s);
         }
 
         return null;
     }
 
     public Definition findAny(TString name) {
-        return Stream.of(
+        for (PapyrusDefinitionMap<? extends Definition> c : Arrays.asList(
                 this.PAPYRUS.getScripts(),
-                this.PAPYRUS.getStructs())
-                .filter(c -> c.containsKey(name))
-                .map(c -> c.get(name))
-                .findAny().orElse(null);
+                this.PAPYRUS.getStructs())) {
+            if (c.containsKey(name)) {
+                return c.get(name);
+            }
+        }
+        return null;
     }
 
     public HasID findAny(EID id) {
@@ -210,17 +212,19 @@ public class PapyrusContext extends resaver.ess.ESS.ESSContext {
     }
 
     public HasID findAll(EID id) {
-        return Stream.of(this.PAPYRUS.getScriptInstances(),
+        for (PapyrusElementMap<? extends AnalyzableElement> c : Arrays.asList(this.PAPYRUS.getScriptInstances(),
                 this.PAPYRUS.getStructInstances(),
                 this.PAPYRUS.getReferences(),
                 this.PAPYRUS.getArrays(),
                 this.PAPYRUS.getActiveScripts(),
                 this.PAPYRUS.getSuspendedStacks1(),
                 this.PAPYRUS.getSuspendedStacks2(),
-                this.PAPYRUS.getUnbinds())
-                .filter(c -> c.containsKey(id))
-                .map(c -> c.get(id))
-                .findAny().orElse(null);
+                this.PAPYRUS.getUnbinds())) {
+            if (c.containsKey(id)) {
+                return c.get(id);
+            }
+        }
+        return null;
     }
 
     public Script findScript(TString name) {
