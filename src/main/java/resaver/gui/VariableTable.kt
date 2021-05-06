@@ -130,7 +130,7 @@ class VariableTable(window: SaveWindow?) : JTable() {
             displayVariableTable(element, context)
         } else if (element is SuspendedStack) {
             if (element.hasMessage()) {
-                displayVariableTable(element.message, context)
+                element.message?.let { displayVariableTable(it, context) }
             } else {
                 clearTable()
             }
