@@ -23,7 +23,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class FieldName(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx: ESPContext) :
+class FieldName(code: IString, input: ByteBuffer, size: Int, big: Boolean, ctx: ESPContext) :
     FieldSimple(code, input, size, big, ctx) {
     /**
      * Returns a String representation of the Field, which will just be the code
@@ -32,7 +32,7 @@ class FieldName(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx
      * @return A string representation.
      */
     override fun toString(): String {
-        return "${this.code.toString()}=$formID"
+        return "${this.code}=$formID"
     }
 
     /**
@@ -51,7 +51,7 @@ class FieldName(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx
      */
     init {
         assert(size == 4)
-        val id = super.getByteBuffer().int
+        val id = super.byteBuffer.int
         formID = ctx.remapFormID(id)
     }
 }
