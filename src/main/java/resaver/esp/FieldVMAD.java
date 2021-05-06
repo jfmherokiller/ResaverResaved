@@ -81,7 +81,7 @@ public class FieldVMAD implements Field {
     }
 
     /**
-     * @see Entry#write(transposer.ByteBuffer)
+     * @see Entry#write(ByteBuffer)
      * @param output The output stream.
      */
     @Override

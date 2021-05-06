@@ -40,7 +40,7 @@ public class FieldXXXX implements Field {
     }
 
     /**
-     * @see Entry#write(transposer.ByteBuffer)
+     * @see Entry#write(ByteBuffer)
      */
     @Override
     public void write(ByteBuffer output) {

@@ -48,7 +48,7 @@ public class FieldSimple implements Field {
     }
 
     /**
-     * @see Entry#write(transposer.ByteBuffer)
+     * @see Entry#write(ByteBuffer)
      * @param output The ByteBuffer.
      */
     @Override
