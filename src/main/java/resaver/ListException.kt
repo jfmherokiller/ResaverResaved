@@ -13,26 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
+
+import java.lang.RuntimeException
 
 /**
  *
  * @author Mark
  */
-public class ListException extends RuntimeException {
+class ListException : RuntimeException {
+    constructor(msg: String?, index: Int, total: Int, cause: Throwable?) : super(
+        String.format(
+            "%s : %d/%d",
+            msg,
+            index,
+            total
+        ), cause
+    ) {
+        INDEX = index
+        TOTAL = total
+    }
 
-    public ListException(String msg, int index, int total, Throwable cause) {
-        super(String.format("%s : %d/%d", msg, index, total), cause);
-        this.INDEX = index;
-        this.TOTAL = total;
+    constructor(index: Int, total: Int, cause: Throwable?) : super(String.format("%d/%d", index, total), cause) {
+        INDEX = index
+        TOTAL = total
     }
-    
-    public ListException(int index, int total, Throwable cause) {
-        super(String.format("%d/%d", index, total), cause);
-        this.INDEX = index;
-        this.TOTAL = total;
-    }
-    
-    final public int INDEX;
-    final public int TOTAL;
+
+    val INDEX: Int
+    val TOTAL: Int
 }
