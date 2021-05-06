@@ -204,7 +204,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.8.0</version>
                 <executions>
                     <execution>
                         <id>compile</id>
@@ -223,6 +223,10 @@
                 </executions>
                 <configuration>
                     <showDeprecation>true</showDeprecation>
+                    <fork>true</fork>
+                    <compilerArgs>
+                        <arg>-Xlint:all,-options,-path,-unchecked</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
         </plugins>

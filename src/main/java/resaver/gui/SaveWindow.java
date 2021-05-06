@@ -15,15 +15,39 @@
  */
 package resaver.gui;
 
-import java.util.*;
+import mf.Duad;
+import mf.JValueMenuItem;
+import resaver.Analysis;
+import resaver.Game;
+import resaver.Mod;
+import resaver.ProgressModel;
+import resaver.ess.*;
+import resaver.ess.papyrus.*;
+import resaver.gui.FilterTreeModel.Node;
+import resaver.pex.AssemblyLevel;
+import resaver.pex.PexFile;
+
+import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.plaf.basic.BasicComboBoxRenderer;
+import javax.swing.text.Document;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ItemEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.function.Predicate;
@@ -31,23 +55,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import javax.swing.text.Document;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.tree.TreePath;
-import mf.Duad;
-import mf.JValueMenuItem;
-import resaver.*;
-import resaver.ess.*;
-import resaver.ess.papyrus.*;
-import resaver.gui.FilterTreeModel.Node;
-import resaver.pex.AssemblyLevel;
-import resaver.pex.PexFile;
 
 /**
  * A window that displays savegame data and allows limited editing.
@@ -414,7 +421,7 @@ final public class SaveWindow extends JFrame {
     /**
      * Clears the modified flag.
      *
-     * @param saveFile A new value for the path.
+     * @param savefile A new value for the path.
      */
     void resetTitle(Path savefile) {
         this.modified = false;
@@ -883,7 +890,6 @@ final public class SaveWindow extends JFrame {
     /**
      * Opens a save file.
      *
-     * @param parse Whether to automatically parse.
      */
     void open() {
         final Path SAVEFILE = Configurator.choosePathModal(this,
@@ -2276,6 +2282,6 @@ final public class SaveWindow extends JFrame {
 
     static final private java.util.prefs.Preferences PREFS = java.util.prefs.Preferences.userNodeForPackage(resaver.ReSaver.class);
     static final private Logger LOG = Logger.getLogger(SaveWindow.class.getCanonicalName());
-    static final private Pattern URLPATTERN = Pattern.compile("(?<type>[a-z]+):\\/\\/(?<address>[^\\[\\]]+)(?:\\[(?<target1>\\d+)\\])?(?:\\[(?<target2>\\d+)\\])?$");
+    static final private Pattern URLPATTERN = Pattern.compile("(?<type>[a-z]+)://(?<address>[^\\[\\]]+)(?:\\[(?<target1>\\d+)])?(?:\\[(?<target2>\\d+)])?$");
 
 }

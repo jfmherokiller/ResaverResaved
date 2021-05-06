@@ -532,7 +532,7 @@ final public class Disassembler {
 
             case ARR_SET:
                 //VData.ID arr = (VData.ID) inst.ARGS.get(0);
-                VData arr = (VData) inst.ARGS.get(0);
+                VData arr = inst.ARGS.get(0);
                 VData idx = inst.ARGS.get(1);
                 return String.format("%s%s[%s] = %s", tab(indent), arr, idx, RHS);
 
@@ -805,7 +805,7 @@ final public class Disassembler {
 
             case ARR_GET:
                 replaceVariables(args, terms, 0);
-                idx = (VData) args.get(2);
+                idx = args.get(2);
                 arr = args.get(1);
                 term = String.format("%s[%s]", arr, idx);
                 return processTerm(args, terms, 0, term);
