@@ -102,7 +102,7 @@ abstract public class TString implements PapyrusElement, AnalyzableElement, Link
     }
 
     /**
-     * @see WStringElement#write(resaver.ByteBuffer)
+     * @see WStringElement#write(ByteBuffer)
      * @param output The output stream.
      */
     public void writeFull(ByteBuffer output) {
@@ -110,7 +110,7 @@ abstract public class TString implements PapyrusElement, AnalyzableElement, Link
     }
 
     /**
-     * @see WStringElement#calculateFullSizecalculateFullSize()
+     * @see WStringElement#calculateSize
      * @return The size of the <code>Element</code> in bytes.
      */
     public int calculateFullSize() {
