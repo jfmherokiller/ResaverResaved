@@ -13,183 +13,158 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.ess;
+package resaver.ess
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import resaver.Analysis;
-import static resaver.ess.ChangeFlagConstantsRef.*;
+import resaver.Analysis
+import resaver.ess.ESS.ESSContext
+import java.nio.ByteBuffer
+
 
 /**
  * Describes a ChangeForm containing an NPC leveled list.
  *
  * @author Mark Fairchild
  */
-final public class ChangeFormLVLN implements ChangeFormData {
-
+class ChangeFormLVLN(input: ByteBuffer, flags: Flags.Int, context: ESSContext?) : ChangeFormData {
     /**
-     * Creates a new <code>ChangeForm</code> by reading from a
-     * <code>LittleEndianDataOutput</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param flags The change form flags.
-     * @param context The <code>ESSContext</code> info.
-     */
-    public ChangeFormLVLN(ByteBuffer input, Flags.Int flags, ESS.ESSContext context) {
-        Objects.requireNonNull(input);
-        if (flags.getFlag(CHANGE_FORM_FLAGS)) {
-            this.FLAGS = new ChangeFormFlags(input);
-        } else {
-            this.FLAGS = null;
-        }
-        if (flags.getFlag(31)) {
-            int formCount = input.get();
-            this.ENTRIES = new ArrayList<>(formCount);
-
-            for (int i = 0; i < formCount; i++) {
-                final LeveledEntry ENTRY = new LeveledEntry(input, context);
-                this.ENTRIES.add(ENTRY);
-            }
-        } else {
-            this.ENTRIES = null;
-        }
-    }
-
-    /**
-     * @see resaver.ess.Element#write(java.nio.ByteBuffer)
+     * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        Objects.requireNonNull(output);
-
-        if (null != this.FLAGS) {
-            this.FLAGS.write(output);
-        }
-
-        if (null != this.ENTRIES) {
-            output.putShort((short) this.ENTRIES.size());
-            this.ENTRIES.forEach(entry -> entry.write(output));
+    override fun write(output: ByteBuffer?) {
+        refID?.write(output)
+        if (null != ENTRIES) {
+            output!!.putShort(ENTRIES!!.size.toShort())
+            ENTRIES!!.forEach { entry: LeveledEntry -> entry.write(output) }
         }
     }
 
     /**
-     * @see resaver.ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see resaver.ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 0;
-
-        if (null != this.FLAGS) {
-            sum += this.FLAGS.calculateSize();
+    override fun calculateSize(): Int {
+        var sum = 0
+        if (null != refID) {
+            sum += refID!!.calculateSize()
         }
-
-        if (null != this.ENTRIES) {
-            sum += 2;
-            int result = 0;
-            for (LeveledEntry ENTRY : this.ENTRIES) {
-                int calculateSize = ENTRY.calculateSize();
-                result += calculateSize;
+        if (null != ENTRIES) {
+            sum += 2
+            var result = 0
+            for (ENTRY in ENTRIES!!) {
+                val calculateSize = ENTRY.calculateSize()
+                result += calculateSize
             }
-            sum += result;
+            sum += result
         }
-
-        return sum;
-    }
-
-    /**
-     * @return The <code>ChangeFormFlags</code> field.
-     */
-    public ChangeFormFlags getRefID() {
-        return this.FLAGS;
+        return sum
     }
 
     /**
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        if (null == this.ENTRIES) {
-            return "";
-
+    override fun toString(): String {
+        return if (null == ENTRIES) {
+            ""
         } else {
-            return "(" + this.ENTRIES.size() + " leveled entries)";
+            "(${ENTRIES!!.size} leveled entries)"
         }
     }
 
     /**
-     * @see Object#hashCode()
+     * @see Object.hashCode
      * @return
      */
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 41 * hash + Objects.hashCode(this.FLAGS);
-        hash = 41 * hash + Objects.hashCode(this.ENTRIES);
-        return hash;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 41 * hash + refID.hashCode()
+        hash = 41 * hash + ENTRIES.hashCode()
+        return hash
     }
 
     /**
-     * @see Object#equals()
-     * @param obj
+     * @see Object.equals
+     * @param other
      * @return
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (!Objects.equals(this.getClass(), obj.getClass())) {
-            return false;
+    override fun equals(other: Any?): Boolean {
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            this.javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as ChangeFormLVLN
+                refID == other2.refID && ENTRIES == other2.ENTRIES
+            }
         }
-
-        final ChangeFormLVLN other = (ChangeFormLVLN) obj;
-        return Objects.equals(this.FLAGS, other.FLAGS) && Objects.equals(this.ENTRIES, other.ENTRIES);
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, resaver.ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-
-        BUILDER.append("<hr/><p>FORMLIST:</p>");
-
-        if (null != this.FLAGS) {
-            BUILDER.append(String.format("<p>ChangeFormFlags: %s</p>", this.FLAGS));
+    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
+        val BUILDER = StringBuilder()
+        BUILDER.append("<hr/><p>FORMLIST:</p>")
+        if (null != refID) {
+            BUILDER.append(String.format("<p>ChangeFormFlags: %s</p>", refID))
         }
-
-        if (null != this.ENTRIES) {
-            BUILDER.append(String.format("<p>List size: %d</p><ol start=0>", this.ENTRIES.size()));
-            this.ENTRIES.forEach(entry -> {
-                BUILDER.append("<li>").append(entry.toHTML(null)).append("</li>");
-            });
-            BUILDER.append("</ol>");
+        if (null != ENTRIES) {
+            BUILDER.append(String.format("<p>List size: %d</p><ol start=0>", ENTRIES!!.size))
+            ENTRIES!!.forEach { entry: LeveledEntry ->
+                BUILDER.append("<li>").append(entry.toHTML(null)).append("</li>")
+            }
+            BUILDER.append("</ol>")
         }
-
-        return BUILDER.toString();
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(Analysis analysis, String mod) {
-        return false;
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+        return false
     }
 
-    final private ChangeFormFlags FLAGS;
-    final private List<LeveledEntry> ENTRIES;
+    /**
+     * @return The `ChangeFormFlags` field.
+     */
+    var refID: ChangeFormFlags? = null
+    private var ENTRIES: MutableList<LeveledEntry>? = null
 
+    /**
+     * Creates a new `ChangeForm` by reading from a
+     * `LittleEndianDataOutput`. No error handling is performed.
+     *
+     * @param input The input stream.
+     * @param flags The change form flags.
+     * @param context The `ESSContext` info.
+     */
+    init {
+        refID = if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS)) {
+            ChangeFormFlags(input)
+        } else {
+            null
+        }
+        if (flags.getFlag(31)) {
+            val formCount = input.get().toInt()
+            ENTRIES = mutableListOf()
+            for (i in 0 until formCount) {
+                val ENTRY = LeveledEntry(input, context)
+                ENTRIES!!.add(ENTRY)
+            }
+        } else {
+            ENTRIES = null
+        }
+    }
 }
