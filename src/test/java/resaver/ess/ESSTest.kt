@@ -73,7 +73,7 @@ class ESSTest {
      *
      * @param path
      */
-    @ParameterizedTest
+    //@ParameterizedTest
     @MethodSource("pathProvider")
     fun testReadESS(path: Path) {
         System.out.printf("readESS (%s)\n", WORK_DIR.relativize(path))
