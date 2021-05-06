@@ -15,8 +15,6 @@
  */
 package resaver.ess.papyrus
 
-import resaver.ess.papyrus.PapyrusContext
-import resaver.ess.papyrus.MemberDesc
 import java.nio.ByteBuffer
 
 /**
@@ -31,7 +29,7 @@ class FunctionLocal
  * @param strtab The StringTable.
  * @throws PapyrusFormatException
  */
-    (input: ByteBuffer?, context: PapyrusContext?) : MemberDesc(input, context) {
+    (input: ByteBuffer?, context: PapyrusContext) : MemberDesc(input, context) {
     /**
      * @return String representation.
      */
