@@ -13,43 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
+
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 /**
  * A base interface describing anything that can be read from an ESP.
  *
  * @author Mark Fairchild
  */
-public interface Entry {
-
+interface Entry {
     /**
      * Writes the Entry.
      *
-     * @param output The <code>ByteBuffer</code> to write.
+     * @param output The `ByteBuffer` to write.
      */
-    abstract public void write(java.nio.ByteBuffer output);
+    fun write(output: ByteBuffer?)
 
     /**
      * Calculates the size of the Entry.
      *
      * @return The size of the Field in bytes.
      */
-    abstract public int calculateSize();
+    fun calculateSize(): Int
 
-    /**
-     *
-     * @param buffer
-     * @param newLimit
-     * @return
-     */
-    static public java.nio.ByteBuffer advancingSlice(java.nio.ByteBuffer buffer, int newLimit) {
-        // Make the new slice.
-        java.nio.ByteBuffer newSlice = buffer.slice().order(java.nio.ByteOrder.LITTLE_ENDIAN);
-        ((java.nio.Buffer) newSlice).limit(newLimit);
+    companion object {
+        /**
+         *
+         * @param buffer
+         * @param newLimit
+         * @return
+         */
+        @JvmStatic
+        fun advancingSlice(buffer: ByteBuffer, newLimit: Int): ByteBuffer {
+            // Make the new slice.
+            val newSlice = buffer.slice().order(ByteOrder.LITTLE_ENDIAN)
+            (newSlice as Buffer).limit(newLimit)
 
-        // Advance the original.
-        ((java.nio.Buffer) buffer).position(buffer.position() + newLimit);
-        
-        return newSlice;
+            // Advance the original.
+            (buffer as Buffer).position(buffer.position() + newLimit)
+            return newSlice
+        }
     }
 }
