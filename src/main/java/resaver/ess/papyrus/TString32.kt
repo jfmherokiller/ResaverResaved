@@ -1,64 +1,50 @@
-package resaver.ess.papyrus;
+package resaver.ess.papyrus
 
-import org.jetbrains.annotations.Nullable;
-import resaver.Analysis;
-import resaver.ess.WStringElement;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
+import resaver.Analysis
+import resaver.ess.WStringElement
+import java.nio.ByteBuffer
 
 /**
  * TString implementation for 32 bit TStrings.
  */
-final class TString32 extends TString {
-
+internal class TString32 : TString {
     /**
-     * Creates a new <code>TString32</code> from a <code>WStringElement</code> and
+     * Creates a new `TString32` from a `WStringElement` and
      * an index.
      *
-     * @param wstr  The <code>WStringElement</code>.
-     * @param index The index of the <code>TString</code>.
+     * @param wstr  The `WStringElement`.
+     * @param index The index of the `TString`.
      */
-    TString32(WStringElement wstr, int index) {
-        super(wstr, index);
-    }
+    constructor(wstr: WStringElement?, index: Int) : super(wstr, index) {}
 
     /**
-     * Creates a new <code>TString32</code> from a character sequence and an
+     * Creates a new `TString32` from a character sequence and an
      * index.
      *
-     * @param cs    The <code>CharSequence</code>.
-     * @param index The index of the <code>TString</code>.
+     * @param cs    The `CharSequence`.
+     * @param index The index of the `TString`.
      */
-    private TString32(CharSequence cs, int index) {
-        super(cs, index);
-    }
-
-    public TString32(String val, int size) {
-        super(val, size);
-    }
+    private constructor(cs: CharSequence, index: Int) : super(cs, index) {}
+    constructor(`val`: String?, size: Int) : super(`val`, size) {}
 
     /**
      * @param output The output stream.
      * @throws IOException
-     * @see resaver.ess.Element#write(ByteBuffer)
+     * @see resaver.ess.Element.write
      */
-    @Override
-    public void write(ByteBuffer output) {
-        output.putInt(this.getIndex());
+    override fun write(output: ByteBuffer?) {
+        output!!.putInt(this.index)
     }
 
     /**
-     * @return The size of the <code>Element</code> in bytes.
-     * @see resaver.ess.Element#calculateSize()
+     * @return The size of the `Element` in bytes.
+     * @see resaver.ess.Element.calculateSize
      */
-    @Override
-    public int calculateSize() {
-        return 4;
+    override fun calculateSize(): Int {
+        return 4
     }
 
-    @Override
-    public boolean matches(@Nullable Analysis analysis, @Nullable String mod) {
-        return false;
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+        return false
     }
 }

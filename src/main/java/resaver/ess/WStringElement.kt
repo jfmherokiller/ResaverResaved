@@ -81,5 +81,9 @@ class WStringElement : WString, Element {
             val BYTES = BufferUtil.getWStringRaw(input)
             return WStringElement(BYTES)
         }
+
+        fun compare(w1: WStringElement?, w2: WStringElement?): Int {
+            return w1!!.compareTo(w2!!)
+        }
     }
 }
