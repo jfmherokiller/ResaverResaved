@@ -118,7 +118,7 @@ class QueuedUnbind(input: ByteBuffer, context: PapyrusContext) : PapyrusElement,
      * @param target A target within the `Linkable`.
      * @return
      */
-    override fun toHTML(target: Element): String {
+    override fun toHTML(target: Element?): String {
         return Linkable.makeLink("unbind", iD, this.toString())
     }
 

@@ -68,7 +68,7 @@ class Struct(input: ByteBuffer, context: PapyrusContext) : Definition() {
      * @param target A target within the `Linkable`.
      * @return
      */
-    override fun toHTML(target: Element): String {
+    override fun toHTML(target: Element?): String {
         if (target is MemberDesc) {
             val i = members.indexOf(target)
             if (i >= 0) {

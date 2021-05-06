@@ -51,7 +51,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @param target A target within the `Linkable`.
      * @return
      */
-    override fun toHTML(target: Element): String {
+    override fun toHTML(target: Element?): String {
         return Linkable.makeLink("plugin", NAME, this.toString())
     }
 

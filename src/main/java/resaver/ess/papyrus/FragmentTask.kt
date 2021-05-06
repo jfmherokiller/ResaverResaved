@@ -63,7 +63,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
      * @param target A target within the `Linkable`.
      * @return
      */
-    override fun toHTML(target: Element): String {
+    override fun toHTML(target: Element?): String {
         assert(null != TYPECODE || null != VARIABLE)
         val BUILDER = StringBuilder()
         BUILDER.append("UNK4:")
@@ -138,7 +138,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
          * @param target A target within the `Linkable`.
          * @return
          */
-        override fun toHTML(target: Element): String {
+        override fun toHTML(target: Element?): String {
             val BUILDER = StringBuilder()
             BUILDER.append("FragmentTask.Type2")
             if (null != RUNNING) {
@@ -196,7 +196,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
             return sum
         }
 
-        override fun toHTML(target: Element): String {
+        override fun toHTML(target: Element?): String {
             val BUF = StringBuilder()
             BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
             return BUF.append(" stage=")
@@ -254,7 +254,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
             return sum
         }
 
-        override fun toHTML(target: Element): String {
+        override fun toHTML(target: Element?): String {
             val BUF = StringBuilder()
             BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
             return BUF.append(" stage=")
@@ -308,7 +308,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
             return sum
         }
 
-        override fun toHTML(target: Element): String {
+        override fun toHTML(target: Element?): String {
             val BUF = StringBuilder()
             BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
             return BUF.append(" stage=")
@@ -360,7 +360,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
             return sum
         }
 
-        override fun toHTML(target: Element): String {
+        override fun toHTML(target: Element?): String {
             val BUF = StringBuilder()
             BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
             return BUF.append(" stage=")
@@ -409,7 +409,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
             return sum
         }
 
-        override fun toHTML(target: Element): String {
+        override fun toHTML(target: Element?): String {
             return StringBuilder()
                 .append(if (FORM == null) REFID.toHTML(target) else FORM.toHTML(target))
                 .append(" ").append(TSTRING)
@@ -454,7 +454,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
             return 0
         }
 
-        override fun toHTML(target: Element): String {
+        override fun toHTML(target: Element?): String {
             return ""
         }
 

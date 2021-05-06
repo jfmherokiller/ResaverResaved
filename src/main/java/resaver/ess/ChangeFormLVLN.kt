@@ -160,8 +160,8 @@ class ChangeFormLVLN(input: ByteBuffer, flags: Flags.Int, context: ESSContext?) 
             val formCount = input.get().toInt()
             ENTRIES = mutableListOf()
             for (i in 0 until formCount) {
-                val ENTRY = LeveledEntry(input, context)
-                ENTRIES!!.add(ENTRY)
+                val ENTRY = context?.let { LeveledEntry(input, it) }
+                ENTRY?.let { ENTRIES!!.add(it) }
             }
         } else {
             ENTRIES = null
