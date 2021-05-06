@@ -6,217 +6,213 @@
  * To view a copy of the public domain dedication, visit
  * http://creativecommons.org/licenses/publicdomain/
  */
-package resaver.gui;
+package resaver.gui
 
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.text.*;
+import java.awt.event.*
+import java.beans.PropertyChangeEvent
+import javax.swing.ComboBoxEditor
+import javax.swing.ComboBoxModel
+import javax.swing.JComboBox
+import javax.swing.text.AttributeSet
+import javax.swing.text.BadLocationException
+import javax.swing.text.JTextComponent
+import javax.swing.text.PlainDocument
 
 /**
  * @param <T> The type stored in the ComboBox.
- */
-final public class AutoCompletion<T> extends PlainDocument {
+</T> */
+class AutoCompletion<T>(var comboBox: JComboBox<T>) : PlainDocument() {
+    var model: ComboBoxModel<T>
+    var editor: JTextComponent? = null
 
-    JComboBox<T> comboBox;
-    ComboBoxModel<T> model;
-    JTextComponent editor;
     // flag to indicate if setSelectedItem has been called
     // subsequent calls to remove/insertString should be ignored
-    boolean selecting = false;
-    boolean hidePopupOnFocusLoss;
-    boolean hitBackspace = false;
-    boolean hitBackspaceOnSelection;
-
-    KeyListener editorKeyListener;
-    FocusListener editorFocusListener;
-
-    public AutoCompletion(final JComboBox<T> comboBox) {
-        this.comboBox = comboBox;
-        model = comboBox.getModel();
-        comboBox.addActionListener(e -> {
-            if (!selecting) {
-                highlightCompletedText(0);
-            }
-        });
-
-        comboBox.addPropertyChangeListener(e -> {
-            if (e.getPropertyName().equals("editor")) {
-                configureEditor((ComboBoxEditor) e.getNewValue());
-            }
-            if (e.getPropertyName().equals("model")) {
-                @SuppressWarnings("unchecked")
-                ComboBoxModel<T> newModel = (ComboBoxModel<T>) e.getNewValue();
-                model = newModel;
-            }
-        });
-
-        editorKeyListener = new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (comboBox.isDisplayable()) {
-                    comboBox.setPopupVisible(true);
-                }
-                hitBackspace = false;
-                switch (e.getKeyCode()) {
-                    // determine if the pressed key is backspace (needed by the remove method)
-                    case KeyEvent.VK_BACK_SPACE:
-                        hitBackspace = true;
-                        hitBackspaceOnSelection = editor.getSelectionStart() != editor.getSelectionEnd();
-                        break;
-                    // ignore delete key
-                    case KeyEvent.VK_DELETE:
-                        e.consume();
-                        comboBox.getToolkit().beep();
-                        break;
-                }
-            }
-        };
-        // Bug 5100422 on Java 1.5: Editable JComboBox won't hide popup when tabbing out
-        hidePopupOnFocusLoss = System.getProperty("java.version").startsWith("1.5");
-        // Highlight whole text when gaining focus
-        editorFocusListener = new FocusAdapter() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                highlightCompletedText(0);
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                // Workaround for Bug 5100422 - Hide Popup on focus loss
-                if (hidePopupOnFocusLoss) {
-                    comboBox.setPopupVisible(false);
-                }
-            }
-        };
-        configureEditor(comboBox.getEditor());
-
-        // Handle initially selected object
-        @SuppressWarnings("unchecked")
-        T selected = (T) comboBox.getSelectedItem();
-        if (selected != null) {
-            setText(selected.toString());
-        }
-        highlightCompletedText(0);
-    }
-
-    public static <T> void enable(JComboBox<T> comboBox) {
-        // has to be editable
-        comboBox.setEditable(true);
-        // change the editor's document
-        new AutoCompletion<>(comboBox);
-    }
-
-    void configureEditor(ComboBoxEditor newEditor) {
+    var selecting = false
+    var hidePopupOnFocusLoss: Boolean
+    var hitBackspace = false
+    var hitBackspaceOnSelection = false
+    var editorKeyListener: KeyListener
+    var editorFocusListener: FocusListener
+    fun configureEditor(newEditor: ComboBoxEditor?) {
         if (editor != null) {
-            editor.removeKeyListener(editorKeyListener);
-            editor.removeFocusListener(editorFocusListener);
+            editor!!.removeKeyListener(editorKeyListener)
+            editor!!.removeFocusListener(editorFocusListener)
         }
-
         if (newEditor != null) {
-            editor = (JTextComponent) newEditor.getEditorComponent();
-            editor.addKeyListener(editorKeyListener);
-            editor.addFocusListener(editorFocusListener);
-            editor.setDocument(this);
+            editor = newEditor.editorComponent as JTextComponent
+            editor!!.addKeyListener(editorKeyListener)
+            editor!!.addFocusListener(editorFocusListener)
+            editor!!.document = this
         }
     }
 
-    @Override
-    public void remove(int offs, int len) throws BadLocationException {
+    @Throws(BadLocationException::class)
+    override fun remove(offs: Int, len: Int) {
         // return immediately when selecting an item
+        var offs = offs
         if (selecting) {
-            return;
+            return
         }
         if (hitBackspace) {
             // user hit backspace => move the selection backwards
             // old item keeps being selected
             if (offs > 0) {
                 if (hitBackspaceOnSelection) {
-                    offs--;
+                    offs--
                 }
             } else {
                 // User hit backspace with the cursor positioned on the start => beep
-                comboBox.getToolkit().beep(); // when available use: UIManager.getLookAndFeel().provideErrorFeedback(comboBox);
+                comboBox.toolkit.beep() // when available use: UIManager.getLookAndFeel().provideErrorFeedback(comboBox);
             }
-            highlightCompletedText(offs);
+            highlightCompletedText(offs)
         } else {
-            super.remove(offs, len);
+            super.remove(offs, len)
         }
     }
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public void insertString(int offs, String str, AttributeSet a) throws BadLocationException {
+    @Throws(BadLocationException::class)
+    override fun insertString(offs: Int, str: String, a: AttributeSet) {
         // return immediately when selecting an item
+        var offs = offs
         if (selecting) {
-            return;
+            return
         }
         // insert the string into the document
-        super.insertString(offs, str, a);
+        super.insertString(offs, str, a)
         // lookup and select a matching item
-        T item = (T) lookupItem(getText(0, getLength()));
-
+        var item = lookupItem(getText(0, length)) as T?
         if (item != null) {
-            setSelectedItem(item);
+            setSelectedItem(item)
         } else {
             // keep old item selected if there is no match
-            item = (T) comboBox.getSelectedItem();
+            item = comboBox.selectedItem as T
             // imitate no insert (later on offs will be incremented by str.length(): selection won't move forward)
-            offs = offs - str.length();
+            offs -= str.length
             // provide feedback to the user that his input has been received but can not be accepted
-            comboBox.getToolkit().beep(); // when available use: UIManager.getLookAndFeel().provideErrorFeedback(comboBox);
+            comboBox.toolkit.beep() // when available use: UIManager.getLookAndFeel().provideErrorFeedback(comboBox);
         }
         if (item != null) {
-            setText(item.toString());
+            setText(item.toString())
         }
         // select the completed part
-        highlightCompletedText(offs + str.length());
+        highlightCompletedText(offs + str.length)
     }
 
-    private void setText(String text) {
+    private fun setText(text: String) {
         try {
             // remove all text and insert the completed string
-            super.remove(0, getLength());
-            super.insertString(0, text, null);
-        } catch (BadLocationException e) {
-            throw new RuntimeException(e.toString());
+            super.remove(0, length)
+            super.insertString(0, text, null)
+        } catch (e: BadLocationException) {
+            throw RuntimeException(e.toString())
         }
     }
 
-    private void highlightCompletedText(int start) {
-        editor.setCaretPosition(getLength());
-        editor.moveCaretPosition(start);
+    private fun highlightCompletedText(start: Int) {
+        editor!!.caretPosition = length
+        editor!!.moveCaretPosition(start)
     }
 
-    private void setSelectedItem(T item) {
-        selecting = true;
-        model.setSelectedItem(item);
-        selecting = false;
+    private fun setSelectedItem(item: T) {
+        selecting = true
+        model.selectedItem = item
+        selecting = false
     }
 
-    private Object lookupItem(String pattern) {
-        @SuppressWarnings("unchecked")
-        T selectedItem = (T) model.getSelectedItem();
+    private fun lookupItem(pattern: String): Any? {
+        val selectedItem: T? = model.selectedItem as T
 
         // only search for a different item if the currently selected does not match
         if (selectedItem != null && startsWithIgnoreCase(selectedItem.toString(), pattern)) {
-            return selectedItem;
+            return selectedItem
         } else {
             // iterate over all items
-            for (int i = 0, n = model.getSize(); i < n; i++) {
-                T currentItem = model.getElementAt(i);
+            var i = 0
+            val n = model.size
+            while (i < n) {
+                val currentItem = model.getElementAt(i)
                 // current item starts with the pattern?
                 if (currentItem != null && startsWithIgnoreCase(currentItem.toString(), pattern)) {
-                    return currentItem;
+                    return currentItem
                 }
+                i++
             }
         }
         // no item starts with the pattern => return null
-        return null;
+        return null
     }
 
     // checks if str1 starts with str2 - ignores case
-    private boolean startsWithIgnoreCase(String str1, String str2) {
-        return str1.toUpperCase().startsWith(str2.toUpperCase());
+    private fun startsWithIgnoreCase(str1: String, str2: String): Boolean {
+        return str1.toUpperCase().startsWith(str2.toUpperCase())
     }
 
+    companion object {
+        @JvmStatic
+        fun <T> enable(comboBox: JComboBox<T>) {
+            // has to be editable
+            comboBox.isEditable = true
+            // change the editor's document
+            AutoCompletion(comboBox)
+        }
+    }
+
+    init {
+        model = comboBox.model
+        comboBox.addActionListener { e: ActionEvent? ->
+            if (!selecting) {
+                highlightCompletedText(0)
+            }
+        }
+        comboBox.addPropertyChangeListener { e: PropertyChangeEvent ->
+            if (e.propertyName == "editor") {
+                configureEditor(e.newValue as ComboBoxEditor)
+            }
+            if (e.propertyName == "model") {
+                val newModel = e.newValue as ComboBoxModel<T>
+                model = newModel
+            }
+        }
+        editorKeyListener = object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent) {
+                if (comboBox.isDisplayable) {
+                    comboBox.isPopupVisible = true
+                }
+                hitBackspace = false
+                when (e.keyCode) {
+                    KeyEvent.VK_BACK_SPACE -> {
+                        hitBackspace = true
+                        hitBackspaceOnSelection = editor!!.selectionStart != editor!!.selectionEnd
+                    }
+                    KeyEvent.VK_DELETE -> {
+                        e.consume()
+                        comboBox.toolkit.beep()
+                    }
+                }
+            }
+        }
+        // Bug 5100422 on Java 1.5: Editable JComboBox won't hide popup when tabbing out
+        hidePopupOnFocusLoss = System.getProperty("java.version").startsWith("1.5")
+        // Highlight whole text when gaining focus
+        editorFocusListener = object : FocusAdapter() {
+            override fun focusGained(e: FocusEvent) {
+                highlightCompletedText(0)
+            }
+
+            override fun focusLost(e: FocusEvent) {
+                // Workaround for Bug 5100422 - Hide Popup on focus loss
+                if (hidePopupOnFocusLoss) {
+                    comboBox.isPopupVisible = false
+                }
+            }
+        }
+        configureEditor(comboBox.editor)
+
+        // Handle initially selected object
+        val selected: T? = comboBox.selectedItem as T
+        if (selected != null) {
+            setText(selected.toString())
+        }
+        highlightCompletedText(0)
+    }
 }
