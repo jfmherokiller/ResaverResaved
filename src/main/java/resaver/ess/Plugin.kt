@@ -77,7 +77,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      */
     fun getChangeForms(save: ESS?): Set<ChangeForm> {
         return save!!.changeForms.values
-            .filter { form: ChangeForm -> form.refID.PLUGIN === this }.toList().toSet()
+            .filter { form: ChangeForm -> form.refID.PLUGIN === this }.toList().filterNotNull().toSet()
     }
 
     /**
