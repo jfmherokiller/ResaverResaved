@@ -26,13 +26,11 @@ import java.nio.BufferUnderflowException
 import java.nio.channels.FileChannel
 import java.nio.file.*
 import java.util.*
-import java.util.function.Predicate
 import java.util.function.ToDoubleFunction
 import java.util.logging.Level
 import java.util.logging.Logger
-import java.util.stream.Collectors
-import java.util.stream.Stream
 import kotlin.math.sqrt
+import kotlin.streams.toList
 
 /**
  * Describes a mod as a 4-tuple of a directory, a list of plugins, a list of
@@ -216,14 +214,10 @@ class Mod(game: Game?, dir: Path) : Serializable {
                         }
                         val scriptsCount = ARCHIVE_SCRIPTS.size
                         if (stringsCount > 0 || scriptsCount > 0) {
-                            val fmt = "Read %5d scripts and %5d strings from %d stringsfiles in %s of \"%s\""
                             val msg = String.format(
-                                fmt,
+                                "Read %5d scripts and %5d strings from ${ARCHIVE_STRINGSFILES.size} stringsfiles in ${archivePath.fileName} of \"$SHORTNAME\"",
                                 scriptsCount,
                                 stringsCount,
-                                ARCHIVE_STRINGSFILES.size,
-                                archivePath.fileName,
-                                SHORTNAME
                             )
                             LOG.info(msg)
                         }
@@ -247,7 +241,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
                     }
                 } catch (ex: IOException) {
                     STRINGSFILE_ERRORS.add(path)
-                    LOG.severe(String.format("Mod \"%s\": error while reading \"%s\".", SHORTNAME, path))
+                    LOG.severe("Mod \"$SHORTNAME\": error while reading \"$path\".")
                     return@map null
                 }
             }.filterNotNull().toList()
@@ -267,8 +261,11 @@ class Mod(game: Game?, dir: Path) : Serializable {
         }
         val scriptsCount = LOOSE_SCRIPTS.size
         if (stringsCount > 0 || scriptsCount > 0) {
-            val fmt = "Read %5d scripts and %5d strings from %d stringsfiles in loose files of \"%s\""
-            val msg = String.format(fmt, scriptsCount, stringsCount, LOOSE_STRINGSFILES.size, SHORTNAME)
+            val msg = String.format(
+                "Read %5d scripts and %5d strings from ${LOOSE_STRINGSFILES.size} stringsfiles in loose files of \"$SHORTNAME\"",
+                scriptsCount,
+                stringsCount
+            )
             LOG.info(msg)
         }
         return ModReadResults(SCRIPT_ORIGINS, STRINGSFILES, ARCHIVE_ERRORS, null, STRINGSFILE_ERRORS)
@@ -289,7 +286,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
      * @return
      */
     override fun toString(): String {
-        return MODNAME!!
+        return MODNAME
     }
 
     /**
@@ -323,21 +320,21 @@ class Mod(game: Game?, dir: Path) : Serializable {
 
     /**
      * @see Object.equals
-     * @param obj
+     * @param other
      * @return
      */
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (obj == null) {
+        if (other == null) {
             return false
         }
-        if (javaClass != obj.javaClass) {
+        if (javaClass != other.javaClass) {
             return false
         }
-        val other = obj as Mod
-        return directory == other.directory
+        val other2 = other as Mod
+        return directory == other2.directory
     }
 
     /**
@@ -372,28 +369,28 @@ class Mod(game: Game?, dir: Path) : Serializable {
          * List: (Mod name)
          */
         @JvmField
-        val MODS: MutableSet<Mod> = LinkedHashSet()
+        val MODS: MutableSet<Mod> = mutableSetOf()
 
         /**
          * Map: (IString) -> File
          */
-        val SCRIPTS: MutableMap<IString, Path> = LinkedHashMap()
+        val SCRIPTS: MutableMap<IString, Path> = mutableMapOf()
 
         /**
          * Map: (Mod name) -> (Lisp[ESP name])
          */
-        val ESPS: MutableMap<String, SortedSet<String>> = LinkedHashMap()
+        val ESPS: MutableMap<String, SortedSet<String>> = mutableMapOf()
 
         /**
          * Map: (IString) -> (List: (Mod name))
          */
         @JvmField
-        val SCRIPT_ORIGINS: MutableMap<IString, SortedSet<String>> = LinkedHashMap()
+        val SCRIPT_ORIGINS: MutableMap<IString, SortedSet<String>> = mutableMapOf()
 
         /**
          * Map: (IString) -> (List: (Mod name))
          */
-        val STRUCT_ORIGINS: MutableMap<IString, SortedSet<String>> = LinkedHashMap()
+        val STRUCT_ORIGINS: MutableMap<IString, SortedSet<String>> = mutableMapOf()
 
         /**
          * Merges analyses.
@@ -436,9 +433,11 @@ class Mod(game: Game?, dir: Path) : Serializable {
         scriptErrors: List<Path>?,
         stringsErrors: List<Path>?
     ) {
-        val errorFiles: Stream<Path>
-            get() = Stream.of(ARCHIVE_ERRORS, SCRIPT_ERRORS, STRINGS_ERRORS)
-                .flatMap { obj: List<Path> -> obj.stream() }
+        val errorFiles: List<Path>
+        get() = ARCHIVE_ERRORS + SCRIPT_ERRORS + STRINGS_ERRORS
+       // val errorFiles: Stream<Path>
+       //     get() = Stream.of(ARCHIVE_ERRORS, SCRIPT_ERRORS, STRINGS_ERRORS)
+        //        .flatMap { obj: List<Path> -> obj.stream() }
         val MOD: Mod
         val SCRIPT_ORIGINS: Map<Path, Path>
         val STRINGSFILES: List<StringsFile>
@@ -533,29 +532,33 @@ class Mod(game: Game?, dir: Path) : Serializable {
 
         // Check if the parent directory is the game directory.
         val PARENT = dir.parent
-        if (Files.list(PARENT).map { obj: Path -> obj.fileName }
+        MODNAME = if (Files.list(PARENT).map { obj: Path -> obj.fileName }
                 .anyMatch { path: Path? -> GLOB_EXE.matches(path) }) {
-            MODNAME = PARENT.fileName.toString()
+            PARENT.fileName.toString()
         } else {
-            MODNAME = dir.fileName.toString()
+            dir.fileName.toString()
         }
-        SHORTNAME = if (MODNAME!!.length < 25) MODNAME else MODNAME!!.substring(0, 22) + "..."
+        SHORTNAME = if (MODNAME.length < 25) MODNAME else MODNAME.substring(0, 22) + "..."
 
         // Collect all files of relevance.
         SCRIPT_PATH = directory.resolve(SCRIPTS_SUBDIR)
         STRING_PATH = directory.resolve(STRINGS_SUBDIR)
         PLUGIN_FILES =
-            if (Files.exists(directory)) Files.list(directory).filter { path: Path? -> GLOB_PLUGIN.matches(path) }
-                .collect(Collectors.toList()) else emptyList()
+            if (Files.exists(directory)) {
+                Files.list(directory).filter { path: Path? -> GLOB_PLUGIN.matches(path) }
+                    .toList()
+            } else {
+                emptyList()
+            }
         ARCHIVE_FILES =
             if (Files.exists(directory)) Files.list(directory).filter { path: Path? -> GLOB_ARCHIVE.matches(path) }
-                .collect(Collectors.toList()) else emptyList()
+                .toList() else emptyList()
         STRINGS_FILES =
             if (Files.exists(STRING_PATH)) Files.walk(STRING_PATH).filter { path: Path? -> GLOB_STRINGS.matches(path) }
-                .collect(Collectors.toList()) else emptyList()
+                .toList() else emptyList()
         SCRIPT_FILES =
             if (Files.exists(SCRIPT_PATH)) Files.walk(SCRIPT_PATH).filter { path: Path? -> GLOB_SCRIPT.matches(path) }
-                .collect(Collectors.toList()) else emptyList()
+                .toList() else emptyList()
 
         // Print out some status information.
         if (!Files.exists(directory)) {
