@@ -579,12 +579,12 @@ public class FilterMaker {
 
         // Setup a changeflag setFilter.
         if (null != changeFlags) {
-            FILTERS.add(createChangeFlagFilter(changeFlags.A, changeFlags.B));
+            FILTERS.add(createChangeFlagFilter(changeFlags.getA(), changeFlags.getB()));
         }
 
         // Setup a changeformflag setFilter.
         if (null != changeFormFlags) {
-            FILTERS.add(createChangeFormFlagFilter(context, changeFormFlags.A, changeFormFlags.B));
+            FILTERS.add(createChangeFormFlagFilter(context, changeFormFlags.getA(), changeFormFlags.getB()));
         }
         // Filter undefined.
         if (undefined) {

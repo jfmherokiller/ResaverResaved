@@ -13,59 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mf;
+package mf
 
-import java.util.Objects;
+
 
 /**
  *
  * @author Mark Fairchild
  * @param <T>
- */
-final public class Duad<T> {
+</T> */
+class Duad<T>(var A: T, var B: T) {
 
-    static public <T> Duad<T> make(T a, T b) {
-        return new Duad<>(a, b);
+    override fun toString(): String {
+        return "($A, $B)"
     }
 
-    public Duad(T a, T b) {
-        this.A = a;
-        this.B = b;
+    override fun hashCode(): Int {
+        var hash = 5
+        hash = 97 * hash + A.hashCode()
+        hash = 97 * hash + B.hashCode()
+        return hash
     }
 
-    @Override
-    public String toString() {
-        return new StringBuilder()
-                .append('(')
-                .append(A)
-                .append(", ")
-                .append(B)
-                .append(')')
-                .toString();
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 5;
-        hash = 97 * hash + Objects.hashCode(this.A);
-        hash = 97 * hash + Objects.hashCode(this.B);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
         }
-        if (obj == null) {
-            return false;
+        if (other == null) {
+            return false
         }
-        if (getClass() != obj.getClass()) {
-            return false;
+        if (javaClass != other.javaClass) {
+            return false
         }
-        final Duad<?> other = (Duad<?>) obj;
-        return Objects.equals(this.A, other.A) && Objects.equals(this.B, other.B);
+        val other2 = other as Duad<*>
+        return A == other2.A && B == other2.B
     }
 
-    final public T A, B;
+    companion object {
+        @JvmStatic
+        fun <T> make(a: T, b: T): Duad<T> {
+            return Duad(a, b)
+        }
+    }
 }

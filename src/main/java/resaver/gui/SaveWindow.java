@@ -1436,7 +1436,7 @@ final public class SaveWindow extends JFrame {
             pair = Duad.make(0, 0);
         }
 
-        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.A, pair.B, (m, f) -> {
+        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.getA(), pair.getB(), (m, f) -> {
             Duad<Integer> newPair = Duad.make(m, f);
             this.MI_CHANGEFILTER.setValue(newPair);
             this.updateFilters(false);
@@ -1456,7 +1456,7 @@ final public class SaveWindow extends JFrame {
             pair = Duad.make(0, 0);
         }
 
-        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.A, pair.B, (m, f) -> {
+        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.getA(), pair.getB(), (m, f) -> {
             Duad<Integer> newPair = Duad.make(m, f);
             this.MI_CHANGEFORMFILTER.setValue(newPair);
             this.updateFilters(false);
