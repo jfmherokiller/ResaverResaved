@@ -46,11 +46,11 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
      * @see ArchiveParser.getFilenames
      */
     @Throws(IOException::class)
-    override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?> {
+    override fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path, Path> {
         return FILES
             .filter { file: BA2FileRecord -> dir == null || file.path!!.startsWith(dir) }
             .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }
-            .associateBy({ k: BA2FileRecord -> super.PATH.fileName.resolve(k.path!!) }, { v: BA2FileRecord -> v.path })
+            .associateBy({ k: BA2FileRecord -> super.PATH.fileName.resolve(k.path!!) }, { v: BA2FileRecord -> v.path!! })
     }
     val HEADER: BA2Header
     private val FILES: MutableList<BA2FileRecord>

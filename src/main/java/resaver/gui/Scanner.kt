@@ -79,13 +79,13 @@ class Scanner(
             val PLUGINFILEMAP: MutableMap<Plugin?, Path> = HashMap()
             MODS
                 .asSequence()
-                .flatMap { it.espFiles.asSequence() }
+                .flatMap { it.getESPFiles().asSequence() }
                 .filter { PLUGINS.paths.containsKey(it.fileName) }
                 .forEach { PLUGINFILEMAP[PLUGINS.paths[it.fileName]] = it }
             val PLUGIN_MOD_MAP: MutableMap<Plugin?, Mod?> = hashMapOf()
             MODS.forEach { MOD ->
                 val collect: MutableMap<Plugin?, Mod?> = hashMapOf()
-                for (path in MOD.espFiles) {
+                for (path in MOD.getESPFiles()) {
                     if (PLUGINS.paths.containsKey(path.fileName)) {
                         check(collect.put(PLUGINS.paths[path.fileName], MOD) == null) { "Duplicate key" }
                     }
@@ -99,7 +99,7 @@ class Scanner(
             var PROFILEANALYSIS = Mod.Analysis()
             MODS
                 .asSequence()
-                .map { it.analysis }
+                .map { it.getAnalysis() }
                 .forEach { PROFILEANALYSIS = PROFILEANALYSIS.merge(it) }
             val ERR_ARCHIVE: MutableList<Path> = mutableListOf()
             val ERR_SCRIPTS: MutableList<Path> = mutableListOf()
@@ -114,7 +114,7 @@ class Scanner(
                     COUNTER.click()
                     PROGRESS.accept("Reading ${GAME.NAME}'s data")
                 } else {
-                    PROGRESS.accept("Reading ${COUNTER.eval()}: mod data for ${mod.shortName}")
+                    PROGRESS.accept("Reading ${COUNTER.eval()}: mod data for ${mod.getShortName()}")
                 }
                 val RESULTS = mod.readData(PLUGINS, LANGUAGE)
                 STRINGSFILES.addAll(RESULTS.STRINGSFILES)

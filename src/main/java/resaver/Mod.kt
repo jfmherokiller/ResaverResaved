@@ -13,29 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver;
+package resaver
 
-import java.io.*;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.*;
-import java.util.function.ToDoubleFunction;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import resaver.archive.ArchiveParser;
-import resaver.esp.StringsFile;
-import resaver.ess.PluginInfo;
-import resaver.ess.Plugin;
+import resaver.archive.ArchiveParser.Companion.createParser
+import resaver.esp.StringsFile
+import resaver.ess.Plugin
+import resaver.ess.PluginInfo
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.Serializable
+import java.nio.BufferUnderflowException
+import java.nio.channels.FileChannel
+import java.nio.file.*
+import java.util.*
+import java.util.function.Predicate
+import java.util.function.ToDoubleFunction
+import java.util.logging.Level
+import java.util.logging.Logger
+import java.util.stream.Collectors
+import java.util.stream.Stream
+import kotlin.math.sqrt
 
 /**
  * Describes a mod as a 4-tuple of a directory, a list of plugins, a list of
@@ -43,117 +40,7 @@ import resaver.ess.Plugin;
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class Mod implements java.io.Serializable {
-
-    /**
-     * Creates a new <code>Mod</code> from a <code>File</code> representing the
-     * directory containing the mod's files. The directory will be scanned to
-     * create lists of all the important files.
-     *
-     * @param game The game.
-     * @param dir The directory containing the mod.
-     * @return The <code>Mod</code>, or null if it couldn't be created.
-     */
-    static public Mod createMod(Game game, Path dir) {
-        try {
-            return new Mod(game, dir);
-        } catch (FileNotFoundException ex) {
-            LOG.warning(String.format("Couldn't read mod: %s\n%s", dir, ex.getMessage()));
-            return null;
-        } catch (IOException ex) {
-            LOG.log(Level.WARNING, String.format("Couldn't read mod: %s", dir), ex);
-            return null;
-        }
-
-    }
-
-    /**
-     * Creates a new <code>Mod</code> from a <code>File</code> representing the
-     * directory containing the mod's files. The directory will be scanned to
-     * create lists of all the important files.
-     *
-     * @param game The game.
-     * @param dir The directory containing the mod.
-     * @throws IllegalArgumentException Thrown if the directory doesn't exist,
-     * isn't a directory, or isn't readable.
-     * @throws IOException Thrown if there is a problem reading data.
-     *
-     */
-    public Mod(Game game, Path dir) throws IOException {
-        Objects.requireNonNull(game);
-        Objects.requireNonNull(dir);
-        this.DIRECTORY = dir;
-
-        if (!Files.exists(dir)) {
-            throw new FileNotFoundException("Directory doesn't exists: " + dir);
-        }
-
-        if (!Files.isDirectory(dir)) {
-            throw new IOException("Directory isn't actual a directory: " + dir);
-        }
-
-        // Check if the parent directory is the game directory.
-        final Path PARENT = dir.getParent();
-        if (Files.list(PARENT).map(Path::getFileName).anyMatch(GLOB_EXE::matches)) {
-            this.MODNAME = PARENT.getFileName().toString();
-        } else {
-            this.MODNAME = dir.getFileName().toString();
-        }
-
-        this.SHORTNAME = (this.MODNAME.length() < 25 ? this.MODNAME : this.MODNAME.substring(0, 22) + "...");
-
-        // Collect all files of relevance.
-        this.SCRIPT_PATH = this.DIRECTORY.resolve(SCRIPTS_SUBDIR);
-        this.STRING_PATH = this.DIRECTORY.resolve(STRINGS_SUBDIR);
-
-        this.PLUGIN_FILES = Files.exists(this.DIRECTORY)
-                ? Files.list(this.DIRECTORY).filter(GLOB_PLUGIN::matches).collect(Collectors.toList())
-                : Collections.emptyList();
-
-        this.ARCHIVE_FILES = Files.exists(this.DIRECTORY)
-                ? Files.list(this.DIRECTORY).filter(GLOB_ARCHIVE::matches).collect(Collectors.toList())
-                : Collections.emptyList();
-
-        this.STRINGS_FILES = Files.exists(this.STRING_PATH)
-                ? Files.walk(this.STRING_PATH).filter(GLOB_STRINGS::matches).collect(Collectors.toList())
-                : Collections.emptyList();
-
-        this.SCRIPT_FILES = Files.exists(this.SCRIPT_PATH)
-                ? Files.walk(this.SCRIPT_PATH).filter(GLOB_SCRIPT::matches).collect(Collectors.toList())
-                : Collections.emptyList();
-
-        // Print out some status information.
-        if (!Files.exists(this.DIRECTORY)) {
-            LOG.warning(String.format("Mod \"%s\" doesn't exist.", this.MODNAME));
-
-        } else {
-            if (PLUGIN_FILES.isEmpty()) {
-                LOG.fine(String.format("Mod \"%s\" contains no plugins.", this.MODNAME));
-            } else {
-                LOG.fine(String.format("Mod \"%s\" contains %d plugins.", this.MODNAME, PLUGIN_FILES.size()));
-            }
-
-            if (ARCHIVE_FILES.isEmpty()) {
-                LOG.fine(String.format("Mod \"%s\" contains no archives.", this.MODNAME));
-            } else {
-                LOG.fine(String.format("Mod \"%s\" contains %d archives.", this.MODNAME, ARCHIVE_FILES.size()));
-            }
-
-            if (STRINGS_FILES.isEmpty()) {
-                LOG.fine(String.format("Mod \"%s\" contains no loose localization files.", this.MODNAME));
-            } else {
-                LOG.fine(String.format("Mod \"%s\" contains %d loose localization files.", this.MODNAME, STRINGS_FILES.size()));
-            }
-
-            if (SCRIPT_FILES.isEmpty()) {
-                LOG.fine(String.format("Mod \"%s\" contains no loose scripts.", this.MODNAME));
-            } else {
-                LOG.fine(String.format("Mod \"%s\" contains %d loose scripts.", this.MODNAME, SCRIPT_FILES.size()));
-            }
-        }
-    }
-
+class Mod(game: Game?, dir: Path) : Serializable {
     /**
      * An estimate of the total amount of data that would be scanned to read
      * this mod. The Math.sqrt operation is applied, to model the fact that
@@ -161,45 +48,36 @@ final public class Mod implements java.io.Serializable {
      *
      * @return The size.
      */
-    public double getSize() {
-        if (null == this.size) {
-
-            ToDoubleFunction<Path> toSize;
-            toSize = f -> {
-                try {
-                    return Math.sqrt(Files.size(f));
-                } catch (IOException ex) {
-                    return 0;
-                }
-            };
-
-            this.size = 0.0;
-            double sum = 0.0;
-            for (Path SCRIPT_FILE : this.SCRIPT_FILES) {
-                double v = toSize.applyAsDouble(SCRIPT_FILE);
-                sum += v;
+    fun getSize(): Int {
+        val toSize: ToDoubleFunction<Path> = ToDoubleFunction { f: Path? ->
+            try {
+                return@ToDoubleFunction sqrt(Files.size(f!!).toDouble())
+            } catch (ex: IOException) {
+                return@ToDoubleFunction 0.0
             }
-            this.size += sum;
-            double result = 0.0;
-            for (Path STRINGS_FILE : this.STRINGS_FILES) {
-                double v = toSize.applyAsDouble(STRINGS_FILE);
-                result += v;
-            }
-            this.size += result;
-            double sum1 = 0.0;
-            for (Path PLUGIN_FILE : this.PLUGIN_FILES) {
-                double v = toSize.applyAsDouble(PLUGIN_FILE);
-                sum1 += v;
-            }
-            this.size += sum1;
-            double result1 = 0.0;
-            for (Path ARCHIVE_FILE : this.ARCHIVE_FILES) {
-                double v = toSize.applyAsDouble(ARCHIVE_FILE);
-                result1 += v;
-            }
-            this.size += result1;
         }
-        return this.size;
+        size = 0.0
+        val sum = SCRIPT_FILES.sumOf { toSize.applyAsDouble(it) }
+        this.size += sum
+        var result = 0.0
+        for (STRINGS_FILE in STRINGS_FILES) {
+            val v = toSize.applyAsDouble(STRINGS_FILE)
+            result += v
+        }
+        size += result
+        var sum1 = 0.0
+        for (PLUGIN_FILE in PLUGIN_FILES) {
+            val v = toSize.applyAsDouble(PLUGIN_FILE)
+            sum1 += v
+        }
+        size += sum1
+        var result1 = 0.0
+        for (ARCHIVE_FILE in ARCHIVE_FILES) {
+            val v = toSize.applyAsDouble(ARCHIVE_FILE)
+            result1 += v
+        }
+        size += result1
+        return size.toInt()
     }
 
     /**
@@ -207,315 +85,281 @@ final public class Mod implements java.io.Serializable {
      * @return Returns true if the mod contains no plugins, archives, or loose
      * script files.
      */
-    public boolean isEmpty() {
-        return this.ARCHIVE_FILES.isEmpty() && this.PLUGIN_FILES.isEmpty() && this.SCRIPT_FILES.isEmpty();
-    }
-
-    /**
-     * @return The directory storing the <code>Mod</code>.
-     */
-    public Path getDirectory() {
-        return this.DIRECTORY;
-    }
+    val isEmpty: Boolean
+        get() = ARCHIVE_FILES.isEmpty() && PLUGIN_FILES.isEmpty() && SCRIPT_FILES.isEmpty()
 
     /**
      * @return The number of archives.
      */
-    public int getNumArchives() {
-        return this.ARCHIVE_FILES.size();
+    fun getNumArchives(): Int {
+        return ARCHIVE_FILES.size
     }
 
     /**
      * @return The number of loose script files.
      */
-    public int getNumLooseScripts() {
-        return this.SCRIPT_FILES.size();
+    fun getNumLooseScripts(): Int {
+        return SCRIPT_FILES.size
     }
 
     /**
      * @return The number of loose script files.
      */
-    public int getNumLooseStrings() {
-        return this.STRINGS_FILES.size();
+    fun getNumLooseStrings(): Int {
+        return STRINGS_FILES.size
     }
 
     /**
      * @return The number of ESP/ESM files.
      */
-    public int getNumESPs() {
-        return this.PLUGIN_FILES.size();
+    fun getNumESPs(): Int {
+        return PLUGIN_FILES.size
     }
 
     /**
      * @return The name of the mod.
      */
-    public String getName() {
-        return this.MODNAME;
+    fun getName(): String? {
+        return MODNAME
     }
 
     /**
      * @return The abbreviated name of the mod.
      */
-    public String getShortName() {
-        return this.SHORTNAME;
+    fun getShortName(): String? {
+        return SHORTNAME
     }
 
     /**
      * @return A list of the names of the esp files in the mod.
      */
-    public List<String> getESPNames() {
-        final List<String> NAMES = new ArrayList<>(this.PLUGIN_FILES.size());
-        for (Path v : this.PLUGIN_FILES) {
-            NAMES.add(v.getFileName().toString());
+    fun getESPNames(): List<String> {
+        val NAMES: MutableList<String> = ArrayList(PLUGIN_FILES.size)
+        for (v in PLUGIN_FILES) {
+            NAMES.add(v.fileName.toString())
         }
-        return NAMES;
+        return NAMES
     }
 
     /**
-     * Finds the <code>Plugin</code> corresponding to a
-     * <code>StringsFile</code>.
+     * Finds the `Plugin` corresponding to a
+     * `StringsFile`.
      *
      * @param stringsFilePath
      * @param language
      * @param plugins
      * @return
      */
-    private Plugin getStringsFilePlugin(Path stringsFilePath, String language, PluginInfo plugins) {
-        final String SSREGEX = String.format("_%s\\.(il|dl)?strings", language);
-        final String FILENAME = stringsFilePath.getFileName().toString();
-
-        Map<Path, Plugin> pathPluginMap = plugins.getPaths();
-        Map<Path, Plugin> pathPluginMap1 = plugins.getPaths();
-        for (Path path : Arrays.asList(
-                Paths.get(FILENAME.replaceAll(SSREGEX, ".esm")),
-                Paths.get(FILENAME.replaceAll(SSREGEX, ".esp")),
-                Paths.get(FILENAME.replaceAll(SSREGEX, ".esl")))) {
+    private fun getStringsFilePlugin(stringsFilePath: Path, language: String, plugins: PluginInfo): Plugin? {
+        val SSREGEX = String.format("_%s\\.(il|dl)?strings", language)
+        val FILENAME = stringsFilePath.fileName.toString()
+        val pathPluginMap = plugins.paths
+        val pathPluginMap1 = plugins.paths
+        for (path in Arrays.asList(
+            Paths.get(FILENAME.replace(SSREGEX.toRegex(), ".esm")),
+            Paths.get(FILENAME.replace(SSREGEX.toRegex(), ".esp")),
+            Paths.get(FILENAME.replace(SSREGEX.toRegex(), ".esl"))
+        )) {
             if (pathPluginMap1.containsKey(path)) {
-                Plugin plugin = pathPluginMap.get(path);
-                return plugin;
+                return pathPluginMap[path]
             }
         }
-        return null;
+        return null
     }
 
     /**
-     * Reads the data for the <code>Mod</code>, consisting of
-     * <code>StringsFile</code> objects and <code>PexFile</code> objects.
+     * Reads the data for the `Mod`, consisting of
+     * `StringsFile` objects and `PexFile` objects.
      *
      * @param language The language for the string tables.
-     * @param plugins The <code>PluginInfo</code> from an <code>ESS</code>.
-     * @return A <code>ModReadResults</code>.
+     * @param plugins The `PluginInfo` from an `ESS`.
+     * @return A `ModReadResults`.
      */
-    public ModReadResults readData(PluginInfo plugins, String language) {
-        Objects.requireNonNull(language);
-
-        final String LANG = "_" + language.toLowerCase();
-        final String GLOB = "glob:**" + LANG + ".*strings";
-        final PathMatcher MATCHER = FS.getPathMatcher(GLOB);
-
-        List<Path> ARCHIVE_ERRORS = new LinkedList<>();
-        List<Path> STRINGSFILE_ERRORS = new LinkedList<>();
+    fun readData(plugins: PluginInfo, language: String): ModReadResults {
+        Objects.requireNonNull(language)
+        val LANG = "_" + language.toLowerCase()
+        val GLOB = "glob:**$LANG.*strings"
+        val MATCHER = FS.getPathMatcher(GLOB)
+        val ARCHIVE_ERRORS: MutableList<Path> = LinkedList()
+        val STRINGSFILE_ERRORS: MutableList<Path> = LinkedList()
 
         // Read the archives.
-        final List<StringsFile> STRINGSFILES = new LinkedList<>();
-        final Map<Path, Path> SCRIPT_ORIGINS = new LinkedHashMap<>();
-
-        for (Path archivePath : this.ARCHIVE_FILES) {
-            try (FileChannel channel = FileChannel.open(archivePath, StandardOpenOption.READ);
-                 final ArchiveParser PARSER = ArchiveParser.createParser(archivePath, channel)) {
-
-                final List<StringsFile> ARCHIVE_STRINGSFILES = new LinkedList<>();
-
-                for (Map.Entry<Path, Optional<ByteBuffer>> entry : PARSER.getFiles(Paths.get("strings"), MATCHER).entrySet()) {
-                    Path path = entry.getKey();
-                    Optional<ByteBuffer> input = entry.getValue();
-                    if (input.isPresent()) {
-                        final Plugin PLUGIN = this.getStringsFilePlugin(path, language, plugins);
-                        if (PLUGIN != null) {
-                            try {
-                                final StringsFile STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN, input.get());
-                                ARCHIVE_STRINGSFILES.add(STRINGSFILE);
-                            } catch (BufferUnderflowException ex) {
-                                STRINGSFILE_ERRORS.add(archivePath.getFileName());
+        val STRINGSFILES: MutableList<StringsFile> = LinkedList()
+        val SCRIPT_ORIGINS: MutableMap<Path, Path> = hashMapOf()
+        for (archivePath in ARCHIVE_FILES) {
+            try {
+                FileChannel.open(archivePath, StandardOpenOption.READ).use { channel ->
+                    createParser(archivePath, channel).use { PARSER ->
+                        val ARCHIVE_STRINGSFILES: MutableList<StringsFile> = LinkedList()
+                        for ((path, input) in PARSER!!.getFiles(Paths.get("strings"), MATCHER)!!) {
+                            if (input.isPresent) {
+                                val PLUGIN = path?.let { getStringsFilePlugin(it, language, plugins) }
+                                if (PLUGIN != null) {
+                                    try {
+                                        val STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN, input.get())
+                                        ARCHIVE_STRINGSFILES.add(STRINGSFILE)
+                                    } catch (ex: BufferUnderflowException) {
+                                        STRINGSFILE_ERRORS.add(archivePath.fileName)
+                                    }
+                                }
+                            } else {
+                                STRINGSFILE_ERRORS.add(archivePath.fileName)
                             }
                         }
-                    } else {
-                        STRINGSFILE_ERRORS.add(archivePath.getFileName());
-                    }
-                }
-
-                Map<Path, Path> ARCHIVE_SCRIPTS = PARSER.getFilenames(Paths.get("scripts"), GLOB_SCRIPT);
-
-                SCRIPT_ORIGINS.putAll(ARCHIVE_SCRIPTS);
-                STRINGSFILES.addAll(ARCHIVE_STRINGSFILES);
-
-                int stringsCount = 0;
-                for (StringsFile s : ARCHIVE_STRINGSFILES) {
-                    int i = s.TABLE.size();
-                    stringsCount += i;
-                }
-                int scriptsCount = ARCHIVE_SCRIPTS.size();
-
-                if (stringsCount > 0 || scriptsCount > 0) {
-                    String fmt = "Read %5d scripts and %5d strings from %d stringsfiles in %s of \"%s\"";
-                    String msg = String.format(fmt, scriptsCount, stringsCount, ARCHIVE_STRINGSFILES.size(), archivePath.getFileName(), this.SHORTNAME);
-                    LOG.info(msg);
-                }
-
-            } catch (IOException ex) {
-                ARCHIVE_ERRORS.add(archivePath.getFileName());
-            }
-        }
-
-        // Read the loose stringtable files.
-        final List<StringsFile> LOOSE_STRINGSFILES = this.STRINGS_FILES.stream()
-                .filter(MATCHER::matches)
-                .map(path -> {
-                    try {
-                        final Plugin PLUGIN = this.getStringsFilePlugin(path, language, plugins);
-                        if (PLUGIN != null) {
-                            final StringsFile STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN);
-                            return STRINGSFILE;
-                        } else {
-                            return null;
+                        val ARCHIVE_SCRIPTS = PARSER.getFilenames(Paths.get("scripts"), GLOB_SCRIPT)
+                        SCRIPT_ORIGINS.putAll(ARCHIVE_SCRIPTS!!)
+                        STRINGSFILES.addAll(ARCHIVE_STRINGSFILES)
+                        var stringsCount = 0
+                        for (s in ARCHIVE_STRINGSFILES) {
+                            val i = s.TABLE.size
+                            stringsCount += i
                         }
-                    } catch (IOException ex) {
-                        STRINGSFILE_ERRORS.add(path);
-                        LOG.severe(String.format("Mod \"%s\": error while reading \"%s\".", this.SHORTNAME, path));
-                        return null;
+                        val scriptsCount = ARCHIVE_SCRIPTS.size
+                        if (stringsCount > 0 || scriptsCount > 0) {
+                            val fmt = "Read %5d scripts and %5d strings from %d stringsfiles in %s of \"%s\""
+                            val msg = String.format(
+                                fmt,
+                                scriptsCount,
+                                stringsCount,
+                                ARCHIVE_STRINGSFILES.size,
+                                archivePath.fileName,
+                                SHORTNAME
+                            )
+                            LOG.info(msg)
+                        }
                     }
-                }).filter(Objects::nonNull).collect(Collectors.toList());
-
-        // Read the loose stringtable files.
-        final Map<Path, Path> LOOSE_SCRIPTS = new HashMap<>();
-        for (Path p : this.SCRIPT_FILES) {
-            if (GLOB_SCRIPT.matches(p)) {
-                if (LOOSE_SCRIPTS.put(p, p.getFileName()) != null) {
-                    throw new IllegalStateException("Duplicate key");
                 }
+            } catch (ex: IOException) {
+                ARCHIVE_ERRORS.add(archivePath.fileName)
             }
         }
-        SCRIPT_ORIGINS.putAll(LOOSE_SCRIPTS);
 
-        int stringsCount = 0;
-        for (StringsFile s : LOOSE_STRINGSFILES) {
-            int i = s.TABLE.size();
-            stringsCount += i;
+        // Read the loose stringtable files.
+        val LOOSE_STRINGSFILES: List<StringsFile> = STRINGS_FILES
+            .filter { path: Path? -> MATCHER.matches(path) }
+            .map { path: Path ->
+                try {
+                    val PLUGIN = getStringsFilePlugin(path, language, plugins)
+                    if (PLUGIN != null) {
+                        return@map StringsFile.readStringsFile(path, PLUGIN)
+                    } else {
+                        return@map null
+                    }
+                } catch (ex: IOException) {
+                    STRINGSFILE_ERRORS.add(path)
+                    LOG.severe(String.format("Mod \"%s\": error while reading \"%s\".", SHORTNAME, path))
+                    return@map null
+                }
+            }.filterNotNull().toList()
+
+        // Read the loose stringtable files.
+        val LOOSE_SCRIPTS: MutableMap<Path, Path> = hashMapOf()
+        for (p in SCRIPT_FILES) {
+            if (GLOB_SCRIPT.matches(p)) {
+                check(LOOSE_SCRIPTS.put(p, p.fileName) == null) { "Duplicate key" }
+            }
         }
-        int scriptsCount = LOOSE_SCRIPTS.size();
-
+        SCRIPT_ORIGINS.putAll(LOOSE_SCRIPTS)
+        var stringsCount = 0
+        for (s in LOOSE_STRINGSFILES) {
+            val i = s.TABLE.size
+            stringsCount += i
+        }
+        val scriptsCount = LOOSE_SCRIPTS.size
         if (stringsCount > 0 || scriptsCount > 0) {
-            String fmt = "Read %5d scripts and %5d strings from %d stringsfiles in loose files of \"%s\"";
-            String msg = String.format(fmt, scriptsCount, stringsCount, LOOSE_STRINGSFILES.size(), this.SHORTNAME);
-            LOG.info(msg);
+            val fmt = "Read %5d scripts and %5d strings from %d stringsfiles in loose files of \"%s\""
+            val msg = String.format(fmt, scriptsCount, stringsCount, LOOSE_STRINGSFILES.size, SHORTNAME)
+            LOG.info(msg)
         }
-
-        return new ModReadResults(SCRIPT_ORIGINS, STRINGSFILES, ARCHIVE_ERRORS, null, STRINGSFILE_ERRORS);
+        return ModReadResults(SCRIPT_ORIGINS, STRINGSFILES, ARCHIVE_ERRORS, null, STRINGSFILE_ERRORS)
     }
 
     /**
      *
      * @return
      */
-    public Analysis getAnalysis() {
-        final Analysis ANALYSIS = new Analysis();
-        ANALYSIS.MODS.add(this);
-        ANALYSIS.ESPS.put(this.MODNAME, new TreeSet<>(this.getESPNames()));
-
-        return ANALYSIS;
+    fun getAnalysis(): Analysis {
+        val ANALYSIS = Analysis()
+        ANALYSIS.MODS.add(this)
+        ANALYSIS.ESPS[MODNAME] = TreeSet(getESPNames())
+        return ANALYSIS
     }
 
     /**
      * @return
      */
-    @Override
-    public String toString() {
-        return this.MODNAME;
+    override fun toString(): String {
+        return MODNAME!!
     }
 
     /**
      * @return A copy of the list of ESP files.
      */
-    public List<Path> getESPFiles() {
-        return new ArrayList<>(this.PLUGIN_FILES);
+    fun getESPFiles(): List<Path> {
+        return ArrayList(PLUGIN_FILES)
     }
 
     /**
      * @return A copy of the list of archive files.
      */
-    public List<Path> getArchiveFiles() {
-        return new ArrayList<>(this.ARCHIVE_FILES);
+    fun getArchiveFiles(): List<Path> {
+        return ArrayList(ARCHIVE_FILES)
     }
 
     /**
      * @return A copy of the list of PEX files.
      */
-    public List<Path> getPexFiles() {
-        return new ArrayList<>(this.SCRIPT_FILES);
+    fun getPexFiles(): List<Path> {
+        return ArrayList(SCRIPT_FILES)
     }
 
     /**
-     * @see Object#hashCode()
+     * @see Object.hashCode
      * @return
      */
-    @Override
-    public int hashCode() {
-        return this.DIRECTORY.hashCode();
+    override fun hashCode(): Int {
+        return directory.hashCode()
     }
 
     /**
-     * @see Object#equals(java.lang.Object)
+     * @see Object.equals
      * @param obj
      * @return
      */
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
         }
         if (obj == null) {
-            return false;
+            return false
         }
-        if (getClass() != obj.getClass()) {
-            return false;
+        if (javaClass != obj.javaClass) {
+            return false
         }
-        final Mod other = (Mod) obj;
-        return Objects.equals(this.DIRECTORY, other.DIRECTORY);
+        val other = obj as Mod
+        return directory == other.directory
     }
 
-    final private Path DIRECTORY;
-    final private Path SCRIPT_PATH;
-    final private Path STRING_PATH;
-    final private String MODNAME;
-    final private String SHORTNAME;
+    /**
+     * @return The directory storing the `Mod`.
+     */
+    val directory: Path
+    private val SCRIPT_PATH: Path
+    private val STRING_PATH: Path
+    private var MODNAME: String
+    private val SHORTNAME: String?
+    private val PLUGIN_FILES: List<Path>
+    private val ARCHIVE_FILES: List<Path>
+    private val SCRIPT_FILES: List<Path>
+    private val STRINGS_FILES: List<Path>
 
-    final private List<Path> PLUGIN_FILES;
-    final private List<Path> ARCHIVE_FILES;
-    final private List<Path> SCRIPT_FILES;
-    final private List<Path> STRINGS_FILES;
-    transient Double size = null;
-
-    static final private Path SCRIPTS_SUBDIR = Paths.get("scripts");
-    static final private Path STRINGS_SUBDIR = Paths.get("strings");
-    static final private Logger LOG = Logger.getLogger(Mod.class.getCanonicalName());
-
-    static final private FileSystem FS = FileSystems.getDefault();
-    static final public PathMatcher GLOB_CREATIONCLUB = FS.getPathMatcher("glob:**\\cc*.{esm,esp,esl,bsa,ba2}");
-    static final public PathMatcher GLOB_INTEREST = FS.getPathMatcher("glob:**.{esm,esp,esl,bsa,ba2}");
-    static final public PathMatcher GLOB_PLUGIN = FS.getPathMatcher("glob:**.{esm,esp,esl}");
-    static final public PathMatcher GLOB_ARCHIVE = FS.getPathMatcher("glob:**.{bsa,ba2}");
-    static final public PathMatcher GLOB_SCRIPT = FS.getPathMatcher("glob:**.pex");
-    static final public PathMatcher GLOB_STRINGS = FS.getPathMatcher("glob:**.{strings,ilstrings,dlstrings}");
-    static final public PathMatcher GLOB_ALL = FS.getPathMatcher("glob:**.{esm,esp,esl,bsa,ba2,pex,strings,ilstrings,dlstrings}");
-    static final public PathMatcher GLOB_EXE = FS.getPathMatcher("glob:{skyrim.exe,skyrimse.exe,fallout4.exe}");
+    var size: Double = 0.0
 
     /**
      * The status of an individual mod within a profile.
      */
-    static public enum Status {
-        CHECKED,
-        UNCHECKED,
-        DISABLED,
+    enum class Status {
+        CHECKED, UNCHECKED, DISABLED
     }
 
     /**
@@ -523,32 +367,33 @@ final public class Mod implements java.io.Serializable {
      *
      * @author Mark Fairchild
      */
-    static public class Analysis implements java.io.Serializable {
-
+    open class Analysis : Serializable {
         /**
          * List: (Mod name)
          */
-        final public Set<Mod> MODS = new LinkedHashSet<>();
+        @JvmField
+        val MODS: MutableSet<Mod> = LinkedHashSet()
 
         /**
          * Map: (IString) -> File
          */
-        final public Map<IString, Path> SCRIPTS = new LinkedHashMap<>();
+        val SCRIPTS: MutableMap<IString, Path> = LinkedHashMap()
 
         /**
          * Map: (Mod name) -> (Lisp[ESP name])
          */
-        final public Map<String, SortedSet<String>> ESPS = new LinkedHashMap<>();
+        val ESPS: MutableMap<String, SortedSet<String>> = LinkedHashMap()
 
         /**
          * Map: (IString) -> (List: (Mod name))
          */
-        final public Map<IString, SortedSet<String>> SCRIPT_ORIGINS = new LinkedHashMap<>();
+        @JvmField
+        val SCRIPT_ORIGINS: MutableMap<IString, SortedSet<String>> = LinkedHashMap()
 
         /**
          * Map: (IString) -> (List: (Mod name))
          */
-        final public Map<IString, SortedSet<String>> STRUCT_ORIGINS = new LinkedHashMap<>();
+        val STRUCT_ORIGINS: MutableMap<IString, SortedSet<String>> = LinkedHashMap()
 
         /**
          * Merges analyses.
@@ -556,48 +401,53 @@ final public class Mod implements java.io.Serializable {
          * @param sub anaysis to merge
          * @return Analysis
          */
-        public Analysis merge(Analysis sub) {
-            this.MODS.addAll(sub.MODS);
-            this.SCRIPTS.putAll(sub.SCRIPTS);
-
-            for (Map.Entry<String, SortedSet<String>> mapEntry : sub.ESPS.entrySet()) {
-                String k = mapEntry.getKey();
-                SortedSet<String> v = mapEntry.getValue();
-                this.ESPS.merge(k, v, (l1, l2) -> {
-                    l1.addAll(l2);
-                    return l1;
-                });
+        fun merge(sub: Analysis): Analysis {
+            MODS.addAll(sub.MODS)
+            SCRIPTS.putAll(sub.SCRIPTS)
+            for ((k, v) in sub.ESPS) {
+                ESPS.merge(k, v) { l1: SortedSet<String>, l2: SortedSet<String>? ->
+                    l1.addAll(l2!!)
+                    l1
+                }
             }
-
-            for (Map.Entry<IString, SortedSet<String>> e : sub.SCRIPT_ORIGINS.entrySet()) {
-                IString key = e.getKey();
-                SortedSet<String> value = e.getValue();
-                this.SCRIPT_ORIGINS.merge(key, value, (l1, l2) -> {
-                    l1.addAll(l2);
-                    return l1;
-                });
+            for ((key, value) in sub.SCRIPT_ORIGINS) {
+                SCRIPT_ORIGINS.merge(key, value) { l1: SortedSet<String>, l2: SortedSet<String>? ->
+                    l1.addAll(l2!!)
+                    l1
+                }
             }
-
-            for (Map.Entry<IString, SortedSet<String>> entry : sub.STRUCT_ORIGINS.entrySet()) {
-                IString name = entry.getKey();
-                SortedSet<String> list = entry.getValue();
-                this.STRUCT_ORIGINS.merge(name, list, (l1, l2) -> {
-                    l1.addAll(l2);
-                    return l1;
-                });
+            for ((name, list) in sub.STRUCT_ORIGINS) {
+                STRUCT_ORIGINS.merge(name, list) { l1: SortedSet<String>, l2: SortedSet<String>? ->
+                    l1.addAll(l2!!)
+                    l1
+                }
             }
-
-            return this;
+            return this
         }
     }
 
     /**
      * An exception that indicates a stringtable file couldn't be read.
      */
-    public class ModReadResults {
+    inner class ModReadResults(
+        scriptOrigins: Map<Path, Path>,
+        strings: List<StringsFile>?,
+        archiveErrors: List<Path>?,
+        scriptErrors: List<Path>?,
+        stringsErrors: List<Path>?
+    ) {
+        val errorFiles: Stream<Path>
+            get() = Stream.of(ARCHIVE_ERRORS, SCRIPT_ERRORS, STRINGS_ERRORS)
+                .flatMap { obj: List<Path> -> obj.stream() }
+        val MOD: Mod
+        val SCRIPT_ORIGINS: Map<Path, Path>
+        val STRINGSFILES: List<StringsFile>
+        val ARCHIVE_ERRORS: List<Path>
+        val SCRIPT_ERRORS: List<Path>
+        val STRINGS_ERRORS: List<Path>
 
         /**
-         * Creates a new <code>StringsReadError</code> with a list of
+         * Creates a new `StringsReadError` with a list of
          * stringtable files and archive files that were corrupt.
          *
          * @param scriptOrigins the origin of the script
@@ -608,29 +458,129 @@ final public class Mod implements java.io.Serializable {
          * unreadable.
          * @param stringsErrors The list of names of the stringtables that were
          * unreadable.
-         * @see Exception#Exception()
+         * @see Exception.Exception
          */
-        private ModReadResults(Map<Path, Path> scriptOrigins, List<StringsFile> strings, List<Path> archiveErrors, List<Path> scriptErrors, List<Path> stringsErrors) {
+        init {
             //super(String.format("Some data could not be read: %d archives, %d scripts, %d stringtables", archives.size(), scripts.size(), strings.size()));
-            this.MOD = Mod.this;
-            this.SCRIPT_ORIGINS = Collections.unmodifiableMap(scriptOrigins == null ? Collections.emptyMap() : scriptOrigins);
-            this.STRINGSFILES = Collections.unmodifiableList(strings == null ? Collections.emptyList() : strings);
-            this.ARCHIVE_ERRORS = Collections.unmodifiableList(archiveErrors == null ? Collections.emptyList() : archiveErrors);
-            this.SCRIPT_ERRORS = Collections.unmodifiableList(scriptErrors == null ? Collections.emptyList() : scriptErrors);
-            this.STRINGS_ERRORS = Collections.unmodifiableList(stringsErrors == null ? Collections.emptyList() : stringsErrors);
+            MOD = this@Mod
+            SCRIPT_ORIGINS = scriptOrigins!!
+            STRINGSFILES = Collections.unmodifiableList(strings ?: emptyList())
+            ARCHIVE_ERRORS = Collections.unmodifiableList(archiveErrors ?: emptyList())
+            SCRIPT_ERRORS = Collections.unmodifiableList(scriptErrors ?: emptyList())
+            STRINGS_ERRORS = Collections.unmodifiableList(stringsErrors ?: emptyList())
         }
-
-        public Stream<Path> getErrorFiles() {
-            return Stream.of(ARCHIVE_ERRORS, SCRIPT_ERRORS, STRINGS_ERRORS)
-                    .flatMap(Collection::stream);
-        }
-
-        final public Mod MOD;
-        final public Map<Path, Path> SCRIPT_ORIGINS;
-        final public List<StringsFile> STRINGSFILES;
-        final public List<Path> ARCHIVE_ERRORS;
-        final public List<Path> SCRIPT_ERRORS;
-        final public List<Path> STRINGS_ERRORS;
     }
 
+    companion object {
+        /**
+         * Creates a new `Mod` from a `File` representing the
+         * directory containing the mod's files. The directory will be scanned to
+         * create lists of all the important files.
+         *
+         * @param game The game.
+         * @param dir The directory containing the mod.
+         * @return The `Mod`, or null if it couldn't be created.
+         */
+        @JvmStatic
+        fun createMod(game: Game?, dir: Path): Mod? {
+            return try {
+                Mod(game, dir)
+            } catch (ex: FileNotFoundException) {
+                LOG.warning(String.format("Couldn't read mod: %s\n%s", dir, ex.message))
+                null
+            } catch (ex: IOException) {
+                LOG.log(Level.WARNING, String.format("Couldn't read mod: %s", dir), ex)
+                null
+            }
+        }
+
+        private val SCRIPTS_SUBDIR = Paths.get("scripts")
+        private val STRINGS_SUBDIR = Paths.get("strings")
+        private val LOG = Logger.getLogger(Mod::class.java.canonicalName)
+        private val FS = FileSystems.getDefault()
+        val GLOB_CREATIONCLUB = FS.getPathMatcher("glob:**\\cc*.{esm,esp,esl,bsa,ba2}")
+        val GLOB_INTEREST = FS.getPathMatcher("glob:**.{esm,esp,esl,bsa,ba2}")
+        val GLOB_PLUGIN = FS.getPathMatcher("glob:**.{esm,esp,esl}")
+        val GLOB_ARCHIVE = FS.getPathMatcher("glob:**.{bsa,ba2}")
+        @JvmField
+        val GLOB_SCRIPT = FS.getPathMatcher("glob:**.pex")
+        val GLOB_STRINGS = FS.getPathMatcher("glob:**.{strings,ilstrings,dlstrings}")
+        val GLOB_ALL = FS.getPathMatcher("glob:**.{esm,esp,esl,bsa,ba2,pex,strings,ilstrings,dlstrings}")
+        val GLOB_EXE = FS.getPathMatcher("glob:{skyrim.exe,skyrimse.exe,fallout4.exe}")
+    }
+
+    /**
+     * Creates a new `Mod` from a `File` representing the
+     * directory containing the mod's files. The directory will be scanned to
+     * create lists of all the important files.
+     *
+     * @param game The game.
+     * @param dir The directory containing the mod.
+     * @throws IllegalArgumentException Thrown if the directory doesn't exist,
+     * isn't a directory, or isn't readable.
+     * @throws IOException Thrown if there is a problem reading data.
+     */
+    init {
+        Objects.requireNonNull(game)
+        Objects.requireNonNull(dir)
+        directory = dir
+        if (!Files.exists(dir)) {
+            throw FileNotFoundException("Directory doesn't exists: $dir")
+        }
+        if (!Files.isDirectory(dir)) {
+            throw IOException("Directory isn't actual a directory: $dir")
+        }
+
+        // Check if the parent directory is the game directory.
+        val PARENT = dir.parent
+        if (Files.list(PARENT).map { obj: Path -> obj.fileName }
+                .anyMatch { path: Path? -> GLOB_EXE.matches(path) }) {
+            MODNAME = PARENT.fileName.toString()
+        } else {
+            MODNAME = dir.fileName.toString()
+        }
+        SHORTNAME = if (MODNAME!!.length < 25) MODNAME else MODNAME!!.substring(0, 22) + "..."
+
+        // Collect all files of relevance.
+        SCRIPT_PATH = directory.resolve(SCRIPTS_SUBDIR)
+        STRING_PATH = directory.resolve(STRINGS_SUBDIR)
+        PLUGIN_FILES =
+            if (Files.exists(directory)) Files.list(directory).filter { path: Path? -> GLOB_PLUGIN.matches(path) }
+                .collect(Collectors.toList()) else emptyList()
+        ARCHIVE_FILES =
+            if (Files.exists(directory)) Files.list(directory).filter { path: Path? -> GLOB_ARCHIVE.matches(path) }
+                .collect(Collectors.toList()) else emptyList()
+        STRINGS_FILES =
+            if (Files.exists(STRING_PATH)) Files.walk(STRING_PATH).filter { path: Path? -> GLOB_STRINGS.matches(path) }
+                .collect(Collectors.toList()) else emptyList()
+        SCRIPT_FILES =
+            if (Files.exists(SCRIPT_PATH)) Files.walk(SCRIPT_PATH).filter { path: Path? -> GLOB_SCRIPT.matches(path) }
+                .collect(Collectors.toList()) else emptyList()
+
+        // Print out some status information.
+        if (!Files.exists(directory)) {
+            LOG.warning(String.format("Mod \"%s\" doesn't exist.", MODNAME))
+        } else {
+            if (PLUGIN_FILES.isEmpty()) {
+                LOG.fine(String.format("Mod \"%s\" contains no plugins.", MODNAME))
+            } else {
+                LOG.fine(String.format("Mod \"%s\" contains %d plugins.", MODNAME, PLUGIN_FILES.size))
+            }
+            if (ARCHIVE_FILES.isEmpty()) {
+                LOG.fine(String.format("Mod \"%s\" contains no archives.", MODNAME))
+            } else {
+                LOG.fine(String.format("Mod \"%s\" contains %d archives.", MODNAME, ARCHIVE_FILES.size))
+            }
+            if (STRINGS_FILES.isEmpty()) {
+                LOG.fine(String.format("Mod \"%s\" contains no loose localization files.", MODNAME))
+            } else {
+                LOG.fine(String.format("Mod \"%s\" contains %d loose localization files.", MODNAME, STRINGS_FILES.size))
+            }
+            if (SCRIPT_FILES.isEmpty()) {
+                LOG.fine(String.format("Mod \"%s\" contains no loose scripts.", MODNAME))
+            } else {
+                LOG.fine(String.format("Mod \"%s\" contains %d loose scripts.", MODNAME, SCRIPT_FILES.size))
+            }
+        }
+    }
 }

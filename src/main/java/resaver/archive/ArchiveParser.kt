@@ -60,7 +60,7 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
      * @throws IOException
     ` */
     @Throws(IOException::class)
-    abstract fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path?, Path?>?
+    abstract fun getFilenames(dir: Path?, matcher: PathMatcher?): Map<Path, Path>?
 
     companion object {
         /**
@@ -86,8 +86,8 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
             return null
         }
 
-        private val BSA_MAGIC = byteArrayOf('B'.toByte(), 'S'.toByte(), 'A'.toByte(), 0)
-        private val BA2GEN_MAGIC = byteArrayOf('B'.toByte(), 'T'.toByte(), 'D'.toByte(), 'X'.toByte())
+        private val BSA_MAGIC = byteArrayOf('B'.code.toByte(), 'S'.code.toByte(), 'A'.code.toByte(), 0)
+        private val BA2GEN_MAGIC = byteArrayOf('B'.code.toByte(), 'T'.code.toByte(), 'D'.code.toByte(), 'X'.code.toByte())
     }
 
     /**
