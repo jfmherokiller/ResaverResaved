@@ -1090,10 +1090,4 @@ public class GeneralElement implements Element {
             float[].class,
             Object[].class));
 
-    @FunctionalInterface
-    static public interface ElementReader<T extends Element> {
-
-        T read(ByteBuffer input);
-    }
-
 }
