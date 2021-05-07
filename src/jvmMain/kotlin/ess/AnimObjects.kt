@@ -119,9 +119,19 @@ class AnimObjects : GlobalDataBlock {
          * @param context The `ESSContext`.
          */
         init {
-            super.readRefID(input, "ACHR", context)
-            super.readRefID(input, "ANIM", context)
-            super.readByte(input, "UNKNOWN")
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ACHR", context)
+                }
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ANIM", context)
+                }
+            }
+            if (input != null) {
+                super.readByte(input, "UNKNOWN")
+            }
         }
     }
 }

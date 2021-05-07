@@ -16,6 +16,7 @@
 package ess
 
 import ess.ESS.ESSContext
+import resaver.Analysis
 import java.nio.Buffer
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
@@ -172,7 +173,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
                 ess.ChangeFormType.FLST -> context?.let { ChangeFormFLST(BODYDATA, changeFlags, it) }
                 ess.ChangeFormType.LVLN -> ChangeFormLVLN(BODYDATA, changeFlags, context)
                 ess.ChangeFormType.REFR -> ChangeFormRefr(BODYDATA, changeFlags, refID, analysis, context)
-                ess.ChangeFormType.ACHR -> ChangeFormACHR(BODYDATA, changeFlags, refID, analysis, context)
+                ess.ChangeFormType.ACHR -> ChangeFormACHR(BODYDATA, changeFlags, refID, context)
                 ess.ChangeFormType.NPC_ -> context?.let { ChangeFormNPC(BODYDATA, changeFlags, it) }
                 else -> if (bestEffort) {
                     ChangeFormDefault(BODYDATA, length1)
@@ -237,7 +238,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
                 BUF.append(" base=").append(base.toString())
             } else if (gen.hasVal("INITIAL")) {
                 val initial = gen.getGeneralElement("INITIAL")
-                if (initial.hasVal("BASE_OBJECT")) {
+                if (initial?.hasVal("BASE_OBJECT") == true) {
                     val base = initial.getVal("BASE_OBJECT") as RefID
                     BUF.append(" base=").append(base.toString())
                 }
@@ -252,7 +253,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * @param save
      * @return
      */
-    override fun getInfo(analysis: resaver.Analysis?, save: ess.ESS?): String {
+    override fun getInfo(analysis: Analysis?, save: ess.ESS?): String {
         val BUILDER = StringBuilder()
         val HOLDERS = save!!.papyrus.scriptInstances.values
             .filter { i: ess.papyrus.ScriptInstance -> refID == i.refID }

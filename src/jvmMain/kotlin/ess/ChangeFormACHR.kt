@@ -16,8 +16,8 @@
 package ess
 
 import ess.ESS.ESSContext
+import resaver.Analysis
 import java.nio.ByteBuffer
-import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -26,8 +26,14 @@ import java.util.logging.Logger
  *
  * @author Mark Fairchild
  */
-class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis: resaver.Analysis?, context: ESSContext?) :
+class ChangeFormACHR(
+    input: ByteBuffer,
+    flags: Flags.Int,
+    refid: RefID,
+    context: ESSContext?
+) :
     ess.GeneralElement(), ChangeFormData {
+
     /**
      * @return String representation.
      */
@@ -41,7 +47,7 @@ class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
      * @param mod
      * @return
      */
-    override fun matches(analysis: resaver.Analysis?, mod: String?): Boolean {
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
         return false
     }
 
@@ -51,7 +57,7 @@ class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
      * @param save
      * @return
      */
-    override fun getInfo(analysis: resaver.Analysis?, save: ess.ESS?): String {
+    override fun getInfo(analysis: Analysis?, save: ess.ESS?): String {
         return "<hr/>" +
                 "<pre><code>" +
                 super.toString("REFR", 0) +
@@ -59,26 +65,13 @@ class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
     }
 
     // The change flags.
-    private val FLAGS: Flags.Int
+    private val FLAGS: Flags.Int = flags
 
     companion object {
         val LOG = Logger.getLogger(ChangeFormACHR::class.java.canonicalName)
     }
 
-    /**
-     * Creates a new `ChangeFormACHR` by reading from a
-     * `LittleEndianDataOutput`. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param flags The ChangeForm flags.
-     * @param refid The ChangeForm refid.
-     * @param analysis
-     * @param context The `ESSContext` info.
-     * @throws ElementException
-     */
     init {
-        Objects.requireNonNull(input)
-        FLAGS = Objects.requireNonNull(flags)
         val initialType: Int = if (refid.type === RefID.Type.CREATED) {
             5
         } else if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_PROMOTED) || flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_CELL_CHANGED)) {
@@ -108,7 +101,9 @@ class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
                 ) { input: ByteBuffer? -> input?.let { ChangeFormFlags(it) } }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_BASEOBJECT)) {
-                super.readRefID(input, "BASE_OBJECT", context)
+                if (context != null) {
+                    super.readRefID(input, "BASE_OBJECT", context)
+                }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_SCALE)) {
                 super.readFloat(input, "SCALE")
@@ -149,4 +144,5 @@ class ChangeFormACHR(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
             throw ElementException("Failed to read ACHR", ex, this)
         }
     }
+
 }
