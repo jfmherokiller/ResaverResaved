@@ -1,33 +1,19 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Variable that stores a ref. Note to self: a ref is a pointer to a papyrus
  * element, unlike a RefID which points to a form or changeform.
  */
-final public class VarRef extends VarAbstractRef {
+class VarRef : VarAbstractRef {
+    constructor(input: ByteBuffer?, context: PapyrusContext) : super(input!!, context) {}
+    constructor(type: TString?, id: EID?, context: PapyrusContext) : super(type, id, context) {}
 
-    public VarRef(ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        super(input, context);
+    fun derive(id: Long, context: PapyrusContext): VarRef {
+        return VarRef(refType, ref?.derive(id), context)
     }
 
-    public VarRef(TString type, EID id, @NotNull PapyrusContext context) {
-        super(type, id, context);
-    }
-
-    @NotNull
-    public VarRef derive(long id, @NotNull PapyrusContext context) {
-        VarRef derivative = new VarRef(this.getRefType(), this.getRef().derive(id), context);
-        return derivative;
-    }
-
-    @NotNull
-    @Override
-    public VarType getType() {
-        return VarType.REF;
-    }
-
+    override val type: VarType
+        get() = VarType.REF
 }

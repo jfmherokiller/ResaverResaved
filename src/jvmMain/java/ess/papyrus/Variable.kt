@@ -13,116 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.ListException;
-import java.nio.ByteBuffer;
-import java.util.Objects;
-import ess.Element;
-import ess.Linkable;
+import ess.Element
+import ess.Linkable
+import ess.papyrus.VarType.Companion.read
+import resaver.ListException
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Describes a variable in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-abstract public class Variable implements PapyrusElement, Linkable {
-
-    /**
-     * Creates a new <code>List</code> of <code>Variable</code> by reading from
-     * a <code>ByteBuffer</code>.
-     *
-     * @param input The input stream.
-     * @param count The number of variables.
-     * @param context The <code>PapyrusContext</code> info.
-     * @return The new <code>List</code> of <code>Variable</code>.
-     * @throws ListException
-     */
-    @NotNull
-    static public java.util.List<Variable> readList(@NotNull ByteBuffer input, int count, @NotNull PapyrusContext context) throws ListException {
-        final java.util.List<Variable> VARIABLES = new java.util.ArrayList<>(count);
-
-        for (int i = 0; i < count; i++) {
-            try {
-                Variable var = Variable.read(input, context);
-                VARIABLES.add(var);
-            } catch (PapyrusFormatException ex) {
-                throw new ListException(i, count, ex);
-            }
-        }
-
-        return VARIABLES;
-    }
-
-    /**
-     * Creates a new <code>Variable</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
-     * @return The new <code>Variable</code>.
-     * @throws PapyrusFormatException
-     */
-    @NotNull
-    static public Variable read(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-
-        final VarType VarTYPE = VarType.read(input);
-
-        switch (VarTYPE) {
-            case NULL:
-                return new VarNull(input);
-            case REF:
-                return new VarRef(input, context);
-            case STRING:
-                return new VarStr(input, context);
-            case INTEGER:
-                return new VarInt(input);
-            case FLOAT:
-                return new VarFlt(input);
-            case BOOLEAN:
-                return new VarBool(input);
-            case VARIANT:
-                return new VarVariant(input, context);
-            case STRUCT:
-                return new VarStruct(input, context);
-            case REF_ARRAY:
-            case STRING_ARRAY:
-            case INTEGER_ARRAY:
-            case FLOAT_ARRAY:
-            case BOOLEAN_ARRAY:
-            case VARIANT_ARRAY:
-            case STRUCT_ARRAY:
-                return new VarArray(VarTYPE, input, context);
-            default:
-                throw new PapyrusException("Illegal typecode for variable", null, null);
-        }
-    }
-
+abstract class Variable : PapyrusElement, Linkable {
     /**
      * @return The EID of the papyrus element.
      */
-    abstract public VarType getType();
+    abstract val type: VarType
 
     /**
-     * @see ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Nullable
-    @Override
-    public String toHTML(Element target) {
-        return this.toString();
+    override fun toHTML(target: Element?): String? {
+        return this.toString()
     }
 
     /**
      * @return A string representation that only includes the type field.
      */
-    public String toTypeString() {
-        return this.getType().toString();
+    open fun toTypeString(): String? {
+        return type.toString()
     }
 
     /**
@@ -130,8 +54,8 @@ abstract public class Variable implements PapyrusElement, Linkable {
      *
      * @return
      */
-    public boolean hasRef() {
-        return false;
+    open fun hasRef(): Boolean {
+        return false
     }
 
     /**
@@ -140,8 +64,8 @@ abstract public class Variable implements PapyrusElement, Linkable {
      * @param id
      * @return
      */
-    public boolean hasRef(EID id) {
-        return false;
+    open fun hasRef(id: EID?): Boolean {
+        return false
     }
 
     /**
@@ -150,10 +74,8 @@ abstract public class Variable implements PapyrusElement, Linkable {
      *
      * @return
      */
-    @Nullable
-    public EID getRef() {
-        return null;
-    }
+    open val ref: EID?
+        get() = null
 
     /**
      * Returns the variable's REFERENT or null if the variable isn't a reference
@@ -161,18 +83,13 @@ abstract public class Variable implements PapyrusElement, Linkable {
      *
      * @return
      */
-    @Nullable
-    public GameElement getReferent() {
-        return null;
-    }
+    open val referent: GameElement?
+        get() = null
 
     /**
      * @return A string representation that doesn't include the type field.
      */
-    abstract public String toValueString();
-
-
-    /*static final public class Array6 extends Variable {
+    abstract fun toValueString(): String? /*static final public class Array6 extends Variable {
 
         public Array6(ByteBuffer input, StringTable strtab) throws IOException {
             Objects.requireNonNull(input);
@@ -216,4 +133,64 @@ abstract public class Variable implements PapyrusElement, Linkable {
 
         final private byte[] VALUE;
     }*/
+
+    companion object {
+        /**
+         * Creates a new `List` of `Variable` by reading from
+         * a `ByteBuffer`.
+         *
+         * @param input The input stream.
+         * @param count The number of variables.
+         * @param context The `PapyrusContext` info.
+         * @return The new `List` of `Variable`.
+         * @throws ListException
+         */
+        @JvmStatic
+        @Throws(ListException::class)
+        fun readList(input: ByteBuffer, count: Int, context: PapyrusContext): List<Variable> {
+            val VARIABLES: MutableList<Variable> = ArrayList(count)
+            for (i in 0 until count) {
+                try {
+                    val `var` = read(input, context)
+                    VARIABLES.add(`var`)
+                } catch (ex: PapyrusFormatException) {
+                    throw ListException(i, count, ex)
+                }
+            }
+            return VARIABLES
+        }
+
+        /**
+         * Creates a new `Variable` by reading from a
+         * `ByteBuffer`. No error handling is performed.
+         *
+         * @param input The input stream.
+         * @param context The `PapyrusContext` info.
+         * @return The new `Variable`.
+         * @throws PapyrusFormatException
+         */
+        @JvmStatic
+        @Throws(PapyrusFormatException::class)
+        fun read(input: ByteBuffer, context: PapyrusContext): Variable {
+            Objects.requireNonNull(input)
+            Objects.requireNonNull(context)
+            val VarTYPE = read(input)
+            return when (VarTYPE) {
+                VarType.NULL -> VarNull(input)
+                VarType.REF -> VarRef(input, context)
+                VarType.STRING -> VarStr(input, context)
+                VarType.INTEGER -> VarInt(input)
+                VarType.FLOAT -> VarFlt(input)
+                VarType.BOOLEAN -> VarBool(input)
+                VarType.VARIANT -> VarVariant(input, context)
+                VarType.STRUCT -> VarStruct(input, context)
+                VarType.REF_ARRAY, VarType.STRING_ARRAY, VarType.INTEGER_ARRAY, VarType.FLOAT_ARRAY, VarType.BOOLEAN_ARRAY, VarType.VARIANT_ARRAY, VarType.STRUCT_ARRAY -> VarArray(
+                    VarTYPE,
+                    input,
+                    context
+                )
+                else -> throw PapyrusException("Illegal typecode for variable", null, null)
+            }
+        }
+    }
 }

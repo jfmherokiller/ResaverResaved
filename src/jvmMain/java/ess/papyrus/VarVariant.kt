@@ -1,82 +1,49 @@
-package ess.papyrus;
+package ess.papyrus
 
-import ess.Element;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import ess.Element
+import java.nio.ByteBuffer
 
 /**
  * Variable that stores a Variant.
  */
-final public class VarVariant extends Variable {
-
-    public VarVariant(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        Objects.requireNonNull(input);
-        this.VALUE = read(input, context);
+class VarVariant(input: ByteBuffer, context: PapyrusContext) : Variable() {
+    override fun calculateSize(): Int {
+        return 1 + value.calculateSize()
     }
 
-    @NotNull
-    public Variable getValue() {
-        return this.VALUE;
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
+        value.write(output)
     }
 
-    @Override
-    public int calculateSize() {
-        return 1 + this.VALUE.calculateSize();
+    override val type: VarType
+        get() = VarType.VARIANT
+
+    override fun hasRef(): Boolean {
+        return value.hasRef()
     }
 
-    @Override
-    public void write(ByteBuffer output) {
-        this.getType().write(output);
-        this.VALUE.write(output);
+    override fun hasRef(id: EID?): Boolean {
+        return value.hasRef(id)
     }
 
-    @NotNull
-    @Override
-    public VarType getType() {
-        return VarType.VARIANT;
+    override val ref: EID?
+        get() = value.ref
+    override val referent: GameElement?
+        get() = value.referent
+
+    override fun toValueString(): String? {
+        return value.toValueString()
     }
 
-    @Override
-    public boolean hasRef() {
-        return this.VALUE.hasRef();
+    override fun toHTML(target: Element?): String {
+        return "$type[${value.toHTML(target)}]"
     }
 
-    @Override
-    public boolean hasRef(EID id) {
-        return this.VALUE.hasRef(id);
+    override fun toString(): String {
+        return "$type:$value"
     }
 
-    @Nullable
-    @Override
-    public EID getRef() {
-        return this.VALUE.getRef();
-    }
+    val value: Variable = read(input, context)
 
-    @Nullable
-    @Override
-    public GameElement getReferent() {
-        return this.VALUE.getReferent();
-    }
-
-    @Override
-    public String toValueString() {
-        return this.VALUE.toValueString();
-    }
-
-    @Override
-    public String toHTML(Element target) {
-        return String.format("%s[%s]", this.getType(), this.VALUE.toHTML(target));
-    }
-
-    @NotNull
-    @Override
-    public String toString() {
-        return this.getType() + ":" + this.VALUE;
-    }
-
-    @NotNull
-    final private Variable VALUE;
 }

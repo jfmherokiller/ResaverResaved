@@ -1,31 +1,18 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Variable that stores an UNKNOWN7.
  */
-final public class VarStruct extends VarAbstractRef {
+class VarStruct : VarAbstractRef {
+    constructor(input: ByteBuffer?, context: PapyrusContext) : super(input!!, context) {}
+    constructor(type: TString?, id: EID?, context: PapyrusContext) : super(type, id, context) {}
 
-    public VarStruct(ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        super(input, context);
+    fun derive(id: Long, context: PapyrusContext): VarStruct {
+        return VarStruct(refType, ref?.derive(id), context)
     }
 
-    public VarStruct(TString type, EID id, @NotNull PapyrusContext context) {
-        super(type, id, context);
-    }
-
-    @NotNull
-    public VarStruct derive(long id, @NotNull PapyrusContext context) {
-        return new VarStruct(this.getRefType(), this.getRef().derive(id), context);
-    }
-
-    @NotNull
-    @Override
-    public VarType getType() {
-        return VarType.STRUCT;
-    }
-
+    override val type: VarType
+        get() = VarType.STRUCT
 }

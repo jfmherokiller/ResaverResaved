@@ -106,7 +106,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
      */
     override fun toHTML(target: Element?): String {
         if (null != target && null != data) {
-            var result: ess.papyrus.Variable? = null
+            var result: Variable? = null
             for (v in variables) {
                 if (v?.hasRef() == true) {
                     if (v.referent === target) {
@@ -224,7 +224,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
      * @see HasVariables.variables
      * @return
      */
-    override val variables: List<ess.papyrus.Variable?>
+    override val variables: List<Variable?>
         get() = if (data == null) emptyList() else data!!.VARIABLES!!
 
     /**
@@ -239,7 +239,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
      * @param index
      * @param newVar
      */
-    override fun setVariable(index: Int, newVar: ess.papyrus.Variable?) {
+    override fun setVariable(index: Int, newVar: Variable?) {
         if (data == null || data!!.VARIABLES == null) {
             throw NullPointerException("The variable list is missing.")
         }
@@ -281,7 +281,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
          */
         override fun write(output: ByteBuffer?) {
             iD.write(output)
-            VARIABLES!!.forEach { `var`: ess.papyrus.Variable? -> `var`!!.write(output) }
+            VARIABLES!!.forEach { `var`: Variable? -> `var`!!.write(output) }
         }
 
         /**
@@ -307,13 +307,13 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
         }
 
         //final private EID ID;
-        var VARIABLES: MutableList<ess.papyrus.Variable?>? = null
+        var VARIABLES: MutableList<Variable?>? = null
 
 
         init {
             try {
                 val count = length
-                VARIABLES = context?.let { Variable.readList(input, count, it) }
+                VARIABLES = context?.let { Variable.readList(input, count, it) }?.toMutableList()
             } catch (ex: ListException) {
                 throw PapyrusElementException("Couldn't read Array variables.", ex, this)
             }

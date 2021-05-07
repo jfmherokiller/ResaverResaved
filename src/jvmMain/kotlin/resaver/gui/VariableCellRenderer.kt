@@ -15,6 +15,7 @@
  */
 package resaver.gui
 
+import ess.papyrus.*
 import java.awt.Color
 import java.awt.Component
 import java.awt.Font
@@ -41,7 +42,7 @@ internal class VariableCellRenderer : DefaultTableCellRenderer() {
             val C = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
             C.foreground = DEFAULT_COLOR
             C.font = DEFAULT_FONT
-            if (VAR is ess.papyrus.VarRef) {
+            if (VAR is VarRef) {
                 val REF = VAR
                 if (REF.isNull) {
                     C.foreground = NULL_COLOR

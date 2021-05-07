@@ -1,55 +1,40 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Variable that stores a float.
  */
-final public class VarFlt extends Variable {
-
-    public VarFlt(@NotNull ByteBuffer input) {
-        this.VALUE = input.getFloat();
+class VarFlt : Variable {
+    constructor(input: ByteBuffer) {
+        value = input.float
     }
 
-    public VarFlt(float val) {
-        this.VALUE = val;
+    constructor(`val`: Float) {
+        value = `val`
     }
 
-    public float getValue() {
-        return this.VALUE;
+    override fun calculateSize(): Int {
+        return 5
     }
 
-    @Override
-    public int calculateSize() {
-        return 5;
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
+        output?.putFloat(value)
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        this.getType().write(output);
-        output.putFloat(this.VALUE);
-    }
+    override val type: VarType
+        get() = VarType.FLOAT
 
-    @NotNull
-    @Override
-    public VarType getType() {
-        return VarType.FLOAT;
-    }
-
-    @Override
-    public String toValueString() {
+    override fun toValueString(): String {
         //return String.format("%f", this.VALUE);
-        return Float.toString(this.VALUE);
+        return value.toString()
     }
 
-    @NotNull
-    @Override
-    public String toString() {
+    override fun toString(): String {
         //return String.format("%s:%f", this.getType(), this.VALUE);
-        return this.getType() + ":" + this.toValueString();
+        return type.toString() + ":" + toValueString()
     }
 
-    final private float VALUE;
+    val value: Float
 }

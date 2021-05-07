@@ -1,58 +1,43 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import java.nio.ByteBuffer
 
 /**
  * Variable that stores a boolean.
  */
-final public class VarBool extends Variable {
-
-    public VarBool(@NotNull ByteBuffer input) {
-        Objects.requireNonNull(input);
-        this.VALUE = input.getInt();
+class VarBool : Variable {
+    constructor(input: ByteBuffer) {
+        VALUE = input.int
     }
 
-    public VarBool(boolean val) {
-        this.VALUE = (val ? 1 : 0);
+    constructor(`val`: Boolean) {
+        VALUE = if (`val`) 1 else 0
     }
 
-    public boolean getValue() {
-        return this.VALUE != 0;
+    val value: Boolean
+        get() = VALUE != 0
+
+    override fun calculateSize(): Int {
+        return 5
     }
 
-    @Override
-    public int calculateSize() {
-        return 5;
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
+        output?.putInt(VALUE)
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        this.getType().write(output);
-        output.putInt(this.VALUE);
-    }
+    override val type: VarType
+        get() = VarType.BOOLEAN
 
-    @NotNull
-    @Override
-    public VarType getType() {
-        return VarType.BOOLEAN;
-    }
-
-    @NotNull
-    @Override
-    public String toValueString() {
+    override fun toValueString(): String {
         //return String.format("%s", Boolean.toString(this.VALUE != 0));
-        return Boolean.toString(this.VALUE != 0);
+        return java.lang.Boolean.toString(VALUE != 0)
     }
 
-    @NotNull
-    @Override
-    public String toString() {
+    override fun toString(): String {
         //return String.format("%s:%s", this.getType(), Boolean.toString(this.VALUE != 0));
-        return this.getType() + ":" + this.toValueString();
+        return "$type:${toValueString()}"
     }
 
-    final private int VALUE;
+    private val VALUE: Int
 }

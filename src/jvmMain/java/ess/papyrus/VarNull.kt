@@ -1,46 +1,31 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Variable that stores nothing.
  */
-final public class VarNull extends Variable {
-
-    public VarNull(@NotNull ByteBuffer input) {
-        this.VALUE = input.getInt();
+class VarNull(input: ByteBuffer) : Variable() {
+    override fun calculateSize(): Int {
+        return 5
     }
 
-    @Override
-    public int calculateSize() {
-        return 5;
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
+        output?.putInt(VALUE)
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        this.getType().write(output);
-        output.putInt(this.VALUE);
+    override val type: VarType
+        get() = VarType.NULL
+
+    override fun toValueString(): String {
+        return "NULL"
     }
 
-    @NotNull
-    @Override
-    public VarType getType() {
-        return VarType.NULL;
+    override fun toString(): String {
+        return "NULL"
     }
 
-    @NotNull
-    @Override
-    public String toValueString() {
-        return "NULL";
-    }
+    private val VALUE: Int = input.int
 
-    @NotNull
-    @Override
-    public String toString() {
-        return "NULL";
-    }
-
-    final private int VALUE;
 }

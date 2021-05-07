@@ -88,21 +88,21 @@ class ChangeFormDefault(input: ByteBuffer, size: Int) : ChangeFormData {
      * @see Object.equals
      * @return
      */
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (obj == null) {
+        if (other == null) {
             return false
         }
-        if (javaClass != obj.javaClass) {
+        if (javaClass != other.javaClass) {
             return false
         }
-        val other = obj as ChangeFormDefault
-        return DATA.contentEquals(other.DATA)
+        val other2 = other as ChangeFormDefault
+        return DATA.contentEquals(other2.DATA)
     }
 
-    private val DATA: ByteArray
+    private val DATA: ByteArray = ByteArray(size)
 
     /**
      * Creates a new `ChangeFormDefault` by storing a data buffer.
@@ -110,7 +110,6 @@ class ChangeFormDefault(input: ByteBuffer, size: Int) : ChangeFormData {
      * @param input The data buffer.
      */
     init {
-        DATA = ByteArray(size)
         input[DATA]
     }
 }

@@ -1,56 +1,40 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Variable that stores an integer.
  */
-final public class VarInt extends Variable {
-
-    public VarInt(@NotNull ByteBuffer input) {
-        this.VALUE = input.getInt();
+class VarInt : Variable {
+    constructor(input: ByteBuffer) {
+        value = input.int
     }
 
-    public VarInt(int val) {
-        this.VALUE = val;
+    constructor(`val`: Int) {
+        value = `val`
     }
 
-    public int getValue() {
-        return this.VALUE;
+    override fun calculateSize(): Int {
+        return 5
     }
 
-    @Override
-    public int calculateSize() {
-        return 5;
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
+        output?.putInt(value)
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        this.getType().write(output);
-        output.putInt(this.VALUE);
-    }
+    override val type: VarType
+        get() = VarType.INTEGER
 
-    @NotNull
-    @Override
-    public VarType getType() {
-        return VarType.INTEGER;
-    }
-
-    @NotNull
-    @Override
-    public String toValueString() {
+    override fun toValueString(): String {
         //return String.format("%d", this.VALUE);
-        return Integer.toString(this.VALUE);
+        return value.toString()
     }
 
-    @NotNull
-    @Override
-    public String toString() {
+    override fun toString(): String {
         //return String.format("%s:%d", this.getType(), this.VALUE);
-        return this.getType() + ":" + this.toValueString();
+        return "$type:${toValueString()}"
     }
 
-    final private int VALUE;
+    val value: Int
 }

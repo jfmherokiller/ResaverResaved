@@ -30,4 +30,4 @@ class PapyrusException
  * @param msg the detail message.
  * @param cause
  * @param partial
- */(msg: String?, cause: Throwable?, val partial: ess.papyrus.Papyrus) : RuntimeException(msg, cause)
+ */(msg: String?, cause: Throwable?, val partial: Papyrus?) : RuntimeException(msg, cause)

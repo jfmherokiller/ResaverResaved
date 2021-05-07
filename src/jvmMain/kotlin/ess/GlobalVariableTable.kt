@@ -64,7 +64,7 @@ class GlobalVariableTable : Element, GlobalDataBlock {
      */
     override fun calculateSize(): Int {
         var sum = COUNT.calculateSize()
-        sum += VARIABLES.sumBy { obj: GlobalVariable -> obj.calculateSize() }
+        sum += VARIABLES.sumOf { obj: GlobalVariable -> obj.calculateSize() }
         return sum
     }
 

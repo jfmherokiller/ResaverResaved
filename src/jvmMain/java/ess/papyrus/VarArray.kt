@@ -1,126 +1,95 @@
-package ess.papyrus;
+package ess.papyrus
 
-import ess.Element;
-import ess.Linkable;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import ess.Element
+import ess.Linkable.Companion.makeLink
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Variable that stores an ARRAY.
  */
-final public class VarArray extends Variable {
+class VarArray(varType: VarType, input: ByteBuffer, context: PapyrusContext) : Variable() {
+    val elementType: VarType
+        get() = VarType.values()[VarTYPE.ordinal - 7]
 
-    protected VarArray(VarType varType, ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        Objects.requireNonNull(varType);
-        Objects.requireNonNull(input);
-        this.VarTYPE = varType;
-        this.REFTYPE = this.VarTYPE.isRefType() ? context.readTString(input) : null;
-        this.ARRAYID = context.readEID(input);
-        this.ARRAY = context.findArray(this.ARRAYID);
+    override val type: VarType
+        get() = VarTYPE
+
+
+    override fun hasRef(): Boolean {
+        return true
     }
 
-    public EID getArrayID() {
-        return this.ARRAYID;
+    override fun hasRef(id: EID?): Boolean {
+        return arrayID == id
     }
 
-    public ArrayInfo getArray() {
-        return this.ARRAY;
-    }
+    override val ref: EID
+        get() = arrayID
 
-    public VarType getElementType() {
-        return VarType.values()[this.VarTYPE.ordinal() - 7];
-    }
 
-    @Override
-    public VarType getType() {
-        return this.VarTYPE;
-    }
+    override val referent: GameElement?
+        get() = null
 
-    @Override
-    public boolean hasRef() {
-        return true;
-    }
 
-    @Override
-    public boolean hasRef(EID id) {
-        return Objects.equals(this.ARRAYID, id);
-    }
-
-    @Override
-    public EID getRef() {
-        return this.getArrayID();
-    }
-
-    @Nullable
-    @Override
-    public GameElement getReferent() {
-        return null;
-    }
-
-    @Override
-    public void write(ByteBuffer output) {
-        this.getType().write(output);
-
-        if (this.VarTYPE.isRefType()) {
-            this.REFTYPE.write(output);
+    override fun write(output: ByteBuffer?) {
+        this.type.write(output)
+        if (VarTYPE.isRefType) {
+            REFTYPE!!.write(output)
         }
-
-        this.ARRAYID.write(output);
+        arrayID.write(output)
     }
 
-    @Override
-    public int calculateSize() {
-        int sum = 1;
-        sum += (this.VarTYPE.isRefType() ? this.REFTYPE.calculateSize() : 0);
-        sum += this.ARRAYID.calculateSize();
-        return sum;
+    override fun calculateSize(): Int {
+        var sum = 1
+        sum += if (VarTYPE.isRefType) REFTYPE!!.calculateSize() else 0
+        sum += arrayID.calculateSize()
+        return sum
     }
 
-    @NotNull
-    @Override
-    public String toTypeString() {
-        if (null == this.ARRAY) {
-            if (this.VarTYPE.isRefType()) {
-                return "" + this.REFTYPE + "[ ]";
+    override fun toTypeString(): String {
+        if (null == array) {
+            return if (VarTYPE.isRefType) {
+                "$REFTYPE[ ]"
             } else {
-                return this.getElementType() + "[ ]";
+                "$elementType[ ]"
             }
         }
-
-        if (this.VarTYPE.isRefType()) {
-            return this.VarTYPE + ":" + "" + this.REFTYPE + "[" + this.ARRAY.getLength() + "]";
+        return if (VarTYPE.isRefType) {
+            VarTYPE.toString() + ":" + "" + REFTYPE + "[" + array.length + "]"
         } else {
-            return this.VarTYPE + ":" + this.getElementType() + "[" + this.ARRAY.getLength() + "]";
+            VarTYPE.toString() + ":" + elementType + "[" + array.length + "]"
         }
     }
 
-    @Override
-    public String toValueString() {
-        if (null != this.getArray()) {
-            return "" + this.ARRAYID + ": " + this.getArray().toValueString();
+    override fun toValueString(): String {
+        return if (null != array) {
+            "" + arrayID + ": " + array.toValueString()
         } else {
-            return this.ARRAYID.toString();
+            arrayID.toString()
         }
     }
 
-    @Override
-    public String toHTML(Element target) {
-        final String LINK = Linkable.makeLink("array", this.ARRAYID, this.ARRAYID.toString());
-        return String.format("%s : %s", this.toTypeString(), LINK);
+    override fun toHTML(target: Element?): String? {
+        val LINK = makeLink("array", arrayID, arrayID.toString())
+        return String.format("%s : %s", toTypeString(), LINK)
     }
 
-    @NotNull
-    @Override
-    public String toString() {
-        return this.toTypeString() + " " + this.ARRAYID;
+    override fun toString(): String {
+        return toTypeString() + " " + arrayID
     }
 
-    final private VarType VarTYPE;
-    final private EID ARRAYID;
-    @Nullable
-    final private TString REFTYPE;
-    final private ArrayInfo ARRAY;
+    private val VarTYPE: VarType
+    val arrayID: EID
+    private val REFTYPE: TString?
+    val array: ArrayInfo?
+
+    init {
+        Objects.requireNonNull(varType)
+        Objects.requireNonNull(input)
+        VarTYPE = varType
+        REFTYPE = if (VarTYPE.isRefType) context.readTString(input) else null
+        arrayID = context.readEID(input)
+        array = context.findArray(arrayID)
+    }
 }

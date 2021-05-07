@@ -1,60 +1,41 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import java.nio.ByteBuffer
 
 /**
  * Variable that stores a string.
  */
-final public class VarStr extends Variable {
-
-    public VarStr(ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        Objects.requireNonNull(input);
-        this.VALUE = context.readTString(input);
+class VarStr : Variable {
+    constructor(input: ByteBuffer, context: PapyrusContext) {
+        value = context.readTString(input)
     }
 
-    public VarStr(String newValue, @NotNull PapyrusContext context) {
-        Objects.requireNonNull(newValue);
-        this.VALUE = context.addTString(newValue);
+    constructor(newValue: String, context: PapyrusContext) {
+        value = context.addTString(newValue)
     }
 
-    public TString getValue() {
-        return this.VALUE;
+    override fun calculateSize(): Int {
+        return 1 + value.calculateSize()
     }
 
-    @Override
-    public int calculateSize() {
-        return 1 + this.VALUE.calculateSize();
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
+        value.write(output)
     }
 
-    @Override
-    public void write(ByteBuffer output) {
-        this.getType().write(output);
-        this.VALUE.write(output);
-    }
+    override val type: VarType
+        get() = VarType.STRING
 
-    @NotNull
-    @Override
-    public VarType getType() {
-        return VarType.STRING;
-    }
-
-    @NotNull
-    @Override
-    public String toValueString() {
+    override fun toValueString(): String {
         //return String.format("\"%s\"", this.VALUE);
-        return "\"" + this.VALUE + "\"";
+        return "\"$value\""
     }
 
-    @NotNull
-    @Override
-    public String toString() {
+    override fun toString(): String {
         //return String.format("%s:\"%s\"", this.getType(), this.VALUE);
-        return this.getType() + ":" + this.toValueString();
+        return "$type:${toValueString()}"
     }
 
     //final private StringTable STRINGS;
-    final private TString VALUE;
+    val value: TString
 }

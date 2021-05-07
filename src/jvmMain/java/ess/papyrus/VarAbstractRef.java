@@ -11,7 +11,7 @@ import java.util.Objects;
 /**
  * ABT for a variable that stores some type of ref.
  */
-abstract class VarAbstractRef extends Variable {
+public abstract class VarAbstractRef extends Variable {
 
     public VarAbstractRef(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
         Objects.requireNonNull(input);
