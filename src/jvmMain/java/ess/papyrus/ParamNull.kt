@@ -1,58 +1,41 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * An opcode parameter that stores Null.
  */
-final public class ParamNull extends Parameter {
+class ParamNull : Parameter() {
+    override val type: ParamType
+        get() = ParamType.NULL
 
-    public ParamNull() {
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
     }
 
-    @NotNull
-    @Override
-    public ParamType getType() {
-        return ParamType.NULL;
-    }
-
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        this.getType().write(output);
-    }
-
-    @Override
-    public int calculateSize() {
-        return 1;
+    override fun calculateSize(): Int {
+        return 1
     }
 
     /**
      * @return String representation.
      */
-    @NotNull
-    @Override
-    public String toValueString() {
-        return "NULL";
+    override fun toValueString(): String {
+        return "NULL"
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 41 * hash + Objects.hashCode(this.getType());
-        return hash;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 41 * hash + Objects.hashCode(type)
+        return hash
     }
 
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        return if (this === obj) {
+            true
         } else if (obj == null) {
-            return false;
-        } else return getClass() == obj.getClass();
+            false
+        } else javaClass == obj.javaClass
     }
-
 }

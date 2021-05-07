@@ -1,62 +1,44 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * An opcode parameter that stores a float.
  */
-final public class ParamFlt extends Parameter {
+class ParamFlt(val VALUE: Float) : Parameter() {
+    override val type: ParamType
+        get() = ParamType.FLOAT
 
-    public ParamFlt(float val) {
-        this.VALUE = val;
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
+        output?.putFloat(VALUE)
     }
 
-    @NotNull
-    @Override
-    public ParamType getType() {
-        return ParamType.FLOAT;
+    override fun calculateSize(): Int {
+        return 5
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        this.getType().write(output);
-        output.putFloat(this.VALUE);
+    override fun toValueString(): String {
+        return VALUE.toString()
     }
 
-    @Override
-    public int calculateSize() {
-        return 5;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 41 * hash + Objects.hashCode(type)
+        hash = 41 * hash + java.lang.Float.hashCode(VALUE)
+        return hash
     }
 
-    @Override
-    public String toValueString() {
-        return Float.toString(this.VALUE);
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 41 * hash + Objects.hashCode(this.getType());
-        hash = 41 * hash + Float.hashCode(this.VALUE);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
         } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+            return false
+        } else if (javaClass != obj.javaClass) {
+            return false
         }
-        final ParamFlt other = (ParamFlt) obj;
-        return this.VALUE == other.VALUE;
+        val other = obj as ParamFlt
+        return VALUE == other.VALUE
     }
-
-    final public float VALUE;
 }

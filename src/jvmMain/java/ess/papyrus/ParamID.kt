@@ -1,89 +1,69 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * An opcode parameter that stores an identifier.
  */
-final public class ParamID extends Parameter {
+class ParamID(`val`: TString?) : Parameter() {
+    override val type: ParamType
+        get() = ParamType.IDENTIFIER
 
-    public ParamID(TString val) {
-        this.VALUE = Objects.requireNonNull(val);
+    override fun write(output: ByteBuffer?) {
+        type.write(output)
+        VALUE.write(output)
     }
 
-    @NotNull
-    @Override
-    public ParamType getType() {
-        return ParamType.IDENTIFIER;
-    }
-
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        this.getType().write(output);
-        this.VALUE.write(output);
-    }
-
-    @Override
-    public int calculateSize() {
-        return 1 + this.VALUE.calculateSize();
+    override fun calculateSize(): Int {
+        return 1 + VALUE.calculateSize()
     }
 
     /**
      * @return String representation.
      */
-    @NotNull
-    @Override
-    public String toValueString() {
-        return this.VALUE.toString();
+    override fun toValueString(): String {
+        return VALUE.toString()
     }
 
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 41 * hash + Objects.hashCode(this.getType());
-        hash = 41 * hash + Objects.hashCode(this.VALUE);
-        return hash;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 41 * hash + Objects.hashCode(type)
+        hash = 41 * hash + Objects.hashCode(VALUE)
+        return hash
     }
 
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
         } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+            return false
+        } else if (javaClass != obj.javaClass) {
+            return false
         }
-        final ParamID other = (ParamID) obj;
-        return this.VALUE.equals(other.VALUE);
+        val other = obj as ParamID
+        return VALUE.equals(other.VALUE)
     }
 
-    @Override
-    public boolean isTemp() {
-        return TEMP_PATTERN.test(this.VALUE.toString())
-                && !AUTOVAR_PATTERN.test(this.VALUE.toString())
-                && !NONE_PATTERN.test(this.VALUE.toString());
-    }
+    override val isTemp: Boolean
+        get() = (TEMP_PATTERN.test(VALUE.toString())
+                && !AUTOVAR_PATTERN.test(VALUE.toString())
+                && !NONE_PATTERN.test(VALUE.toString()))
 
     /**
      * @return A flag indicating if the parameter is an Autovariable.
      */
-    @Override
-    public boolean isAutovar() {
-        return AUTOVAR_PATTERN.test(this.VALUE.toString());
-    }
+    override val isAutovar: Boolean
+        get() = AUTOVAR_PATTERN.test(VALUE.toString())
 
     /**
      * @return A flag indicating if the parameter is an None variable.
      */
-    @Override
-    public boolean isNonevar() {
-        return NONE_PATTERN.test(this.VALUE.toString());
-    }
+    override val isNonevar: Boolean
+        get() = NONE_PATTERN.test(VALUE.toString())
+    val VALUE: TString
 
-    final public TString VALUE;
+    init {
+        VALUE = Objects.requireNonNull(`val`)!!
+    }
 }

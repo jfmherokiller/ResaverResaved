@@ -72,7 +72,7 @@ class AutoCompletion<T>(var comboBox: JComboBox<T>) : PlainDocument() {
     }
 
     @Throws(BadLocationException::class)
-    override fun insertString(offs: Int, str: String, a: AttributeSet) {
+    override fun insertString(offs: Int, str: String, a: AttributeSet?) {
         // return immediately when selecting an item
         var offs = offs
         if (selecting) {

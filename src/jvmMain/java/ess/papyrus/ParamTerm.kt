@@ -1,61 +1,46 @@
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.nio.ByteBuffer;
-import java.util.Objects;
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * An opcode parameter that stores a boolean.
  */
-final public class ParamTerm extends Parameter {
+class ParamTerm(`val`: String) : Parameter() {
+    override val type: ParamType
+        get() = ParamType.TERM
 
-    public ParamTerm(String val) {
-        this.VALUE = Objects.requireNonNull(val);
+    override fun write(output: ByteBuffer?) {
+        throw IllegalStateException("Terms can't be written.")
     }
 
-    @NotNull
-    @Override
-    public ParamType getType() {
-        return ParamType.TERM;
+    override fun calculateSize(): Int {
+        throw IllegalStateException("Terms don't have a serialized size.")
     }
 
-    @Override
-    public void write(ByteBuffer output) {
-        throw new IllegalStateException("Terms can't be written.");
+    override fun toValueString(): String {
+        return VALUE
     }
 
-    @Override
-    public int calculateSize() {
-        throw new IllegalStateException("Terms don't have a serialized size.");
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 41 * hash + Objects.hashCode(type)
+        hash = 41 * hash + Objects.hashCode(VALUE)
+        return hash
     }
 
-    @Override
-    public String toValueString() {
-        return this.VALUE;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 41 * hash + Objects.hashCode(this.getType());
-        hash = 41 * hash + Objects.hashCode(this.VALUE);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
         } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+            return false
+        } else if (javaClass != obj.javaClass) {
+            return false
         }
-        final ParamTerm other = (ParamTerm) obj;
-        return this.VALUE.equals(other.VALUE);
+        val other = obj as ParamTerm
+        return VALUE == other.VALUE
     }
 
-    final public String VALUE;
+    val VALUE: String = Objects.requireNonNull(`val`)
+
 }
