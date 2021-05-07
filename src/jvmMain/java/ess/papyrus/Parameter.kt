@@ -13,170 +13,162 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.regex.Pattern
 
 /**
  * Describes a variable in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-public abstract class Parameter implements PapyrusElement {
-
-    /**
-     * Creates a new <code>Parameter</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The <code>PapyrusContext</code> info.
-     * @return The new <code>Parameter</code>.
-     * @throws PapyrusFormatException
-     */
-    @NotNull
-    static public Parameter read(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-
-        ParamType TYPE = ParamType.read(input);
-        switch (TYPE) {
-            case NULL:
-                return new ParamNull();
-            case IDENTIFIER:
-                TString id = context.readTString(input);
-                return new ParamID(id);
-            case STRING:
-                TString str = context.readTString(input);
-                return new ParamStr(str);
-            case INTEGER:
-                int i = input.getInt();
-                return new ParamInt(i);
-            case FLOAT:
-                float f = input.getFloat();
-                return new ParamFlt(f);
-            case BOOLEAN:
-                byte b = input.get();
-                return new ParamBool(b);
-            case TERM:
-                throw new IllegalStateException("Terms cannot be read.");
-            case UNKNOWN8:
-                TString u8 = context.readTString(input);
-                return new ParamUnk8(u8);
-            default:
-                throw new PapyrusFormatException("Illegal Parameter type: " + TYPE);
-        }
-
-    }
-
-    /**
-     * Creates a term, a label for doing substitutions.
-     *
-     * @param value
-     * @return
-     */
-    @NotNull
-    static public Parameter createTerm(String value) {
-        return new ParamTerm(value);
-    }
-
+abstract class Parameter : PapyrusElement {
     /**
      * @return The type of the parameter.
      */
-    @NotNull
-    abstract public ParamType getType();
+    abstract val type: ParamType
 
     /**
      * @return A flag indicating if the parameter is an identifier to a temp
      * variable.
      */
-    public boolean isTemp() {
-        return false;
-    }
+    open val isTemp: Boolean
+        get() = false
 
     /**
      * @return A flag indicating if the parameter is an Autovariable.
      */
-    public boolean isAutovar() {
-        return false;
-    }
+    open val isAutovar: Boolean
+        get() = false
 
     /**
      * @return A flag indicating if the parameter is an None variable.
      */
-    public boolean isNonevar() {
-        return false;
-    }
+    open val isNonevar: Boolean
+        get() = false
 
     /**
-     * @return Returns the identifier value of the <code>Parameter</code>, if
+     * @return Returns the identifier value of the `Parameter`, if
      * possible.
      */
-    public TString getIDValue() {
-        if (this instanceof ParamID) {
-            return ((ParamID) this).VALUE;
+    val iDValue: TString
+        get() = if (this is ParamID) {
+            this.VALUE
         } else {
-            throw new IllegalStateException();
+            throw IllegalStateException()
         }
-    }
 
     /**
-     * @return Returns the string value of the <code>Parameter</code>, if
+     * @return Returns the string value of the `Parameter`, if
      * possible.
      */
-    public TString getTStrValue() {
-        if (this instanceof ParamStr) {
-            return ((ParamStr) this).VALUE;
+    val tStrValue: TString
+        get() = if (this is ParamStr) {
+            this.VALUE
         } else {
-            throw new IllegalStateException();
+            throw IllegalStateException()
         }
-    }
 
     /**
-     * @return Returns the integer value of the <code>Parameter</code>, if
+     * @return Returns the integer value of the `Parameter`, if
      * possible.
      */
-    public int getIntValue() {
-        if (this instanceof ParamInt) {
-            return ((ParamInt) this).VALUE;
+    val intValue: Int
+        get() = if (this is ParamInt) {
+            this.VALUE
         } else {
-            throw new IllegalStateException();
+            throw IllegalStateException()
         }
-    }
 
     /**
      * @return Short string representation.
      */
-    abstract public String toValueString();
+    abstract fun toValueString(): String
 
     /**
      * An appropriately parenthesized string form of the parameter.
      *
      * @return
      */
-    public String paren() {
-        if (this.getType() == ParamType.TERM) {
-            return "(" + this.toValueString() + ")";
+    fun paren(): String {
+        return if (type == ParamType.TERM) {
+            "(" + toValueString() + ")"
         } else {
-            return this.toValueString();
+            toValueString()
         }
     }
 
     /**
      * @return String representation.
      */
-    @NotNull
-    @Override
-    public String toString() {
-        return this.getType() + ":" + this.toValueString();
+    override fun toString(): String {
+        return type.toString() + ":" + toValueString()
     }
 
-    static final Predicate<String> TEMP_PATTERN = Pattern.compile("^::.+$", Pattern.CASE_INSENSITIVE).asPredicate();
-    static final Predicate<String> NONE_PATTERN = Pattern.compile("^::NoneVar$", Pattern.CASE_INSENSITIVE).asPredicate();
-    static final Predicate<String> AUTOVAR_PATTERN = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE).asPredicate();
+    companion object {
+        /**
+         * Creates a new `Parameter` by reading from a
+         * `ByteBuffer`. No error handling is performed.
+         *
+         * @param input The input stream.
+         * @param context The `PapyrusContext` info.
+         * @return The new `Parameter`.
+         * @throws PapyrusFormatException
+         */
+        @Throws(PapyrusFormatException::class)
+        fun read(input: ByteBuffer, context: PapyrusContext): Parameter {
+            Objects.requireNonNull(input)
+            Objects.requireNonNull(context)
+            val TYPE = ParamType.read(input)
+            return when (TYPE) {
+                ParamType.NULL -> ParamNull()
+                ParamType.IDENTIFIER -> {
+                    val id = context.readTString(input)
+                    ParamID(id)
+                }
+                ParamType.STRING -> {
+                    val str = context.readTString(input)
+                    ParamStr(str)
+                }
+                ParamType.INTEGER -> {
+                    val i = input.int
+                    ParamInt(i)
+                }
+                ParamType.FLOAT -> {
+                    val f = input.float
+                    ParamFlt(f)
+                }
+                ParamType.BOOLEAN -> {
+                    val b = input.get()
+                    ParamBool(b)
+                }
+                ParamType.TERM -> throw IllegalStateException("Terms cannot be read.")
+                ParamType.UNKNOWN8 -> {
+                    val u8 = context.readTString(input)
+                    ParamUnk8(u8)
+                }
+                else -> throw PapyrusFormatException("Illegal Parameter type: $TYPE")
+            }
+        }
 
+        /**
+         * Creates a term, a label for doing substitutions.
+         *
+         * @param value
+         * @return
+         */
+        @JvmStatic
+        fun createTerm(value: String?): Parameter {
+            return ParamTerm(value)
+        }
+
+        @JvmField
+        val TEMP_PATTERN = Pattern.compile("^::.+$", Pattern.CASE_INSENSITIVE).asPredicate()
+        @JvmField
+        val NONE_PATTERN = Pattern.compile("^::NoneVar$", Pattern.CASE_INSENSITIVE).asPredicate()
+        @JvmField
+        val AUTOVAR_PATTERN = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE).asPredicate()
+    }
 }
