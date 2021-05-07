@@ -18,7 +18,7 @@ package resaver.pex;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+
 import resaver.IString;
 import resaver.pex.Pex.Function.Instruction;
 
@@ -181,7 +181,7 @@ final public class Disassembler {
             if (OP.isConditional()) {
                 operator = (OP == JMPF ? "&&" : "||");
                 term = inst.ARGS.get(0).toString();//.paren();
-                offset = ((VData.Int) inst.ARGS.get(1)).getValue();
+                offset = ((VDataInt) inst.ARGS.get(1)).getValue();
             } else {
                 operator = "INVALID";
                 term = inst.ARGS.get(1).toString();//.paren();
@@ -423,14 +423,14 @@ final public class Disassembler {
             return null;
         }
 
-        int offset1 = ((VData.Int) begin.ARGS.get(1)).getValue();
+        int offset1 = ((VDataInt) begin.ARGS.get(1)).getValue();
         Instruction end = instructions.get(ptr + offset1 - 1);
 
         if (null == end || end.OPCODE != JMP) {
             return null;
         }
 
-        int offset2 = ((VData.Int) end.ARGS.get(0)).getValue();
+        int offset2 = ((VDataInt) end.ARGS.get(0)).getValue();
         if (offset2 <= 0) {
             return null;
         }
@@ -451,7 +451,7 @@ final public class Disassembler {
             return null;
         }
 
-        int offset1 = ((VData.Int) begin.ARGS.get(1)).getValue();
+        int offset1 = ((VDataInt) begin.ARGS.get(1)).getValue();
         if (ptr + offset1 - 1 >= instructions.size()) {
             throw new IllegalStateException("Ptr out of range.");
         }
@@ -461,7 +461,7 @@ final public class Disassembler {
             return null;
         }
 
-        int offset2 = ((VData.Int) end.ARGS.get(0)).getValue();
+        int offset2 = ((VDataInt) end.ARGS.get(0)).getValue();
         if (offset2 > 0) {
             return null;
         }
@@ -529,7 +529,7 @@ final public class Disassembler {
 
             case PROPSET:
                 VData obj = inst.ARGS.get(1);
-                VData.ID prop = (VData.ID) inst.ARGS.get(0);
+                VDataID prop = (VDataID) inst.ARGS.get(0);
                 return String.format("%s%s.%s = %s", tab(indent), obj, prop, RHS);
 
             case ARR_SET:
@@ -562,14 +562,14 @@ final public class Disassembler {
 
         VData lhs = args.get(lhsPos);
 
-        if (null == lhs || lhs instanceof VData.None) {
+        if (null == lhs || lhs instanceof VDataNone) {
             return String.format("%s%s", tab(indent), rhs);
 
-        } else if (!(lhs instanceof VData.ID)) {
+        } else if (!(lhs instanceof VDataID)) {
             return String.format("%s%s = %s", tab(indent), lhs, rhs);
         }
 
-        VData.ID var = (VData.ID) lhs;
+        VDataID var = (VDataID) lhs;
 
         if (var.isTemp()) {
             assert false;
@@ -607,7 +607,7 @@ final public class Disassembler {
     static boolean makeTerm(Opcode op, List<VData> args, List<VariableType> types, TermMap terms) {
         String term;
         VData operand1, operand2, obj, prop, arr, search, idx;
-        VData.ID method;
+        VDataID method;
         List<String> subArgs;
 
         switch (op) {
@@ -657,7 +657,7 @@ final public class Disassembler {
 
             case CALLMETHOD:
                 replaceVariables(args, terms, 2);
-                method = (VData.ID) args.get(0);
+                method = (VDataID) args.get(0);
                 obj = args.get(1);
                 //.paren())
                 List<String> list = new ArrayList<>();
@@ -672,7 +672,7 @@ final public class Disassembler {
 
             case CALLPARENT:
                 replaceVariables(args, terms, 1);
-                method = (VData.ID) args.get(0);
+                method = (VDataID) args.get(0);
                 //.paren())
                 List<String> result = new ArrayList<>();
                 for (VData vData : args
@@ -687,7 +687,7 @@ final public class Disassembler {
             case CALLSTATIC:
                 replaceVariables(args, terms, 2);
                 obj = args.get(0);
-                method = (VData.ID) args.get(1);
+                method = (VDataID) args.get(1);
                 List<String> list1 = new ArrayList<>();
                 for (VData vData : args
                         .subList(4, args.size())) {
@@ -716,7 +716,7 @@ final public class Disassembler {
 
             case CAST: {
                 replaceVariables(args, terms, 0);
-                VData.ID dest = (VData.ID) args.get(0);
+                VDataID dest = (VDataID) args.get(0);
                 VData arg = args.get(1);
                 IString name = dest.getValue();
                 Optional<VariableType> found = Optional.empty();
@@ -786,7 +786,7 @@ final public class Disassembler {
 
             case ARR_CREATE:
                 VData size = args.get(1);
-                VData.ID dest = (VData.ID) args.get(0);
+                VDataID dest = (VDataID) args.get(0);
                 IString name = dest.getValue();
                 Optional<VariableType> found = Optional.empty();
                 for (VariableType t : types) {
@@ -825,7 +825,7 @@ final public class Disassembler {
                 replaceVariables(args, terms, 1);
                 arr = args.get(0);
                 search = args.get(2);
-                idx = (VData.Int) args.get(3);
+                idx = (VDataInt) args.get(3);
                 term = String.format("%s.find(%s, %s)", arr, search, idx);
                 return processTerm(args, terms, 1, term);
 
@@ -833,7 +833,7 @@ final public class Disassembler {
                 replaceVariables(args, terms, 1);
                 arr = args.get(0);
                 search = args.get(2);
-                idx = (VData.Int) args.get(3);
+                idx = (VDataInt) args.get(3);
                 term = String.format("%s.rfind(%s, %s)", arr, search, idx);
                 return processTerm(args, terms, 1, term);
 
@@ -881,7 +881,7 @@ final public class Disassembler {
             }
 
             case CALLMETHOD: {
-                VData.ID method = (VData.ID) inst.ARGS.get(0);
+                VDataID method = (VDataID) inst.ARGS.get(0);
                 VData obj = inst.ARGS.get(1);
                 //.paren())
                 List<String> subArgs = new ArrayList<>();
@@ -894,7 +894,7 @@ final public class Disassembler {
             }
 
             case CALLPARENT: {
-                VData.ID method = (VData.ID) inst.ARGS.get(0);
+                VDataID method = (VDataID) inst.ARGS.get(0);
                 //.paren())
                 List<String> subArgs = new ArrayList<>();
                 for (VData vData : inst.ARGS
@@ -907,7 +907,7 @@ final public class Disassembler {
 
             case CALLSTATIC: {
                 VData obj = inst.ARGS.get(0);
-                VData.ID method = (VData.ID) inst.ARGS.get(1);
+                VDataID method = (VDataID) inst.ARGS.get(1);
                 //.paren())
                 List<String> subArgs = new ArrayList<>();
                 for (VData vData : inst.ARGS
@@ -929,7 +929,7 @@ final public class Disassembler {
                 return inst.ARGS.get(1).toString();
 
             case CAST: {
-                VData.ID dest = (VData.ID) inst.ARGS.get(0);
+                VDataID dest = (VDataID) inst.ARGS.get(0);
                 VData arg = inst.ARGS.get(1);
                 IString name = dest.getValue();
                 Optional<VariableType> found = Optional.empty();
@@ -985,7 +985,7 @@ final public class Disassembler {
 
             case ARR_CREATE: {
                 VData size = inst.ARGS.get(1);
-                VData.ID dest = (VData.ID) inst.ARGS.get(0);
+                VDataID dest = (VDataID) inst.ARGS.get(0);
                 IString name = dest.getValue();
                 Optional<VariableType> found = Optional.empty();
                 for (VariableType t : types) {
@@ -1033,16 +1033,16 @@ final public class Disassembler {
      * @param positions
      */
     static boolean processTerm(List<VData> args, TermMap terms, int destPos, String term) {
-        if (destPos >= args.size() || !(args.get(destPos) instanceof VData.ID)) {
+        if (destPos >= args.size() || !(args.get(destPos) instanceof VDataID)) {
             return false;
         }
-        VData.ID dest = (VData.ID) args.get(destPos);
+        VDataID dest = (VDataID) args.get(destPos);
 
         if (!dest.isTemp()) {
             return false;
         }
 
-        terms.put(dest, new VData.Term(term));
+        terms.put(dest, new VDataTerm(term));
         return true;
     }
 
@@ -1057,8 +1057,8 @@ final public class Disassembler {
     static void replaceVariables(List<VData> args, TermMap terms, int exclude) {
         for (int i = 0; i < args.size(); i++) {
             VData arg = args.get(i);
-            if (arg instanceof VData.ID) {
-                VData.ID id = (VData.ID) arg;
+            if (arg instanceof VDataID) {
+                VDataID id = (VDataID) arg;
 
                 if (terms.containsKey(id) && i != exclude) {
                     args.set(i, terms.get(id));
@@ -1067,13 +1067,13 @@ final public class Disassembler {
                     final Matcher MATCHER = AUTOVAR_REGEX.matcher(id.toString());
                     MATCHER.matches();
                     String prop = MATCHER.group(1);
-                    terms.put(id, new VData.Term(prop));
+                    terms.put(id, new VDataTerm(prop));
                     args.set(i, terms.get(id));
                 }
 
-            } else if (arg instanceof VData.Str) {
-                VData.Str str = (VData.Str) arg;
-                args.set(i, new VData.StrLit(str.getString().toString()));
+            } else if (arg instanceof VDataStr) {
+                VDataStr str = (VDataStr) arg;
+                args.set(i, new VDataStrLit(str.getString().toString()));
             }
         }
     }

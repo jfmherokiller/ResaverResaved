@@ -15,7 +15,6 @@
  */
 package resaver.pex
 
-import resaver.Game
 import resaver.IString
 import resaver.IString.Companion.format
 import resaver.Scheme
@@ -1038,7 +1037,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             types.addAll(LOCALS)
             val terms = TermMap()
             for ((p, value) in autovars) {
-                terms[resaver.pex.VData.ID(value.NAME)] = resaver.pex.VData.Term(p.NAME.toString())
+                terms[VDataID(value.NAME)] = VDataTerm(p.NAME.toString())
             }
             val block: List<Instruction> = ArrayList(
                 INSTRUCTIONS
@@ -1141,7 +1140,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
                         for (i in 0 until 1 - OPCODE.ARGS) {
                             ARGS.add(resaver.pex.VData.readVariableData(input, strings))
                         }
-                        val count = ARGS[-OPCODE.ARGS] as? resaver.pex.VData.Int ?: throw IOException("Invalid instruction")
+                        val count = ARGS[-OPCODE.ARGS] as? VDataInt ?: throw IOException("Invalid instruction")
                         val numVargs = count.value
                         for (i in 0 until numVargs) {
                             ARGS.add(resaver.pex.VData.readVariableData(input, strings))
@@ -1225,7 +1224,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
                 for (i in firstArg until ARGS.size) {
                     val arg = ARGS[i]
                     if (arg.type === DataType.IDENTIFIER) {
-                        val id = arg as resaver.pex.VData.ID
+                        val id = arg as VDataID
                         if (scheme.containsKey(id.value)) {
                             val newValue = scheme[id.value]
                             val newStr = STRINGS.addString(newValue)

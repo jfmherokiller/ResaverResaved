@@ -20,7 +20,7 @@ package resaver.pex
  *
  * @author Mark
  */
-class TermMap : HashMap<resaver.pex.VData.ID, resaver.pex.VData.Term>, Cloneable {
+class TermMap : HashMap<VDataID, VDataTerm>, Cloneable {
     constructor() {}
     constructor(o: TermMap) : super(o) {}
 
