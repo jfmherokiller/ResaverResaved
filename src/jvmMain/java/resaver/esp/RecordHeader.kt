@@ -1,51 +1,30 @@
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
+import java.nio.ByteBuffer
 
 /**
  * Header represents the standard header for all records except GRUP.
  *
  * @author Mark Fairchild
  */
-public class RecordHeader implements Entry {
-
+class RecordHeader(input: ByteBuffer, ctx: ESPContext) : Entry {
     /**
-     * Creates a new Header by reading it from a LittleEndianInput.
-     *
-     * @param input The LittleEndianInput to readFully.
-     * @param ctx   The mod descriptor.
+     * @see Entry.write
      */
-    public RecordHeader(ByteBuffer input, ESPContext ctx) {
-        this.FLAGS = input.getInt();
-
-        int id = input.getInt();
-        int newID = ctx.remapFormID(id);
-        this.ID = newID;
-
-        this.REVISION = input.getInt();
-        this.VERSION = input.getShort();
-        this.UNKNOWN = input.getShort();
-    }
-
-    /**
-     * @see Entry#write(transposer.ByteBuffer)
-     */
-    @Override
-    public void write(ByteBuffer output) {
-        output.putInt(this.FLAGS);
-        output.putInt(this.ID);
-        output.putInt(this.REVISION);
-        output.putShort(this.VERSION);
-        output.putShort(this.UNKNOWN);
+    override fun write(output: ByteBuffer?) {
+        output!!.putInt(FLAGS)
+        output.putInt(ID)
+        output.putInt(REVISION)
+        output.putShort(VERSION)
+        output.putShort(UNKNOWN)
     }
 
     /**
      * @return The calculated size of the field.
-     * @see Entry#calculateSize()
+     * @see Entry.calculateSize
      */
-    @Override
-    public int calculateSize() {
-        return 16;
+    override fun calculateSize(): Int {
+        return 16
     }
 
     /**
@@ -53,23 +32,36 @@ public class RecordHeader implements Entry {
      *
      * @return True if the field data is compressed, false otherwise.
      */
-    public boolean isCompressed() {
-        return (this.FLAGS & 0x00040000) != 0;
-    }
+    val isCompressed: Boolean
+        get() = FLAGS and 0x00040000 != 0
 
     /**
      * Checks if the header indicates localization (TES4 record only).
      *
      * @return True if the record is a TES4 and localization is enabled.
      */
-    public boolean isLocalized() {
-        return (this.FLAGS & 0x00000080) != 0;
+    val isLocalized: Boolean
+        get() = FLAGS and 0x00000080 != 0
+    val FLAGS: Int
+    @JvmField
+    val ID: Int
+    val REVISION: Int
+    val VERSION: Short
+    val UNKNOWN: Short
+
+    /**
+     * Creates a new Header by reading it from a LittleEndianInput.
+     *
+     * @param input The LittleEndianInput to readFully.
+     * @param ctx   The mod descriptor.
+     */
+    init {
+        FLAGS = input.int
+        val id = input.int
+        val newID = ctx.remapFormID(id)
+        ID = newID
+        REVISION = input.int
+        VERSION = input.short
+        UNKNOWN = input.short
     }
-
-    final public int FLAGS;
-    final public int ID;
-    final public int REVISION;
-    final public short VERSION;
-    final public short UNKNOWN;
-
 }
