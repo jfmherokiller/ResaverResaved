@@ -22,7 +22,6 @@ import mf.BufferUtil
 import resaver.Analysis
 import resaver.IString
 import java.nio.ByteBuffer
-import java.util.*
 import kotlin.collections.LinkedHashMap
 import kotlin.collections.List
 import kotlin.collections.Map
@@ -69,7 +68,6 @@ open class GeneralElement protected constructor() : Element {
      * @return Retrieves a copy of the <name></name>,value> map.
      */
     fun hasVal(name: Enum<*>): Boolean {
-        Objects.requireNonNull(name)
         return this.hasVal(name.toString())
     }
 
@@ -81,7 +79,6 @@ open class GeneralElement protected constructor() : Element {
      * @return Retrieves a copy of the <name></name>,value> map.
      */
     fun hasVal(name: String): Boolean {
-        Objects.requireNonNull(name)
         return this.hasVal(IString[name])
     }
 
@@ -93,7 +90,6 @@ open class GeneralElement protected constructor() : Element {
      * if there is no match.
      */
     fun getVal(name: String): Any? {
-        Objects.requireNonNull(name)
         return this.getVal(IString[name])
     }
 
@@ -105,7 +101,6 @@ open class GeneralElement protected constructor() : Element {
      * if there is no match or the match is not an `Element`.
      */
     fun getElement(name: String): Element? {
-        Objects.requireNonNull(name)
         val `val` = this.getVal(name)
         return if (`val` is Element) {
             `val`
@@ -120,7 +115,6 @@ open class GeneralElement protected constructor() : Element {
      * if there is no match or the match is not a `GeneralElement`.
      */
     fun getGeneralElement(name: String): GeneralElement? {
-        Objects.requireNonNull(name)
         val `val` = this.getVal(name)
         return if (`val` is GeneralElement) {
             `val`
@@ -136,7 +130,7 @@ open class GeneralElement protected constructor() : Element {
      * if there is no match or the match is not a `GeneralElement`.
      */
     fun getElement(name: Enum<*>): Element? {
-        return this.getElement(Objects.requireNonNull(name.toString()))
+        return this.getElement(name.toString())
     }
 
     /**
@@ -147,8 +141,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The byte.
      */
     fun readByte(input: ByteBuffer, name: String): Byte? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val `val` = input.get()
         return addValue(name, `val`)
     }
@@ -162,8 +154,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The short.
      */
     fun readShort(input: ByteBuffer, name: String): Short? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val `val` = input.short
         return addValue(name, `val`)
     }
@@ -176,8 +166,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The int.
      */
     fun readInt(input: ByteBuffer, name: String): Int? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val `val` = input.int
         return addValue(name, `val`)
     }
@@ -190,8 +178,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The long.
      */
     fun readLong(input: ByteBuffer, name: String): Long? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val `val` = input.long
         return addValue(name, `val`)
     }
@@ -204,8 +190,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The float.
      */
     fun readFloat(input: ByteBuffer, name: String): Float? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val `val` = input.float
         return addValue(name, `val`)
     }
@@ -218,8 +202,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The string.
      */
     fun readZString(input: ByteBuffer, name: String): String? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val `val` = BufferUtil.getZString(input)!!
         return addValue(name, `val`)
     }
@@ -247,8 +229,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The element.
     </T> */
     inline fun <reified T : Element?> readElement(input: ByteBuffer?, name: String, reader: ElementReader<T>): T? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val element = reader.read(input)
         return addValue(name, element)
     }
@@ -262,8 +242,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The ID.
      */
     fun readID32(input: ByteBuffer, name: String, context: PapyrusContext): EID? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         return this.readElement(input, name) { i: ByteBuffer? -> context.readEID32(input) }
     }
 
@@ -276,8 +254,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The ID.
      */
     fun readID64(input: ByteBuffer, name: String, context: PapyrusContext): EID? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         return this.readElement(input, name) { i: ByteBuffer? -> context.readEID64(input) }
     }
 
@@ -290,8 +266,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The RefID.
      */
     fun readRefID(input: ByteBuffer, name: String, context: ESSContext): RefID? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         return this.readElement(input, name) { i: ByteBuffer? -> context.readRefID(input) }
     }
 
@@ -303,8 +277,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The RefID.
      */
     fun readVSVal(input: ByteBuffer, name: String): VSVal? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val `val` = VSVal(input)
         return addValue(name, `val`)
     }
@@ -318,8 +290,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readBytes(input: ByteBuffer, name: String, size: Int): ByteArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = ByteArray(size)
@@ -336,8 +306,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readShorts(input: ByteBuffer, name: String, size: Int): ShortArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = ShortArray(size)
@@ -356,8 +324,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readInts(input: ByteBuffer, name: String, size: Int): IntArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = IntArray(size)
@@ -376,8 +342,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readLongs(input: ByteBuffer, name: String, size: Int): LongArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = LongArray(size)
@@ -396,8 +360,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readFloats(input: ByteBuffer, name: String, size: Int): FloatArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = FloatArray(size)
@@ -423,9 +385,6 @@ open class GeneralElement protected constructor() : Element {
         size: Int,
         reader: ElementReader<T>
     ): MutableList<Element>? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
-        Objects.requireNonNull(reader)
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = mutableListOf<Element>()
@@ -444,8 +403,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readBytesVS(input: ByteBuffer, name: String): ByteArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -461,8 +418,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readShortsVS(input: ByteBuffer, name: String): ShortArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -478,8 +433,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readIntsVS(input: ByteBuffer, name: String): IntArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -495,8 +448,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readLongsVS(input: ByteBuffer, name: String): LongArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -512,8 +463,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
      */
     fun readFloatsVS(input: ByteBuffer, name: String): FloatArray? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(name)
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -531,9 +480,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
     </T> */
     fun <T : Element?> readVSElemArray(input: ByteBuffer, name: String, reader: ElementReader<T>): MutableList<Element>? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(reader)
-        Objects.requireNonNull(name)
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -558,9 +504,6 @@ open class GeneralElement protected constructor() : Element {
      * @return The array.
     </T> */
     fun <T : Element?> read32ElemArray(input: ByteBuffer, name: String, reader: ElementReader<T>): MutableList<Element>? {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(reader)
-        Objects.requireNonNull(name)
         val COUNT = readInt(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT >= 0) { "Count is negative: $COUNT" }
@@ -721,7 +664,7 @@ open class GeneralElement protected constructor() : Element {
      * @return
      */
     override fun hashCode(): Int {
-        return Objects.hashCode(DATA)
+        return DATA.hashCode()
     }
 
     /**
@@ -745,12 +688,7 @@ open class GeneralElement protected constructor() : Element {
      * @return String representation.
      */
     fun toTextBlock(): String {
-        val joiner = StringJoiner(", ", "[", "]")
-        for (n in DATA.keys) {
-            val format = String.format("%s=%s", n, getVal(n))
-            joiner.add(format)
-        }
-        return joiner.toString()
+        return DATA.keys.joinToString(separator = ", ", prefix = "[", postfix = "]") { n: IString -> "$n=${getVal(n)}" }
     }
 
     /**
@@ -807,34 +745,34 @@ open class GeneralElement protected constructor() : Element {
                         String.format("%16x", `val`)
                     }
                     is Array<*> -> {
-                        Arrays.toString(`val` as Array<*>?)
+                        (`val` as Array<*>?)?.joinToString(",","[","]").toString()
                     }
                     is BooleanArray -> {
-                        Arrays.toString(`val` as BooleanArray?)
+                        (`val` as BooleanArray?)?.joinToString(",","[","]").toString()
                     }
                     is ByteArray -> {
-                        Arrays.toString(`val` as ByteArray?)
+                        (`val` as ByteArray?)?.joinToString(",","[","]").toString()
                     }
                     is CharArray -> {
-                        Arrays.toString(`val` as CharArray?)
+                        (`val` as CharArray?)?.joinToString(",","[","]").toString()
                     }
                     is DoubleArray -> {
-                        Arrays.toString(`val` as DoubleArray?)
+                        (`val` as DoubleArray?)?.joinToString(",","[","]").toString()
                     }
                     is FloatArray -> {
-                        Arrays.toString(`val` as FloatArray?)
+                        (`val` as FloatArray?)?.joinToString(",","[","]").toString()
                     }
                     is IntArray -> {
-                        Arrays.toString(`val` as IntArray?)
+                        (`val` as IntArray?)?.joinToString(",","[","]").toString()
                     }
                     is LongArray -> {
-                        Arrays.toString(`val` as LongArray?)
+                        (`val` as LongArray?)?.joinToString(",","[","]").toString()
                     }
                     is ShortArray -> {
-                        Arrays.toString(`val` as ShortArray?)
+                        (`val` as ShortArray?)?.joinToString(",","[","]").toString()
                     }
                     else -> {
-                        Objects.toString(`val`)
+                        `val`.toString()
                     }
                 }
                 BUF.append(String.format("%s=%s\n", key, str))
@@ -853,7 +791,6 @@ open class GeneralElement protected constructor() : Element {
      * @return Retrieves a copy of the <name></name>,value> map.
      */
     fun hasVal(name: IString): Boolean {
-        Objects.requireNonNull(name)
         return DATA.containsKey(name)
     }
 
@@ -865,7 +802,6 @@ open class GeneralElement protected constructor() : Element {
      * if there is no match.
      */
     private fun getVal(name: IString): Any? {
-        Objects.requireNonNull(name)
         return DATA[name]
     }
 
@@ -945,15 +881,16 @@ open class GeneralElement protected constructor() : Element {
             }
             BUF.append("[\n")
             for (e in list) {
-                if (e is GeneralElement) {
-                    val str = e.toString(level + 1)
-                    BUF.append(str).append('\n')
-                } else if (e != null) {
-                    indent(BUF, level + 1)
-                    val str = e.toString()
-                    BUF.append(str).append('\n')
-                } else {
-                    BUF.append("null")
+                when (e) {
+                    is GeneralElement -> {
+                        val str = e.toString(level + 1)
+                        BUF.append(str).append('\n')
+                    }
+                    else -> {
+                        indent(BUF, level + 1)
+                        val str = e.toString()
+                        BUF.append(str).append('\n')
+                    }
                 }
             }
             indent(BUF, level)
@@ -963,42 +900,59 @@ open class GeneralElement protected constructor() : Element {
 
         private fun formatElement(key: String, `val`: Any?, analysis: Analysis, save: ESS): String {
             val BUF = StringBuilder()
-            if (`val` == null) {
-                BUF.append(String.format("%s: <NULL>", key))
-            } else if (`val` is Linkable) {
-                val STR = `val`.toHTML(null)
-                BUF.append(String.format("%s: %s", key, STR))
-            } else if (`val` is List<*>) {
-                val STR = formatList(key, `val`, analysis, save)
-                BUF.append(String.format("%s: %s", key, STR))
-            } else if (`val`.javaClass.isArray) {
-                if (`val` is Array<*>) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as Array<Any?>?)))
-                } else if (`val` is BooleanArray) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as BooleanArray?)))
-                } else if (`val` is ByteArray) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as ByteArray?)))
-                } else if (`val` is CharArray) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as CharArray?)))
-                } else if (`val` is DoubleArray) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as DoubleArray?)))
-                } else if (`val` is FloatArray) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as FloatArray?)))
-                } else if (`val` is IntArray) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as IntArray?)))
-                } else if (`val` is LongArray) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as LongArray?)))
-                } else if (`val` is ShortArray) {
-                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as ShortArray?)))
+            when {
+                `val` == null -> {
+                    BUF.append(String.format("%s: <NULL>", key))
                 }
-                val LIST = `val` as List<*>
-                val STR = formatList(key, LIST, analysis, save)
-                BUF.append(String.format("%s: %s", key, STR))
-            } else if (`val` is GeneralElement) {
-                val STR = formatGeneralElement(key, `val`, analysis, save)
-                BUF.append(String.format("%s: %s", key, STR))
-            } else {
-                BUF.append(String.format("%s: %s", key, `val`))
+                `val` is Linkable -> {
+                    val STR = `val`.toHTML(null)
+                    BUF.append(String.format("%s: %s", key, STR))
+                }
+                `val` is List<*> -> {
+                    val STR = formatList(key, `val`, analysis, save)
+                    BUF.append(String.format("%s: %s", key, STR))
+                }
+                `val`.javaClass.isArray -> {
+                    when (`val`) {
+                        is Array<*> -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as Array<*>?)?.joinToString(",","[","]").toString()))
+                        }
+                        is BooleanArray -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as BooleanArray?)?.joinToString(",","[","]").toString()))
+                        }
+                        is ByteArray -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as ByteArray?)?.joinToString(",","[","]").toString()))
+                        }
+                        is CharArray -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as CharArray?)?.joinToString(",","[","]").toString()))
+                        }
+                        is DoubleArray -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as DoubleArray?)?.joinToString(",","[","]").toString()))
+                        }
+                        is FloatArray -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as FloatArray?)?.joinToString(",","[","]").toString()))
+                        }
+                        is IntArray -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as IntArray?)?.joinToString(",","[","]").toString()))
+                        }
+                        is LongArray -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as LongArray?)?.joinToString(",","[","]").toString()))
+                        }
+                        is ShortArray -> {
+                            BUF.append(String.format("%s: %s", key, (`val` as ShortArray?)?.joinToString(",","[","]").toString()))
+                        }
+                    }
+                    val LIST = `val` as List<*>
+                    val STR = formatList(key, LIST, analysis, save)
+                    BUF.append(String.format("%s: %s", key, STR))
+                }
+                `val` is GeneralElement -> {
+                    val STR = formatGeneralElement(key, `val`, analysis, save)
+                    BUF.append(String.format("%s: %s", key, STR))
+                }
+                else -> {
+                    BUF.append(String.format("%s: %s", key, `val`))
+                }
             }
             return BUF.toString()
         }
