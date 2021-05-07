@@ -63,19 +63,20 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.Int, context: ESSContext) : 
             BUILDER.append("</ul>")
         }
         if (super.hasVal("SPELLS")) {
-            val UncastedSpells = super.getVal("SPELLS")
-            val spells = UncastedSpells as Array<RefID>
-            val spells_levelled = super.getVal("SPELLS_LEVELLED") as Array<RefID>
-            val shouts = super.getVal("SHOUTS") as Array<RefID>
+            val UncastedSpells = super.getVal("SPELLS") as Array<*>
+            val spells = UncastedSpells.map { i -> i as RefID }
+            val uncastedLVLSpells = super.getVal("SPELLS_LEVELLED") as Array<*>
+            val spells_levelled = uncastedLVLSpells.map { i -> i as RefID }
+            val uncastedShouts = super.getVal("SHOUTS") as Array<*>
+            val shouts = uncastedShouts.map { i -> i as RefID }
             BUILDER.append(String.format("<p>%s spells.</p><ul>", spells.size))
-            listOf(*spells).forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
+            spells.forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
             BUILDER.append("</ul>")
             BUILDER.append(String.format("<p>%s levelled spells.</p><ul>", spells_levelled.size))
-            listOf(*spells_levelled)
-                .forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
+            spells_levelled.forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
             BUILDER.append("</ul>")
             BUILDER.append(String.format("<p>%s shouts.</p><ul>", shouts.size))
-            listOf(*shouts).forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
+            shouts.forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
             BUILDER.append("</ul>")
         }
         if (super.hasVal("AIDT")) {
