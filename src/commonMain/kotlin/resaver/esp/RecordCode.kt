@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
 /**
  * Describes the prefix codes of skyrim mod file records.
- * 
+ *
  * @author Mark Fairchild
  */
-public enum RecordCode {
+enum class RecordCode(val FULLNAME: String, val HAS_VMAD: Boolean) {
     AACT("Action", false),
     ACHR("Actor", true),
     ACTI("Activator", true),
@@ -53,10 +53,10 @@ public enum RecordCode {
     CPTH("Camera Path", false),
     CSTY("Combat Style", false),
     DEBR("Debris", false),
-    DFOB("Default Object", false),    
+    DFOB("Default Object", false),
     DIAL("Dialog Topic", false),
     DLBR("Dialog Branch", false),
-    DLVW("Dialog View", false),    
+    DLVW("Dialog View", false),
     DMGT("Damage Type", false),
     DOBJ("Default Object Manager", false),
     DOOR("Door", true),
@@ -89,7 +89,7 @@ public enum RecordCode {
     INNR("Instance Naming Rules", false),
     IPCT("Impact Data", false),
     IPDS("Impatact Data Set", false),
-    KEYM("Key", true),   
+    KEYM("Key", true),
     KSSM("Sound Keyword Mapping", false),
     KYWD("Keyword", false),
     LAND("Landscape", false),
@@ -130,7 +130,7 @@ public enum RecordCode {
     PHZD("Placed Hazard", true),
     PMIS("Placed Missile", true),
     PROJ("Projectile", false),
-    QUST("Quest", true),    
+    QUST("Quest", true),
     RACE("Race", false),
     RFCT("Visual Effect", false),
     REFR("Object Reference", true),
@@ -170,13 +170,4 @@ public enum RecordCode {
     WRLD("World Space", false),
     WTHR("Weather", false),
     ZOOM("Zoom", false);
-    
-    final public String FULLNAME;
-    final public boolean HAS_VMAD;
-
-    private RecordCode(String fullName, boolean hasVMAD) {
-        this.HAS_VMAD = hasVMAD;
-        this.FULLNAME = fullName;
-    }
-
 }

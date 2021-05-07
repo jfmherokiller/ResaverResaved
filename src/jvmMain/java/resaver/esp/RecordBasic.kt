@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-import static java.nio.charset.StandardCharsets.UTF_8;
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 
 /**
  * RecordBasic represents all records that are not a GRUP and do not contain
@@ -26,90 +24,42 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  *
  * @author Mark Fairchild
  */
-public class RecordBasic extends Record {
-
-    /**
-     * Skims a RecordBasic by reading it from a LittleEndianInput.
-     *
-     * @param recordCode The record code.
-     * @param header The header.
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param ctx The mod descriptor.
-     */
-    static public void skimRecord(@NotNull RecordCode recordCode, @NotNull RecordHeader header, @NotNull ByteBuffer input, @NotNull ESPContext ctx) {
-        final FieldList FIELDS = new FieldList();
-
-        while (input.hasRemaining()) {
-            FieldList newFields = Record.readField(recordCode, input, ctx);
-            FIELDS.addAll(newFields);
-        }
-
-        ctx.PLUGIN_INFO.addRecord(header.ID, FIELDS);
-    }
-
-    /**
-     * Creates a new RecordBasic by reading it from a LittleEndianInput.
-     *
-     * @param recordCode The record code.
-     * @param header The header.
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param ctx The mod descriptor.
-     */
-    public RecordBasic(@NotNull RecordCode recordCode, RecordHeader header, @NotNull ByteBuffer input, @NotNull ESPContext ctx) {
-        this.CODE = recordCode;
-        this.HEADER = header;       
-        this.FIELDS = new FieldList();
-
-        while (input.hasRemaining()) {
-            FieldList newFields = Record.readField(recordCode, input, ctx);
-            FIELDS.addAll(newFields);
-        }
-    }
-
-    /**
-     * @see Entry#write(ByteBuffer)
-     * @param output The ByteBuffer.
-     */
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        output.put(this.CODE.toString().getBytes(UTF_8));
-        output.putInt(this.calculateSize() - 24);
-        this.HEADER.write(output);
-        this.FIELDS.forEach(field -> field.write(output));
-    }
-
-    /**
-     * @return The calculated size of the field.
-     * @see Entry#calculateSize()
-     */
-    @Override
-    public int calculateSize() {
-        int sum = 24;
-        int result = 0;
-        for (Field FIELD : this.FIELDS) {
-            int calculateSize = FIELD.calculateSize();
-            result += calculateSize;
-        }
-        sum += result;
-        return sum;
-    }
-
+class RecordBasic(
     /**
      * Returns the record code.
      *
      * @return The record code.
      */
-    @NotNull
-    @Override
-    public RecordCode getCode() {
-        return this.CODE;
-    }
-
+    override val code: RecordCode,
     /**
      * @return The record header.
      */
-    public RecordHeader getHeader() {
-        return this.HEADER;
+    val header: RecordHeader, input: ByteBuffer, ctx: ESPContext
+) : Record() {
+    /**
+     * @see Entry.write
+     * @param output The ByteBuffer.
+     */
+    override fun write(output: ByteBuffer?) {
+        output?.put(this.code.toString().toByteArray(StandardCharsets.UTF_8))
+        output?.putInt(calculateSize() - 24)
+        header.write(output)
+        FIELDS.forEach { field: Field? ->
+            field?.write(output)
+        }
+    }
+
+    /**
+     * @return The calculated size of the field.
+     * @see Entry.calculateSize
+     */
+    override fun calculateSize(): Int {
+        var sum = 24
+        val result = FIELDS
+            .mapNotNull { it?.calculateSize() }
+            .sum()
+        sum += result
+        return sum
     }
 
     /**
@@ -117,17 +67,44 @@ public class RecordBasic extends Record {
      * code string.
      *
      * @return A string representation.
-     *
      */
-    @Override
-    public String toString() {
-        return this.getCode().toString();
+    override fun toString(): String {
+        return this.code.toString()
     }
 
-    @NotNull
-    final private RecordCode CODE;
-    final private RecordHeader HEADER;
-    @NotNull
-    final private FieldList FIELDS;
+    private val FIELDS: FieldList = FieldList()
 
+    companion object {
+        /**
+         * Skims a RecordBasic by reading it from a LittleEndianInput.
+         *
+         * @param recordCode The record code.
+         * @param header The header.
+         * @param input The `ByteBuffer` to read.
+         * @param ctx The mod descriptor.
+         */
+        fun skimRecord(recordCode: RecordCode, header: RecordHeader, input: ByteBuffer, ctx: ESPContext) {
+            val FIELDS = FieldList()
+            while (input.hasRemaining()) {
+                val newFields = readField(recordCode, input, ctx)
+                FIELDS.addAll(newFields)
+            }
+            ctx.PLUGIN_INFO.addRecord(header.ID, FIELDS)
+        }
+    }
+
+    /**
+     * Creates a new RecordBasic by reading it from a LittleEndianInput.
+     *
+     * @param recordCode The record code.
+     * @param header The header.
+     * @param input The `ByteBuffer` to read.
+     * @param ctx The mod descriptor.
+     */
+    init {
+        while (input.hasRemaining()) {
+            val newFields = readField(code, input, ctx)
+            FIELDS.addAll(newFields)
+        }
+    }
 }

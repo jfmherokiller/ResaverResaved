@@ -13,21 +13,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.util.List;
-import java.util.LinkedList;
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.util.*
+import java.util.function.Consumer
 
 /**
  * Describes GRUP records.
  *
  * @author Mark Fairchild
  */
-public class RecordGrup extends Record {
+class RecordGrup(
+    /**
+     * Returns the record code.
+     *
+     * @return The record code.
+     */
+    override val code: RecordCode, private val HEADER: ByteBuffer, input: ByteBuffer, ctx: ESPContext
+) : Record() {
+    /**
+     * @see Entry.write
+     * @param output The ByteBuffer.
+     */
+    override fun write(output: ByteBuffer?) {
+        output?.put(this.code.toString().toByteArray(StandardCharsets.UTF_8))
+        output?.putInt(calculateSize())
+        output?.put(HEADER)
+        RECORDS.forEach(Consumer { record: Record -> record.write(output) })
+    }
+
+    /**
+     * @return The calculated size of the field.
+     * @see Entry.calculateSize
+     */
+    override fun calculateSize(): Int {
+        var sum = 24
+        var result = 0
+        for (RECORD in RECORDS) {
+            val calculateSize = RECORD.calculateSize()
+            result += calculateSize
+        }
+        sum += result
+        return sum
+    }
+
+    /**
+     * Returns a String representation of the Record, which will just be the
+     * code string.
+     *
+     * @return A string representation.
+     */
+    override fun toString(): String {
+        return this.code.toString()
+    }
+
+    private val RECORDS: MutableList<Record>
 
     /**
      * Creates a new RecordGRUP by reading it from a LittleEndianInput.
@@ -37,70 +79,11 @@ public class RecordGrup extends Record {
      * @param input The LittleEndianInput to read.
      * @param ctx The mod descriptor.
      */
-    public RecordGrup(RecordCode code, ByteBuffer headerData, @NotNull ByteBuffer input, @NotNull ESPContext ctx) {
-        this.CODE = code;
-        this.HEADER = headerData;
-        this.RECORDS = new LinkedList<>();
-
+    init {
+        RECORDS = LinkedList()
         while (input.hasRemaining()) {
-            Record record = Record.readRecord(input, ctx);
-            this.RECORDS.add(record);
+            val record = readRecord(input, ctx)
+            RECORDS.add(record)
         }
     }
-
-    /**
-     * @see Entry#write(transposer.ByteBuffer)
-     * @param output The ByteBuffer.
-     */
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        output.put(this.CODE.toString().getBytes(UTF_8));
-        output.putInt(this.calculateSize());
-        output.put(this.HEADER);
-        this.RECORDS.forEach(record -> record.write(output));
-    }
-
-    /**
-     * @return The calculated size of the field.
-     * @see Entry#calculateSize()
-     */
-    @Override
-    public int calculateSize() {
-        int sum = 24;
-        int result = 0;
-        for (Record RECORD : this.RECORDS) {
-            int calculateSize = RECORD.calculateSize();
-            result += calculateSize;
-        }
-        sum += result;
-        return sum;
-    }
-
-    /**
-     * Returns the record code.
-     *
-     * @return The record code.
-     */
-    @Override
-    public RecordCode getCode() {
-        return this.CODE;
-    }
-
-    /**
-     * Returns a String representation of the Record, which will just be the
-     * code string.
-     *
-     * @return A string representation.
-     *
-     */
-    @Override
-    public String toString() {
-        return this.getCode().toString();
-    }
-
-    final private RecordCode CODE;
-    final private ByteBuffer HEADER;
-    @NotNull
-    final private List<Record> RECORDS;
-
 }

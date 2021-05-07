@@ -13,22 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
-
-import mf.BufferUtil;
-import org.jetbrains.annotations.NotNull;
-import resaver.IString;
-import ess.Plugin;
-import static resaver.esp.Entry.advancingSlice;
-import ess.PluginInfo;
+import ess.Plugin
+import ess.PluginInfo
+import ess.PluginInfo.Companion.makeFormID
+import mf.BufferUtil
+import resaver.IString
+import resaver.esp.Entry.Companion.advancingSlice
+import java.nio.ByteBuffer
+import java.nio.file.Paths
+import java.util.*
 
 /**
  * RecordTes4 is the first record. It handles its own data and is not read using
@@ -36,129 +31,29 @@ import ess.PluginInfo;
  *
  * @author Mark Fairchild
  */
-public class RecordTes4 extends Record {
-
+class RecordTes4(input: ByteBuffer, plugin: Plugin?, plugins: PluginInfo?, ctx: ESPContext) : Record() {
     /**
-     * Creates a new RecordTes4 by reading it from a LittleEndianInput.
-     *
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param plugin The <code>Plugin</code> corresponding to the
-     * <code>ESP</code>.
-     * @param plugins The list of plugins, for correcting FormIDs.
-     * @param ctx The mod descriptor.
-     */
-    public RecordTes4(@NotNull ByteBuffer input, Plugin plugin, PluginInfo plugins, @NotNull ESPContext ctx) {
-        this.CODE = RecordCode.TES4;
-        this.PLUGIN = Objects.requireNonNull(plugin);
-        this.PLUGINS = Objects.requireNonNull(plugins);
-
-        final byte[] CODEBYTES = new byte[4];
-        input.get(CODEBYTES);
-        final String CODESTRING = new String(CODEBYTES);
-        assert CODESTRING.equals("TES4");
-
-        ctx.pushContext(CODESTRING);
-
-        final int DATASIZE = input.getInt();
-        this.HEADER = new RecordHeader(input, ctx);
-
-        // Read the record data.
-        final ByteBuffer FIELDINPUT = advancingSlice(input, DATASIZE);
-        this.FIELDS = new FieldList();
-
-        while (FIELDINPUT.hasRemaining()) {
-            FieldList newFields = Record.readField(RecordCode.TES4, FIELDINPUT, ctx);
-            this.FIELDS.addAll(newFields);
-        }
-
-        List<String> masters = new ArrayList<>();
-        for (Field FIELD : this.FIELDS) {
-            if (FIELD.getCode().equals(IString.get("MAST"))) {
-                if (FIELD instanceof FieldSimple) {
-                    FieldSimple fieldSimple = (FieldSimple) FIELD;
-                    ByteBuffer byteBuffer = fieldSimple.getByteBuffer();
-                    String zString = BufferUtil.getZString(byteBuffer);
-                    masters.add(zString);
-                }
-            }
-        }
-        this.MASTERS = java.util.Collections.unmodifiableList(new ArrayList<>(masters));
-
-        Optional<ByteBuffer> HEDR = Optional.empty();
-        for (Field f : this.FIELDS) {
-            if (f.getCode().equals(IString.get("HEDR"))) {
-                if (f instanceof FieldSimple) {
-                    FieldSimple fieldSimple = (FieldSimple) f;
-                    ByteBuffer byteBuffer = fieldSimple.getByteBuffer();
-                    HEDR = Optional.of(byteBuffer);
-                    break;
-                }
-            }
-        }
-
-        if (HEDR.isPresent()) {
-            this.VERSION = HEDR.get().getFloat();
-            this.RECORD_COUNT = HEDR.get().getInt();
-            this.NEXT_RECORD = HEDR.get().getInt();
-        } else {
-            this.VERSION = Float.NaN;
-            this.RECORD_COUNT = 0;
-            this.NEXT_RECORD = 0;
-        }
-
-        /*Map<String, Integer> esps = new java.util.HashMap<>(espList.size());
-        for (int i = 0; i < espList.size(); i++) {
-            esps.put(espList.get(i), i);
-        }
-
-        this.ESPs = java.util.Collections.unmodifiableMap(esps);*/
-    }
-
-    /**
-     * @see Entry#write(ByteBuffer)
+     * @see Entry.write
      * @param output The ByteBuffer.
      */
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        output.put(this.CODE.toString().getBytes());
-        output.putInt(this.calculateSize() - 24);
-        this.HEADER.write(output);
-        this.FIELDS.forEach(field -> field.write(output));
+    override fun write(output: ByteBuffer?) {
+        output?.put(this.code.toString().toByteArray())
+        output?.putInt(calculateSize() - 24)
+        header.write(output)
+        FIELDS.forEach { field: Field? -> field?.write(output) }
     }
 
     /**
      * @return The calculated size of the field.
-     * @see Entry#calculateSize()
+     * @see Entry.calculateSize
      */
-    @Override
-    public int calculateSize() {
-        int sum = 24;
-        int result = 0;
-        for (Field FIELD : this.FIELDS) {
-            int calculateSize = FIELD.calculateSize();
-            result += calculateSize;
-        }
-        sum += result;
-        return sum;
-    }
-
-    /**
-     * Returns the record code.
-     *
-     * @return The record code.
-     */
-    @NotNull
-    @Override
-    public RecordCode getCode() {
-        return this.CODE;
-    }
-
-    /**
-     * @return The record header.
-     */
-    @NotNull
-    public RecordHeader getHeader() {
-        return this.HEADER;
+    override fun calculateSize(): Int {
+        var sum = 24
+        val result = FIELDS
+            .mapNotNull { it?.calculateSize() }
+            .sum()
+        sum += result
+        return sum
     }
 
     /**
@@ -166,11 +61,9 @@ public class RecordTes4 extends Record {
      * code string.
      *
      * @return A string representation.
-     *
      */
-    @Override
-    public String toString() {
-        return this.getCode().toString();
+    override fun toString(): String {
+        return this.code.toString()
     }
 
     /**
@@ -181,36 +74,104 @@ public class RecordTes4 extends Record {
      * @param ctx The mod descriptor.
      * @return
      */
-    public int remapFormID(int id, ESPContext ctx) {
-        int headerIndex = id >>> 24;
-        assert 0 <= headerIndex && headerIndex < 256;
-
-        if (headerIndex == this.MASTERS.size()) {
-            return PluginInfo.makeFormID(this.PLUGIN, id);
-
-        } else if (headerIndex < this.MASTERS.size()) {
-            String originPluginName = this.MASTERS.get(headerIndex);
-            Plugin origin = this.PLUGINS.getPaths().get(Paths.get(originPluginName));
-            return origin == null ? (id | 0xFF000000) : PluginInfo.makeFormID(origin, id);
-            
+    fun remapFormID(id: Int, ctx: ESPContext?): Int {
+        val headerIndex = id ushr 24
+        assert(headerIndex in 0..255)
+        return if (headerIndex == MASTERS.size) {
+            makeFormID(PLUGIN, id)
+        } else if (headerIndex < MASTERS.size) {
+            val originPluginName = MASTERS[headerIndex]
+            val origin = PLUGINS.paths[Paths.get(originPluginName)]
+            if (origin == null) id or -0x1000000 else makeFormID(origin, id)
         } else {
-            return id | 0xFF000000;
+            id or -0x1000000
         }
     }
 
-    final public Plugin PLUGIN;
-    @NotNull
-    final public List<String> MASTERS;
-    final private PluginInfo PLUGINS;
+    val PLUGIN: Plugin
+    val MASTERS: List<String?>
+    private val PLUGINS: PluginInfo
 
-    @NotNull
-    final private RecordCode CODE;
-    @NotNull
-    final private RecordHeader HEADER;
-    @NotNull
-    final private FieldList FIELDS;
-    final private float VERSION;
-    final private int RECORD_COUNT;
-    final private int NEXT_RECORD;
+    /**
+     * Returns the record code.
+     *
+     * @return The record code.
+     */
+    override val code: RecordCode
 
+    /**
+     * @return The record header.
+     */
+    val header: RecordHeader
+    private val FIELDS: FieldList
+    private var VERSION = 0f
+    private var RECORD_COUNT = 0
+    private var NEXT_RECORD = 0
+
+    /**
+     * Creates a new RecordTes4 by reading it from a LittleEndianInput.
+     *
+     * @param input The `ByteBuffer` to read.
+     * @param plugin The `Plugin` corresponding to the
+     * `ESP`.
+     * @param plugins The list of plugins, for correcting FormIDs.
+     * @param ctx The mod descriptor.
+     */
+    init {
+        this.code = RecordCode.TES4
+        PLUGIN = Objects.requireNonNull(plugin)!!
+        PLUGINS = Objects.requireNonNull(plugins)!!
+        val CODEBYTES = ByteArray(4)
+        input[CODEBYTES]
+        val CODESTRING = String(CODEBYTES)
+        assert(CODESTRING == "TES4")
+        ctx.pushContext(CODESTRING)
+        val DATASIZE = input.int
+        header = RecordHeader(input, ctx)
+
+        // Read the record data.
+        val FIELDINPUT = advancingSlice(input, DATASIZE)
+        FIELDS = FieldList()
+        while (FIELDINPUT.hasRemaining()) {
+            val newFields = readField(RecordCode.TES4, FIELDINPUT, ctx)
+            FIELDS.addAll(newFields)
+        }
+        val masters: MutableList<String?> = ArrayList()
+        for (FIELD in FIELDS) {
+            if (FIELD?.code!!.equals(IString["MAST"])) {
+                if (FIELD is FieldSimple) {
+                    val byteBuffer = FIELD.byteBuffer
+                    val zString = BufferUtil.getZString(byteBuffer)
+                    masters.add(zString)
+                }
+            }
+        }
+        MASTERS = Collections.unmodifiableList(ArrayList(masters))
+        var HEDR = Optional.empty<ByteBuffer>()
+        for (f in FIELDS) {
+            if (f?.code!!.equals(IString["HEDR"])) {
+                if (f is FieldSimple) {
+                    val byteBuffer = f.byteBuffer
+                    HEDR = Optional.of(byteBuffer)
+                    break
+                }
+            }
+        }
+        if (HEDR.isPresent) {
+            VERSION = HEDR.get().float
+            RECORD_COUNT = HEDR.get().int
+            NEXT_RECORD = HEDR.get().int
+        } else {
+            VERSION = Float.NaN
+            RECORD_COUNT = 0
+            NEXT_RECORD = 0
+        }
+
+        /*Map<String, Integer> esps = new java.util.HashMap<>(espList.size());
+        for (int i = 0; i < espList.size(); i++) {
+            esps.put(espList.get(i), i);
+        }
+
+        this.ESPs = java.util.Collections.unmodifiableMap(esps);*/
+    }
 }
