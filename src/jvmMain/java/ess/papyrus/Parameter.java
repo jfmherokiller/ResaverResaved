@@ -15,6 +15,9 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -36,7 +39,8 @@ public abstract class Parameter implements PapyrusElement {
      * @return The new <code>Parameter</code>.
      * @throws PapyrusFormatException
      */
-    static public Parameter read(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
+    @NotNull
+    static public Parameter read(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
         Objects.requireNonNull(input);
         Objects.requireNonNull(context);
 
@@ -76,6 +80,7 @@ public abstract class Parameter implements PapyrusElement {
      * @param value
      * @return
      */
+    @NotNull
     static public Parameter createTerm(String value) {
         return new Term(value);
     }
@@ -83,6 +88,7 @@ public abstract class Parameter implements PapyrusElement {
     /**
      * @return The type of the parameter.
      */
+    @NotNull
     abstract public ParamType getType();
 
     /**
@@ -164,6 +170,7 @@ public abstract class Parameter implements PapyrusElement {
     /**
      * @return String representation.
      */
+    @NotNull
     @Override
     public String toString() {
         return this.getType() + ":" + this.toValueString();
@@ -181,13 +188,14 @@ public abstract class Parameter implements PapyrusElement {
         public Null() {
         }
 
+        @NotNull
         @Override
         public ParamType getType() {
             return ParamType.NULL;
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             this.getType().write(output);
         }
 
@@ -199,6 +207,7 @@ public abstract class Parameter implements PapyrusElement {
         /**
          * @return String representation.
          */
+        @NotNull
         @Override
         public String toValueString() {
             return "NULL";
@@ -212,15 +221,12 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             } else if (obj == null) {
                 return false;
-            } else if (getClass() != obj.getClass()) {
-                return false;
-            }
-            return true;
+            } else return getClass() == obj.getClass();
         }
 
     }
@@ -234,13 +240,14 @@ public abstract class Parameter implements PapyrusElement {
             this.VALUE = Objects.requireNonNull(val);
         }
 
+        @NotNull
         @Override
         public ParamType getType() {
             return ParamType.IDENTIFIER;
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             this.getType().write(output);
             this.VALUE.write(output);
         }
@@ -253,6 +260,7 @@ public abstract class Parameter implements PapyrusElement {
         /**
          * @return String representation.
          */
+        @NotNull
         @Override
         public String toValueString() {
             return this.VALUE.toString();
@@ -267,7 +275,7 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             } else if (obj == null) {
@@ -314,13 +322,14 @@ public abstract class Parameter implements PapyrusElement {
             this.VALUE = Objects.requireNonNull(val);
         }
 
+        @NotNull
         @Override
         public ParamType getType() {
             return ParamType.STRING;
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             this.getType().write(output);
             this.VALUE.write(output);
         }
@@ -333,6 +342,7 @@ public abstract class Parameter implements PapyrusElement {
         /**
          * @return String representation.
          */
+        @NotNull
         @Override
         public String toValueString() {
             return this.VALUE.toString().replace("\n", "\\n");
@@ -347,7 +357,7 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             } else if (obj == null) {
@@ -371,13 +381,14 @@ public abstract class Parameter implements PapyrusElement {
             this.VALUE = val;
         }
 
+        @NotNull
         @Override
         public ParamType getType() {
             return ParamType.INTEGER;
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             this.getType().write(output);
             output.putInt(this.VALUE);
         }
@@ -387,6 +398,7 @@ public abstract class Parameter implements PapyrusElement {
             return 5;
         }
 
+        @NotNull
         @Override
         public String toValueString() {
             return Integer.toString(this.VALUE);
@@ -401,7 +413,7 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             } else if (obj == null) {
@@ -425,13 +437,14 @@ public abstract class Parameter implements PapyrusElement {
             this.VALUE = val;
         }
 
+        @NotNull
         @Override
         public ParamType getType() {
             return ParamType.FLOAT;
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             this.getType().write(output);
             output.putFloat(this.VALUE);
         }
@@ -455,7 +468,7 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             } else if (obj == null) {
@@ -479,13 +492,14 @@ public abstract class Parameter implements PapyrusElement {
             this.VALUE = val;
         }
 
+        @NotNull
         @Override
         public ParamType getType() {
             return ParamType.BOOLEAN;
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             this.getType().write(output);
             output.put(this.VALUE);
         }
@@ -495,6 +509,7 @@ public abstract class Parameter implements PapyrusElement {
             return 2;
         }
 
+        @NotNull
         @Override
         public String toValueString() {
             return Boolean.toString(this.VALUE != 0);
@@ -509,7 +524,7 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             } else if (obj == null) {
@@ -533,6 +548,7 @@ public abstract class Parameter implements PapyrusElement {
             this.VALUE = Objects.requireNonNull(val);
         }
 
+        @NotNull
         @Override
         public ParamType getType() {
             return ParamType.TERM;
@@ -562,7 +578,7 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             } else if (obj == null) {
@@ -586,13 +602,14 @@ public abstract class Parameter implements PapyrusElement {
             this.VALUE = Objects.requireNonNull(val);
         }
 
+        @NotNull
         @Override
         public ParamType getType() {
             return ParamType.UNKNOWN8;
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             this.getType().write(output);
             this.VALUE.write(output);
         }
@@ -602,6 +619,7 @@ public abstract class Parameter implements PapyrusElement {
             return 1 + this.VALUE.calculateSize();
         }
 
+        @NotNull
         @Override
         public String toValueString() {
             return this.VALUE.toString().replace("\n", "\\n");
@@ -616,7 +634,7 @@ public abstract class Parameter implements PapyrusElement {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(@Nullable Object obj) {
             if (this == obj) {
                 return true;
             } else if (obj == null) {

@@ -255,9 +255,9 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      */
     override fun getInfo(analysis: Analysis?, save: ess.ESS?): String {
         val BUILDER = StringBuilder()
-        val HOLDERS = save!!.papyrus.scriptInstances.values
-            .filter { i: ess.papyrus.ScriptInstance -> refID == i.refID }
-            .toList().toSet()
+        val HOLDERS = save!!.papyrus?.scriptInstances?.values
+            ?.filter { i: ess.papyrus.ScriptInstance -> refID == i.refID }
+            ?.toList()?.toSet()
         BUILDER.append("<html><h3>CHANGEFORM</h3>")
         BUILDER.append(String.format("<p>RefID: %s</p>", refID))
         BUILDER.append(String.format("<p style=\"display:inline-table;\">ChangeFlags: %s</p>", changeFlags.toHTML()))
@@ -271,22 +271,24 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
             BUILDER.append(String.format("Length: %d bytes<br/>", length1))
         }
         BUILDER.append("</p>")
-        if (HOLDERS.isEmpty()) {
-            BUILDER.append("<p>No attached instances.</p>")
-        } else {
-            BUILDER.append(String.format("<p>%d attached instances:</p><ul>", HOLDERS.size))
-            HOLDERS.forEach { owner: ess.papyrus.ScriptInstance? ->
-                if (owner != null) {
-                    BUILDER.append(
-                        String.format(
-                            "<li>%s - %s",
-                            owner.javaClass.simpleName,
-                            (owner as Linkable).toHTML(this)
+        if (HOLDERS != null) {
+            if (HOLDERS.isEmpty()) {
+                BUILDER.append("<p>No attached instances.</p>")
+            } else {
+                BUILDER.append(String.format("<p>%d attached instances:</p><ul>", HOLDERS.size))
+                HOLDERS.forEach { owner: ess.papyrus.ScriptInstance? ->
+                    if (owner != null) {
+                        BUILDER.append(
+                            String.format(
+                                "<li>%s - %s",
+                                owner.javaClass.simpleName,
+                                (owner as Linkable).toHTML(this)
+                            )
                         )
-                    )
+                    }
                 }
+                BUILDER.append("</ul>")
             }
-            BUILDER.append("</ul>")
         }
         BUILDER.append(String.format("<h3>ANALYZE RAW DATA: %s</h3>", refID.toHTML(null)))
         val BODY = getData(analysis, save.context, true)
@@ -414,7 +416,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         TYPEFIELD = java.lang.Byte.toUnsignedInt(input.get())
         VERSION = input.get()
         val typeCode = TYPEFIELD and 0x3F
-        val type = ess.ChangeFormType.getType(context.game, typeCode)
+        val type = context.game?.let { ChangeFormType.getType(it, typeCode) }
             ?: throw IllegalStateException("Invalid changeform type index: $typeCode")
         this.type = type
         when (dataLength) {

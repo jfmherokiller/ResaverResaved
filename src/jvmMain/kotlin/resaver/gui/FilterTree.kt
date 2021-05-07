@@ -126,9 +126,9 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
                     }
                 } else if (element is ess.papyrus.StackFrame) {
                     val owner = element.owner
-                    if (null != owner && owner is ess.papyrus.VarRef) {
+                    if (owner is ess.papyrus.VarRef) {
                         val ref = element.owner as ess.papyrus.VarRef?
-                        findHandler!!.accept(ref!!.referent)
+                        ref!!.referent?.let { findHandler!!.accept(it) }
                     }
                 } else if (element is ArrayInfo) {
                     if (null != element.holder) {

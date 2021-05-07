@@ -15,13 +15,15 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  *
  * @author Mark
  */
 final public class SuspendedStackMap extends PapyrusElementMap<SuspendedStack> {
 
-    SuspendedStackMap(java.nio.ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
+    SuspendedStackMap(@NotNull java.nio.ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
         super(input, b -> new SuspendedStack(b, context));
     }
 

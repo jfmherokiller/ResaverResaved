@@ -1,5 +1,8 @@
 package resaver.pex;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -36,6 +39,7 @@ class VDataStrLit extends VData {
         return STRING;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return ("\"" + this.VALUE + "\"").replace("\n", "\\n");
@@ -52,14 +56,14 @@ class VDataStrLit extends VData {
         return hash;
     }
 
-    public boolean equals(VDataTerm obj) {
+    public boolean equals(@Nullable VDataTerm obj) {
         if (obj == null) {
             return false;
         }
         return Objects.equals(this.VALUE, obj.VALUE);
     }
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         } else if (obj == null) {

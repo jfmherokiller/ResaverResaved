@@ -18,6 +18,9 @@ package resaver.esp;
 import java.nio.ByteBuffer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.IString;
 
 /**
@@ -27,7 +30,7 @@ import resaver.IString;
  */
 public class FragmentPerk extends FragmentBase {
 
-    public FragmentPerk(ByteBuffer input, ESPContext ctx) {
+    public FragmentPerk(@NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         try {
             this.UNKNOWN = input.get();
 
@@ -55,7 +58,7 @@ public class FragmentPerk extends FragmentBase {
     }
 
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.UNKNOWN);
         if (null != this.SCRIPT) {
             this.SCRIPT.write(output);
@@ -94,8 +97,11 @@ public class FragmentPerk extends FragmentBase {
     }
 
     final private byte UNKNOWN;
+    @Nullable
     final private String FILENAME;
+    @Nullable
     final private Script SCRIPT;
+    @NotNull
     final private List<Fragment> FRAGMENTS;
 
     /**
@@ -103,7 +109,7 @@ public class FragmentPerk extends FragmentBase {
      */
     public class Fragment implements Entry {
 
-        public Fragment(ByteBuffer input) {
+        public Fragment(@NotNull ByteBuffer input) {
             this.INDEX = Short.toUnsignedInt(input.getShort());
             this.UNKNOWN1 = input.getShort();
             this.UNKNOWN2 = input.get();
@@ -112,7 +118,7 @@ public class FragmentPerk extends FragmentBase {
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             output.putShort((short) this.INDEX);
             output.putShort(this.UNKNOWN1);
             output.put(this.UNKNOWN2);
@@ -128,7 +134,9 @@ public class FragmentPerk extends FragmentBase {
         final private int INDEX;
         final private short UNKNOWN1;
         final private byte UNKNOWN2;
+        @NotNull
         final private IString SCRIPTNAME;
+        @NotNull
         final private IString FRAGMENTNAME;
     }
 }

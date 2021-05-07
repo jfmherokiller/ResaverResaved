@@ -73,6 +73,9 @@ tasks.withType<Jar> {
         ))
     }
 }
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
+    minimize()
+}
 tasks.withType<Test> {
     minHeapSize="2048m"
     maxHeapSize="4096m"

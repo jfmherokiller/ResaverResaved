@@ -114,13 +114,17 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
                 }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_BASEOBJECT)) {
-                super.readRefID(input, "BASE_OBJECT", context)
+                if (context != null) {
+                    super.readRefID(input, "BASE_OBJECT", context)
+                }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_SCALE)) {
                 super.readFloat(input, "SCALE")
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_MOVE)) {
-                super.readRefID(input, "MOVE_CELL", context)
+                if (context != null) {
+                    super.readRefID(input, "MOVE_CELL", context)
+                }
                 super.readFloats(input, "MOVE_POS", 3)
                 super.readFloats(input, "MOVE_ROT", 3)
             }

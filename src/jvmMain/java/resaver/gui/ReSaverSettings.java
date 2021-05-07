@@ -32,6 +32,9 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.UIManager;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.Game;
 
 /**
@@ -42,7 +45,7 @@ import resaver.Game;
 @SuppressWarnings("serial")
 public class ReSaverSettings extends JDialog {
 
-    public ReSaverSettings(SaveWindow parent, Game currentGame) {
+    public ReSaverSettings(SaveWindow parent, @Nullable Game currentGame) {
         super(parent, true);
         super.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         super.setLocationRelativeTo(parent);
@@ -178,7 +181,7 @@ public class ReSaverSettings extends JDialog {
      * @param items
      * @return
      */
-    static public Path getFirst(Path... items) {
+    static public Path getFirst(@NotNull Path... items) {
         return Arrays.stream(items).filter(Objects::nonNull).findFirst().orElse(null);
     }
 

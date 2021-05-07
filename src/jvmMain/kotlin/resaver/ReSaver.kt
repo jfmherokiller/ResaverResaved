@@ -16,8 +16,6 @@
 package resaver
 
 import picocli.CommandLine
-import resaver.gui.Configurator
-import resaver.gui.SaveWindow
 import java.awt.Color
 import java.awt.EventQueue
 import java.nio.file.Path
@@ -89,7 +87,7 @@ class ReSaver : Callable<Int> {
         val WINDOW: resaver.gui.SaveWindow = if (PATH_PARAMETER != null && PATH_PARAMETER!!.isNotEmpty() && resaver.gui.Configurator.validateSavegame(
                 PATH_PARAMETER!![0])) {
             resaver.gui.SaveWindow(PATH_PARAMETER!![0], AUTOPARSE_OPTION)
-            } else if (REOPEN_OPTION && resaver.gui.Configurator.validateSavegame(PREVIOUS)) {
+            } else if (REOPEN_OPTION && PREVIOUS?.let { resaver.gui.Configurator.validateSavegame(it) } == true) {
             resaver.gui.SaveWindow(PREVIOUS, AUTOPARSE_OPTION)
             } else {
             resaver.gui.SaveWindow(null, false)

@@ -1,5 +1,7 @@
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -19,7 +21,7 @@ public enum ParamType implements PapyrusElement {
     UNKNOWN8,
     TERM;
 
-    static public ParamType read(ByteBuffer input) throws PapyrusFormatException {
+    static public ParamType read(@NotNull ByteBuffer input) throws PapyrusFormatException {
         Objects.requireNonNull(input);
         int val = Byte.toUnsignedInt(input.get());
         if (val < 0 || val >= VALUES.length) {
@@ -29,7 +31,7 @@ public enum ParamType implements PapyrusElement {
     }
 
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put((byte) this.ordinal());
     }
 

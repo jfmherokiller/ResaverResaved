@@ -44,17 +44,33 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
 
     private class AliasInstance internal constructor(input: ByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
         init {
-            super.readRefID(input, "REF", context)
-            super.readInt(input, "FORMID")
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "REF", context)
+                }
+            }
+            if (input != null) {
+                super.readInt(input, "FORMID")
+            }
         }
     }
 
     private class MagicTarget internal constructor(input: ByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
         init {
-            super.readRefID(input, "REF", context)
-            super.readByte(input, "unk1")
-            super.readVSVal(input, "unk2")
-            super.readBytesVS(input, "data")
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "REF", context)
+                }
+            }
+            if (input != null) {
+                super.readByte(input, "unk1")
+            }
+            if (input != null) {
+                super.readVSVal(input, "unk2")
+            }
+            if (input != null) {
+                super.readBytesVS(input, "data")
+            }
         }
     }
 

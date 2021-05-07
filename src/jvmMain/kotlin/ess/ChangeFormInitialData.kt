@@ -45,22 +45,30 @@ internal class ChangeFormInitialData(input: ByteBuffer, initialType: Int, contex
             }
             3 -> super.readInt(input, "UNK")
             4 -> {
-                super.readRefID(input, "CELL", context)
+                if (context != null) {
+                    super.readRefID(input, "CELL", context)
+                }
                 super.readFloats(input, "POS", 3)
                 super.readFloats(input, "ROT", 3)
             }
             5 -> {
-                super.readRefID(input, "CELL", context)
+                if (context != null) {
+                    super.readRefID(input, "CELL", context)
+                }
                 super.readFloats(input, "POS", 3)
                 super.readFloats(input, "ROT", 3)
                 super.readByte(input, "UNK")
-                val ref = super.readRefID(input, "BASE_OBJECT", context)
+                val ref = context?.let { super.readRefID(input, "BASE_OBJECT", it) }
             }
             6 -> {
-                super.readRefID(input, "CELL", context)
+                if (context != null) {
+                    super.readRefID(input, "CELL", context)
+                }
                 super.readFloats(input, "POS", 3)
                 super.readFloats(input, "ROT", 3)
-                super.readRefID(input, "STARTING CELL", context)
+                if (context != null) {
+                    super.readRefID(input, "STARTING CELL", context)
+                }
                 super.readShort(input, "UNK1")
                 super.readShort(input, "UNK2")
             }

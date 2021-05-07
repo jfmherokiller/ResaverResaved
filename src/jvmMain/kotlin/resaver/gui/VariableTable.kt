@@ -47,7 +47,7 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
             val o = model.getValueAt(modelRow, column)
             assert(o is ess.papyrus.Variable)
             val `var` = o as ess.papyrus.Variable
-            if (`var`.hasRef() && !`var`.ref.isZero) {
+            if (`var`.hasRef() && `var`.ref?.isZero!!.not()) {
                 WINDOW.findElement(`var`.referent)
             }
         }
@@ -62,7 +62,7 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
                     val o = model.getValueAt(modelRow, column)
                     assert(o is ess.papyrus.Variable)
                     val `var` = o as ess.papyrus.Variable
-                    if (`var`.hasRef() && !`var`.ref.isZero) {
+                    if (`var`.hasRef() && `var`.ref?.isZero!!.not()) {
                         TABLE_POPUP_MENU.show(e.component, e.x, e.y)
                     }
                 }

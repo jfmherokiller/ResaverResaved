@@ -40,6 +40,6 @@ class FieldEDID(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx
     /**
      * @return The string value of the EDID.
      */
-    val value: String = BufferUtil.getZString(super.byteBuffer)
+    val value: String = BufferUtil.getZString(super.byteBuffer).toString()
 
 }

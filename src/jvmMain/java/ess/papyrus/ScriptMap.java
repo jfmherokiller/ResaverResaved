@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Convenience class for script maps.
  *
@@ -22,7 +24,7 @@ package ess.papyrus;
  */
 final public class ScriptMap extends PapyrusDefinitionMap<Script> {
 
-    ScriptMap(int count, java.nio.ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
+    ScriptMap(int count, java.nio.ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
         super(count, input, b -> new Script(b, context));
     }
 

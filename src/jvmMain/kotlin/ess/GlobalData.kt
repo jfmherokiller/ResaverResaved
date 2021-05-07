@@ -120,7 +120,7 @@ class GlobalData(input: ByteBuffer, context: ESSContext?, model: ModelBuilder?) 
         (input as Buffer).position((input as Buffer).position() + blockSize)
         when (type) {
             3 -> dataBlock = GlobalVariableTable(subSection, context)
-            1001 -> dataBlock = ess.papyrus.Papyrus(subSection, context, model)
+            1001 -> dataBlock = context?.let { model?.let { it1 -> ess.papyrus.Papyrus(subSection, it, it1) } }
             else -> {
                 val DATA = ByteArray(blockSize)
                 subSection[DATA]

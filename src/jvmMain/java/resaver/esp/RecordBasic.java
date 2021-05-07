@@ -15,6 +15,8 @@
  */
 package resaver.esp;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -34,7 +36,7 @@ public class RecordBasic extends Record {
      * @param input The <code>ByteBuffer</code> to read.
      * @param ctx The mod descriptor.
      */
-    static public void skimRecord(RecordCode recordCode, RecordHeader header, ByteBuffer input, ESPContext ctx) {
+    static public void skimRecord(@NotNull RecordCode recordCode, @NotNull RecordHeader header, @NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         final FieldList FIELDS = new FieldList();
 
         while (input.hasRemaining()) {
@@ -53,7 +55,7 @@ public class RecordBasic extends Record {
      * @param input The <code>ByteBuffer</code> to read.
      * @param ctx The mod descriptor.
      */
-    public RecordBasic(RecordCode recordCode, RecordHeader header, ByteBuffer input, ESPContext ctx) {
+    public RecordBasic(@NotNull RecordCode recordCode, RecordHeader header, @NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         this.CODE = recordCode;
         this.HEADER = header;       
         this.FIELDS = new FieldList();
@@ -65,11 +67,11 @@ public class RecordBasic extends Record {
     }
 
     /**
-     * @see Entry#write(transposer.ByteBuffer)
+     * @see Entry#write(ByteBuffer)
      * @param output The ByteBuffer.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.CODE.toString().getBytes(UTF_8));
         output.putInt(this.calculateSize() - 24);
         this.HEADER.write(output);
@@ -97,6 +99,7 @@ public class RecordBasic extends Record {
      *
      * @return The record code.
      */
+    @NotNull
     @Override
     public RecordCode getCode() {
         return this.CODE;
@@ -121,8 +124,10 @@ public class RecordBasic extends Record {
         return this.getCode().toString();
     }
 
+    @NotNull
     final private RecordCode CODE;
     final private RecordHeader HEADER;
+    @NotNull
     final private FieldList FIELDS;
 
 }

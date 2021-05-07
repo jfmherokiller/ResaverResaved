@@ -23,16 +23,15 @@ import java.nio.ByteBuffer
  * @author Mark Fairchild
  */
 class ActiveScriptMap :
-    ess.papyrus.PapyrusElementMap<ess.papyrus.ActiveScript> {
-    internal constructor(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : super(
-        input,
-        PapyrusElementReader<ess.papyrus.ActiveScript> { b: ByteBuffer? ->
-            ess.papyrus.ActiveScript(
-                b,
-                context
+    PapyrusElementMap<ActiveScript> {
+    internal constructor(input: ByteBuffer?, context: PapyrusContext?) : super(
+        input!!,
+        PapyrusElementReader<ActiveScript> { b: ByteBuffer? ->
+            ActiveScript(
+                b!!,
+                context!!
             )
-        }) {
-    }
+        })
 
     internal constructor() {}
 }

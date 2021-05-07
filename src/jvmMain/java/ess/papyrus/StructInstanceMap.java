@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  *
  * @author Mark Fairchild
@@ -22,7 +24,7 @@ package ess.papyrus;
 @SuppressWarnings("serial")
 final public class StructInstanceMap extends PapyrusElementMap<StructInstance> {
 
-    StructInstanceMap(java.nio.ByteBuffer input, StructMap structs, PapyrusContext context) throws PapyrusElementException {
+    StructInstanceMap(@NotNull java.nio.ByteBuffer input, @NotNull StructMap structs, @NotNull PapyrusContext context) throws PapyrusElementException {
         super(input, b -> new StructInstance(b, structs, context));
     }
 

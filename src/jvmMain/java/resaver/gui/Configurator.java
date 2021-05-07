@@ -15,6 +15,8 @@
  */
 package resaver.gui;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.Game;
 import resaver.Mod;
 
@@ -56,18 +58,18 @@ abstract public class Configurator {
      * allowed.
      * @return
      */
-    static public Path choosePathModal(SaveWindow owner, Supplier<Path> defval, Supplier<Path> request, Predicate<Path> check, boolean interactive) {
+    @Nullable
+    static public Path choosePathModal(@NotNull SaveWindow owner, Supplier<Path> defval, Supplier<Path> request, @NotNull Predicate<Path> check, boolean interactive) {
         try {
             final FutureTask<Path> PROMPT = new FutureTask<>(() -> choosePath(defval, request, check, interactive));
 
             if (interactive) {
                 final ModalProgressDialog MODAL = new ModalProgressDialog(owner, "File Selection", PROMPT);
                 MODAL.setVisible(true);
-                return PROMPT.get();
             } else {
                 PROMPT.run();
-                return PROMPT.get();
             }
+            return PROMPT.get();
 
         } catch (InterruptedException | ExecutionException ex) {
             LOG.log(Level.SEVERE, "Interrupted while displaying FileChooser.", ex);
@@ -88,7 +90,8 @@ abstract public class Configurator {
      * allowed.
      * @return
      */
-    static public Path choosePath(Supplier<Path> defval, Supplier<Path> request, Predicate<Path> check, boolean interactive) {
+    @Nullable
+    static public Path choosePath(@Nullable Supplier<Path> defval, @Nullable Supplier<Path> request, @NotNull Predicate<Path> check, boolean interactive) {
         if (defval != null) {
             final Path DEFAULT = defval.get();
             if (check.test(DEFAULT)) {
@@ -114,7 +117,8 @@ abstract public class Configurator {
      * @return A <code>Path</code> pointing to the export file, or
      * <code>null</code> if a file was not selected.
      */
-    static public Path selectPluginsExport(SaveWindow parent, Path savefile) {
+    @Nullable
+    static public Path selectPluginsExport(@NotNull SaveWindow parent, @Nullable Path savefile) {
         LOG.info("Choosing an export file.");
 
         Path previousExport = getPreviousPluginsExport();
@@ -212,7 +216,8 @@ abstract public class Configurator {
      * @return A <code>Path</code> pointing to the savefile file, or
      * <code>null</code> if a file was not selected.
      */
-    static public Path selectNewSaveFile(SaveWindow parent, Game game) {
+    @Nullable
+    static public Path selectNewSaveFile(@NotNull SaveWindow parent, @NotNull Game game) {
         LOG.info("Choosing a savefile.");
 
         Path previousSave = getPreviousSave();
@@ -294,7 +299,8 @@ abstract public class Configurator {
      * @return A <code>File</code> pointing to the savefile file, or
      * <code>null</code> if a file was not selected.
      */
-    static public Path confirmSaveFile(SaveWindow parent, Game game, Path selectedPath) {
+    @Nullable
+    static public Path confirmSaveFile(@NotNull SaveWindow parent, @NotNull Game game, @NotNull Path selectedPath) {
         LOG.info("Choosing a savefile.");
 
         if (Files.exists(selectedPath) && !Files.isWritable(selectedPath)) {
@@ -330,7 +336,8 @@ abstract public class Configurator {
      * @return A <code>File</code> pointing to the savefile, or
      * <code>null</code> if a file was not selected.
      */
-    static public Path selectSaveFile(SaveWindow parent) {
+    @Nullable
+    static public Path selectSaveFile(@NotNull SaveWindow parent) {
         LOG.info("Choosing a savefile.");
 
         Path previousSave = getPreviousSave();
@@ -405,7 +412,8 @@ abstract public class Configurator {
      * @return A <code>File</code> pointing to the selected ModOrganizer ini
      * file, or <code>null</code> if a file was not selected.
      */
-    static public Path selectMO2Ini(SaveWindow parent, Game game) {
+    @Nullable
+    static public Path selectMO2Ini(SaveWindow parent, @NotNull Game game) {
         LOG.info("Choosing the ModOrganizer path.");
 
         final JFileChooser CHOOSER = new JFileChooser();
@@ -455,7 +463,8 @@ abstract public class Configurator {
      * @return A <code>File</code> pointing to the selected game directory, or
      * <code>null</code> if a directory was not selected.
      */
-    static public Path selectGameDirectory(SaveWindow parent, Game game) {
+    @Nullable
+    static public Path selectGameDirectory(SaveWindow parent, @NotNull Game game) {
         LOG.info(String.format("Choosing the %s directory.", game));
 
         final JFileChooser CHOOSER = new JFileChooser();
@@ -495,7 +504,8 @@ abstract public class Configurator {
      * @return A <code>Path</code> pointing to the savefile directory, or
      * <code>null</code> if a directory was not selected.
      */
-    static public Path selectSavefileDirectory(SaveWindow parent, Game game) {
+    @Nullable
+    static public Path selectSavefileDirectory(SaveWindow parent, @NotNull Game game) {
         LOG.info("Choosing a directory to watch.");
 
         final JFileChooser CHOOSER = new JFileChooser();
@@ -537,7 +547,7 @@ abstract public class Configurator {
      * @param dir The directory to validate.
      * @return True if the directory contains ModOrganizer, false otherwise.
      */
-    static public boolean validateMODir(Path dir) {
+    static public boolean validateMODir(@NotNull Path dir) {
         return validDir(dir) && Files.exists(dir.resolve("mods"));
     }
 
@@ -549,7 +559,7 @@ abstract public class Configurator {
      * @param dir The directory to validate.
      * @return True if the directory contains the game, false otherwise.
      */
-    static public boolean validateGameDirectory(Game game, Path dir) {
+    static public boolean validateGameDirectory(@NotNull Game game, @NotNull Path dir) {
         return validDir(dir) && dir.getFileName().equals(game.getGAME_DIRECTORY()) && Files.exists(dir.resolve(game.getEXECUTABLE()));
     }
 
@@ -561,7 +571,7 @@ abstract public class Configurator {
      * @param path The file to validate.
      * @return True if the file is probably a savefile.
      */
-    static public boolean validateSavegame(Path path) {
+    static public boolean validateSavegame(@NotNull Path path) {
         return validFile(path) && Game.FILTER_ALL.accept(path.toFile());
     }
 
@@ -571,7 +581,7 @@ abstract public class Configurator {
      *
      * @param mo2Ini The ini file to validate and store.
      */
-    static public void storeMO2Ini(Path mo2Ini) {
+    static public void storeMO2Ini(@NotNull Path mo2Ini) {
         if (!validFile(mo2Ini)) {
             return;
         }
@@ -629,7 +639,7 @@ abstract public class Configurator {
      * @return True if the ini file exists and is readable and contains relevant
      * info.
      */
-    static public boolean validateMO2Ini(Game game, Path mo2Ini) {
+    static public boolean validateMO2Ini(Game game, @NotNull Path mo2Ini) {
         if (!validFile(mo2Ini)) {
             return false;
         }
@@ -693,7 +703,8 @@ abstract public class Configurator {
      * for any reason.
      *
      */
-    static public List<Mod> analyzeModOrganizer2(Game game, Path mo2Ini) {
+    @Nullable
+    static public List<Mod> analyzeModOrganizer2(Game game, @NotNull Path mo2Ini) {
         try (final java.util.Scanner SCANNER = new java.util.Scanner(mo2Ini)) {
             final Map<String, String> TOKENS = new java.util.TreeMap<>();
 
@@ -737,7 +748,7 @@ abstract public class Configurator {
                 return Configurator.analyzeModDirectory(game, PROFILE, MODS);
             }
 
-        } catch (IOException | RuntimeException ex) {
+        } catch ( IOException | RuntimeException ex) {
             LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex);
             return null;
         }
@@ -754,7 +765,8 @@ abstract public class Configurator {
      * for any reason.
      *
      */
-    static public List<Mod> analyzeModDirectory(Game game, Path profile, Path modDir) {
+    @Nullable
+    static public List<Mod> analyzeModDirectory(Game game, @NotNull Path profile, @NotNull Path modDir) {
         LOG.info("Attempting to analyze the Mod Organizer directory.");
 
         try {
@@ -801,7 +813,7 @@ abstract public class Configurator {
      *
      * @param chooser
      */
-    static private void saveChooserPrefs(JFileChooser chooser) {
+    static private void saveChooserPrefs(@NotNull JFileChooser chooser) {
         PREFS.putInt("chooserWidth", chooser.getSize().width);
         PREFS.putInt("chooserHeight", chooser.getSize().height);
         PREFS.putInt("chooserX", chooser.getLocation().x);
@@ -812,7 +824,7 @@ abstract public class Configurator {
      *
      * @param chooser
      */
-    static private void loadChooserPrefs(JFileChooser chooser) {
+    static private void loadChooserPrefs(@NotNull JFileChooser chooser) {
         int width = PREFS.getInt("chooserWidth", chooser.getSize().width);
         int height = PREFS.getInt("chooserHeight", chooser.getSize().height);
         int x = PREFS.getInt("chooserX", chooser.getLocation().x);
@@ -827,7 +839,8 @@ abstract public class Configurator {
      * @param game The game.
      * @return The directory.
      */
-    static Path getGameDirectory(Game game) {
+    @Nullable
+    static Path getGameDirectory(@NotNull Game game) {
         final String KEY = game.getNAME() + "_directory";
         String path = PREFS.get(KEY, "");
         return path.isEmpty() ? null : Paths.get(path);
@@ -840,7 +853,8 @@ abstract public class Configurator {
      * @param dir The new directory.
      * @return The specified <code>Path</code>.
      */
-    static Path setGameDirectory(Game game, Path dir) {
+    @Nullable
+    static Path setGameDirectory(@NotNull Game game, @Nullable Path dir) {
         final String KEY = game.getNAME() + "_directory";
         if (dir == null) {
             PREFS.remove(KEY);
@@ -856,7 +870,8 @@ abstract public class Configurator {
      * @param game The game whose MO ini file should be stored.
      * @return The ini file.
      */
-    static Path getMO2Ini(Game game) {
+    @Nullable
+    static Path getMO2Ini(@NotNull Game game) {
         final Path gameDir = MO2ROOT.resolve(game.getNAME());
         final Path iniFile = gameDir.resolve("ModOrganizer.ini");
 
@@ -880,7 +895,8 @@ abstract public class Configurator {
      * @param file The new ini file.
      * @return The specified <code>Path</code>.
      */
-    static Path setMO2Ini(Game game, Path file) {
+    @Nullable
+    static Path setMO2Ini(Game game, @Nullable Path file) {
         final String KEY = "modOrganizerIni_" + game;
         if (file == null) {
             PREFS.remove(KEY);
@@ -896,7 +912,8 @@ abstract public class Configurator {
      * @param game The game whose MO ini file should be stored.
      * @return The ini file.
      */
-    static Path getSaveDirectory(Game game) {
+    @NotNull
+    static Path getSaveDirectory(@NotNull Game game) {
         final Path DEFAULT = MYGAMES.resolve(game.getSAVE_DIRECTORY());
         Path STORED = Paths.get(PREFS.get("saveDirectory_" + game, DEFAULT.toString()));
         if (validDir(STORED)) {
@@ -915,7 +932,8 @@ abstract public class Configurator {
      * @param file The new ini file.
      * @return The specified <code>Path</code>.
      */
-    static Path setSaveDirectory(Game game, Path file) {
+    @Nullable
+    static Path setSaveDirectory(Game game, @Nullable Path file) {
         final String KEY = "saveDirectory_" + game;
         if (file == null) {
             PREFS.remove(KEY);
@@ -930,6 +948,7 @@ abstract public class Configurator {
      *
      * @return The file.
      */
+    @Nullable
     public static Path getPreviousSave() {
         String path = PREFS.get("previousSave", "");
         if (path.isEmpty()) {
@@ -945,7 +964,8 @@ abstract public class Configurator {
      * @param file The new file.
      * @return The specified <code>Path</code>.
      */
-    static Path setPreviousSave(Path file) {
+    @Nullable
+    static Path setPreviousSave(@Nullable Path file) {
         final String KEY = "previousSave";
         if (file == null) {
             PREFS.remove(KEY);
@@ -960,6 +980,7 @@ abstract public class Configurator {
      *
      * @return The file.
      */
+    @Nullable
     static Path getPreviousPluginsExport() {
         String path = PREFS.get("previousPluginsExport", "");
         if (path.isEmpty()) {
@@ -975,7 +996,8 @@ abstract public class Configurator {
      * @param file The new file.
      * @return The specified <code>Path</code>.
      */
-    static Path setPreviousPluginsExport(Path file) {
+    @Nullable
+    static Path setPreviousPluginsExport(@Nullable Path file) {
         final String KEY = "previousPluginsExport";
         if (file == null) {
             PREFS.remove(KEY);
@@ -991,7 +1013,7 @@ abstract public class Configurator {
      * @param path
      * @return
      */
-    static public boolean validFile(Path path) {
+    static public boolean validFile(@Nullable Path path) {
         if (null == path) {
             LOG.info("validFile check: null.");
             return false;
@@ -1012,7 +1034,7 @@ abstract public class Configurator {
      * @param path
      * @return
      */
-    static public boolean validDir(Path path) {
+    static public boolean validDir(@Nullable Path path) {
         if (null == path) {
             return false;
         }
@@ -1025,7 +1047,7 @@ abstract public class Configurator {
      * @param path
      * @return
      */
-    static public boolean validWrite(Path path) {
+    static public boolean validWrite(@Nullable Path path) {
         if (null == path) {
             return false;
         } else if (Files.exists(path) && !Files.isRegularFile(path)) {
@@ -1042,7 +1064,7 @@ abstract public class Configurator {
      * @param items
      * @return
      */
-    static public Path getFirst(Path... items) {
+    static public Path getFirst(@NotNull Path... items) {
         return Arrays.stream(items)
                 .filter(Objects::nonNull)
                 .filter(Files::exists)
@@ -1054,7 +1076,7 @@ abstract public class Configurator {
      * @param items
      * @return
      */
-    static public String getFirst(String... items) {
+    static public String getFirst(@NotNull String... items) {
         return Arrays.stream(items).filter(Objects::nonNull).findFirst().orElse(null);
     }
 

@@ -33,7 +33,9 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
-        mf.BufferUtil.putWString(output, NAME)
+        if (output != null) {
+            mf.BufferUtil.putWString(output, NAME)
+        }
     }
 
     /**
@@ -85,9 +87,9 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @return A set of scriptinstances.
      */
     fun getInstances(save: ess.ESS?): Set<ess.papyrus.ScriptInstance> {
-        val INSTANCES: Set<ess.papyrus.ScriptInstance> = save!!.papyrus.scriptInstances.values
-            .filter { instance: ess.papyrus.ScriptInstance -> instance.refID != null }
-            .filter { instance: ess.papyrus.ScriptInstance -> instance.refID.PLUGIN === this }.toList().toSet()
+        val INSTANCES: Set<ess.papyrus.ScriptInstance> = save!!.papyrus?.scriptInstances?.values
+            ?.filter { instance: ess.papyrus.ScriptInstance -> instance.refID != null }
+            ?.filter { instance: ess.papyrus.ScriptInstance -> instance.refID.PLUGIN === this }?.toList()!!.toSet()
         return INSTANCES
     }
 
@@ -244,7 +246,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
             if (index < 0 || index > 255) {
                 throw IllegalArgumentException("Invalid index: $index")
             }
-            val name: String = mf.BufferUtil.getWString(input)
+            val name: String = input?.let { mf.BufferUtil.getWString(it).toString() }!!
             return Plugin(name, index, false)
         }
 
@@ -262,7 +264,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
             if (index < 0 || index >= 4096) {
                 throw IllegalArgumentException("Invalid index: $index")
             }
-            val name: String = mf.BufferUtil.getWString(input)
+            val name: String = input?.let { mf.BufferUtil.getWString(it) }!!
             return Plugin(name, index, true)
         }
     }

@@ -21,6 +21,7 @@ import java.nio.ByteOrder;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.zip.DataFormatException;
 import mf.BufferUtil;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * RecordCompressed represents all records that are compressed.
@@ -37,7 +38,7 @@ public class RecordCompressed extends Record {
      * @param input The <code>ByteBuffer</code> to read.
      * @param ctx The mod descriptor.
      */
-    static public void skimRecord(RecordCode recordCode, RecordHeader header, ByteBuffer input, ESPContext ctx) throws DataFormatException {
+    static public void skimRecord(@NotNull RecordCode recordCode, @NotNull RecordHeader header, @NotNull ByteBuffer input, @NotNull ESPContext ctx) throws DataFormatException {
         assert input.hasRemaining();
 
         final int DECOMPRESSED_SIZE = input.getInt();
@@ -63,7 +64,7 @@ public class RecordCompressed extends Record {
      * @param ctx The mod descriptor.
      * @throws java.util.zip.DataFormatException
      */
-    public RecordCompressed(RecordCode recordCode, RecordHeader header, ByteBuffer input, ESPContext ctx) throws DataFormatException {
+    public RecordCompressed(@NotNull RecordCode recordCode, RecordHeader header, @NotNull ByteBuffer input, @NotNull ESPContext ctx) throws DataFormatException {
         assert input.hasRemaining();
         this.CODE = recordCode;
         this.HEADER = header;
@@ -95,6 +96,7 @@ public class RecordCompressed extends Record {
 
     /**
      */
+    @NotNull
     private ByteBuffer getUncompressedData() {
         final ByteBuffer DATA = ByteBuffer.allocate(this.getUncompressedSize());
         this.FIELDS.forEach(field -> field.write(DATA));
@@ -106,7 +108,7 @@ public class RecordCompressed extends Record {
      * @param output The ByteBuffer.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.CODE.toString().getBytes(UTF_8));
 
         final ByteBuffer UNCOMPRESSED = this.getUncompressedData();
@@ -142,6 +144,7 @@ public class RecordCompressed extends Record {
      *
      * @return The record code.
      */
+    @NotNull
     @Override
     public RecordCode getCode() {
         return this.CODE;
@@ -159,8 +162,10 @@ public class RecordCompressed extends Record {
         return this.getCode().toString();
     }
 
+    @NotNull
     final private RecordCode CODE;
     final private RecordHeader HEADER;
+    @NotNull
     final private FieldList FIELDS;
 
 }

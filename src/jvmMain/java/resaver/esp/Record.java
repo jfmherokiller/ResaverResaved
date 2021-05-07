@@ -19,6 +19,8 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.zip.DataFormatException;
+
+import org.jetbrains.annotations.NotNull;
 import resaver.IString;
 import ess.papyrus.EID;
 import static resaver.esp.Entry.advancingSlice;
@@ -41,7 +43,8 @@ abstract public class Record implements Entry {
      * @return A list of fields that were readFully.
      *
      */
-    static public FieldList readField(RecordCode parentCode, ByteBuffer input, ESPContext ctx) {
+    @NotNull
+    static public FieldList readField(@NotNull RecordCode parentCode, @NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         return readFieldAux(parentCode, input, 0, ctx);
     }
 
@@ -58,7 +61,8 @@ abstract public class Record implements Entry {
      * @return A list of fields that were readFully.
      *
      */
-    static private FieldList readFieldAux(RecordCode parentCode, ByteBuffer input, int bigSize, ESPContext ctx) {
+    @NotNull
+    static private FieldList readFieldAux(@NotNull RecordCode parentCode, @NotNull ByteBuffer input, int bigSize, @NotNull ESPContext ctx) {
         assert input.hasRemaining();
 
         // Read the record identification code.
@@ -131,7 +135,8 @@ abstract public class Record implements Entry {
      * @return The next Record from input.
      *
      */
-    static public Record readRecord(ByteBuffer input, ESPContext ctx) {
+    @NotNull
+    static public Record readRecord(@NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         // Read the record identification code.
         final byte[] CODEBYTES = new byte[4];
         input.get(CODEBYTES);
@@ -180,7 +185,7 @@ abstract public class Record implements Entry {
      * @param ctx The mod descriptor.
      *
      */
-    static public void skimRecord(ByteBuffer input, ESPContext ctx) {
+    static public void skimRecord(@NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         // Read the record identification code.
         final byte[] CODEBYTES = new byte[4];
         input.get(CODEBYTES);
@@ -233,7 +238,6 @@ abstract public class Record implements Entry {
             while (RECORDINPUT.hasRemaining()) {
                 Record.skimRecord(RECORDINPUT, ctx);
             }
-            ctx.popContext();
 
         } else {
             // Read the header.
@@ -255,8 +259,8 @@ abstract public class Record implements Entry {
                 RecordBasic.skimRecord(CODE, HEADER, RECORDINPUT, ctx);
             }
 
-            ctx.popContext();
         }
+        ctx.popContext();
     }
 
 }

@@ -24,7 +24,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-open class MemberDesc(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : PapyrusElement, Comparable<MemberDesc> {
+open class MemberDesc(input: ByteBuffer?, context: PapyrusContext?) : PapyrusElement, Comparable<MemberDesc> {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
@@ -56,12 +56,12 @@ open class MemberDesc(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) 
     /**
      * @return The ID of the papyrus element.
      */
-    val name: TString = context?.readTString(input) ?: TString.makeUnindexed("")
+    val name: TString = input?.let { context?.readTString(it) } ?: TString.makeUnindexed("")
 
     /**
      * @return The type of the array.
      */
-    val type: TString = context?.readTString(input) ?: TString.makeUnindexed("")
+    val type: TString = input?.let { context?.readTString(it) } ?: TString.makeUnindexed("")
 
     companion object {
         /**
@@ -75,7 +75,7 @@ open class MemberDesc(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) 
          * @throws ListException
          */
         @Throws(ListException::class)
-        fun readList(input: ByteBuffer?, count: Int, context: ess.papyrus.PapyrusContext): List<MemberDesc> {
+        fun readList(input: ByteBuffer?, count: Int, context: PapyrusContext): List<MemberDesc> {
             val DESCS: MutableList<MemberDesc> = ArrayList(count)
             for (i in 0 until count) {
                 try {

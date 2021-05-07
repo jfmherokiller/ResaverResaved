@@ -24,6 +24,7 @@ import java.util.Optional;
 
 
 import mf.BufferUtil;
+import org.jetbrains.annotations.NotNull;
 import resaver.IString;
 import ess.Plugin;
 import static resaver.esp.Entry.advancingSlice;
@@ -46,7 +47,7 @@ public class RecordTes4 extends Record {
      * @param plugins The list of plugins, for correcting FormIDs.
      * @param ctx The mod descriptor.
      */
-    public RecordTes4(ByteBuffer input, Plugin plugin, PluginInfo plugins, ESPContext ctx) {
+    public RecordTes4(@NotNull ByteBuffer input, Plugin plugin, PluginInfo plugins, @NotNull ESPContext ctx) {
         this.CODE = RecordCode.TES4;
         this.PLUGIN = Objects.requireNonNull(plugin);
         this.PLUGINS = Objects.requireNonNull(plugins);
@@ -114,11 +115,11 @@ public class RecordTes4 extends Record {
     }
 
     /**
-     * @see Entry#write(transposer.ByteBuffer)
+     * @see Entry#write(ByteBuffer)
      * @param output The ByteBuffer.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.CODE.toString().getBytes());
         output.putInt(this.calculateSize() - 24);
         this.HEADER.write(output);
@@ -146,6 +147,7 @@ public class RecordTes4 extends Record {
      *
      * @return The record code.
      */
+    @NotNull
     @Override
     public RecordCode getCode() {
         return this.CODE;
@@ -154,6 +156,7 @@ public class RecordTes4 extends Record {
     /**
      * @return The record header.
      */
+    @NotNull
     public RecordHeader getHeader() {
         return this.HEADER;
     }
@@ -196,11 +199,15 @@ public class RecordTes4 extends Record {
     }
 
     final public Plugin PLUGIN;
+    @NotNull
     final public List<String> MASTERS;
     final private PluginInfo PLUGINS;
 
+    @NotNull
     final private RecordCode CODE;
+    @NotNull
     final private RecordHeader HEADER;
+    @NotNull
     final private FieldList FIELDS;
     final private float VERSION;
     final private int RECORD_COUNT;

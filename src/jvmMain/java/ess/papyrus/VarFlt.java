@@ -1,5 +1,7 @@
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -7,7 +9,7 @@ import java.nio.ByteBuffer;
  */
 final public class VarFlt extends Variable {
 
-    public VarFlt(ByteBuffer input) {
+    public VarFlt(@NotNull ByteBuffer input) {
         this.VALUE = input.getFloat();
     }
 
@@ -25,11 +27,12 @@ final public class VarFlt extends Variable {
     }
 
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         this.getType().write(output);
         output.putFloat(this.VALUE);
     }
 
+    @NotNull
     @Override
     public VarType getType() {
         return VarType.FLOAT;
@@ -41,6 +44,7 @@ final public class VarFlt extends Variable {
         return Float.toString(this.VALUE);
     }
 
+    @NotNull
     @Override
     public String toString() {
         //return String.format("%s:%f", this.getType(), this.VALUE);

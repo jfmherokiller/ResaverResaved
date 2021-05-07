@@ -15,6 +15,8 @@
  */
 package resaver.esp;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.List;
@@ -35,7 +37,7 @@ public class RecordGrup extends Record {
      * @param input The LittleEndianInput to read.
      * @param ctx The mod descriptor.
      */
-    public RecordGrup(RecordCode code, ByteBuffer headerData, ByteBuffer input, ESPContext ctx) {
+    public RecordGrup(RecordCode code, ByteBuffer headerData, @NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         this.CODE = code;
         this.HEADER = headerData;
         this.RECORDS = new LinkedList<>();
@@ -51,7 +53,7 @@ public class RecordGrup extends Record {
      * @param output The ByteBuffer.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.CODE.toString().getBytes(UTF_8));
         output.putInt(this.calculateSize());
         output.put(this.HEADER);
@@ -98,6 +100,7 @@ public class RecordGrup extends Record {
 
     final private RecordCode CODE;
     final private ByteBuffer HEADER;
+    @NotNull
     final private List<Record> RECORDS;
 
 }

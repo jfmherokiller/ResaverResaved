@@ -1,5 +1,7 @@
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -8,19 +10,21 @@ import java.nio.ByteBuffer;
  */
 final public class VarRef extends VarAbstractRef {
 
-    public VarRef(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
+    public VarRef(ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
         super(input, context);
     }
 
-    public VarRef(TString type, EID id, PapyrusContext context) {
+    public VarRef(TString type, EID id, @NotNull PapyrusContext context) {
         super(type, id, context);
     }
 
-    public VarRef derive(long id, PapyrusContext context) {
+    @NotNull
+    public VarRef derive(long id, @NotNull PapyrusContext context) {
         VarRef derivative = new VarRef(this.getRefType(), this.getRef().derive(id), context);
         return derivative;
     }
 
+    @NotNull
     @Override
     public VarType getType() {
         return VarType.REF;

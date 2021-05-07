@@ -32,8 +32,14 @@ class ChangeFormInventoryItem(input: ByteBuffer?, context: ESSContext?) : ess.Ge
      * @param context The `ESSContext` info.
      */
     init {
-        super.readRefID(input, "ITEM", context)
-        super.readInt(input, "COUNT")
+        if (context != null) {
+            if (input != null) {
+                super.readRefID(input, "ITEM", context)
+            }
+        }
+        if (input != null) {
+            super.readInt(input, "COUNT")
+        }
         super.readElement(input, "EXTRA") { `in`: ByteBuffer? ->
             ChangeFormExtraData(
                 `in`!!, context!!

@@ -1,5 +1,8 @@
 package resaver.pex;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -17,7 +20,7 @@ public class VDataStr extends VData {
     }
 
     @Override
-    public void write(ByteBuffer output) throws IOException {
+    public void write(@NotNull ByteBuffer output) throws IOException {
         output.put((byte) this.getType().ordinal());
         this.VALUE.write(output);
     }
@@ -28,7 +31,7 @@ public class VDataStr extends VData {
     }
 
     @Override
-    public void collectStrings(Set<TString> strings) {
+    public void collectStrings(@NotNull Set<TString> strings) {
         strings.add(this.VALUE);
     }
 
@@ -54,7 +57,7 @@ public class VDataStr extends VData {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         } else if (obj == null) {

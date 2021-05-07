@@ -15,6 +15,9 @@
  */
 package mf;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Objects;
 
 /**
@@ -25,10 +28,12 @@ import java.util.Objects;
  */
 final public class Pair<TypeA, TypeB> {
 
+    @Nullable
     static public <A> Pair<A, A> make(A a) {
         return new Pair<>(a, null);
     }
 
+    @NotNull
     static public <A, B> Pair<A, B> make(A a, B b) {
         return new Pair<>(a, b);
     }
@@ -38,10 +43,12 @@ final public class Pair<TypeA, TypeB> {
         this.B = b;
     }
 
-    public <C, D> Pair<C, D> map(java.util.function.Function<TypeA, C> f1, java.util.function.Function<TypeB, D> f2) {
+    @NotNull
+    public <C, D> Pair<C, D> map(@NotNull java.util.function.Function<TypeA, C> f1, @NotNull java.util.function.Function<TypeB, D> f2) {
         return Pair.make(f1.apply(this.A), f2.apply(this.B));
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "Pair{" + "A=" + A + ", B=" + B + '}';
@@ -56,7 +63,7 @@ final public class Pair<TypeA, TypeB> {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }

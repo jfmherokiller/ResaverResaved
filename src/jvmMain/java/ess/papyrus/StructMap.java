@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -24,7 +26,7 @@ import java.nio.ByteBuffer;
  */
 final public class StructMap extends PapyrusDefinitionMap<Struct> {
 
-    StructMap(int count, ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
+    StructMap(int count, ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
         super(count, input, b -> new Struct(b, context));
     }
 

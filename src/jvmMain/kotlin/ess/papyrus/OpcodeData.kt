@@ -46,8 +46,10 @@ class OpcodeData : PapyrusElement {
         val fixedCount = opcode.fixedCount
         for (i in 0 until fixedCount) {
             try {
-                val `var` = ess.papyrus.Parameter.read(input, context)
-                PARAMETERS.add(`var`)
+                val `var` = context?.let { Parameter.read(input, it) }
+                if (`var` != null) {
+                    PARAMETERS.add(`var`)
+                }
             } catch (ex: PapyrusFormatException) {
                 throw ListException(i, fixedCount, ex)
             } catch (ex: BufferUnderflowException) {
@@ -58,8 +60,10 @@ class OpcodeData : PapyrusElement {
             val extraCount = PARAMETERS.last().intValue
             for (i in 0 until extraCount) {
                 try {
-                    val `var` = ess.papyrus.Parameter.read(input, context)
-                    PARAMETERS.add(`var`)
+                    val `var` = context?.let { Parameter.read(input, it) }
+                    if (`var` != null) {
+                        PARAMETERS.add(`var`)
+                    }
                 } catch (ex: PapyrusFormatException) {
                     throw ListException(i + fixedCount, extraCount + fixedCount, ex)
                 } catch (ex: BufferUnderflowException) {

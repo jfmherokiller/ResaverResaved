@@ -15,6 +15,7 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
 import resaver.ListException;
 
 import java.nio.ByteBuffer;
@@ -26,7 +27,7 @@ import java.nio.ByteBuffer;
  */
 public class PapyrusDefinitionMap<T extends Definition> extends java.util.LinkedHashMap<TString, T> implements PapyrusElement {
 
-    PapyrusDefinitionMap(int count, ByteBuffer input, PapyrusElementReader<T> reader) throws PapyrusElementException {
+    PapyrusDefinitionMap(int count, ByteBuffer input, @NotNull PapyrusElementReader<T> reader) throws PapyrusElementException {
         try {
             for (int i = 0; i < count; i++) {
                 try {
@@ -64,6 +65,7 @@ public class PapyrusDefinitionMap<T extends Definition> extends java.util.Linked
     @FunctionalInterface
     interface PapyrusElementReader<T> {
 
+        @NotNull
         public T read(ByteBuffer input) throws PapyrusFormatException, PapyrusElementException;
     }
 }

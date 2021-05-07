@@ -30,6 +30,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Logger;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mozilla.universalchardet.UniversalDetector;
 import ess.Plugin;
 
@@ -50,7 +53,8 @@ public class StringsFile {
      * @return The <code>StringsFile</code>.
      * @throws IOException
      */
-    static public StringsFile readStringsFile(Path file, Plugin plugin) throws IOException {
+    @NotNull
+    static public StringsFile readStringsFile(@NotNull Path file, Plugin plugin) throws IOException {
         Objects.requireNonNull(file);
         Objects.requireNonNull(plugin);
         
@@ -73,7 +77,8 @@ public class StringsFile {
      * @param input The input stream.
      * @return The <code>StringsFile</code>.
      */
-    static public StringsFile readStringsFile(Path file, Plugin plugin, ByteBuffer input) {
+    @NotNull
+    static public StringsFile readStringsFile(Path file, Plugin plugin, @NotNull ByteBuffer input) {
         Objects.requireNonNull(file);
         Objects.requireNonNull(plugin);
         Objects.requireNonNull(input);
@@ -91,7 +96,7 @@ public class StringsFile {
      * @param input The input stream.
      * @param type The type of stringtable.
      */
-    private StringsFile(Path path, Plugin plugin, ByteBuffer input, Type type) {
+    private StringsFile(Path path, Plugin plugin, @NotNull ByteBuffer input, Type type) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(type);
         input.order(ByteOrder.LITTLE_ENDIAN);
@@ -150,6 +155,7 @@ public class StringsFile {
     /**
      * The reference for accessing the stringtable.
      */
+    @NotNull
     final public Map<Integer, String> TABLE;
 
     /**
@@ -174,6 +180,7 @@ public class StringsFile {
         ILSTRINGS("glob:**.ILStrings"),
         DLSTRINGS("glob:**.DLStrings");
 
+        @Nullable
         static public Type match(Path file) {
             if (STRINGS.GLOB.matches(file)) {
                 return STRINGS;
@@ -199,7 +206,8 @@ public class StringsFile {
      * @param bytes
      * @return
      */
-    static String makeString(byte[] bytes) {
+    @NotNull
+    static String makeString(@NotNull byte[] bytes) {
         final UniversalDetector DETECTOR = new UniversalDetector(null);
 
         DETECTOR.handleData(bytes, 0, bytes.length);

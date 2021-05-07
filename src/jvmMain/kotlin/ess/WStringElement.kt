@@ -77,8 +77,8 @@ class WStringElement : WString, Element {
          */
         @JvmStatic
         fun read(input: ByteBuffer?): WStringElement {
-            val BYTES = mf.BufferUtil.getWStringRaw(input)
-            return WStringElement(BYTES)
+            val BYTES = input?.let { mf.BufferUtil.getWStringRaw(it) }
+            return BYTES?.let { WStringElement(it) }!!
         }
 
         fun compare(w1: WStringElement?, w2: WStringElement?): Int {

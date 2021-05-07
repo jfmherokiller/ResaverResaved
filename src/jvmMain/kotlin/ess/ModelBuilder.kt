@@ -73,7 +73,7 @@ class ModelBuilder(progress: ProgressModel) {
      *
      * @param table The `StringTable`.
      */
-    fun addStringTable(table: ess.papyrus.StringTable) {
+    fun addStringTable(table: StringTable) {
         TASKS.add(EXECUTOR.submit(Callable {
             val DICTIONARY = table.stream()
                 .collect(Collectors.groupingBy(ALPHABETICAL))
@@ -92,7 +92,7 @@ class ModelBuilder(progress: ProgressModel) {
      *
      * @param script The `ScriptMap`.
      */
-    fun addScripts(script: ess.papyrus.ScriptMap) {
+    fun addScripts(script: ScriptMap) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Script Definitions", script.values).sort()
             PROGRESS.modifyValue(1)
@@ -105,7 +105,7 @@ class ModelBuilder(progress: ProgressModel) {
      *
      * @param structs The `StructMap`.
      */
-    fun addStructs(structs: ess.papyrus.StructMap) {
+    fun addStructs(structs: StructMap) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Struct Definitions", structs.values).sort()
             PROGRESS.modifyValue(1)
@@ -144,7 +144,7 @@ class ModelBuilder(progress: ProgressModel) {
      *
      * @param unbinds The `UnbindMap`.
      */
-    fun addUnbinds(unbinds: ess.papyrus.UnbindMap) {
+    fun addUnbinds(unbinds: UnbindMap) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("QueuedUnbinds", unbinds.values).sort()
             PROGRESS.modifyValue(1)
@@ -157,7 +157,7 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addUnknownIDList(unknownIDs: List<EID?>?) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Unknown ID List", unknownIDs).sort()
+            val NODE = unknownIDs?.let { ContainerNode("Unknown ID List", it).sort() }
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -181,7 +181,7 @@ class ModelBuilder(progress: ProgressModel) {
      *
      * @param instances The `ScriptInstanceMap`.
      */
-    fun addScriptInstances(instances: ess.papyrus.ScriptInstanceMap) {
+    fun addScriptInstances(instances: ScriptInstanceMap) {
         TASKS.add(EXECUTOR.submit(Callable {
             val DICTIONARY = instances.values.stream()
                 .collect(Collectors.groupingBy(ALPHABETICAL))
@@ -199,7 +199,7 @@ class ModelBuilder(progress: ProgressModel) {
      *
      * @param instances The `StructInstanceMap`.
      */
-    fun addStructInstances(instances: ess.papyrus.StructInstanceMap) {
+    fun addStructInstances(instances: StructInstanceMap) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Struct Instances", instances.values).sort()
             PROGRESS.modifyValue(1)
@@ -215,7 +215,7 @@ class ModelBuilder(progress: ProgressModel) {
     fun addThreads(threads: ActiveScriptMap) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Active Scripts").addAll(
-                threads.values.map { element: ess.papyrus.ActiveScript? -> ActiveScriptNode(element) }.toList()
+                threads.values.map { element: ActiveScript? -> element?.let { ActiveScriptNode(it) } }.toList()
             ).sort()
             PROGRESS.modifyValue(1)
             NODE
@@ -230,7 +230,7 @@ class ModelBuilder(progress: ProgressModel) {
     fun addFunctionMessages(messages: List<FunctionMessage?>) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Function Messages").addAll(
-                messages.map { element: FunctionMessage? -> FunctionMessageNode(element) }.toList()
+                messages.map { element: FunctionMessage? -> element?.let { FunctionMessageNode(it) } }.toList()
             ).sort()
             PROGRESS.modifyValue(1)
             NODE
@@ -242,10 +242,10 @@ class ModelBuilder(progress: ProgressModel) {
      *
      * @param stacks The list of `SuspendedStack`.
      */
-    fun addSuspendedStacks1(stacks: ess.papyrus.SuspendedStackMap) {
+    fun addSuspendedStacks1(stacks: SuspendedStackMap) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Suspended Stacks 1").addAll(
-                stacks.values.map { element: SuspendedStack? -> SuspendedStackNode(element) }
+                stacks.values.map { element: SuspendedStack? -> element?.let { SuspendedStackNode(it) } }
                     .toList()).sort()
             PROGRESS.modifyValue(1)
             NODE
@@ -257,10 +257,10 @@ class ModelBuilder(progress: ProgressModel) {
      *
      * @param stacks The list of `SuspendedStack`.
      */
-    fun addSuspendedStacks2(stacks: ess.papyrus.SuspendedStackMap) {
+    fun addSuspendedStacks2(stacks: SuspendedStackMap) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Suspended Stacks 2").addAll(
-                stacks.values.map { element: SuspendedStack? -> SuspendedStackNode(element) }
+                stacks.values.map { element: SuspendedStack? -> element?.let { SuspendedStackNode(it) } }
                     .toList()).sort()
             PROGRESS.modifyValue(1)
             NODE
@@ -273,7 +273,7 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addChangeForms(changeForms: Map<RefID?, ChangeForm?>) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val DICTIONARY: Map<ess.ChangeFormType, List<ChangeForm>> =
+            val DICTIONARY: Map<ChangeFormType, List<ChangeForm>> =
                 changeForms.values.toList().filterNotNull().groupBy(ChangeForm::type)
             val NODES: List<Node> = DICTIONARY.entries
                 .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
@@ -308,7 +308,7 @@ class ModelBuilder(progress: ProgressModel) {
      * @param ess
      * @return
      */
-    fun finish(ess: ess.ESS?): resaver.gui.FilterTreeModel? {
+    fun finish(ess: ESS?): resaver.gui.FilterTreeModel? {
         try {
             EXECUTOR.shutdown()
             EXECUTOR.awaitTermination(2, TimeUnit.MINUTES)
@@ -334,7 +334,7 @@ class ModelBuilder(progress: ProgressModel) {
                 throw IllegalStateException("ModelBuilding failed.", ex)
             }
         })
-        val ROOT: Node = RootNode(ess, ROOT_NODES)
+        val ROOT: Node = ess?.let { RootNode(it, ROOT_NODES) }!!
         MODEL.root = ROOT
         return MODEL
     }
@@ -345,29 +345,55 @@ class ModelBuilder(progress: ProgressModel) {
     private val PROGRESS: ProgressModel
 
     companion object {
-        fun createModel(ess: ess.ESS, progress: ProgressModel): resaver.gui.FilterTreeModel? {
+        fun createModel(ess: ESS, progress: ProgressModel): resaver.gui.FilterTreeModel? {
             val MB = ModelBuilder(progress)
             val papyrus = ess.papyrus
             MB.addPluginInfo(ess.pluginInfo)
-            MB.addGlobalVariableTable(ess.globals)
+            ess.globals?.let { MB.addGlobalVariableTable(it) }
             MB.addChangeForms(ess.changeForms)
-            MB.addStringTable(papyrus.stringTable)
-            MB.addScripts(papyrus.scripts)
-            if (ess.isFO4) {
-                MB.addStructs(papyrus.structs)
+            if (papyrus != null) {
+                MB.addStringTable(papyrus.stringTable)
             }
-            MB.addScriptInstances(papyrus.scriptInstances)
-            if (ess.isFO4) {
-                MB.addStructInstances(papyrus.structInstances)
+            if (papyrus != null) {
+                MB.addScripts(papyrus.scripts)
             }
-            MB.addReferences(papyrus.references)
-            MB.addArrays(papyrus.arrays)
-            MB.addThreads(papyrus.activeScripts)
-            MB.addFunctionMessages(papyrus.functionMessages)
-            MB.addSuspendedStacks1(papyrus.suspendedStacks1)
-            MB.addSuspendedStacks2(papyrus.suspendedStacks2)
-            MB.addUnknownIDList(papyrus.unknownIDList)
-            MB.addUnbinds(papyrus.unbinds)
+            if (ess.isFO4) {
+                if (papyrus != null) {
+                    MB.addStructs(papyrus.structs)
+                }
+            }
+            if (papyrus != null) {
+                MB.addScriptInstances(papyrus.scriptInstances)
+            }
+            if (ess.isFO4) {
+                if (papyrus != null) {
+                    MB.addStructInstances(papyrus.structInstances)
+                }
+            }
+            if (papyrus != null) {
+                MB.addReferences(papyrus.references)
+            }
+            if (papyrus != null) {
+                MB.addArrays(papyrus.arrays)
+            }
+            if (papyrus != null) {
+                MB.addThreads(papyrus.activeScripts)
+            }
+            if (papyrus != null) {
+                MB.addFunctionMessages(papyrus.functionMessages)
+            }
+            if (papyrus != null) {
+                MB.addSuspendedStacks1(papyrus.suspendedStacks1)
+            }
+            if (papyrus != null) {
+                MB.addSuspendedStacks2(papyrus.suspendedStacks2)
+            }
+            if (papyrus != null) {
+                MB.addUnknownIDList(papyrus.unknownIDList)
+            }
+            if (papyrus != null) {
+                MB.addUnbinds(papyrus.unbinds)
+            }
             MB.addAnimations(ess.animations)
             return MB.finish(ess)
         }
@@ -377,7 +403,7 @@ class ModelBuilder(progress: ProgressModel) {
          */
         val ALPHABETICAL = Function { v: Element ->
             val str = v.toString()
-            val firstChar = if (str.length == 0) '0' else Character.toUpperCase(str[0])
+            val firstChar = if (str.isEmpty()) '0' else Character.toUpperCase(str[0])
             val category = if (Character.isLetter(firstChar)) firstChar else '0'
             category
         }

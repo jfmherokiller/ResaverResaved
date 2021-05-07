@@ -80,7 +80,7 @@ abstract class PropertyData : Entry {
             return DATA
         }
 
-        private val DATA: String = BufferUtil.getUTF(input)
+        private val DATA: String = BufferUtil.getUTF(input!!)!!
 
     }
 
@@ -188,8 +188,10 @@ abstract class PropertyData : Entry {
             val memberCount = input.int
             MEMBERS = mutableListOf()
             for (i in 0 until memberCount) {
-                val p = Property(input, ctx)
-                MEMBERS.add(p)
+                val p = ctx?.let { Property(input, it) }
+                if (p != null) {
+                    MEMBERS.add(p)
+                }
             }
         }
     }

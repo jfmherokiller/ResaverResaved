@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.IString;
 import resaver.pex.Pex.Function.Instruction;
 
@@ -45,7 +47,7 @@ final public class Disassembler {
      * @param terms Map from identifiers to the terms they represent.
      *
      */
-    static void preMap(List<Instruction> block, List<VariableType> types, TermMap terms) {
+    static void preMap(@NotNull List<Instruction> block, @NotNull List<VariableType> types, @NotNull TermMap terms) {
         for (int i = 0; i < block.size(); i++) {
             Instruction inst = block.get(i);
             if (null == inst) {
@@ -68,7 +70,8 @@ final public class Disassembler {
      * @return A list of disassembled instructions.
      * @throws DisassemblyException
      */
-    static List<String> disassemble(List<Instruction> block, List<VariableType> types, int indent)
+    @NotNull
+    static List<String> disassemble(@NotNull List<Instruction> block, @NotNull List<VariableType> types, int indent)
             throws DisassemblyException {
 
         final List<String> CODE = new LinkedList<>();
@@ -141,7 +144,8 @@ final public class Disassembler {
      * @return
      * @throws DisassemblyException
      */
-    static List<String> disassembleConditional(List<Instruction> block, List<VariableType> types, int indent, boolean elseif)
+    @NotNull
+    static List<String> disassembleConditional(@NotNull List<Instruction> block, @NotNull List<VariableType> types, int indent, boolean elseif)
             throws DisassemblyException {
 
         // Make sure that this is ACTUALLY a conditional block.
@@ -260,7 +264,8 @@ final public class Disassembler {
      * @param elseif
      * @throws DisassemblyException
      */
-    static List<String> disassembleIfElseBlock(String condition, List<Instruction> block, List<VariableType> types, int indent, boolean elseif)
+    @NotNull
+    static List<String> disassembleIfElseBlock(String condition, @NotNull List<Instruction> block, @NotNull List<VariableType> types, int indent, boolean elseif)
             throws DisassemblyException {
 
         final List<String> CODE = new LinkedList<>();
@@ -349,7 +354,8 @@ final public class Disassembler {
      * @param indent
      * @throws DisassemblyException
      */
-    static List<String> disassembleLoop(String condition, List<Instruction> block, List<VariableType> types, int indent)
+    @NotNull
+    static List<String> disassembleLoop(String condition, @NotNull List<Instruction> block, @NotNull List<VariableType> types, int indent)
             throws DisassemblyException {
 
         final List<String> CODE = new LinkedList<>();
@@ -370,7 +376,8 @@ final public class Disassembler {
      * @param ptr
      * @return
      */
-    static int[] detectConditional(List<Instruction> block, int ptr) {
+    @Nullable
+    static int[] detectConditional(@NotNull List<Instruction> block, int ptr) {
         if (block.isEmpty()) {
             return null;
         }
@@ -412,7 +419,8 @@ final public class Disassembler {
      * @param ptr
      * @return
      */
-    static int[] detectIF(List<Instruction> instructions, int ptr) {
+    @Nullable
+    static int[] detectIF(@NotNull List<Instruction> instructions, int ptr) {
         if (instructions.isEmpty() || ptr >= instructions.size() || ptr < 0) {
             return null;
         }
@@ -444,7 +452,8 @@ final public class Disassembler {
      * @param ptr
      * @return
      */
-    static int[] detectWHILE(List<Instruction> instructions, int ptr) {
+    @Nullable
+    static int[] detectWHILE(@NotNull List<Instruction> instructions, int ptr) {
         Instruction begin = instructions.get(ptr);
 
         if (null == begin || begin.OPCODE != JMPF) {
@@ -478,7 +487,7 @@ final public class Disassembler {
      * @param indent
      * @return
      */
-    static String disassembleInstruction(Instruction inst, List<VariableType> types, int indent) {
+    static String disassembleInstruction(@NotNull Instruction inst, @NotNull List<VariableType> types, int indent) {
         final String RHS = makeRHS(inst, types);
 
         switch (inst.OPCODE) {
@@ -555,7 +564,7 @@ final public class Disassembler {
      * @param types
      * @param indent
      */
-    static String disassembleSimple(int lhsPos, String rhs, List<VData> args, List<VariableType> types, int indent) {
+    static String disassembleSimple(int lhsPos, String rhs, @NotNull List<VData> args, @NotNull List<VariableType> types, int indent) {
         if (lhsPos < 0 || lhsPos >= args.size()) {
             throw new IllegalArgumentException();
         }
@@ -604,7 +613,7 @@ final public class Disassembler {
      * @param terms
      * @return
      */
-    static boolean makeTerm(Opcode op, List<VData> args, List<VariableType> types, TermMap terms) {
+    static boolean makeTerm(@NotNull Opcode op, @NotNull List<VData> args, @NotNull List<VariableType> types, @NotNull TermMap terms) {
         String term;
         VData operand1, operand2, obj, prop, arr, search, idx;
         VDataID method;
@@ -843,7 +852,7 @@ final public class Disassembler {
         }
     }
 
-    static String makeRHS(Instruction inst, List<VariableType> types/*, TermMap terms*/) {
+    static String makeRHS(@NotNull Instruction inst, @NotNull List<VariableType> types/*, TermMap terms*/) {
         switch (inst.OPCODE) {
             case IADD:
             case FADD:
@@ -1032,7 +1041,7 @@ final public class Disassembler {
      * @param destPos
      * @param positions
      */
-    static boolean processTerm(List<VData> args, TermMap terms, int destPos, String term) {
+    static boolean processTerm(@NotNull List<VData> args, @NotNull TermMap terms, int destPos, String term) {
         if (destPos >= args.size() || !(args.get(destPos) instanceof VDataID)) {
             return false;
         }
@@ -1054,7 +1063,7 @@ final public class Disassembler {
      * @param terms
      * @param exclude
      */
-    static void replaceVariables(List<VData> args, TermMap terms, int exclude) {
+    static void replaceVariables(@NotNull List<VData> args, @NotNull TermMap terms, int exclude) {
         for (int i = 0; i < args.size(); i++) {
             VData arg = args.get(i);
             if (arg instanceof VDataID) {
@@ -1084,7 +1093,7 @@ final public class Disassembler {
      * @param params
      * @return
      */
-    static <T> String paramList(List<T> params) {
+    static <T> String paramList(@NotNull List<T> params) {
         StringJoiner joiner = new StringJoiner(", ", "(", ")");
         for (T param : params) {
             String toString = param.toString();
@@ -1098,6 +1107,7 @@ final public class Disassembler {
      * @param n
      * @return
      */
+    @NotNull
     static public String tab(int n) {
         final StringBuilder BUF = new StringBuilder();
         for (int i = 0; i < n; i++) {

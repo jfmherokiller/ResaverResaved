@@ -17,6 +17,9 @@ package ess;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.IString;
 import ess.papyrus.EID;
 import ess.papyrus.PapyrusContext;
@@ -52,6 +55,7 @@ public class GeneralElement implements Element {
      * @return Retrieves a copy of the <name,value> map.
      *
      */
+    @NotNull
     final public Map<IString, Object> getValues() {
         return this.DATA;
         //return this.DATA.entrySet().stream()
@@ -66,7 +70,7 @@ public class GeneralElement implements Element {
      * @return Retrieves a copy of the <name,value> map.
      *
      */
-    final public boolean hasVal(Enum<?> name) {
+    final public boolean hasVal(@NotNull Enum<?> name) {
         Objects.requireNonNull(name);
         return this.hasVal(name.toString());
     }
@@ -79,7 +83,7 @@ public class GeneralElement implements Element {
      * @return Retrieves a copy of the <name,value> map.
      *
      */
-    final public boolean hasVal(String name) {
+    final public boolean hasVal(@NotNull String name) {
         Objects.requireNonNull(name);
         return this.hasVal(IString.get(name));
     }
@@ -91,7 +95,7 @@ public class GeneralElement implements Element {
      * @return Retrieves the value associated with the specified name, or null
      * if there is no match.
      */
-    final public Object getVal(String name) {
+    final public Object getVal(@NotNull String name) {
         Objects.requireNonNull(name);
         return this.getVal(IString.get(name));
     }
@@ -103,7 +107,8 @@ public class GeneralElement implements Element {
      * @return Retrieves the value associated with the specified name, or null
      * if there is no match or the match is not an <code>Element</code>.
      */
-    final public Element getElement(String name) {
+    @Nullable
+    final public Element getElement(@NotNull String name) {
         Objects.requireNonNull(name);
         Object val = this.getVal(name);
         if (val instanceof Element) {
@@ -119,7 +124,8 @@ public class GeneralElement implements Element {
      * @return Retrieves the value associated with the specified name, or null
      * if there is no match or the match is not a <code>GeneralElement</code>.
      */
-    final public GeneralElement getGeneralElement(String name) {
+    @Nullable
+    final public GeneralElement getGeneralElement(@NotNull String name) {
         Objects.requireNonNull(name);
         Object val = this.getVal(name);
         if (val instanceof GeneralElement) {
@@ -136,7 +142,8 @@ public class GeneralElement implements Element {
      * @return Retrieves the value associated with the specified name, or null
      * if there is no match or the match is not a <code>GeneralElement</code>.
      */
-    final public Element getElement(Enum<?> name) {
+    @Nullable
+    final public Element getElement(@NotNull Enum<?> name) {
         return this.getElement(Objects.requireNonNull(name.toString()));
     }
 
@@ -147,7 +154,7 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The byte.
      */
-    final public byte readByte(ByteBuffer input, String name) {
+    final public byte readByte(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         byte val = input.get();
@@ -161,7 +168,7 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The short.
      */
-    final public short readShort(ByteBuffer input, String name) {
+    final public short readShort(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         short val = input.getShort();
@@ -175,7 +182,7 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The int.
      */
-    final public int readInt(ByteBuffer input, String name) {
+    final public int readInt(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         int val = input.getInt();
@@ -189,7 +196,7 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The long.
      */
-    final public long readLong(ByteBuffer input, String name) {
+    final public long readLong(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         long val = input.getLong();
@@ -203,7 +210,7 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The float.
      */
-    final public float readFloat(ByteBuffer input, String name) {
+    final public float readFloat(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         float val = input.getFloat();
@@ -217,7 +224,8 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The string.
      */
-    final public String readZString(ByteBuffer input, String name) {
+    @NotNull
+    final public String readZString(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         String val = mf.BufferUtil.getZString(input);
@@ -234,7 +242,8 @@ public class GeneralElement implements Element {
      * @return The element.
      *
      */
-    final public <T extends Element> T readElement(ByteBuffer input, Enum<?> name, ElementReader<T> reader) {
+    @NotNull
+    final public <T extends Element> T readElement(ByteBuffer input, @NotNull Enum<?> name, @NotNull ElementReader<T> reader) {
         return this.readElement(input, Objects.requireNonNull(name.toString()), reader);
     }
 
@@ -248,7 +257,8 @@ public class GeneralElement implements Element {
      * @return The element.
      *
      */
-    final public <T extends Element> T readElement(ByteBuffer input, String name, ElementReader<T> reader) {
+    @NotNull
+    final public <T extends Element> T readElement(ByteBuffer input, @NotNull String name, @NotNull ElementReader<T> reader) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         T element = reader.read(input);
@@ -264,7 +274,8 @@ public class GeneralElement implements Element {
      * @return The ID.
      *
      */
-    final public EID readID32(ByteBuffer input, String name, PapyrusContext context) {
+    @NotNull
+    final public EID readID32(@NotNull ByteBuffer input, @NotNull String name, @NotNull PapyrusContext context) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         return this.readElement(input, name, i -> context.readEID32(input));
@@ -279,7 +290,8 @@ public class GeneralElement implements Element {
      * @return The ID.
      *
      */
-    final public EID readID64(ByteBuffer input, String name, PapyrusContext context) {
+    @NotNull
+    final public EID readID64(@NotNull ByteBuffer input, @NotNull String name, @NotNull PapyrusContext context) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         return this.readElement(input, name, i -> context.readEID64(input));
@@ -294,7 +306,8 @@ public class GeneralElement implements Element {
      * @return The RefID.
      *
      */
-    final public RefID readRefID(ByteBuffer input, String name, ESS.ESSContext context) {
+    @NotNull
+    final public RefID readRefID(@NotNull ByteBuffer input, @NotNull String name, @NotNull ESS.ESSContext context) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         return this.readElement(input, name, i -> context.readRefID(input));
@@ -308,7 +321,8 @@ public class GeneralElement implements Element {
      * @return The RefID.
      *
      */
-    final public VSVal readVSVal(ByteBuffer input, String name) {
+    @NotNull
+    final public VSVal readVSVal(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         VSVal val = new VSVal(input);
@@ -324,7 +338,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public byte[] readBytes(ByteBuffer input, String name, int size) {
+    @NotNull
+    final public byte[] readBytes(@NotNull ByteBuffer input, @NotNull String name, int size) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -348,7 +363,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public short[] readShorts(ByteBuffer input, String name, int size) {
+    @NotNull
+    final public short[] readShorts(@NotNull ByteBuffer input, @NotNull String name, int size) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -374,7 +390,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public int[] readInts(ByteBuffer input, String name, int size) {
+    @NotNull
+    final public int[] readInts(@NotNull ByteBuffer input, @NotNull String name, int size) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -400,7 +417,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public long[] readLongs(ByteBuffer input, String name, int size) {
+    @NotNull
+    final public long[] readLongs(@NotNull ByteBuffer input, @NotNull String name, int size) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -426,7 +444,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public float[] readFloats(ByteBuffer input, String name, int size) {
+    @NotNull
+    final public float[] readFloats(@NotNull ByteBuffer input, @NotNull String name, int size) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -454,7 +473,8 @@ public class GeneralElement implements Element {
      * @param <T> The element type.
      *
      */
-    final public <T extends Element> Element[] readElements(ByteBuffer input, String name, int size, ElementReader<T> reader) {
+    @NotNull
+    final public <T extends Element> Element[] readElements(ByteBuffer input, @NotNull String name, int size, @NotNull ElementReader<T> reader) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
         Objects.requireNonNull(reader);
@@ -482,7 +502,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public byte[] readBytesVS(ByteBuffer input, String name) {
+    @NotNull
+    final public byte[] readBytesVS(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -501,7 +522,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public short[] readShortsVS(ByteBuffer input, String name) {
+    @NotNull
+    final public short[] readShortsVS(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -520,7 +542,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public int[] readIntsVS(ByteBuffer input, String name) {
+    @NotNull
+    final public int[] readIntsVS(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -539,7 +562,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public long[] readLongsVS(ByteBuffer input, String name) {
+    @NotNull
+    final public long[] readLongsVS(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -558,7 +582,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public float[] readFloatsVS(ByteBuffer input, String name) {
+    @NotNull
+    final public float[] readFloatsVS(@NotNull ByteBuffer input, @NotNull String name) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(name);
 
@@ -579,8 +604,9 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
+    @NotNull
     @SuppressWarnings("unchecked")
-    final public <T extends Element> T[] readVSElemArray(ByteBuffer input, String name, ElementReader<T> reader) {
+    final public <T extends Element> T[] readVSElemArray(@NotNull ByteBuffer input, @NotNull String name, @NotNull ElementReader<T> reader) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(reader);
         Objects.requireNonNull(name);
@@ -610,7 +636,8 @@ public class GeneralElement implements Element {
      * @return The array.
      *
      */
-    final public <T extends Element> Element[] read32ElemArray(ByteBuffer input, String name, ElementReader<T> reader) {
+    @NotNull
+    final public <T extends Element> Element[] read32ElemArray(@NotNull ByteBuffer input, @NotNull String name, @NotNull ElementReader<T> reader) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(reader);
         Objects.requireNonNull(name);
@@ -635,7 +662,8 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param val The value.
      */
-    private <T> T addValue(String name, T val) {
+    @NotNull
+    private <T> T addValue(@NotNull String name, @NotNull T val) {
         boolean b = true;
         for (Class<?> type : SUPPORTED) {
             if (type.isInstance(val)) {
@@ -656,7 +684,7 @@ public class GeneralElement implements Element {
      * @param output output buffer
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         this.DATA.values().forEach(v -> {
             if (v instanceof Element) {
                 Element element = (Element) v;
@@ -760,7 +788,7 @@ public class GeneralElement implements Element {
      * @return
      */
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         } else if (obj == null) {
@@ -799,6 +827,7 @@ public class GeneralElement implements Element {
      * @param level Number of tabs by which to indent.
      * @return String representation.
      */
+    @NotNull
     public String toString(int level) {
         return this.toString(null, level);
     }
@@ -808,7 +837,8 @@ public class GeneralElement implements Element {
      * @param level Number of tabs by which to indent.
      * @return String representation.
      */
-    protected String toString(String name, int level) {
+    @NotNull
+    protected String toString(@Nullable String name, int level) {
         final StringBuilder BUF = new StringBuilder();
 
         if (this.DATA.keySet().isEmpty()) {
@@ -847,7 +877,7 @@ public class GeneralElement implements Element {
                 } else if (val instanceof Integer) {
                     str = String.format("%08x", Integer.toUnsignedLong((Integer) val));
                 } else if (val instanceof Long) {
-                    str = String.format("%16x", (Long) val);
+                    str = String.format("%16x", val);
                 } else if (val instanceof Object[]) {
                     str = Arrays.toString((Object[]) val);
                 } else if (val instanceof boolean[]) {
@@ -911,7 +941,7 @@ public class GeneralElement implements Element {
      * @param b
      * @param n
      */
-    static private void indent(StringBuilder b, int n) {
+    static private void indent(@NotNull StringBuilder b, int n) {
         for (int i = 0; i < n; i++) {
             b.append('\t');
         }
@@ -924,7 +954,8 @@ public class GeneralElement implements Element {
      * @param level Number of tabs by which to indent.
      * @return String representation.
      */
-    static private String eaToString(IString name, int level, Element[] list) {
+    @NotNull
+    static private String eaToString(@Nullable IString name, int level, @NotNull Element[] list) {
         final StringBuilder BUF = new StringBuilder();
 
         if (list.length == 0) {
@@ -968,6 +999,7 @@ public class GeneralElement implements Element {
      * @param save
      * @return
      */
+    @NotNull
     public String getInfo(resaver.Analysis analysis, ESS save) {
         final StringBuilder BUF = new StringBuilder();
         BUF.append("<table border=1>");
@@ -997,7 +1029,8 @@ public class GeneralElement implements Element {
         return BUF.toString();
     }
 
-    static private String formatElement(String key, Object val, resaver.Analysis analysis, ESS save) {
+    @NotNull
+    static private String formatElement(String key, @Nullable Object val, resaver.Analysis analysis, ESS save) {
         final StringBuilder BUF = new StringBuilder();
         if (val == null) {
             BUF.append(String.format("%s: <NULL>", key));
@@ -1047,7 +1080,8 @@ public class GeneralElement implements Element {
         return BUF.toString();
     }
 
-    static private String formatGeneralElement(String key, GeneralElement gen, resaver.Analysis analysis, ESS save) {
+    @NotNull
+    static private String formatGeneralElement(String key, @NotNull GeneralElement gen, resaver.Analysis analysis, ESS save) {
         final StringBuilder BUF = new StringBuilder();
         gen.getValues().forEach((k, v) -> {
             final String S = GeneralElement.formatElement(k.toString(), v, analysis, save);
@@ -1057,7 +1091,8 @@ public class GeneralElement implements Element {
         return BUF.toString();
     }
 
-    static private String formatList(String key, List<?> list, resaver.Analysis analysis, ESS save) {
+    @NotNull
+    static private String formatList(String key, @NotNull List<?> list, resaver.Analysis analysis, ESS save) {
         final StringBuilder BUF = new StringBuilder();
         //BUF.append(String.format("<p>%s</p>", key));
         int i = 0;
@@ -1074,6 +1109,7 @@ public class GeneralElement implements Element {
     /**
      * Stores the actual data.
      */
+    @NotNull
     final private Map<IString, Object> DATA;
 
     static final private Set<Class<?>> SUPPORTED = new HashSet<>(Arrays.asList(

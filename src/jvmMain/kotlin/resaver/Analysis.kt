@@ -30,7 +30,7 @@ class Analysis(profileAnalysis: resaver.Mod.Analysis, espInfos: MutableMap<Plugi
 
     fun find(searchTerm: String?): Set<Int> {
         return ESP_INFOS.values
-            .map { v: resaver.esp.PluginData -> v.getID(searchTerm, STRINGS) }
+            .map { v: resaver.esp.PluginData -> v.getID(searchTerm!!, STRINGS) }
             .filter { obj: Set<Int>? -> obj.isNullOrEmpty() }
             .flatten().toSet()
     }

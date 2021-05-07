@@ -21,6 +21,8 @@ import java.util.Objects;
 
 import ess.AnalyzableElement;
 import ess.Linkable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  *
@@ -46,7 +48,7 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      *
      * @param context
      */
-    public PapyrusContext(PapyrusContext context) {
+    public PapyrusContext(@NotNull PapyrusContext context) {
         super(context);
         this.PAPYRUS = Objects.requireNonNull(context.PAPYRUS);
     }
@@ -59,7 +61,8 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @param input The input stream.
      * @return The <code>EID</code>.
      */
-    public EID readEID(ByteBuffer input) {
+    @NotNull
+    public EID readEID(@NotNull ByteBuffer input) {
         return this.getGame().isID64()
                 ? this.readEID64(input)
                 : this.readEID32(input);
@@ -73,7 +76,8 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @param val The id value.
      * @return The <code>EID</code>.
      */
-    public EID makeEID(Number val) {
+    @NotNull
+    public EID makeEID(@NotNull Number val) {
         return this.getGame().isID64()
                 ? this.makeEID64(val.longValue())
                 : this.makeEID32(val.intValue());
@@ -85,7 +89,8 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @param input The input stream.
      * @return The <code>EID</code>.
      */
-    public EID readEID32(ByteBuffer input) {
+    @NotNull
+    public EID readEID32(@NotNull ByteBuffer input) {
         return EID.read4byte(input, this.PAPYRUS);
     }
 
@@ -95,7 +100,8 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @param input The input stream.
      * @return The <code>EID</code>.
      */
-    public EID readEID64(ByteBuffer input) {
+    @NotNull
+    public EID readEID64(@NotNull ByteBuffer input) {
         return EID.read8byte(input, this.PAPYRUS);
     }
 
@@ -105,6 +111,7 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @param val The id value.
      * @return The <code>EID</code>.
      */
+    @NotNull
     public EID makeEID32(int val) {
         return EID.make4byte(val, this.PAPYRUS);
     }
@@ -115,6 +122,7 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @param val The id value.
      * @return The <code>EID</code>.
      */
+    @NotNull
     public EID makeEID64(long val) {
         return EID.make8Byte(val, this.PAPYRUS);
     }
@@ -126,7 +134,7 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @return The new <code>TString</code>.
      * @throws PapyrusFormatException
      */
-    public TString readTString(ByteBuffer input) throws PapyrusFormatException{
+    public TString readTString(@NotNull ByteBuffer input) throws PapyrusFormatException{
         return this.PAPYRUS.getStringTable().read(input);
     }
 
@@ -136,6 +144,7 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @param s The new <code>String</code>.
      * @return The new <code>TString</code>.
      */
+    @NotNull
     public TString addTString(String s) {
         return this.PAPYRUS.getStringTable().addString(s);
     }
@@ -156,8 +165,9 @@ public class PapyrusContext extends ess.ESS.ESSContext {
      * @param number The data to search for.
      * @return Any match of any kind.
      */
+    @Nullable
     @Override
-    public Linkable broadSpectrumSearch(Number number) {
+    public Linkable broadSpectrumSearch(@NotNull Number number) {
         HasID r1 = this.findAny(this.makeEID32(number.intValue()));
         if (r1 != null) {
             return r1;
@@ -181,6 +191,7 @@ public class PapyrusContext extends ess.ESS.ESSContext {
         return null;
     }
 
+    @Nullable
     public Definition findAny(TString name) {
         for (PapyrusDefinitionMap<? extends Definition> c : Arrays.asList(
                 this.PAPYRUS.getScripts(),
@@ -210,6 +221,7 @@ public class PapyrusContext extends ess.ESS.ESSContext {
         } else return this.PAPYRUS.getUnbinds().getOrDefault(id, null);
     }
 
+    @Nullable
     public HasID findAll(EID id) {
         for (PapyrusElementMap<? extends AnalyzableElement> c : Arrays.asList(this.PAPYRUS.getScriptInstances(),
                 this.PAPYRUS.getStructInstances(),
@@ -254,7 +266,8 @@ public class PapyrusContext extends ess.ESS.ESSContext {
         return this.PAPYRUS.getActiveScripts().getOrDefault(id, null);
     }
 
-    public GameElement findReferrent(EID id) {
+    @Nullable
+    public GameElement findReferrent(@NotNull EID id) {
         return this.PAPYRUS.findReferrent(id);
     }
 

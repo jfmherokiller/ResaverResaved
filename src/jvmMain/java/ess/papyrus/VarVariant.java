@@ -1,6 +1,8 @@
 package ess.papyrus;
 
 import ess.Element;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -10,11 +12,12 @@ import java.util.Objects;
  */
 final public class VarVariant extends Variable {
 
-    public VarVariant(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
+    public VarVariant(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
         Objects.requireNonNull(input);
         this.VALUE = read(input, context);
     }
 
+    @NotNull
     public Variable getValue() {
         return this.VALUE;
     }
@@ -30,6 +33,7 @@ final public class VarVariant extends Variable {
         this.VALUE.write(output);
     }
 
+    @NotNull
     @Override
     public VarType getType() {
         return VarType.VARIANT;
@@ -45,11 +49,13 @@ final public class VarVariant extends Variable {
         return this.VALUE.hasRef(id);
     }
 
+    @Nullable
     @Override
     public EID getRef() {
         return this.VALUE.getRef();
     }
 
+    @Nullable
     @Override
     public GameElement getReferent() {
         return this.VALUE.getReferent();
@@ -65,10 +71,12 @@ final public class VarVariant extends Variable {
         return String.format("%s[%s]", this.getType(), this.VALUE.toHTML(target));
     }
 
+    @NotNull
     @Override
     public String toString() {
-        return this.getType() + ":" + this.VALUE.toString();
+        return this.getType() + ":" + this.VALUE;
     }
 
+    @NotNull
     final private Variable VALUE;
 }

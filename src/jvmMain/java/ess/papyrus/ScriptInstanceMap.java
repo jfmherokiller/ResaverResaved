@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  *
  * @author Mark Fairchild
@@ -22,7 +24,7 @@ package ess.papyrus;
 @SuppressWarnings("serial")
 final public class ScriptInstanceMap extends PapyrusElementMap<ScriptInstance> {
 
-    ScriptInstanceMap(java.nio.ByteBuffer input, ScriptMap scripts, PapyrusContext context) throws PapyrusElementException {
+    ScriptInstanceMap(@NotNull java.nio.ByteBuffer input, @NotNull ScriptMap scripts, @NotNull PapyrusContext context) throws PapyrusElementException {
         super(input, b -> new ScriptInstance(b, scripts, context));
     }
 

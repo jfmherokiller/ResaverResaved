@@ -56,7 +56,7 @@ class QueuedUnbind(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Pap
     override fun getInfo(analysis: Analysis?, save: ess.ESS?): String {
         val BUILDER = StringBuilder()
         if (null != scriptInstance && null != scriptInstance.script) {
-            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", scriptInstance.script.toHTML(this)))
+            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", scriptInstance.script!!.toHTML(this)))
         } else if (null != scriptInstance) {
             BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", scriptInstance.scriptName))
         } else {
@@ -68,7 +68,7 @@ class QueuedUnbind(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Pap
             BUILDER.append(String.format("<p>Instance: %s</p>", scriptInstance.toHTML(this)))
         }
         BUILDER.append(String.format("<p>Unknown: %s</p>", pad8(unknown)))
-        val UNK = save!!.papyrus.context.broadSpectrumSearch(unknown)
+        val UNK = save!!.papyrus?.context?.broadSpectrumSearch(unknown)
         if (null != UNK) {
             BUILDER.append("<p>Potential match for UNKNOWN found using general search:<br/>")
             BUILDER.append(UNK.toHTML(this))

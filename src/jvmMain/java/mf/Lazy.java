@@ -15,6 +15,8 @@
  */
 package mf;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -26,12 +28,12 @@ public final class Lazy<T> {
 
     private volatile T value;
 
-    public T getOrCompute(Supplier<T> supplier) {
+    public T getOrCompute(@NotNull Supplier<T> supplier) {
         final T result = value; // Just one volatile read 
         return result == null ? maybeCompute(supplier) : result;
     }
 
-    private synchronized T maybeCompute(Supplier<T> supplier) {
+    private synchronized T maybeCompute(@NotNull Supplier<T> supplier) {
         if (value == null) {
             value = Objects.requireNonNull(supplier.get());
         }

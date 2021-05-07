@@ -17,6 +17,8 @@ package resaver.esp;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
 import resaver.IString;
 
 /**
@@ -26,7 +28,7 @@ import resaver.IString;
  */
 public class FragmentTerm extends FragmentBase {
 
-    public FragmentTerm(ByteBuffer input, ESPContext ctx) {
+    public FragmentTerm(@NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         //input = <code>ByteBuffer</code>.debug(input);
         this.UNKNOWN = input.get();
         this.SCRIPT = new Script(input, ctx);
@@ -42,7 +44,7 @@ public class FragmentTerm extends FragmentBase {
     }
 
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.UNKNOWN);
         this.SCRIPT.write(output);
         output.putShort((short) this.FRAGMENTS.size());
@@ -69,7 +71,9 @@ public class FragmentTerm extends FragmentBase {
     }
 
     final private byte UNKNOWN;
+    @NotNull
     final private Script SCRIPT;
+    @NotNull
     final private List<Fragment> FRAGMENTS;
 
     /**
@@ -77,7 +81,7 @@ public class FragmentTerm extends FragmentBase {
      */
     public class Fragment implements Entry {
 
-        public Fragment(ByteBuffer input) {
+        public Fragment(@NotNull ByteBuffer input) {
             this.INDEX = input.getInt();
             this.UNKNOWN = input.get();
             this.SCRIPTNAME = IString.get(mf.BufferUtil.getUTF(input));
@@ -85,7 +89,7 @@ public class FragmentTerm extends FragmentBase {
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             output.put((byte) this.INDEX);
             output.put(this.UNKNOWN);
             output.put(this.SCRIPTNAME.getUTF8());
@@ -104,7 +108,9 @@ public class FragmentTerm extends FragmentBase {
 
         final private int INDEX;
         final private byte UNKNOWN;
+        @NotNull
         final private IString SCRIPTNAME;
+        @NotNull
         final private IString FRAGMENTNAME;
     }
 

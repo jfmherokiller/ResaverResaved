@@ -27,6 +27,8 @@ import static resaver.ResaverFormatting.makeHTMLList;
 
 import ess.RefID;
 import ess.WStringElement;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  *
@@ -43,7 +45,8 @@ final public class Worrier {
         this.previousNamespaces = null;
     }
 
-    private CharSequence checkFatal(ESS.Result result) {
+    @NotNull
+    private CharSequence checkFatal(@NotNull ESS.Result result) {
         final StringBuilder BUF = new StringBuilder();
         final ESS ESS = result.ESS;
         final Papyrus PAPYRUS = ESS.getPapyrus();
@@ -92,7 +95,8 @@ final public class Worrier {
         return BUF;
     }
 
-    private CharSequence checkPerformance(ESS.Result result) {
+    @NotNull
+    private CharSequence checkPerformance(@NotNull ESS.Result result) {
         final StringBuilder BUF = new StringBuilder();
 
         double time = result.TIME_S;
@@ -110,7 +114,8 @@ final public class Worrier {
         return BUF;
     }
 
-    private CharSequence checkNonFatal(ESS.Result result) {
+    @NotNull
+    private CharSequence checkNonFatal(@NotNull ESS.Result result) {
         final StringBuilder BUF = new StringBuilder();
 
         int unattached = result.ESS.getPapyrus().countUnattachedInstances();
@@ -295,7 +300,7 @@ final public class Worrier {
         return BUF;
     }
 
-    public void check(ESS.Result result) {
+    public void check(@NotNull ESS.Result result) {
         this.message = null;
         this.shouldWorry = false;
         this.disableSaving = false;
@@ -323,6 +328,7 @@ final public class Worrier {
         this.message = BUF.toString();
     }
 
+    @Nullable
     public String getMessage() {
         return this.message;
     }
@@ -335,11 +341,15 @@ final public class Worrier {
         return this.shouldWorry;
     }
 
+    @Nullable
     private String message;
     private boolean shouldWorry;
     private boolean disableSaving;
+    @Nullable
     private ESS previousESS;
+    @Nullable
     private Map<Script, Integer> previousCanaries;
+    @Nullable
     private Map<String, List<ScriptInstance>> previousNamespaces;
 
     static final private Logger LOG = Logger.getLogger(Worrier.class.getCanonicalName());

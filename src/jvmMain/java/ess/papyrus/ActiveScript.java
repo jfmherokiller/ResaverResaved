@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.ListException;
 import ess.AnalyzableElement;
 import java.util.Collections;
@@ -46,7 +48,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      * @param input The input stream.
      * @param context The <code>PapyrusContext</code> info.
      */
-    public ActiveScript(ByteBuffer input, PapyrusContext context) {
+    public ActiveScript(@NotNull ByteBuffer input, @NotNull PapyrusContext context) {
         Objects.requireNonNull(input);
         Objects.requireNonNull(context);
 
@@ -61,7 +63,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      * @param output The output stream.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         this.ID.write(output);
         output.put(this.TYPE);
     }
@@ -75,7 +77,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      * @throws PapyrusFormatException
      */
     @Override
-    public void readData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
+    public void readData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
         this.data = new ActiveScriptData(input, context);
     }
 
@@ -84,7 +86,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      * @param output
      */
     @Override
-    public void writeData(ByteBuffer output) {
+    public void writeData(@NotNull ByteBuffer output) {
         this.data.write(output);
     }
 
@@ -124,6 +126,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     /**
      * @return The instance field.
      */
+    @Nullable
     public AnalyzableElement getInstance() {
         return this.owner;
     }
@@ -133,6 +136,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      *
      * @return
      */
+    @NotNull
     public List<StackFrame> getStackFrames() {
         return null != this.data ? this.data.STACKFRAMES : Collections.emptyList();
     }
@@ -142,6 +146,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      *
      * @return The attached field.
      */
+    @Nullable
     public EID getAttached() {
         return null != this.data ? this.data.ATTACHED : null;
     }
@@ -151,6 +156,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      *
      * @return
      */
+    @Nullable
     public HasID getAttachedElement() {
         return this.data == null ? null : this.data.ATTACHED_ELEMENT;
     }
@@ -197,6 +203,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      * @param target A target within the <code>Linkable</code>.
      * @return
      */
+    @NotNull
     @Override
     public String toHTML(Element target) {
         return Linkable.makeLink("thread", this.ID, this.toString());
@@ -205,6 +212,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     /**
      * @return String representation.
      */
+    @NotNull
     @Override
     public String toString() {
         final StringBuilder BUILDER = new StringBuilder();
@@ -252,8 +260,9 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      * @param save
      * @return
      */
+    @NotNull
     @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
+    public String getInfo(@Nullable resaver.Analysis analysis, @NotNull ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
 
         if (this.isTerminated()) {
@@ -361,7 +370,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
      * @return
      */
     @Override
-    public boolean matches(Analysis analysis, String mod) {
+    public boolean matches(@NotNull Analysis analysis, String mod) {
         Objects.requireNonNull(analysis);
         Objects.requireNonNull(mod);
         for (StackFrame v : this.getStackFrames()) {
@@ -375,7 +384,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     /**
      * @param stacks The SuspendedStacks.
      */
-    public void resolveStack(java.util.Map<EID, SuspendedStack> stacks) {
+    public void resolveStack(@NotNull java.util.Map<EID, SuspendedStack> stacks) {
         if (this.hasStack()) {
             Variable ref = this.getStackFrames().get(0).getOwner();
             if (ref instanceof VarRef) {
@@ -432,6 +441,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     /**
      * @return The unknown variable field.
      */
+    @NotNull
     public Variable getUnknownVar() {
         return this.data.UNKNOWN;
     }
@@ -439,6 +449,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     /**
      * @return The FragmentTask field.
      */
+    @Nullable
     public FragmentTask getUnknown4() {
         return this.data.UNKNOWN4;
     }
@@ -467,6 +478,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     /**
      * @return The Unknown5 field.
      */
+    @Nullable
     public Byte getUnknown5() {
         return this.data.UNKNOWN5;
     }
@@ -497,7 +509,9 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
     final private EID ID;
     final private byte TYPE;
     private ActiveScriptData data;
+    @Nullable
     private AnalyzableElement owner;
+    @Nullable
     private SuspendedStack suspendedStack;
     static final private Logger LOG = Logger.getLogger(ActiveScript.class.getCanonicalName());
 
@@ -511,7 +525,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
          * @throws PapyrusElementException
          * @throws PapyrusFormatException
          */
-        ActiveScriptData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
+        ActiveScriptData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
             Objects.requireNonNull(input);
             Objects.requireNonNull(context);
 
@@ -582,7 +596,7 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
          * @param output The output stream.
          */
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             ID.write(output);
             output.put(this.MAJORVERSION);
             output.put(this.MINORVERSION);
@@ -638,15 +652,21 @@ final public class ActiveScript implements AnalyzableElement, HasID, SeparateDat
 
         final private byte MAJORVERSION;
         final private byte MINORVERSION;
+        @NotNull
         final private Variable UNKNOWN;
         final private byte FLAG;
         final private byte UNKNOWNBYTE;
         final private int UNKNOWN2;
         final private byte UNKNOWN3;
+        @Nullable
         final private FragmentTask UNKNOWN4;
+        @Nullable
         final private EID ATTACHED;
+        @Nullable
         final private HasID ATTACHED_ELEMENT;
+        @NotNull
         final private List<StackFrame> STACKFRAMES;
+        @Nullable
         final private Byte UNKNOWN5;
     }
 }

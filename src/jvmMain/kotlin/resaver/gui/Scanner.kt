@@ -150,7 +150,7 @@ class Scanner(
                     LOG.info("Plugin $plugin could not be found.")
                 } else {
                     try {
-                        val INFO = resaver.esp.ESP.skimPlugin(PLUGINFILEMAP[plugin], GAME, plugin, PLUGINS)
+                        val INFO = resaver.esp.ESP.skimPlugin(PLUGINFILEMAP[plugin]!!, GAME, plugin, PLUGINS)
                         PLUGIN_DATA[plugin] = INFO
                         LOG.info(
                             String.format(

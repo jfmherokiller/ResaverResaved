@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.logging.Logger;
+
+import org.jetbrains.annotations.NotNull;
 import resaver.Game;
 import ess.Plugin;
 import ess.PluginInfo;
@@ -58,7 +60,8 @@ final public class ESP implements Entry {
      * @throws BufferUnderflowException
      *
      */
-    static public PluginData skimPlugin(Path path, Game game, Plugin plugin, PluginInfo plugins) throws FileNotFoundException, IOException, ClosedByInterruptException {
+    @NotNull
+    static public PluginData skimPlugin(@NotNull Path path, @NotNull Game game, @NotNull Plugin plugin, PluginInfo plugins) throws FileNotFoundException, IOException, ClosedByInterruptException {
         Objects.requireNonNull(path);
         assert Files.isReadable(path);
         assert Files.isRegularFile(path);
@@ -104,7 +107,7 @@ final public class ESP implements Entry {
      * @param plugins The list of plugins, for correcting FormIDs.
      * @throws IOException Exceptions aren't handled.
      */
-    public ESP(ByteBuffer input, Game game, Plugin plugin, String name, PluginInfo plugins) throws IOException {
+    public ESP(@NotNull ByteBuffer input, @NotNull Game game, @NotNull Plugin plugin, String name, PluginInfo plugins) throws IOException {
         assert input.hasRemaining();
         this.RECORDS = new LinkedList<>();
 
@@ -151,6 +154,7 @@ final public class ESP implements Entry {
      *
      * @return A string representation of the ESP.
      */
+    @NotNull
     @Override
     public String toString() {
         final StringBuilder BUF = new StringBuilder();
@@ -158,6 +162,7 @@ final public class ESP implements Entry {
         return BUF.toString();
     }
 
+    @NotNull
     final private List<Record> RECORDS;
 
     static final private Logger LOG = Logger.getLogger(ESP.class.getCanonicalName());

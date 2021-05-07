@@ -17,6 +17,9 @@ package ess.papyrus;
 
 import java.nio.Buffer;
 import java.nio.BufferUnderflowException;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.ListException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -47,7 +50,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * readRefID.
      *
      */
-    public Papyrus(ByteBuffer input, ESS.ESSContext context, ModelBuilder model) throws PapyrusException, PapyrusElementException {
+    public Papyrus(@NotNull ByteBuffer input, @NotNull ESS.ESSContext context, @NotNull ModelBuilder model) throws PapyrusException, PapyrusElementException {
         final mf.Counter SUM = new mf.Counter(input.capacity());
         SUM.addCountListener(sum -> {
             if (this.truncated || sum != input.position()) {
@@ -246,7 +249,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                         EID eid = CONTEXT.readEID(input);
                         ArrayInfo element = this.getArrays().get(eid);
                         element.readData(input, CONTEXT);
-                    } catch (NullPointerException | PapyrusFormatException | PapyrusElementException ex) {
+                    } catch ( NullPointerException | PapyrusFormatException | PapyrusElementException ex) {
                         throw new ListException(i, count, ex);
                     }
                 }
@@ -266,7 +269,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                         EID eid = CONTEXT.readEID32(input);
                         ActiveScript element = this.getActiveScripts().get(eid);
                         element.readData(input, CONTEXT);
-                    } catch (NullPointerException | PapyrusFormatException | PapyrusElementException ex) {
+                    } catch ( NullPointerException | PapyrusFormatException | PapyrusElementException ex) {
                         throw new ListException(i, count, ex);
                     }
                 }
@@ -398,12 +401,12 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @param output The output stream.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         if (this.truncated) {
             throw new IllegalStateException("Papyrus is truncated. Cannot write.");
         }
 
-        int startingPosition = ((Buffer) output).position();
+        int startingPosition = output.position();
 
         output.putShort(this.HEADER);
 
@@ -463,7 +466,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
         // Write the remaining data.
         output.put(this.ARRAYSBLOCK);
 
-        if (((Buffer) output).position() != startingPosition + this.calculateSize()) {
+        if (output.position() != startingPosition + this.calculateSize()) {
             throw new IllegalStateException(String.format("Actual = %d, calculated = %d", output.position(), this.calculateSize()));
         }
     }
@@ -516,6 +519,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Returns a new <code>PapyrusContext</code>.
      */
+    @NotNull
     public PapyrusContext getContext() {
         return this.CONTEXT;
     }
@@ -523,6 +527,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the string table.
      */
+    @NotNull
     public StringTable getStringTable() {
         return this.STRINGS == null ? new StringTable() : this.STRINGS;
     }
@@ -530,6 +535,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the list of scripts.
      */
+    @NotNull
     public ScriptMap getScripts() {
         return this.SCRIPTS == null ? new ScriptMap() : this.SCRIPTS;
     }
@@ -537,6 +543,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the list of structdefs.
      */
+    @NotNull
     public StructMap getStructs() {
         return this.STRUCTS == null ? new StructMap() : this.STRUCTS;
     }
@@ -544,6 +551,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the list of script instances.
      */
+    @NotNull
     public ScriptInstanceMap getScriptInstances() {
         return this.SCRIPT_INSTANCES == null ? new ScriptInstanceMap() : this.SCRIPT_INSTANCES;
     }
@@ -551,6 +559,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the list of references.
      */
+    @NotNull
     public ReferenceMap getReferences() {
         return this.REFERENCES == null ? new ReferenceMap() : this.REFERENCES;
     }
@@ -558,6 +567,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the list of structs.
      */
+    @NotNull
     public StructInstanceMap getStructInstances() {
         return this.STRUCT_INSTANCES == null ? new StructInstanceMap() : this.STRUCT_INSTANCES;
     }
@@ -565,6 +575,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the list of arrays.
      */
+    @NotNull
     public ArrayMap getArrays() {
         return this.ARRAYS == null ? new ArrayMap() : this.ARRAYS;
     }
@@ -572,6 +583,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the list of active scripts.
      */
+    @NotNull
     public ActiveScriptMap getActiveScripts() {
         return this.ACTIVESCRIPTS == null ? new ActiveScriptMap() : this.ACTIVESCRIPTS;
     }
@@ -579,6 +591,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the list of function messages.
      */
+    @NotNull
     public List<FunctionMessage> getFunctionMessages() {
         return this.FUNCTIONMESSAGES == null ? Collections.emptyList() : this.FUNCTIONMESSAGES;
     }
@@ -586,6 +599,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the combined list of suspended stacks.
      */
+    @NotNull
     public SuspendedStackMap getSuspendedStacks() {
         SuspendedStackMap s1 = this.getSuspendedStacks1();
         SuspendedStackMap s2 = this.getSuspendedStacks2();
@@ -598,6 +612,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the first list of suspended stacks.
      */
+    @NotNull
     public SuspendedStackMap getSuspendedStacks1() {
         return this.SUSPENDEDSTACKS1 == null ? new SuspendedStackMap() : this.SUSPENDEDSTACKS1;
     }
@@ -605,6 +620,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the second list of suspended stacks.
      */
+    @NotNull
     public SuspendedStackMap getSuspendedStacks2() {
         return this.SUSPENDEDSTACKS2 == null ? new SuspendedStackMap() : this.SUSPENDEDSTACKS2;
     }
@@ -612,6 +628,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the queued unbinds list.
      */
+    @NotNull
     public UnbindMap getUnbinds() {
         return this.UNBINDMAP == null ? new UnbindMap() : this.UNBINDMAP;
     }
@@ -619,6 +636,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return
      */
+    @NotNull
     public List<EID> getUnknownIDList() {
         return null != this.UNKS ? this.UNKS : Collections.emptyList();
     }
@@ -626,6 +644,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor the "other" data.
      */
+    @Nullable
     public OtherData getOtherData() {
         return this.OTHER;
     }
@@ -633,6 +652,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return Accessor for the Arrays block.
      */
+    @NotNull
     public ByteBuffer getArraysBlock() {
         final ByteBuffer BUFFER = ByteBuffer.wrap(this.ARRAYSBLOCK);
         BUFFER.order(ByteOrder.LITTLE_ENDIAN);
@@ -647,7 +667,8 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @param id
      * @return
      */
-    public GameElement findReferrent(EID id) {
+    @Nullable
+    public GameElement findReferrent(@NotNull EID id) {
         if (this.getScriptInstances().containsKey(id)) {
             return this.getScriptInstances().get(id);
         } else if (this.getReferences().containsKey(id)) {
@@ -683,6 +704,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      *
      * @return The number of undefined elements / undefined threads.
      */
+    @NotNull
     public int[] countUndefinedElements() {
         int count = 0;
         int threads = 0;
@@ -737,6 +759,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      *
      * @return The elements that were removed.
      */
+    @NotNull
     public Set<PapyrusElement> removeUnattachedInstances() {
         final Set<ScriptInstance> UNATTACHED = new HashSet<>();
         for (ScriptInstance scriptInstance : this.getScriptInstances().values()) {
@@ -755,8 +778,8 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      *
      * @return The elements that were removed.
      */
+    @NotNull
     public Set<PapyrusElement> removeUndefinedElements() {
-        final java.util.Set<PapyrusElement> REMOVED = new java.util.HashSet<>();
 
         Set<Script> set = new HashSet<>();
         for (Script script : this.getScripts().values()) {
@@ -764,7 +787,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 set.add(script);
             }
         }
-        REMOVED.addAll(this.removeElements(set));
+        final Set<PapyrusElement> REMOVED = new HashSet<>(this.removeElements(set));
         Set<Struct> result = new HashSet<>();
         for (Struct struct : this.getStructs().values()) {
             if (struct.isUndefined()) {
@@ -811,6 +834,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      *
      * @return The elements that were removed.
      */
+    @NotNull
     public Set<ActiveScript> terminateUndefinedThreads() {
         final Set<ActiveScript> TERMINATED = new HashSet<>();
         for (ActiveScript v : this.getActiveScripts().values()) {
@@ -830,7 +854,8 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @return The elements that were removed.
      *
      */
-    public java.util.Set<PapyrusElement> removeElements(java.util.Collection<? extends PapyrusElement> elements) {
+    @NotNull
+    public java.util.Set<PapyrusElement> removeElements(@Nullable java.util.Collection<? extends PapyrusElement> elements) {
         if (elements == null || elements.contains(null)) {
             throw new NullPointerException("The set of elements to remove must not be null and must not contain null.");
         }
@@ -914,6 +939,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     /**
      * @return String representation.
      */
+    @NotNull
     @Override
     public String toString() {
         return "Papyrus-" + super.toString();
@@ -926,6 +952,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @param id
      * @return
      */
+    @NotNull
     private ReferrentMap findMatches(EID id) {
         final ReferrentMap REFERRENTS = new ReferrentMap();
 
@@ -1017,7 +1044,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @param builder
      * @param myName
      */
-    public void printReferrents(GameElement ref, StringBuilder builder, String myName) {
+    public void printReferrents(@NotNull GameElement ref, @NotNull StringBuilder builder, String myName) {
         final ReferrentMap REFERENTS = this.findMatches(ref.getID());
         referrentsPrint(ref, builder, REFERENTS.get(ActiveScript.class), myName, "threads", "attached to");
         referrentsPrint(ref, builder, REFERENTS.get(StackFrame.class), myName, "stackframes", "with member data referring to");
@@ -1036,7 +1063,7 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
      * @param lname
      * @param relationship
      */
-    static private void referrentsPrint(Element ref, StringBuilder builder, Set<Linkable> ls, String myname, String lname, String relationship) {
+    static private void referrentsPrint(Element ref, @NotNull StringBuilder builder, @Nullable Set<Linkable> ls, String myname, String lname, String relationship) {
         if (null == ls) {
             return;
         }
@@ -1065,27 +1092,46 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
     }
 
     private boolean truncated = false;
+    @NotNull
     final private PapyrusContext CONTEXT;
     final private short HEADER;
     final private EID PAPYRUS_RUNTIME;
+    @NotNull
     final private Optional<Short> SAVE_FILE_VERSION;
     final private int UNK1;
+    @NotNull
     final private Optional<Integer> UNK2;
+    @Nullable
     final private StringTable STRINGS;
+    @Nullable
     final private ScriptMap SCRIPTS;
+    @Nullable
     final private StructMap STRUCTS;
+    @Nullable
     final private ScriptInstanceMap SCRIPT_INSTANCES;
+    @Nullable
     final private ReferenceMap REFERENCES;
+    @Nullable
     final private StructInstanceMap STRUCT_INSTANCES;
+    @Nullable
     final private ArrayMap ARRAYS;
+    @Nullable
     final private ActiveScriptMap ACTIVESCRIPTS;
+    @NotNull
     final private List<FunctionMessage> FUNCTIONMESSAGES;
+    @Nullable
     final private SuspendedStackMap SUSPENDEDSTACKS1;
+    @Nullable
     final private SuspendedStackMap SUSPENDEDSTACKS2;
+    @Nullable
     final private UnbindMap UNBINDMAP;
+    @NotNull
     final private List<EID> UNKS;
+    @Nullable
     final private OtherData OTHER;
+    @NotNull
     final private byte[] ARRAYSBLOCK;
+    @NotNull
     final java.util.Map<Number, EID> EIDS;
     static final private Logger LOG = Logger.getLogger(Papyrus.class.getCanonicalName());
 

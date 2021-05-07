@@ -1,5 +1,7 @@
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -7,18 +9,20 @@ import java.nio.ByteBuffer;
  */
 final public class VarStruct extends VarAbstractRef {
 
-    public VarStruct(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
+    public VarStruct(ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
         super(input, context);
     }
 
-    public VarStruct(TString type, EID id, PapyrusContext context) {
+    public VarStruct(TString type, EID id, @NotNull PapyrusContext context) {
         super(type, id, context);
     }
 
-    public VarStruct derive(long id, PapyrusContext context) {
+    @NotNull
+    public VarStruct derive(long id, @NotNull PapyrusContext context) {
         return new VarStruct(this.getRefType(), this.getRef().derive(id), context);
     }
 
+    @NotNull
     @Override
     public VarType getType() {
         return VarType.STRUCT;

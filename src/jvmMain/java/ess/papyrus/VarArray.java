@@ -2,6 +2,8 @@ package ess.papyrus;
 
 import ess.Element;
 import ess.Linkable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -11,7 +13,7 @@ import java.util.Objects;
  */
 final public class VarArray extends Variable {
 
-    protected VarArray(VarType varType, ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
+    protected VarArray(VarType varType, ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
         Objects.requireNonNull(varType);
         Objects.requireNonNull(input);
         this.VarTYPE = varType;
@@ -52,6 +54,7 @@ final public class VarArray extends Variable {
         return this.getArrayID();
     }
 
+    @Nullable
     @Override
     public GameElement getReferent() {
         return null;
@@ -76,6 +79,7 @@ final public class VarArray extends Variable {
         return sum;
     }
 
+    @NotNull
     @Override
     public String toTypeString() {
         if (null == this.ARRAY) {
@@ -108,6 +112,7 @@ final public class VarArray extends Variable {
         return String.format("%s : %s", this.toTypeString(), LINK);
     }
 
+    @NotNull
     @Override
     public String toString() {
         return this.toTypeString() + " " + this.ARRAYID;
@@ -115,6 +120,7 @@ final public class VarArray extends Variable {
 
     final private VarType VarTYPE;
     final private EID ARRAYID;
+    @Nullable
     final private TString REFTYPE;
     final private ArrayInfo ARRAY;
 }

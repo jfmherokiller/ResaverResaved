@@ -20,6 +20,9 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.Mod;
 import resaver.Analysis;
 import ess.*;
@@ -40,7 +43,8 @@ public class FilterMaker {
      * @param analysis
      * @return
      */
-    static public Predicate<Node> createModFilter(Mod mod, PluginInfo plugins, Analysis analysis) {
+    @NotNull
+    static public Predicate<Node> createModFilter(@NotNull Mod mod, @NotNull PluginInfo plugins, Analysis analysis) {
         Objects.requireNonNull(mod);
         Objects.requireNonNull(analysis);
         LOG.info(String.format("Filtering: mod = \"%s\"", mod));
@@ -71,7 +75,8 @@ public class FilterMaker {
      * @param plugins
      * @return
      */
-    static public Predicate<Node> createPluginFilter(Set<Plugin> plugins) {
+    @NotNull
+    static public Predicate<Node> createPluginFilter(@NotNull Set<Plugin> plugins) {
         Objects.requireNonNull(plugins);
         LOG.info(String.format("Filtering: plugins = \"%s\"", plugins));
 
@@ -107,7 +112,8 @@ public class FilterMaker {
      * @param regex
      * @return
      */
-    static public Predicate<Node> createRegexFilter(String regex) {
+    @NotNull
+    static public Predicate<Node> createRegexFilter(@NotNull String regex) {
         Objects.requireNonNull(regex);
         LOG.info(String.format("Filtering: regex = \"%s\"", regex));
 
@@ -128,6 +134,7 @@ public class FilterMaker {
      *
      * @return
      */
+    @NotNull
     static public Predicate<Node> createUndefinedFilter() {
         return node -> {
             if (node.hasElement()) {
@@ -161,6 +168,7 @@ public class FilterMaker {
      *
      * @return
      */
+    @NotNull
     static public Predicate<Node> createUnattachedFilter() {
         return node -> {
             if (node.hasElement() && node.getElement() instanceof ScriptInstance) {
@@ -175,6 +183,7 @@ public class FilterMaker {
      *
      * @return
      */
+    @NotNull
     static public Predicate<Node> createMemberlessFilter() {
         return node -> {
             if (node.hasElement() && node.getElement() instanceof ScriptInstance) {
@@ -189,6 +198,7 @@ public class FilterMaker {
      *
      * @return
      */
+    @NotNull
     static public Predicate<Node> createCanaryFilter() {
         return node -> {
             if (node.hasElement() && node.getElement() instanceof ScriptInstance) {
@@ -204,6 +214,7 @@ public class FilterMaker {
      *
      * @return
      */
+    @NotNull
     static public Predicate<Node> createNullRefFilter() {
         return node -> {
             if (!node.hasElement() || !(node.getElement() instanceof ChangeForm)) {
@@ -227,7 +238,8 @@ public class FilterMaker {
      * @param ess The save file.
      * @return
      */
-    static public Predicate<Node> createNonExistentFilter(ESS ess) {
+    @NotNull
+    static public Predicate<Node> createNonExistentFilter(@NotNull ESS ess) {
         return node -> {
             if (node.hasElement() && node.getElement() instanceof ScriptInstance) {
                 ScriptInstance instance = (ScriptInstance) node.getElement();
@@ -243,6 +255,7 @@ public class FilterMaker {
      *
      * @return
      */
+    @NotNull
     static public Predicate<Node> createLongStringFilter() {
         return node -> {
             if (node.hasElement() && node.getElement() instanceof TString) {
@@ -260,6 +273,7 @@ public class FilterMaker {
      * @param analysis
      * @return
      */
+    @NotNull
     static public Predicate<Node> createDeletedFilter(ESS.ESSContext context, Analysis analysis) {
         return node -> {
             if (!node.hasElement()) {
@@ -312,6 +326,7 @@ public class FilterMaker {
      * @param analysis
      * @return
      */
+    @NotNull
     static public Predicate<Node> createVoidFilter(ESS.ESSContext context, Analysis analysis) {
         return node -> {
             if (!node.hasElement()) {
@@ -375,6 +390,7 @@ public class FilterMaker {
      * @param filter
      * @return
      */
+    @NotNull
     static public Predicate<Node> createChangeFlagFilter(int mask, int filter) {
         if (mask == 0) {
             return node -> true;
@@ -406,6 +422,7 @@ public class FilterMaker {
      * @param filter
      * @return
      */
+    @NotNull
     static public Predicate<Node> createChangeFormFlagFilter(ESS.ESSContext context, int mask, int filter) {
         if (mask == 0) {
             return node -> true;
@@ -458,6 +475,7 @@ public class FilterMaker {
      * @param filter
      * @return
      */
+    @NotNull
     static public Predicate<Node> createChangeFormflagFilter(ESS.ESSContext context, Analysis analysis, int mask, int filter) {
         if (mask == 0) {
             return node -> true;
@@ -521,6 +539,7 @@ public class FilterMaker {
      * Create an empty filter.
      *
      */
+    @NotNull
     static public Predicate<Node> createFilter() {
         return x -> true;
     }
@@ -546,14 +565,15 @@ public class FilterMaker {
      * @param changeFormFlags
      * @return
      */
-    static public Predicate<Node> createFilter(ESS savefile,
-            Mod mod,
-            Plugin plugin,
-            String regex, Analysis analysis,
-            boolean undefined, boolean unattached, boolean memberless,
-            boolean canaries, boolean nullrefs, boolean nonexistent,
-            boolean longStrings, boolean deleted, boolean empty,
-            mf.Duad<Integer> changeFlags, mf.Duad<Integer> changeFormFlags) {
+    @Nullable
+    static public Predicate<Node> createFilter(@NotNull ESS savefile,
+                                               @Nullable Mod mod,
+                                               @Nullable Plugin plugin,
+                                               @NotNull String regex, @Nullable Analysis analysis,
+                                               boolean undefined, boolean unattached, boolean memberless,
+                                               boolean canaries, boolean nullrefs, boolean nonexistent,
+                                               boolean longStrings, boolean deleted, boolean empty,
+                                               @Nullable mf.Duad<Integer> changeFlags, @Nullable mf.Duad<Integer> changeFormFlags) {
         Objects.requireNonNull(savefile);
 
         LOG.info("Updating filter.");

@@ -1,5 +1,7 @@
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -7,7 +9,7 @@ import java.nio.ByteBuffer;
  */
 final public class VarNull extends Variable {
 
-    public VarNull(ByteBuffer input) {
+    public VarNull(@NotNull ByteBuffer input) {
         this.VALUE = input.getInt();
     }
 
@@ -17,21 +19,24 @@ final public class VarNull extends Variable {
     }
 
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         this.getType().write(output);
         output.putInt(this.VALUE);
     }
 
+    @NotNull
     @Override
     public VarType getType() {
         return VarType.NULL;
     }
 
+    @NotNull
     @Override
     public String toValueString() {
         return "NULL";
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "NULL";

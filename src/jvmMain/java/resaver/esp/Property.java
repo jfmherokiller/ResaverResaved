@@ -16,6 +16,8 @@
 package resaver.esp;
 
 import java.nio.ByteBuffer;
+
+import org.jetbrains.annotations.NotNull;
 import resaver.IString;
 
 /**
@@ -31,7 +33,7 @@ final public class Property implements Entry {
      * @param input The <code>ByteBuffer</code> to read.
      * @param ctx
      */
-    public Property(ByteBuffer input, ESPContext ctx) {
+    public Property(@NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         this.NAME = IString.get(mf.BufferUtil.getWString(input));
         ctx.pushContext("prop:" + this.NAME);
 
@@ -50,7 +52,7 @@ final public class Property implements Entry {
      * @param output The ByteBuffer.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.NAME.getUTF8());
         output.put(this.TYPE);
         output.put(this.STATUS);
@@ -71,9 +73,11 @@ final public class Property implements Entry {
         return String.format("%s: %d (%02x): %s", this.NAME, this.TYPE, this.STATUS, this.DATA);
     }
 
+    @NotNull
     private final IString NAME;
     private final byte TYPE;
     private final byte STATUS;
+    @NotNull
     private final PropertyData DATA;
 
 }

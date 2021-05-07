@@ -17,6 +17,7 @@ package resaver.gui;
 
 import mf.Duad;
 import mf.JValueMenuItem;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import resaver.Analysis;
 import resaver.Game;
@@ -179,7 +180,7 @@ final public class SaveWindow extends JFrame {
      * @param autoParse Automatically parse the specified savefile.
      *
      */
-    private void initComponents(Path path, boolean autoParse) {
+    private void initComponents(@NotNull Path path, boolean autoParse) {
         this.resetTitle(null);
         this.setDropTarget(new ReSaverDropTarget(f -> open(f, PREFS.getBoolean("settings.alwaysParse", false))));
         this.TREE.addTreeSelectionListener(e -> updateContextInformation());
@@ -401,7 +402,7 @@ final public class SaveWindow extends JFrame {
             final java.io.InputStream INPUT = this.getClass().getClassLoader().getResourceAsStream("Disk.png");
             final Image ICON = javax.imageio.ImageIO.read(INPUT);
             super.setIconImage(ICON);
-        } catch (IOException | NullPointerException | IllegalArgumentException ex) {
+        } catch ( IOException | NullPointerException | IllegalArgumentException ex) {
             LOG.warning("Failed to load icon.");
         }
         this.MODCOMBO.addItemListener(e -> updateFilters(false));
@@ -424,7 +425,7 @@ final public class SaveWindow extends JFrame {
      *
      * @param savefile A new value for the path.
      */
-    void resetTitle(Path savefile) {
+    void resetTitle(@NotNull Path savefile) {
         this.modified = false;
 
         if (this.save == null) {
@@ -523,6 +524,7 @@ final public class SaveWindow extends JFrame {
      *
      * @return
      */
+    @NotNull
     ProgressIndicator getProgressIndicator() {
         return this.PROGRESS;
     }
@@ -560,7 +562,7 @@ final public class SaveWindow extends JFrame {
      * @param disableSaving A flag indicating that saving should be disabled.
      *
      */
-    void setESS(Path savefile, ESS newSave, FilterTreeModel model, boolean disableSaving) {
+    void setESS(@NotNull Path savefile, @NotNull ESS newSave, @NotNull FilterTreeModel model, boolean disableSaving) {
         Objects.requireNonNull(savefile);
         Objects.requireNonNull(newSave);
 
@@ -629,7 +631,7 @@ final public class SaveWindow extends JFrame {
      *
      * @param model The model to which the filters should be applied.
      */
-    private boolean createFilter(FilterTreeModel model) {
+    private boolean createFilter(@NotNull FilterTreeModel model) {
         LOG.info("Creating filters.");
         final Mod MOD = this.MODCOMBO.getItemAt(this.MODCOMBO.getSelectedIndex());
         final Plugin PLUGIN = (Plugin) this.PLUGINCOMBO.getSelectedItem();
@@ -654,12 +656,11 @@ final public class SaveWindow extends JFrame {
         if (null == mainfilter) {
             this.filter = null;
             model.removeFilter();
-            return true;
         } else {
             this.filter = mainfilter;
             model.setFilter(this.filter);
-            return true;
         }
+        return true;
     }
 
     /**
@@ -845,7 +846,7 @@ final public class SaveWindow extends JFrame {
             final Saver SAVER = new Saver(this, SAVEFILE, this.save, doAfter);
             SAVER.execute();
 
-        } catch (InterruptedException | ExecutionException ex) {
+        } catch ( InterruptedException | ExecutionException ex) {
             LOG.log(Level.SEVERE, "Error while saving.", ex);
         }
     }
@@ -911,7 +912,7 @@ final public class SaveWindow extends JFrame {
      * @param parse
      *
      */
-    void open(Path path, boolean parse) {
+    void open(@NotNull Path path, boolean parse) {
         if (Configurator.validateSavegame(path)) {
             if (this.scanner != null) {
                 this.setScanning(false);
@@ -934,7 +935,7 @@ final public class SaveWindow extends JFrame {
                 }
                 final TextDialog TEXT = new TextDialog(joiner.toString());
                 JOptionPane.showMessageDialog(this, TEXT, path.getFileName().toString(), JOptionPane.INFORMATION_MESSAGE);
-            } catch (IOException | RuntimeException ex) {
+            } catch ( IOException | RuntimeException ex) {
                 LOG.log(Level.WARNING, "Error while decompiling drag-and-drop script.", ex);
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Decompile Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -1069,7 +1070,7 @@ final public class SaveWindow extends JFrame {
 
     }
 
-    private void showDataAnalyzer(ByteBuffer data) {
+    private void showDataAnalyzer(@NotNull ByteBuffer data) {
         DataAnalyzer.showDataAnalyzer(this, data, this.save);
     }
 
@@ -1093,7 +1094,7 @@ final public class SaveWindow extends JFrame {
             ESS.verifyIdentical(this.save, RESULT.ESS);
             JOptionPane.showMessageDialog(this, "No mismatches detected.", "Match", JOptionPane.INFORMATION_MESSAGE);
 
-        } catch (RuntimeException | IOException ex) {
+        } catch ( RuntimeException | IOException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "MisMatch", JOptionPane.ERROR_MESSAGE);
         }
     }
@@ -1219,7 +1220,7 @@ final public class SaveWindow extends JFrame {
      *
      * @param flst
      */
-    private void cleanseFormList(ChangeFormFLST flst) {
+    private void cleanseFormList(@NotNull ChangeFormFLST flst) {
         try {
             if (null == this.save) {
                 return;
@@ -1370,6 +1371,7 @@ final public class SaveWindow extends JFrame {
     /**
      *
      */
+    @NotNull
     Watcher getWatcher() {
         return this.WATCHER;
     }
@@ -1487,7 +1489,7 @@ final public class SaveWindow extends JFrame {
      *
      */
     @Nullable
-    void findElement(Element element) {
+    void findElement(@Nullable Element element) {
 
         if (null == element) {
             return;
@@ -1511,7 +1513,7 @@ final public class SaveWindow extends JFrame {
      * @param var The <code>Variable</code> whose contents should be found.
      */
     @Nullable
-    private void findElement(Variable var) {
+    private void findElement(@Nullable Variable var) {
 
 
         if (var == null) {
@@ -1557,7 +1559,7 @@ final public class SaveWindow extends JFrame {
      * @param purgeScripts A flag indicating to purge script instances.
      * @return The count of instances and changeforms removed.
      */
-    private void purgePlugins(Collection<Plugin> plugins, boolean purgeScripts, boolean purgeForms) {
+    private void purgePlugins(@NotNull Collection<Plugin> plugins, boolean purgeScripts, boolean purgeForms) {
         Objects.requireNonNull(plugins);
         final int NUM_FORMS, NUM_INSTANCES;
 
@@ -1628,7 +1630,7 @@ final public class SaveWindow extends JFrame {
      * @param threads An <code>Element</code> <code>List</code> that will be
      * terminated.
      */
-    private void zeroThreads(java.util.List<ActiveScript> threads) {
+    private void zeroThreads(@NotNull java.util.List<ActiveScript> threads) {
         Objects.requireNonNull(threads);
         if (threads.isEmpty()) {
             return;
@@ -1661,7 +1663,7 @@ final public class SaveWindow extends JFrame {
      *
      * @param elements The selections to delete.
      */
-    public void deletePaths(Map<Element, Node> elements) {
+    public void deletePaths(@NotNull Map<Element, Node> elements) {
         this.deleteElements(elements.keySet());
     }
 
@@ -1670,7 +1672,7 @@ final public class SaveWindow extends JFrame {
      *
      * @param elements The selections to delete.
      */
-    public void deleteElements(Set<Element> elements) {
+    public void deleteElements(@Nullable Set<Element> elements) {
         if (null == this.save || null == elements || elements.isEmpty()) {
             return;
         }
@@ -1822,7 +1824,7 @@ final public class SaveWindow extends JFrame {
      *
      * @param newCompressionType
      */
-    void setCompressionType(CompressionType newCompressionType) {
+    void setCompressionType(@Nullable CompressionType newCompressionType) {
         if (this.save != null && this.save.supportsCompression() && newCompressionType != null) {
             int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to change the compression type?", "Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (result == JOptionPane.YES_OPTION) {
@@ -1949,7 +1951,7 @@ final public class SaveWindow extends JFrame {
      * @param event The <code>HyperLinkEvent</code> to handle.
      * @see HyperlinkListener#hyperlinkUpdate(javax.swing.event.HyperlinkEvent)
      */
-    public void hyperlinkUpdate(HyperlinkEvent event) {
+    public void hyperlinkUpdate(@NotNull HyperlinkEvent event) {
         if (event.getEventType() == HyperlinkEvent.EventType.ENTERED) {
             if (event.getSource() == this.INFOPANE) {
                 JComponent component = (JComponent) event.getSource();
@@ -1985,7 +1987,7 @@ final public class SaveWindow extends JFrame {
         Integer index2 = null;
         try {
             index2 = Integer.parseInt(MATCHER.group("target2"));
-        } catch (NumberFormatException | NullPointerException ex) {
+        } catch ( NumberFormatException | NullPointerException ex) {
         }
 
         final PapyrusContext CONTEXT = this.save.getPapyrus().getContext();
@@ -2122,7 +2124,7 @@ final public class SaveWindow extends JFrame {
                     break;
                 }
             }
-        } catch (NumberFormatException | IndexOutOfBoundsException ex) {
+        } catch ( NumberFormatException | IndexOutOfBoundsException ex) {
             LOG.warning(String.format("Invalid address: %s", URL));
         }
     }
@@ -2134,6 +2136,7 @@ final public class SaveWindow extends JFrame {
      * not be found.
      *
      */
+    @Nullable
     Object initializeJavaFX() {
         try {
             final Class<?> CLASS_JFXPANEL = Class.forName("javafx.embed.swing.JFXPanel");
@@ -2179,7 +2182,7 @@ final public class SaveWindow extends JFrame {
     final private class ModListCellRenderer implements ListCellRenderer<Mod> {
 
         @Override
-        public Component getListCellRendererComponent(JList list, Mod value, int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList list, @Nullable Mod value, int index, boolean isSelected, boolean cellHasFocus) {
             if (null == value) {
                 return RENDERER.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus);
             }
@@ -2195,7 +2198,7 @@ final public class SaveWindow extends JFrame {
     final private class PluginListCellRenderer implements ListCellRenderer<Plugin> {
 
         @Override
-        public Component getListCellRendererComponent(JList list, Plugin value, int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList list, @Nullable Plugin value, int index, boolean isSelected, boolean cellHasFocus) {
             if (null == value) {
                 return RENDERER.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus);
             }
@@ -2207,80 +2210,153 @@ final public class SaveWindow extends JFrame {
     /**
      * Listener for tree selection events.
      */
+    @Nullable
     private ESS save;
+    @Nullable
     private Analysis analysis;
     private boolean modified;
+    @Nullable
     private Predicate<Node> filter;
+    @Nullable
     private Scanner scanner;
 
+    @NotNull
     final private MemoryLabel LBL_MEMORY;
+    @NotNull
     final private JLabel LBL_WATCHING;
+    @NotNull
     final private JLabel LBL_SCANNING;
+    @NotNull
     final private FilterTree TREE;
+    @NotNull
     final private VariableTable TABLE;
+    @NotNull
     final private InfoPane INFOPANE;
+    @NotNull
     final private JButton BTN_CLEAR_FILTER;
+    @NotNull
     final private JScrollPane TREESCROLLER;
+    @NotNull
     final private JScrollPane DATASCROLLER;
+    @NotNull
     final private JScrollPane INFOSCROLLER;
+    @NotNull
     final private JSplitPane MAINSPLITTER;
+    @Nullable
     final private JSplitPane RIGHTSPLITTER;
+    @NotNull
     final private JPanel MAINPANEL;
+    @NotNull
     final private JPanel MODPANEL;
+    @NotNull
     final private JComboBox<Mod> MODCOMBO;
+    @NotNull
     final private JComboBox<Plugin> PLUGINCOMBO;
+    @NotNull
     final private JLabel MODLABEL;
+    @NotNull
     final private JPanel FILTERPANEL;
+    @NotNull
     final private JTreeFilterField FILTERFIELD;
+    @NotNull
     final private JPanel TOPPANEL;
+    @NotNull
     final private JPanel STATUSPANEL;
+    @NotNull
     final private JTreeHistory TREEHISTORY;
+    @NotNull
     final private JPanel PROGRESSPANEL;
+    @NotNull
     final private ProgressIndicator PROGRESS;
+    @NotNull
     final private JMenuBar MENUBAR;
+    @NotNull
     final private JMenu FILEMENU;
+    @NotNull
     final private JMenu DATAMENU;
+    @NotNull
     final private JMenu CLEANMENU;
+    @NotNull
     final private JMenu OPTIONSMENU;
+    @NotNull
     final private JMenu HELPMENU;
+    @NotNull
     final private JMenuItem MI_LOAD;
+    @NotNull
     final private JMenuItem MI_SAVE;
+    @NotNull
     final private JMenuItem MI_SAVEAS;
+    @NotNull
     final private JMenuItem MI_EXIT;
+    @NotNull
     final private JMenuItem MI_LOADESPS;
+    @NotNull
     final private JMenuItem MI_LOOKUPID;
+    @NotNull
     final private JMenuItem MI_LOOKUPBASE;
+    @NotNull
     final private JMenuItem MI_REMOVEUNATTACHED;
+    @NotNull
     final private JMenuItem MI_REMOVEUNDEFINED;
+    @NotNull
     final private JMenuItem MI_RESETHAVOK;
+    @NotNull
     final private JMenuItem MI_CLEANSEFORMLISTS;
+    @NotNull
     final private JMenuItem MI_REMOVENONEXISTENT;
+    @NotNull
     final private JMenuItem MI_BATCHCLEAN;
+    @NotNull
     final private JMenuItem MI_KILL;
+    @NotNull
     final private JMenuItem MI_SHOWLONGSTRINGS;
+    @NotNull
     final private JMenuItem MI_ANALYZE_ARRAYS;
+    @NotNull
     final private JMenuItem MI_COMPARETO;
+    @NotNull
     final private JCheckBoxMenuItem MI_USEMO2;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWMODS;
+    @NotNull
     final private JCheckBoxMenuItem MI_WATCHSAVES;
+    @NotNull
     final private JMenuItem MI_SHOWLOG;
+    @NotNull
     final private JMenuItem MI_ABOUT;
+    @NotNull
     final private JMenuItem MI_EXPORTPLUGINS;
+    @NotNull
     final private JMenuItem MI_SETTINGS;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWUNATTACHED;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWUNDEFINED;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWMEMBERLESS;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWCANARIES;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWNULLREFS;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWNONEXISTENTCREATED;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWDELETED;
+    @NotNull
     final private JCheckBoxMenuItem MI_SHOWEMPTY;
+    @NotNull
     final private JValueMenuItem<Duad<Integer>> MI_CHANGEFILTER;
+    @Nullable
     final private JValueMenuItem<Duad<Integer>> MI_CHANGEFORMFILTER;
+    @NotNull
     final private LogWindow LOGWINDOW;
+    @NotNull
     final private Watcher WATCHER;
+    @NotNull
     final private Worrier WORRIER;
+    @NotNull
     final private mf.Timer TIMER;
+    @Nullable
     final private Object JFXPANEL;
 
     static final private java.util.prefs.Preferences PREFS = java.util.prefs.Preferences.userNodeForPackage(resaver.ReSaver.class);

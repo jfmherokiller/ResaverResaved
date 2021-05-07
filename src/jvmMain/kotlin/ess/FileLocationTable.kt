@@ -93,7 +93,7 @@ class FileLocationTable : Element {
         table1Offset += ess.pluginInfo.calculateSize()
         table1Offset += calculateSize()
         if (null != ess.versionString) {
-            table1Offset += ess.versionString.length + 2
+            table1Offset += ess.versionString!!.length + 2
         }
         table2Offset = table1Offset + table1Size
         changeFormCount = ess.changeForms.size
@@ -103,7 +103,7 @@ class FileLocationTable : Element {
         unknownTable3Offset = 0
         unknownTable3Offset += formIDArrayCountOffset
         unknownTable3Offset += 4 + 4 * ess.formIDs.size
-        unknownTable3Offset += 4 + 4 * ess.visitedWorldspaceArray.size
+        unknownTable3Offset += 4 + 4 * (ess.visitedWorldspaceArray?.size ?: 0)
     }
 
     /**
@@ -138,7 +138,7 @@ class FileLocationTable : Element {
         table1Offset += ess.pluginInfo.calculateSize()
         table1Offset += calculateSize()
         if (null != ess.versionString) {
-            table1Offset += ess.versionString.length + 2
+            table1Offset += ess.versionString!!.length + 2
         }
         table2Offset = table1Offset + table1Size
         changeFormCount = ess.changeForms.size
@@ -148,7 +148,7 @@ class FileLocationTable : Element {
         unknownTable3Offset = 0
         unknownTable3Offset += formIDArrayCountOffset
         unknownTable3Offset += 4 + 4 * ess.formIDs.size
-        unknownTable3Offset += 4 + 4 * ess.visitedWorldspaceArray.size
+        unknownTable3Offset += 4 + 4 * (ess.visitedWorldspaceArray?.size ?: 0)
     }
 
     /**

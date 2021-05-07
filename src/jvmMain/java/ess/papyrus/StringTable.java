@@ -23,6 +23,8 @@ import java.util.Optional;
 
 import ess.ESS;
 import ess.WStringElement;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * An abstraction describing a string table.
@@ -40,7 +42,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * @return The new <code>TString</code>.
      * @throws PapyrusFormatException
      */
-    public TString read(ByteBuffer input) throws PapyrusFormatException {
+    public TString read(@NotNull ByteBuffer input) throws PapyrusFormatException {
         Objects.requireNonNull(input);
 
         int index;
@@ -75,7 +77,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * @param context The <code>ESSContext</code> info.
      * @throws PapyrusElementException
      */
-    public StringTable(ByteBuffer input, ESS.ESSContext context) throws PapyrusElementException {
+    public StringTable(@NotNull ByteBuffer input, @NotNull ESS.ESSContext context) throws PapyrusElementException {
         this.STR32 = context.isStr32();
 
         int strCount;
@@ -147,7 +149,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * @param output The output stream.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         if (this.STBCORRECTION) {
             throw new IllegalStateException("String-Table-Bug correction in effect. Cannot write.");
         } else if (this.TRUNCATED) {
@@ -204,6 +206,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * @param str
      * @return
      */
+    @Nullable
     public TString resolve(String str) {
         for (TString tstr : this) {
             if (tstr.equals(str)) {
@@ -238,6 +241,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * @return The new <code>TString</code>, or the existing one if the
      * <code>StringTable</code> already contained a match.
      */
+    @NotNull
     public TString addString(String val) {
         Optional<TString> match = Optional.empty();
         for (TString v : this) {

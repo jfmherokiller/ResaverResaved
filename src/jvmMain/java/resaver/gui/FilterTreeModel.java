@@ -27,6 +27,8 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import javax.swing.tree.TreePath;
 import ess.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A <code>TreeModel</code> that supports filtering.
@@ -47,7 +49,7 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @param elements
      */
-    public void deleteElements(Set<? extends Element> elements) {
+    public void deleteElements(@NotNull Set<? extends Element> elements) {
         this.deleteElements(this.root, elements);
     }
 
@@ -56,7 +58,7 @@ final public class FilterTreeModel implements TreeModel {
      * @param node
      * @param elements
      */
-    private void deleteElements(Node node, Set<? extends Element> elements) {
+    private void deleteElements(@NotNull Node node, @NotNull Set<? extends Element> elements) {
         assert !node.isLeaf();
 
         if (!node.isLeaf()) {
@@ -83,7 +85,8 @@ final public class FilterTreeModel implements TreeModel {
      * @param paths
      * @return
      */
-    public Map<Element, Node> parsePaths(TreePath[] paths) {
+    @NotNull
+    public Map<Element, Node> parsePaths(@NotNull TreePath[] paths) {
         Objects.requireNonNull(paths);
         final Map<Element, Node> ELEMENTS = new LinkedHashMap<>(paths.length);
 
@@ -112,6 +115,7 @@ final public class FilterTreeModel implements TreeModel {
      * @return The corresponding <code>Node</code> or null if the
      * <code>Element</code> was not found.
      */
+    @Nullable
     public TreePath findPath(Element element) {
         if (null == this.root) {
             return null;
@@ -142,7 +146,8 @@ final public class FilterTreeModel implements TreeModel {
      * @return A <code>TreePath</code> to the <code>Element</code>, or
      * <code>null</code> if it is not a leaf of this node.
      */
-    private TreePath findPath(Node node, Element element) {
+    @Nullable
+    private TreePath findPath(@NotNull Node node, Element element) {
         if (node == this.root) {
             for (Node c : node.getChildren()) {
                 if (c.isVisible()) {
@@ -181,7 +186,8 @@ final public class FilterTreeModel implements TreeModel {
      * @return A <code>TreePath</code> to the <code>Element</code>, or
      * <code>null</code> if it is not a leaf of this node.
      */
-    private TreePath findPathUnfiltered(Node node, Element element) {
+    @Nullable
+    private TreePath findPathUnfiltered(@NotNull Node node, Element element) {
         if (node == this.root) {
             for (Node v : node.getChildren()) {
                 TreePath pathUnfiltered = findPathUnfiltered(v, element);
@@ -214,7 +220,7 @@ final public class FilterTreeModel implements TreeModel {
      * @param node The <code>Node</code> to search from.
      * @return
      */
-    public TreePath getPath(Node node) {
+    public TreePath getPath(@NotNull Node node) {
         if (node.getParent() == null) {
             return new TreePath(node);
         } else {
@@ -227,6 +233,7 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @return
      */
+    @NotNull
     public List<Element> getElements() {
         if (null == this.root) {
             return new LinkedList<>();
@@ -240,7 +247,8 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @return
      */
-    private List<Element> getElements(Node node) {
+    @NotNull
+    private List<Element> getElements(@NotNull Node node) {
         List<Element> collected = new LinkedList<>();
 
         if (node.hasElement() && node.isVisible()) {
@@ -292,7 +300,7 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @param
      */
-    private void removeFilter(Node node) {
+    private void removeFilter(@NotNull Node node) {
         node.setVisible(true);
         if (!node.isLeaf()) {
             node.getChildren().forEach(this::removeFilter);
@@ -305,7 +313,7 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @param filter The setFilter that determines which nodes to keep.
      */
-    public void setFilter(Predicate<Node> filter) {
+    public void setFilter(@NotNull Predicate<Node> filter) {
         Objects.requireNonNull(filter);
 
         if (null == this.root) {
@@ -327,7 +335,7 @@ final public class FilterTreeModel implements TreeModel {
      * @param filter The setFilter that determines which nodes to keep.
      * @return True if the node is still visible.
      */
-    private void setFilter(Node node, Predicate<Node> filter) {
+    private void setFilter(@NotNull Node node, @NotNull Predicate<Node> filter) {
         Objects.requireNonNull(filter);
 
         // Determine if the node itself would be filtered out.
@@ -366,7 +374,8 @@ final public class FilterTreeModel implements TreeModel {
      * @param path
      * @return
      */
-    public TreePath rebuildPath(TreePath path) {
+    @Nullable
+    public TreePath rebuildPath(@NotNull TreePath path) {
         Objects.requireNonNull(path);
         if (path.getPathCount() < 1) {
             return null;
@@ -417,7 +426,7 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @param path
      */
-    public void defilter(TreePath path) {
+    public void defilter(@NotNull TreePath path) {
         final TreePath PARENT = path.getParentPath();
         if (PARENT != null) {
             defilter(PARENT);
@@ -435,7 +444,8 @@ final public class FilterTreeModel implements TreeModel {
      * @return A <code>List</code> of every <code>Element</code> contained by
      * the descendents of the <code>Node</code> (not including the node itself).
      */
-    private Map<Element, Node> parsePath(Node node) {
+    @NotNull
+    private Map<Element, Node> parsePath(@NotNull Node node) {
         final Map<Element, Node> ELEMENTS = new LinkedHashMap<>();
 
         if (!node.isLeaf()) {
@@ -453,6 +463,7 @@ final public class FilterTreeModel implements TreeModel {
         return ELEMENTS;
     }
 
+    @Nullable
     @Override
     public Node getRoot() {
         return this.root;
@@ -470,6 +481,7 @@ final public class FilterTreeModel implements TreeModel {
      * @return The child at the specified index, or <code>null</code> if the
      * node is a leaf or the index is invalid.
      */
+    @Nullable
     @Override
     public Object getChild(Object parent, int index) {
         assert parent instanceof Node;
@@ -574,7 +586,9 @@ final public class FilterTreeModel implements TreeModel {
         this.LISTENERS.forEach(listener -> listener.treeNodesRemoved(event));
     }
 
+    @Nullable
     private Node root;
+    @NotNull
     final List<TreeModelListener> LISTENERS;
 
     /**
@@ -588,6 +602,7 @@ final public class FilterTreeModel implements TreeModel {
          * @return The <code>Collection</code> of children, or null if the
          * <code>Node</code> is a leaf.
          */
+        @Nullable
         abstract public Collection<Node> getChildren();
 
         /**
@@ -598,6 +613,7 @@ final public class FilterTreeModel implements TreeModel {
         /**
          * @return The element, if any.
          */
+        @Nullable
         abstract public Element getElement();
 
         /**
@@ -605,7 +621,8 @@ final public class FilterTreeModel implements TreeModel {
          * @param cls
          * @return The element.
          */
-        public <T> T getAs(Class<T> cls) {
+        @Nullable
+        public <T> T getAs(@NotNull Class<T> cls) {
             if (this.hasElement(cls)) {
                 return cls.cast(this.getElement());
             } else {
@@ -625,7 +642,7 @@ final public class FilterTreeModel implements TreeModel {
          * @param check The <code>Element</code> to check for.
          * @return The element.
          */
-        public boolean hasElement(Class<?> check) {
+        public boolean hasElement(@NotNull Class<?> check) {
             return this.hasElement() && check.isInstance(this.getElement());
         }
 
@@ -649,6 +666,7 @@ final public class FilterTreeModel implements TreeModel {
         /**
          * @return The parent of the <code>Node</code>.
          */
+        @Nullable
         final public Node getParent() {
             return this.parent;
         }
@@ -677,10 +695,11 @@ final public class FilterTreeModel implements TreeModel {
         }
 
         @Override
-        final public int compareTo(Node o) {
+        final public int compareTo(@NotNull Node o) {
             return this.toString().compareTo(o.toString());
         }
 
+        @Nullable
         private Node parent = null;
         private boolean isVisible = true;
     }
@@ -710,7 +729,7 @@ final public class FilterTreeModel implements TreeModel {
          * @param elements A list of elements with which to populate the
          * <code>Node</code>.
          */
-        public ContainerNode(CharSequence name, Collection<? extends Element> elements) {
+        public ContainerNode(CharSequence name, @NotNull Collection<? extends Element> elements) {
             this.NAME = Objects.requireNonNull(name).toString();
             List<Node> list = new ArrayList<>();
             for (Element element : elements) {
@@ -728,7 +747,8 @@ final public class FilterTreeModel implements TreeModel {
          * @param children The children to add.
          * @return The <code>Node</code> itself, to allow for chaining.
          */
-        public ContainerNode addAll(Collection<Node> children) {
+        @NotNull
+        public ContainerNode addAll(@NotNull Collection<Node> children) {
             Objects.requireNonNull(children);
             if (children.contains(null)) {
                 throw new NullPointerException();
@@ -748,16 +768,19 @@ final public class FilterTreeModel implements TreeModel {
          * @return The <code>Node</code> itself, to allow for chaining.
          *
          */
+        @NotNull
         public ContainerNode sort() {
             this.CHILDREN.sort((n1, n2) -> n1.toString().compareToIgnoreCase(n2.toString()));
             return this;
         }
 
+        @NotNull
         @Override
         public String getName() {
             return this.NAME;
         }
 
+        @NotNull
         @Override
         public Collection<Node> getChildren() {
             return this.CHILDREN;
@@ -768,6 +791,7 @@ final public class FilterTreeModel implements TreeModel {
             return false;
         }
 
+        @Nullable
         @Override
         public Element getElement() {
             return null;
@@ -800,7 +824,9 @@ final public class FilterTreeModel implements TreeModel {
             return this.label;
         }
 
+        @NotNull
         final private String NAME;
+        @NotNull
         final private List<Node> CHILDREN;
         private String label;
 
@@ -830,6 +856,7 @@ final public class FilterTreeModel implements TreeModel {
             return this.ELEMENT;
         }
 
+        @Nullable
         @Override
         public Collection<Node> getChildren() {
             return null;
@@ -845,6 +872,7 @@ final public class FilterTreeModel implements TreeModel {
             return true;
         }
 
+        @Nullable
         @Override
         public String toString() {
             if (null == this.label) {
@@ -865,6 +893,7 @@ final public class FilterTreeModel implements TreeModel {
         }
 
         final private T ELEMENT;
+        @Nullable
         protected String label;
 
     }
@@ -885,6 +914,7 @@ final public class FilterTreeModel implements TreeModel {
             super(element);
         }
 
+        @NotNull
         @Override
         public String getName() {
             return this.getElement().indexName();
@@ -899,7 +929,7 @@ final public class FilterTreeModel implements TreeModel {
      */
     static public class RootNode extends ContainerNode {
 
-        public RootNode(ESS root, Collection<Node> children) {
+        public RootNode(@NotNull ESS root, @NotNull Collection<Node> children) {
             super(root.toString());
             this.ROOT = Objects.requireNonNull(root);
             super.addAll(children);
@@ -924,7 +954,7 @@ final public class FilterTreeModel implements TreeModel {
      */
     static public class ActiveScriptNode extends ElementNode<ActiveScript> {
 
-        public ActiveScriptNode(ActiveScript element) {
+        public ActiveScriptNode(@NotNull ActiveScript element) {
             super(element);
             if (element.hasStack()) {
                 List<Node> list = new ArrayList<>();
@@ -949,11 +979,13 @@ final public class FilterTreeModel implements TreeModel {
             return this.CHILDREN == null;
         }
 
+        @Nullable
         @Override
         public Collection<Node> getChildren() {
             return this.CHILDREN;
         }
 
+        @Nullable
         final private List<Node> CHILDREN;
     }
 
@@ -963,7 +995,7 @@ final public class FilterTreeModel implements TreeModel {
      */
     static public class SuspendedStackNode extends ElementNode<SuspendedStack> {
 
-        public SuspendedStackNode(SuspendedStack element) {
+        public SuspendedStackNode(@NotNull SuspendedStack element) {
             super(element);
             if (element.hasMessage()) {
                 final ElementNode<FunctionMessageData> CHILD = new ElementNode<>(element.getMessage());
@@ -984,11 +1016,13 @@ final public class FilterTreeModel implements TreeModel {
             return this.CHILDREN == null;
         }
 
+        @Nullable
         @Override
         public Collection<Node> getChildren() {
             return this.CHILDREN;
         }
 
+        @Nullable
         final private List<Node> CHILDREN;
     }
 
@@ -998,7 +1032,7 @@ final public class FilterTreeModel implements TreeModel {
      */
     static public class FunctionMessageNode extends ElementNode<FunctionMessage> {
 
-        public FunctionMessageNode(FunctionMessage element) {
+        public FunctionMessageNode(@NotNull FunctionMessage element) {
             super(element);
             if (element.hasMessage()) {
                 final ElementNode<FunctionMessageData> CHILD = new ElementNode<>(element.getMessage());
@@ -1019,11 +1053,13 @@ final public class FilterTreeModel implements TreeModel {
             return this.CHILDREN == null;
         }
 
+        @Nullable
         @Override
         public Collection<Node> getChildren() {
             return this.CHILDREN;
         }
 
+        @Nullable
         final private List<Node> CHILDREN;
     }
 

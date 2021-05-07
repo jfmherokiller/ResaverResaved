@@ -178,7 +178,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
         BUILDER.append(String.format("<p>ID: %s</p>", iD))
         BUILDER.append(String.format("<p>Content type: %s</p>", varType))
         if (varType.isRefType) {
-            val SCRIPT = save!!.papyrus.scripts[refType]
+            val SCRIPT = save!!.papyrus?.scripts?.get(refType)
             if (null != SCRIPT) {
                 BUILDER.append(String.format("<p>Reference type: %s</p>", SCRIPT.toHTML(this)))
             } else {
@@ -313,7 +313,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
         init {
             try {
                 val count = length
-                VARIABLES = ess.papyrus.Variable.readList(input, count, context)
+                VARIABLES = context?.let { Variable.readList(input, count, it) }
             } catch (ex: ListException) {
                 throw PapyrusElementException("Couldn't read Array variables.", ex, this)
             }

@@ -1,5 +1,7 @@
 package prefs;
  
+import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -20,11 +22,13 @@ public class FilePreferences extends AbstractPreferences
 {
   private static final Logger log = Logger.getLogger(FilePreferences.class.getName());
  
+  @NotNull
   private final Map<String, String> root;
+  @NotNull
   private final Map<String, FilePreferences> children;
   private boolean isRemoved = false;
  
-  public FilePreferences(AbstractPreferences parent, String name)
+  public FilePreferences(AbstractPreferences parent, @NotNull String name)
   {
     super(parent, name);
  
@@ -74,17 +78,19 @@ public class FilePreferences extends AbstractPreferences
     flush();
   }
  
+  @NotNull
   protected String[] keysSpi() throws BackingStoreException
   {
     return root.keySet().toArray(new String[0]);
   }
  
+  @NotNull
   protected String[] childrenNamesSpi() throws BackingStoreException
   {
     return children.keySet().toArray(new String[0]);
   }
  
-  protected FilePreferences childSpi(String name)
+  protected FilePreferences childSpi(@NotNull String name)
   {
     FilePreferences child = children.get(name);
     if (child == null || child.isRemoved()) {
@@ -130,7 +136,7 @@ public class FilePreferences extends AbstractPreferences
     }
   }
  
-  private void getPath(StringBuilder sb)
+  private void getPath(@NotNull StringBuilder sb)
   {
     final FilePreferences parent = (FilePreferences) parent();
     if (parent == null) return;

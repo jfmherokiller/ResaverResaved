@@ -59,7 +59,7 @@ class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
     }
 
     @JvmField
-    val NAME: IString = IString[mf.BufferUtil.getWString(input)]
+    val NAME: IString = IString[mf.BufferUtil.getWString(input)!!]
     private var STATUS: Byte
     var PROPERTIES: MutableList<resaver.esp.Property>?
 

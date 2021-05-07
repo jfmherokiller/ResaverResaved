@@ -120,8 +120,14 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.Int, context: ESSContext) : 
         }
 
         init {
-            super.readRefID(input, "FACTION", context)
-            super.readByte(input, "RANK")
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "FACTION", context)
+                }
+            }
+            if (input != null) {
+                super.readByte(input, "RANK")
+            }
         }
     }
 
@@ -130,16 +136,18 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.Int, context: ESSContext) : 
      */
     private class FaceData(input: ByteBuffer?, context: ESSContext) : ess.GeneralElement() {
         init {
-            val facePresent = super.readByte(input, "FACEPRESENT")
-            if (facePresent.toInt() != 0) {
-                super.readRefID(input, "HAIRCOLOR", context)
-                super.readInt(input, "SKINTONE")
-                super.readRefID(input, "SKIN", context)
-                super.readVSElemArray(input, "HEADPARTS") { input: ByteBuffer? -> context.readRefID(input) }
-                val faceDataPrsent = super.readByte(input, "FACEDATAPRESENT")
-                if (faceDataPrsent.toInt() != 0) {
-                    super.readFloats(input, "MORPHS", super.readInt(input, "MORPHS_COUNT"))
-                    super.readInts(input, "PRESETS", super.readInt(input, "PRESETS_COUNT"))
+            val facePresent = input?.let { super.readByte(it, "FACEPRESENT") }
+            if (facePresent != null) {
+                if (facePresent.toInt() != 0) {
+                    super.readRefID(input, "HAIRCOLOR", context)
+                    super.readInt(input, "SKINTONE")
+                    super.readRefID(input, "SKIN", context)
+                    super.readVSElemArray(input, "HEADPARTS") { input: ByteBuffer? -> input?.let { context.readRefID(it) } }
+                    val faceDataPrsent = input?.let { super.readByte(it, "FACEDATAPRESENT") }
+                    if (faceDataPrsent.toInt() != 0) {
+                        input.let { super.readInt(it, "MORPHS_COUNT") }.let { super.readFloats(input, "MORPHS", it) }
+                        input.let { super.readInt(it, "PRESETS_COUNT") }.let { super.readInts(input, "PRESETS", it) }
+                    }
                 }
             }
         }

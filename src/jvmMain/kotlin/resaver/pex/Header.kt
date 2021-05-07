@@ -69,8 +69,8 @@ class Header internal constructor(input: ByteBuffer) {
         magic = input.int
         version = input.int
         compilationTime = input.long
-        soureFilename = mf.BufferUtil.getUTF(input)
-        userName = mf.BufferUtil.getUTF(input)
-        machineName = mf.BufferUtil.getUTF(input)
+        soureFilename = mf.BufferUtil.getUTF(input).toString()
+        userName = mf.BufferUtil.getUTF(input).toString()
+        machineName = mf.BufferUtil.getUTF(input).toString()
     }
 }

@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  *
  * @author Mark Fairchild
@@ -22,7 +24,7 @@ package ess.papyrus;
 @SuppressWarnings("serial")
 final public class UnbindMap extends PapyrusElementMap<QueuedUnbind> {
 
-    UnbindMap(java.nio.ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
+    UnbindMap(@NotNull java.nio.ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
         super(input, b -> new QueuedUnbind(b, context));
     }
 

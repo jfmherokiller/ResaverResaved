@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.ListException;
 import ess.AnalyzableElement;
 
@@ -50,7 +52,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @throws PapyrusFormatException
      * @throws PapyrusElementException
      */
-    public StackFrame(ByteBuffer input, ActiveScript thread, PapyrusContext context) throws PapyrusFormatException, PapyrusElementException {
+    public StackFrame(@NotNull ByteBuffer input, ActiveScript thread, @NotNull PapyrusContext context) throws PapyrusFormatException, PapyrusElementException {
         Objects.requireNonNull(input);
         Objects.requireNonNull(thread);
         Objects.requireNonNull(context);
@@ -131,11 +133,11 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     }
 
     /**
-     * @see ess.Element#write(resaver.ByteBuffer)
+     * @see ess.Element#write(ByteBuffer)
      * @param output The output stream.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.putInt(this.VARIABLES.size());
         this.FLAG.write(output);
         this.FN_Var_TYPE.write(output);
@@ -255,6 +257,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     /**
      * @return The qualified name of the function being executed.
      */
+    @NotNull
     public IString getFName() {
         IString fname = IString.format("%s.%s", this.SCRIPTNAME, this.EVENT);
         return fname;
@@ -284,6 +287,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     /**
      * @return The function parameter list.
      */
+    @NotNull
     public List<FunctionParam> getFunctionParams() {
         return Collections.unmodifiableList(this.FN_PARAMS);
     }
@@ -291,6 +295,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     /**
      * @return The function locals list.
      */
+    @NotNull
     public List<FunctionLocal> getFunctionLocals() {
         return Collections.unmodifiableList(this.FN_LOCALS);
     }
@@ -298,6 +303,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     /**
      * @return The function opcode data list.
      */
+    @NotNull
     public List<OpcodeData> getOpcodeData() {
         return Collections.unmodifiableList(this.CODE);
     }
@@ -342,6 +348,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     /**
      * @return The owner, which should be a form or an instance.
      */
+    @NotNull
     public Variable getOwner() {
         return OWNERFIELD;
     }
@@ -394,8 +401,9 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @param target A target within the <code>Linkable</code>.
      * @return
      */
+    @NotNull
     @Override
-    public String toHTML(Element target) {
+    public String toHTML(@Nullable Element target) {
         assert null != this.THREAD;
         int frameIndex = this.THREAD.getStackFrames().indexOf(this);
         if (frameIndex < 0) {
@@ -435,6 +443,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     /**
      * @return String representation.
      */
+    @NotNull
     @Override
     public String toString() {
         final StringBuilder BUF = new StringBuilder();
@@ -461,6 +470,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @param save
      * @return
      */
+    @NotNull
     @Override
     public String getInfo(resaver.Analysis analysis, ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
@@ -521,7 +531,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         BUILDER.append(String.format("Event: %s<br/>", this.EVENT));
         BUILDER.append(String.format("Status: %s<br/>", this.STATUS));
         BUILDER.append(String.format("Flag: %s<br/>", this.FLAG));
-        BUILDER.append(String.format("Function type: %s<br/>", this.FN_Var_TYPE.toString()));
+        BUILDER.append(String.format("Function type: %s<br/>", this.FN_Var_TYPE));
         BUILDER.append(String.format("Function return type: %s<br/>", this.RETURNTYPE));
         BUILDER.append(String.format("Function docstring: %s<br/>", this.FN_DOCSTRING));
         BUILDER.append(String.format("%d parameters, %d locals, %d values.<br/>", this.FN_PARAMS.size(), this.FN_LOCALS.size(), this.VARIABLES.size()));
@@ -552,13 +562,13 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement#matches(Analysis, resaver.Mod)
      * @param analysis
      * @param mod
      * @return
      */
     @Override
-    public boolean matches(Analysis analysis, String mod) {
+    public boolean matches(@NotNull Analysis analysis, String mod) {
         Objects.requireNonNull(analysis);
         Objects.requireNonNull(mod);
 
@@ -577,7 +587,8 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @param types
      * @param terms
      */
-    static String preMap(List<OpcodeData> instructions, List<MemberDesc> locals, List<MemberDesc> types, Map<Parameter, Parameter> terms, int ptr) {
+    @NotNull
+    static String preMap(@NotNull List<OpcodeData> instructions, List<MemberDesc> locals, @NotNull List<MemberDesc> types, @NotNull Map<Parameter, Parameter> terms, int ptr) {
         final StringBuilder BUF = new StringBuilder();
 
         for (int i = 0; i < instructions.size(); i++) {
@@ -616,7 +627,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @param terms
      * @return
      */
-    static boolean makeTerm(Opcode op, List<Parameter> args, List<MemberDesc> types, Map<Parameter, Parameter> terms) {
+    static boolean makeTerm(@NotNull Opcode op, @NotNull List<Parameter> args, @NotNull List<MemberDesc> types, @NotNull Map<Parameter, Parameter> terms) {
         String term;
         String method, obj, dest, arg, prop, operand1, operand2;
         List<String> subArgs;
@@ -838,9 +849,9 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @param args
      * @param terms
      * @param destPos
-     * @param positions
+     * @param term
      */
-    static boolean processTerm(List<Parameter> args, Map<Parameter, Parameter> terms, int destPos, String term) {
+    static boolean processTerm(@NotNull List<Parameter> args, @NotNull Map<Parameter, Parameter> terms, int destPos, String term) {
         if (destPos >= args.size() || !(args.get(destPos).getType() == ParamType.IDENTIFIER)) {
             return false;
         }
@@ -862,7 +873,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @param terms
      * @param exclude
      */
-    static void replaceVariables(List<Parameter> args, Map<Parameter, Parameter> terms, int exclude) {
+    static void replaceVariables(@NotNull List<Parameter> args, @NotNull Map<Parameter, Parameter> terms, int exclude) {
         for (int i = 0; i < args.size(); i++) {
             Parameter arg = args.get(i);
             if (terms.containsKey(arg) && i != exclude) {
@@ -885,7 +896,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
      * @param params
      * @return
      */
-    static <T> String paramList(List<T> params) {
+    static <T> String paramList(@NotNull List<T> params) {
         StringJoiner joiner = new StringJoiner(", ", "(", ")");
         for (T p : params) {
             String s = p.toString();
@@ -895,25 +906,36 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
     }
 
     final private ActiveScript THREAD;
+    @NotNull
     final private Flags.Byte FLAG;
+    @NotNull
     final private VarType FN_Var_TYPE;
     final private TString SCRIPTNAME;
     final private Script SCRIPT;
     final private TString BASENAME;
     final private TString EVENT;
+    @NotNull
     final private Optional<TString> STATUS;
     final private byte OPCODE_MAJORVERSION;
     final private byte OPCODE_MINORVERSION;
     final private TString RETURNTYPE;
     final private TString FN_DOCSTRING;
+    @NotNull
     final private Flags.Int FN_USERFLAGS;
+    @NotNull
     final private Flags.Byte FN_FLAGS;
+    @NotNull
     final private List<FunctionParam> FN_PARAMS;
+    @NotNull
     final private List<FunctionLocal> FN_LOCALS;
+    @NotNull
     final private List<OpcodeData> CODE;
     final private int PTR;
+    @NotNull
     final private Variable OWNERFIELD;
+    @NotNull
     final private List<Variable> VARIABLES;
+    @Nullable
     final private GameElement OWNER;
     static final Pattern AUTOVAR_REGEX = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE);
 

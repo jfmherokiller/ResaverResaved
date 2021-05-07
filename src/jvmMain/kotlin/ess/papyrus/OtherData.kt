@@ -24,7 +24,7 @@ import java.util.logging.Logger
  *
  * @author Mark Fairchild
  */
-class OtherData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.GeneralElement(), PapyrusElement {
+class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement(), PapyrusElement {
     val arrays: List<Array<Element>>
         get() = listOfNotNull(
             ARRAY1,
@@ -48,7 +48,7 @@ class OtherData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.G
             ARRAY14,
             ARRAY15
         )
-    val ARRAY1: Array<Element> = read32ElemArray(input, "Array1") { `in`: ByteBuffer? -> Array1(`in`, context) }
+    val ARRAY1: Array<Element> = input?.let { read32ElemArray(it, "Array1") { `in`: ByteBuffer? -> Array1(`in`, context) } }!!
     val ARRAY1A: Array<Element>
     val ARRAY2: Array<Element>
     val ARRAY3: Array<Element>
@@ -70,7 +70,7 @@ class OtherData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.G
     val ARRAY14: Array<Element>?
     val ARRAY15: Array<Element>?
 
-    internal class Array1(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.GeneralElement() {
+    internal class Array1(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
         override fun toString(): String {
             return if (null == THREAD) {
                 "INVALID (" + super.toString() + ")"
@@ -79,16 +79,16 @@ class OtherData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.G
             }
         }
 
-        private val THREAD: ess.papyrus.ActiveScript?
+        private val THREAD: ActiveScript?
 
         init {
-            val ID1 = super.readID32(input, "ID1", context)
-            val ID2 = super.readID32(input, "ID2", context)
+            val ID1 = input?.let { super.readID32(it, "ID1", context) }
+            val ID2 = input?.let { super.readID32(it, "ID2", context) }
             THREAD = context.findActiveScript(ID2)
         }
     }
 
-    internal class Array1A(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.GeneralElement() {
+    internal class Array1A(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
         override fun toString(): String {
             return if (null == THREAD) {
                 "INVALID (" + super.toString() + ")"
@@ -97,77 +97,139 @@ class OtherData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.G
             }
         }
 
-        private val THREAD: ess.papyrus.ActiveScript?
+        private val THREAD: ActiveScript?
 
         init {
-            super.readID32(input, "ID1", context)
+            if (input != null) {
+                super.readID32(input, "ID1", context)
+            }
             val ID =
-                if (context.game.isFO4) super.readID64(input, "ID2", context) else super.readID32(input, "ID2", context)
+                if (context.game?.isFO4 == true) input?.let { super.readID64(it, "ID2", context) } else input?.let {
+                    super.readID32(
+                        it, "ID2", context)
+                }
             THREAD = context.findActiveScript(ID)
         }
     }
 
-    internal class Array2(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.GeneralElement() {
+    internal class Array2(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
         override fun toString(): String {
             return if (THREAD == null) {
-                "null(" + super.toString() + ")"
+                "null(${super.toString()})"
             } else {
-                THREAD.toString() + "(" + super.toString() + ")"
+                "$THREAD(${super.toString()})"
             }
         }
 
-        private val THREAD: ess.papyrus.ActiveScript?
+        private val THREAD: ActiveScript?
 
         init {
-            super.readID32(input, "ID1", context)
+            if (input != null) {
+                super.readID32(input, "ID1", context)
+            }
             val ID =
-                if (context.game.isFO4) super.readID64(input, "ID2", context) else super.readID32(input, "ID2", context)
+                if (context.game?.isFO4 == true) input?.let { super.readID64(it, "ID2", context) } else input?.let {
+                    super.readID32(
+                        it, "ID2", context)
+                }
             THREAD = context.findActiveScript(ID)
         }
     }
 
-    internal class Array3(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement() {
+    internal class Array3(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
-            super.readByte(input, "type")
-            super.readShort(input, "str1")
-            super.readShort(input, "unk1")
-            super.readShort(input, "str2")
-            super.readInt(input, "unk2")
+            if (input != null) {
+                super.readByte(input, "type")
+            }
+            if (input != null) {
+                super.readShort(input, "str1")
+            }
+            if (input != null) {
+                super.readShort(input, "unk1")
+            }
+            if (input != null) {
+                super.readShort(input, "str2")
+            }
+            if (input != null) {
+                super.readInt(input, "unk2")
+            }
             super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
-            super.readRefID(input, "refID", context)
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "refID", context)
+                }
+            }
         }
     }
 
-    internal class Array4(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement() {
+    internal class Array4(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
-            super.readShort(input, "str1")
-            super.readShort(input, "unk1")
-            super.readByte(input, "unk2")
-            super.readShort(input, "str2")
-            super.readInt(input, "unk3")
+            if (input != null) {
+                super.readShort(input, "str1")
+            }
+            if (input != null) {
+                super.readShort(input, "unk1")
+            }
+            if (input != null) {
+                super.readByte(input, "unk2")
+            }
+            if (input != null) {
+                super.readShort(input, "str2")
+            }
+            if (input != null) {
+                super.readInt(input, "unk3")
+            }
             super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
-            super.readRefID(input, "refID", context)
+            if (context != null) {
+                if (input != null) {
+                    super.readRefID(input, "refID", context)
+                }
+            }
         }
     }
 
-    internal class Array4A(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement()
-    internal class Array4B(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement() {
+    internal class Array4A(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement()
+    internal class Array4B(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
-            super.readByte(input, "unk1")
-            super.readShort(input, "unk2")
-            super.readShort(input, "unk3")
-            super.readRefID(input, "ref1", context)
-            super.readRefID(input, "ref2", context)
-            super.readRefID(input, "ref3", context)
-            super.readRefID(input, "ref4", context)
+            if (input != null) {
+                super.readByte(input, "unk1")
+            }
+            if (input != null) {
+                super.readShort(input, "unk2")
+            }
+            if (input != null) {
+                super.readShort(input, "unk3")
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ref1", context)
+                }
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ref2", context)
+                }
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ref3", context)
+                }
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ref4", context)
+                }
+            }
         }
     }
 
-    internal class Array4C(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement() {
+    internal class Array4C(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
-            val FLAG = super.readByte(input, "flag")
+            val FLAG = input?.let { super.readByte(it, "flag") }!!
             super.readInt(input, "data")
-            super.readRefID(input, "ref", context)
+            if (context != null) {
+                super.readRefID(input, "ref", context)
+            }
             if (FLAG in 0..6) {
                 super.readInts(input, "data1array", 3)
             }
@@ -180,51 +242,101 @@ class OtherData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.G
         }
     }
 
-    internal class Array4D(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement() {
+    internal class Array4D(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
-            super.readByte(input, "flag1")
-            super.readInt(input, "unk2")
-            super.readByte(input, "flag2")
-            super.readRefID(input, "ref", context)
+            if (input != null) {
+                super.readByte(input, "flag1")
+            }
+            if (input != null) {
+                super.readInt(input, "unk2")
+            }
+            if (input != null) {
+                super.readByte(input, "flag2")
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ref", context)
+                }
+            }
         }
     }
 
-    internal class Array5(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement() {
+    internal class Array5(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
-            super.readShort(input, "unk1")
-            super.readShort(input, "unk2")
-            super.readRefID(input, "ref1", context)
-            super.readRefID(input, "ref2", context)
-            super.readRefID(input, "ref3", context)
-            super.readShort(input, "unk4")
+            if (input != null) {
+                super.readShort(input, "unk1")
+            }
+            if (input != null) {
+                super.readShort(input, "unk2")
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ref1", context)
+                }
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ref2", context)
+                }
+            }
+            if (input != null) {
+                if (context != null) {
+                    super.readRefID(input, "ref3", context)
+                }
+            }
+            if (input != null) {
+                super.readShort(input, "unk4")
+            }
         }
     }
 
-    internal class Array6(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement() {
+    internal class Array6(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
-            super.readShort(input, "unk")
+            if (input != null) {
+                super.readShort(input, "unk")
+            }
             super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
-            super.readRefID(input, "ref", context)
+            if (context != null) {
+                if (input != null) {
+                    super.readRefID(input, "ref", context)
+                }
+            }
         }
     }
 
-    internal class Array7(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : ess.GeneralElement() {
+    internal class Array7(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
-            super.readShort(input, "unk")
+            if (input != null) {
+                super.readShort(input, "unk")
+            }
             super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
-            super.readRefID(input, "ref", context)
+            if (context != null) {
+                if (input != null) {
+                    super.readRefID(input, "ref", context)
+                }
+            }
         }
     }
 
-    internal class Array8(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.GeneralElement() {
+    internal class Array8(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
         init {
-            super.readShort(input, "unk")
-            super.readShort(input, "type")
-            super.readRefID(input, "ref", context)
-            val COUNT1 = super.readInt(input, "count1")
-            val COUNT2 = super.readInt(input, "count2")
-            super.readElements(input, "refArray1", COUNT1) { input: ByteBuffer? -> context.readRefID(input) }
-            super.readElements(input, "refArray2", COUNT2) { input: ByteBuffer? -> context.readRefID(input) }
+            if (input != null) {
+                super.readShort(input, "unk")
+            }
+            if (input != null) {
+                super.readShort(input, "type")
+            }
+            if (input != null) {
+                super.readRefID(input, "ref", context)
+            }
+            val COUNT1 = input?.let { super.readInt(it, "count1") }
+            val COUNT2 = input?.let { super.readInt(it, "count2") }
+            if (COUNT1 != null) {
+                super.readElements(input, "refArray1", COUNT1) { input: ByteBuffer? -> input?.let { context.readRefID(it) } }
+            }
+            if (COUNT2 != null) {
+                super.readElements(input, "refArray2", COUNT2) { input: ByteBuffer? -> input?.let { context.readRefID(it) } }
+            }
         }
     }
 
@@ -236,8 +348,8 @@ class OtherData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.G
         val STRING: String
 
         init {
-            val COUNT = readInt(input, "COUNT")
-            assert(0 <= COUNT)
+            val COUNT = input?.let { readInt(it, "COUNT") }
+            assert(0 <= COUNT!!)
             val BYTES = super.readBytes(input, "MEMBERS", COUNT)
             STRING = String(BYTES)
         }
@@ -252,7 +364,7 @@ class OtherData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : ess.G
     static final private int[] SIZES_FO4 = {};*/
     init {
         LOG.info(String.format("Read ARRAY1, %d elements.", ARRAY1.size))
-        ARRAY1A = read32ElemArray(input, "Array1a") { `in`: ByteBuffer? -> Array1A(`in`, context) }
+        ARRAY1A = input?.let { read32ElemArray(it, "Array1a") { `in`: ByteBuffer? -> Array1A(`in`, context) } }!!
         LOG.info(String.format("Read ARRAY1A, %d elements.", ARRAY1A.size))
         ARRAY2 = read32ElemArray(input, "Array2") { `in`: ByteBuffer? -> Array2(`in`, context) }
         LOG.info(String.format("Read ARRAY2, %d elements.", ARRAY2.size))

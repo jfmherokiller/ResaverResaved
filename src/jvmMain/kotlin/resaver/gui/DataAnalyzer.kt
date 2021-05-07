@@ -296,44 +296,52 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
                     }
                     DataType.BString -> {
                         var `val` = mf.BufferUtil.getBString(currentSlice)
-                        if (!validString(`val`)) {
+                        if (`val`?.let { validString(it) }?.not() == true) {
                             FIELD.background = Color.LIGHT_GRAY
                         } else {
-                            if (`val`.length > MAXLEN) {
-                                `val` = `val`.substring(0, MAXLEN - 3) + "..."
+                            if (`val` != null) {
+                                if (`val`.length > MAXLEN) {
+                                    `val` = `val`.substring(0, MAXLEN - 3) + "..."
+                                }
                             }
                             BUF.append(`val`)
                         }
                     }
                     DataType.WString -> {
                         var `val` = mf.BufferUtil.getWString(currentSlice)
-                        if (!validString(`val`)) {
+                        if (`val`?.let { validString(it).not() } == true) {
                             FIELD.background = Color.LIGHT_GRAY
                         } else {
-                            if (`val`.length > MAXLEN) {
-                                `val` = `val`.substring(0, MAXLEN - 3) + "..."
+                            if (`val` != null) {
+                                if (`val`.length > MAXLEN) {
+                                    `val` = `val`.substring(0, MAXLEN - 3) + "..."
+                                }
                             }
                             BUF.append(`val`)
                         }
                     }
                     DataType.LString -> {
                         var `val` = mf.BufferUtil.getLString(currentSlice)
-                        if (!validString(`val`)) {
+                        if (`val`?.let { validString(it).not() } == true) {
                             FIELD.background = Color.LIGHT_GRAY
                         } else {
-                            if (`val`.length > MAXLEN) {
-                                `val` = `val`.substring(0, MAXLEN - 3) + "..."
+                            if (`val` != null) {
+                                if (`val`.length > MAXLEN) {
+                                    `val` = `val`.substring(0, MAXLEN - 3) + "..."
+                                }
                             }
                             BUF.append(`val`)
                         }
                     }
                     DataType.ZString -> {
                         var `val` = mf.BufferUtil.getZString(currentSlice)
-                        if (!validString(`val`)) {
+                        if (`val`?.let { validString(it).not() } == true) {
                             FIELD.background = Color.LIGHT_GRAY
                         } else {
-                            if (`val`.length > MAXLEN) {
-                                `val` = `val`.substring(0, MAXLEN - 3) + "..."
+                            if (`val` != null) {
+                                if (`val`.length > MAXLEN) {
+                                    `val` = `val`.substring(0, MAXLEN - 3) + "..."
+                                }
                             }
                             BUF.append(`val`)
                         }
@@ -469,7 +477,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
         SAVE = save
         ANALYSIS = if (save.analysis == null) null else save.analysis
         ESS_CONTEXT = save.context
-        PAPYRUS_CONTEXT = if (save.papyrus == null) null else save.papyrus.context
+        PAPYRUS_CONTEXT = if (save.papyrus == null) null else save.papyrus!!.context
         currentSlice = DATA.slice()
         SIZE = 2048.coerceAtMost(currentSlice.limit())
         currentSlice.limit(SIZE)

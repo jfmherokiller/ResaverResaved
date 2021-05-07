@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.ListException;
 import ess.AnalyzableElement;
 import java.util.Collections;
@@ -43,7 +45,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
      * @throws PapyrusFormatException
      * @throws PapyrusElementException
      */
-    public FunctionMessageData(ByteBuffer input, PapyrusElement parent, PapyrusContext context) throws PapyrusFormatException, PapyrusElementException {
+    public FunctionMessageData(@NotNull ByteBuffer input, PapyrusElement parent, @NotNull PapyrusContext context) throws PapyrusFormatException, PapyrusElementException {
         Objects.requireNonNull(input);
         Objects.requireNonNull(context);
 
@@ -67,7 +69,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
      * @param output The output stream.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.UNKNOWN);
         this.SCRIPTNAME.write(output);
         this.EVENT.write(output);
@@ -157,6 +159,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
     /**
      * @return The qualified name of the function being executed.
      */
+    @NotNull
     public IString getFName() {
         IString fname = IString.format("%s.%s", this.SCRIPTNAME, this.EVENT);
         return fname;
@@ -165,6 +168,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
     /**
      * @return String representation.
      */
+    @NotNull
     @Override
     public String toString() {
         if (this.isUndefined()) {
@@ -181,7 +185,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
      * @return
      */
     @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
+    public String getInfo(@Nullable resaver.Analysis analysis, ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
         if (null != this.SCRIPT) {
             BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGEDATA of %s</h3>", this.SCRIPT.toHTML(null)));
@@ -233,7 +237,7 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
      * @return
      */
     @Override
-    public boolean matches(Analysis analysis, String mod) {
+    public boolean matches(@NotNull Analysis analysis, String mod) {
         Objects.requireNonNull(analysis);
         Objects.requireNonNull(mod);
 
@@ -261,6 +265,8 @@ public class FunctionMessageData implements PapyrusElement, AnalyzableElement, H
     final private TString SCRIPTNAME;
     final private Script SCRIPT;
     final private TString EVENT;
+    @NotNull
     final private Variable UNKNOWNVAR;
+    @NotNull
     final private List<Variable> VARIABLES;
 }

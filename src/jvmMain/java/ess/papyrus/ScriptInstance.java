@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.ListException;
 import ess.AnalyzableElement;
 import java.util.Collections;
@@ -46,7 +48,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      * @param context The <code>PapyrusContext</code> info.
      * @throws PapyrusFormatException
      */
-    ScriptInstance(ByteBuffer input, ScriptMap scripts, PapyrusContext context) throws PapyrusFormatException {
+    ScriptInstance(@NotNull ByteBuffer input, @NotNull ScriptMap scripts, @NotNull PapyrusContext context) throws PapyrusFormatException {
         super(input, scripts, context);
         this.UNKNOWN2BITS = input.getShort();
         this.UNKNOWN = input.getShort();
@@ -68,7 +70,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      * @param output The output stream.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         super.write(output);
         output.putShort(this.UNKNOWN2BITS);
         output.putShort(this.UNKNOWN);
@@ -88,7 +90,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      * @throws PapyrusFormatException
      */
     @Override
-    public void readData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
+    public void readData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
         this.data = new ScriptData(input, context);
     }
 
@@ -97,7 +99,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      * @param output
      */
     @Override
-    public void writeData(ByteBuffer output) {
+    public void writeData(@NotNull ByteBuffer output) {
         this.data.write(output);
     }
 
@@ -159,6 +161,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
     /**
      * @return The name of the corresponding <code>Script</code>.
      */
+    @NotNull
     public TString getScriptName() {
         return super.getDefinitionName();
     }
@@ -166,6 +169,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
     /**
      * @return The corresponding <code>Script</code>.
      */
+    @Nullable
     public Script getScript() {
         assert super.getDefinition() instanceof Script;
         return (Script) super.getDefinition();
@@ -176,6 +180,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      *
      * @return The type of the script.
      */
+    @Nullable
     public TString getType() {
         return null != this.data ? this.data.getType() : null;
     }
@@ -219,6 +224,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      * @see HasVariables#getDescriptors() 
      * @return 
      */
+    @NotNull
     @Override
     public List<MemberDesc> getDescriptors() {
         return this.getScript().getExtendedMembers();
@@ -247,7 +253,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      * @return
      */
     @Override
-    public String toHTML(Element target) {
+    public String toHTML(@Nullable Element target) {
         if (null == target || null == this.data) {
             return Linkable.makeLink("scriptinstance", this.getID(), this.toString());
 
@@ -263,7 +269,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
             for (Variable var : this.getVariables()) {
                 if (var.hasRef()) {
                     if (var.getReferent() == target) {
-                        Integer indexOf = this.getVariables().indexOf(var);
+                        int indexOf = this.getVariables().indexOf(var);
                         if (indexOf >= 0) {
                             return Optional.of(indexOf)
                                     .map(index -> Linkable.makeLink("scriptinstance", this.getID(), index, this.toString()))
@@ -281,6 +287,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
     /**
      * @return String representation.
      */
+    @NotNull
     @Override
     public String toString() {
         final StringBuilder BUF = new StringBuilder();
@@ -306,8 +313,9 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
      * @param save
      * @return
      */
+    @NotNull
     @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
+    public String getInfo(@Nullable resaver.Analysis analysis, @NotNull ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
         if (null != this.getScript()) {
             BUILDER.append(String.format("<html><h3>INSTANCE of %s</h3>", this.getScript().toHTML(this)));
@@ -447,6 +455,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
     final private short UNKNOWN;
     final private RefID REFID;
     final private byte UNKNOWN_BYTE;
+    @Nullable
     final private Byte UNKNOWN_FO_BYTE;
     private ScriptData data;
 
@@ -470,7 +479,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
          * @throws PapyrusElementException
          * @throws PapyrusFormatException
          */
-        public ScriptData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
+        public ScriptData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
             Objects.requireNonNull(input);
             Objects.requireNonNull(context);
             this.FLAG = input.get();
@@ -491,7 +500,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
          * @param output The output stream.
          */
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             getID().write(output);
             output.put(this.FLAG);
             this.TYPE.write(output);
@@ -535,6 +544,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
          * @see Object#toString()
          * @return
          */
+        @NotNull
         @Override
         public String toString() {
             final StringBuilder BUILDER = new StringBuilder();
@@ -553,6 +563,7 @@ final public class ScriptInstance extends GameElement implements SeparateData, H
         final private TString TYPE;
         final private int UNKNOWN1;
         final private int UNKNOWN2;
+        @NotNull
         final private List<Variable> VARIABLES;
 
     }

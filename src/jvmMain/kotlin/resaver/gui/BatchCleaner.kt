@@ -28,7 +28,7 @@ import javax.swing.*
  *
  * @author Mark
  */
-class BatchCleaner(window: resaver.gui.SaveWindow?, save: ess.ESS?) : SwingWorker<Boolean, Double?>() {
+class BatchCleaner(window: SaveWindow?, save: ess.ESS?) : SwingWorker<Boolean, Double?>() {
     /**
      *
      * @return @throws Exception
@@ -148,47 +148,59 @@ class BatchCleaner(window: resaver.gui.SaveWindow?, save: ess.ESS?) : SwingWorke
                 return false
             }
             val PAPYRUS = SAVE.papyrus
-            val THREADS: MutableSet<ess.papyrus.ActiveScript> = HashSet()
+            val THREADS: MutableSet<ess.papyrus.ActiveScript> = hashSetOf()
             for (def in CLEAN_NAMES) {
                 if (def is Script) {
-                    for (activeScript in PAPYRUS.activeScripts.values) {
-                        if (activeScript.hasScript(def)) {
-                            THREADS.add(activeScript)
+                    if (PAPYRUS != null) {
+                        for (activeScript in PAPYRUS.activeScripts.values) {
+                            if (activeScript.hasScript(def)) {
+                                THREADS.add(activeScript)
+                            }
                         }
                     }
                 }
             }
             THREADS.forEach { obj: ess.papyrus.ActiveScript -> obj.zero() }
-            val REMOVED = SAVE.papyrus.removeElements(CLEAN_NAMES)
+            val REMOVED = SAVE.papyrus?.removeElements(CLEAN_NAMES)
             WINDOW.deleteNodesFor(REMOVED)
             var scripts = 0L
-            for (papyrusElement in REMOVED) {
-                if (papyrusElement is Script) {
-                    scripts++
+            if (REMOVED != null) {
+                for (papyrusElement in REMOVED) {
+                    if (papyrusElement is Script) {
+                        scripts++
+                    }
                 }
             }
             var scriptInstances = 0L
-            for (papyrusElement in REMOVED) {
-                if (papyrusElement is ess.papyrus.ScriptInstance) {
-                    scriptInstances++
+            if (REMOVED != null) {
+                for (papyrusElement in REMOVED) {
+                    if (papyrusElement is ScriptInstance) {
+                        scriptInstances++
+                    }
                 }
             }
             var structs = 0L
-            for (papyrusElement in REMOVED) {
-                if (papyrusElement is Struct) {
-                    structs++
+            if (REMOVED != null) {
+                for (papyrusElement in REMOVED) {
+                    if (papyrusElement is Struct) {
+                        structs++
+                    }
                 }
             }
             var structsInstances = 0L
-            for (papyrusElement in REMOVED) {
-                if (papyrusElement is ess.papyrus.StructInstance) {
-                    structsInstances++
+            if (REMOVED != null) {
+                for (papyrusElement in REMOVED) {
+                    if (papyrusElement is StructInstance) {
+                        structsInstances++
+                    }
                 }
             }
             var references = 0L
-            for (v in REMOVED) {
-                if (v is ess.papyrus.Reference) {
-                    references++
+            if (REMOVED != null) {
+                for (v in REMOVED) {
+                    if (v is Reference) {
+                        references++
+                    }
                 }
             }
             val threads = THREADS.size.toLong()
@@ -209,9 +221,9 @@ class BatchCleaner(window: resaver.gui.SaveWindow?, save: ess.ESS?) : SwingWorke
         }
     }
 
-    private val WINDOW: resaver.gui.SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
+    private val WINDOW: SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
     private val SAVE: ess.ESS = Objects.requireNonNull(save, "The save field must not be null.")!!
-    private val CONTEXT: ess.papyrus.PapyrusContext = SAVE.papyrus.context
+    private val CONTEXT: ess.papyrus.PapyrusContext = SAVE.papyrus!!.context
     private val LISTENER: WindowAdapter = object : WindowAdapter() {
         override fun windowClosing(e: WindowEvent) {
             if (!isDone) {

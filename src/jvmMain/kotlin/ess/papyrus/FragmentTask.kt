@@ -164,8 +164,8 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
         private var RUNNING: ess.papyrus.ActiveScript? = null
 
         init {
-            if (context.game.isFO4) {
-                RUNNING_ID = context.readEID32(input)
+            if (context.game?.isFO4 == true) {
+                RUNNING_ID = input?.let { context.readEID32(it) }
                 RUNNING = context.findActiveScript(RUNNING_ID)
             } else {
                 RUNNING_ID = null
@@ -225,7 +225,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
             QUESTID = context.readRefID(input)
             STAGE = input.short
             FLAGS = Flags.readByteFlags(input)
-            UNKNOWN_4BYTES = if (context.game.isFO4) input.int else null
+            UNKNOWN_4BYTES = if (context.game?.isFO4 == true) input.int else null
             QUEST = context.getChangeForm(QUESTID)
         }
     }
@@ -279,7 +279,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
         init {
             QUESTID = context.readRefID(input)
             INT = input.int
-            UNKNOWN_4BYTES = if (context.game.isFO4) input.int else null
+            UNKNOWN_4BYTES = if (context.game?.isFO4 == true) input.int else null
             QUEST = context.getChangeForm(QUESTID)
         }
     }
@@ -333,7 +333,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
         init {
             QUESTID = context.readRefID(input)
             INT = input.int
-            UNKNOWN_4BYTES = if (context.game.isFO4) input.int else null
+            UNKNOWN_4BYTES = if (context.game?.isFO4 == true) input.int else null
             QUEST = context.getChangeForm(QUESTID)
         }
     }
@@ -381,7 +381,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
 
         init {
             QUESTID = context.readRefID(input)
-            UNKNOWN_4BYTES = if (context.game.isFO4) input.int else null
+            UNKNOWN_4BYTES = if (context.game?.isFO4 == true) input.int else null
             QUEST = context.getChangeForm(QUESTID)
         }
     }
@@ -480,7 +480,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
                 TYPE = null
             } else {
                 TYPECODE = mf.BufferUtil.getLStringRaw(input)
-                TYPE = FragmentType.valueOf(String(TYPECODE, StandardCharsets.UTF_8))
+                TYPE = TYPECODE?.let { String(it, StandardCharsets.UTF_8) }?.let { FragmentType.valueOf(it) }
                 DATA = when (TYPE) {
                     FragmentType.QuestStage -> QuestStage(input, context)
                     FragmentType.ScenePhaseResults -> ScenePhaseResults(input, context)

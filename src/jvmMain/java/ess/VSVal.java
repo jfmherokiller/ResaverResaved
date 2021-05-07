@@ -15,6 +15,9 @@
  */
 package ess;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -57,7 +60,7 @@ final public class VSVal implements Element {
      *
      * @param input The input stream.
      */
-    public VSVal(ByteBuffer input) {
+    public VSVal(@NotNull ByteBuffer input) {
         byte firstByte = input.get();
         int size = firstByte & 0x3;
 
@@ -79,7 +82,7 @@ final public class VSVal implements Element {
      * @param output The output stream.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.DATA);
     }
 
@@ -131,7 +134,7 @@ final public class VSVal implements Element {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         }
@@ -145,6 +148,7 @@ final public class VSVal implements Element {
         return Arrays.equals(this.DATA, other.DATA);
     }
 
+    @NotNull
     final private byte[] DATA;
 
 }

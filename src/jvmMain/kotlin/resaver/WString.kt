@@ -50,7 +50,7 @@ open class WString : IString {
      *
      * @param bytes The byte array.
      */
-    protected constructor(bytes: ByteArray?) : super(mf.BufferUtil.mozillaString(bytes)) {
+    protected constructor(bytes: ByteArray?) : super(mf.BufferUtil.mozillaString(bytes!!)) {
         RAW_BYTES = if (Arrays.equals(super.uTF8, bytes)) null else bytes
     }
 
@@ -107,7 +107,7 @@ open class WString : IString {
          * @return The new `WString`.
          */
         fun read(input: ByteBuffer?): WString {
-            val BYTES = mf.BufferUtil.getWStringRaw(input)
+            val BYTES = input?.let { mf.BufferUtil.getWStringRaw(it) }
             return WString(BYTES)
         }
     }

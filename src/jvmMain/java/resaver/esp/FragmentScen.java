@@ -18,6 +18,9 @@ package resaver.esp;
 import java.nio.ByteBuffer;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import java.util.List;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.IString;
 
 /**
@@ -27,7 +30,7 @@ import resaver.IString;
  */
 public class FragmentScen extends FragmentBase {
 
-    public FragmentScen(ByteBuffer input, ESPContext ctx) {
+    public FragmentScen(@NotNull ByteBuffer input, @NotNull ESPContext ctx) {
         this.UNKNOWN = input.get();
         this.FLAGS = input.get();
 
@@ -59,7 +62,7 @@ public class FragmentScen extends FragmentBase {
     }
 
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         output.put(this.UNKNOWN);
         output.put(this.FLAGS);
         if (null != this.SCRIPT) {
@@ -107,9 +110,13 @@ public class FragmentScen extends FragmentBase {
 
     final private byte UNKNOWN;
     final private byte FLAGS;
+    @Nullable
     final private Script SCRIPT;
+    @Nullable
     final private String FILENAME;
+    @NotNull
     final private List<Fragment> FRAGMENTS;
+    @NotNull
     final private List<Phase> PHASES;
 
     /**
@@ -117,14 +124,14 @@ public class FragmentScen extends FragmentBase {
      */
     public class Fragment implements Entry {
 
-        public Fragment(ByteBuffer input) {
+        public Fragment(@NotNull ByteBuffer input) {
             this.UNKNOWN = input.get();
             this.SCRIPTNAME = IString.get(mf.BufferUtil.getUTF(input));
             this.FRAGMENTNAME = IString.get(mf.BufferUtil.getUTF(input));
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             output.put(this.UNKNOWN);
             output.put(this.SCRIPTNAME.getUTF8());
             output.put(this.FRAGMENTNAME.getUTF8());
@@ -141,7 +148,9 @@ public class FragmentScen extends FragmentBase {
         }
 
         final private byte UNKNOWN;
+        @NotNull
         final private IString SCRIPTNAME;
+        @NotNull
         final private IString FRAGMENTNAME;
     }
 
@@ -150,7 +159,7 @@ public class FragmentScen extends FragmentBase {
      */
     public class Phase implements Entry {
 
-        public Phase(ByteBuffer input) {
+        public Phase(@NotNull ByteBuffer input) {
             this.UNKNOWN1 = input.get();
             this.PHASE = input.getInt();
             this.UNKNOWN2 = input.get();
@@ -159,7 +168,7 @@ public class FragmentScen extends FragmentBase {
         }
 
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             output.put(this.UNKNOWN1);
             output.putInt(this.PHASE);
             output.put(this.UNKNOWN2);
@@ -180,7 +189,9 @@ public class FragmentScen extends FragmentBase {
         final private byte UNKNOWN1;
         final private int PHASE;
         final private byte UNKNOWN2;
+        @NotNull
         final private IString SCRIPTNAME;
+        @NotNull
         final private IString FRAGMENTNAME;
     }
 }

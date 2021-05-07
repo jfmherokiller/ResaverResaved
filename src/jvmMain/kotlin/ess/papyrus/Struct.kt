@@ -109,10 +109,10 @@ class Struct(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definitio
             }
         }
         BUILDER.append(String.format("<p>Contains %d member variables.</p>", MEMBERS!!.size))
-        val STRUCTS: MutableList<ess.papyrus.StructInstance> = ArrayList()
+        val STRUCTS: MutableList<StructInstance> = ArrayList()
         for (instance in save!!.papyrus
-            .structInstances
-            .values) {
+            ?.structInstances
+            ?.values!!) {
             if (instance.struct == this) {
                 STRUCTS.add(instance)
             }
@@ -120,7 +120,7 @@ class Struct(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definitio
         BUILDER.append(String.format("<p>There are %d instances of this structure definition.</p>", STRUCTS.size))
         if (STRUCTS.size < 20) {
             BUILDER.append("<ul>")
-            STRUCTS.forEach { i: ess.papyrus.StructInstance ->
+            STRUCTS.forEach { i: StructInstance ->
                 val s = "<li>${i.toHTML(this)}</a>"
                 BUILDER.append(s)
             }

@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import ess.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Stores somethin'.
@@ -46,7 +48,7 @@ final public class PluginData {
      * @param fields The record's fields, which will be sampled for suitable
      * names.
      */
-    public void addRecord(int formID, FieldList fields) {
+    public void addRecord(int formID, @NotNull FieldList fields) {
         final Info INFO = new Info(fields);
         this.MAP.put(formID, INFO);
     }
@@ -55,7 +57,7 @@ final public class PluginData {
      * Calculates the script data size and adds it.
      * @param script 
      */
-    public void addScriptData(Script script) {
+    public void addScriptData(@NotNull Script script) {
         this.scriptDataSize += script.calculateSize();
     }
     
@@ -78,7 +80,7 @@ final public class PluginData {
      *
      * @param other
      */
-    public void addAll(PluginData other) {
+    public void addAll(@NotNull PluginData other) {
         this.MAP.putAll(other.MAP);
         this.scriptDataSize += other.scriptDataSize;
     }
@@ -89,7 +91,8 @@ final public class PluginData {
      * @param strings
      * @return
      */
-    public Set<Integer> getID(String searchTerm, StringTable strings) {
+    @NotNull
+    public Set<Integer> getID(@NotNull String searchTerm, StringTable strings) {
         Set<Integer> matches = new TreeSet<>();
         for (Integer id : this.MAP.keySet()) {
             if (searchTerm.equalsIgnoreCase(this.getName(id, strings))) {
@@ -107,7 +110,8 @@ final public class PluginData {
      * @param strings The StringTable.
      * @return
      */
-    public String getName(int formID, StringTable strings) {
+    @Nullable
+    public String getName(int formID, @Nullable StringTable strings) {
         if (!this.MAP.containsKey(formID)) {
             return null;
         }
@@ -146,6 +150,7 @@ final public class PluginData {
      * @see Object#toString()
      * @return
      */
+    @NotNull
     @Override
     public String toString() {
         return this.ESPNAME.toString();
@@ -154,6 +159,7 @@ final public class PluginData {
     /**
      * The actual mapping.
      */
+    @NotNull
     final private Map<Integer, Info> MAP;
 
     /**
@@ -171,7 +177,7 @@ final public class PluginData {
      */
     static final private class Info {
 
-        public Info(FieldList fields) {
+        public Info(@NotNull FieldList fields) {
             FieldEDID edid = null;
             FieldName name = null;
             FieldFull full = null;
@@ -191,8 +197,11 @@ final public class PluginData {
             this.FULL = full;
         }
 
+        @Nullable
         final public FieldFull FULL;
+        @Nullable
         final public FieldName NAME;
+        @Nullable
         final public FieldEDID EDID;
     }
 }

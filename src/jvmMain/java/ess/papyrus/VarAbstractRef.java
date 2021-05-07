@@ -2,6 +2,8 @@ package ess.papyrus;
 
 import ess.Element;
 import ess.Linkable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -11,14 +13,14 @@ import java.util.Objects;
  */
 abstract class VarAbstractRef extends Variable {
 
-    public VarAbstractRef(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
+    public VarAbstractRef(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
         Objects.requireNonNull(input);
         this.REFTYPE = context.readTString(input);
         this.REF = context.readEID(input);
         this.REFERENT = context.findReferrent(this.REF);
     }
 
-    public VarAbstractRef(TString type, EID id, PapyrusContext context) {
+    public VarAbstractRef(TString type, EID id, @NotNull PapyrusContext context) {
         this.REF = Objects.requireNonNull(id);
         this.REFTYPE = Objects.requireNonNull(type);
         this.REFERENT = context.findReferrent(this.REF);
@@ -47,6 +49,7 @@ abstract class VarAbstractRef extends Variable {
         return this.REF;
     }
 
+    @Nullable
     @Override
     public GameElement getReferent() {
         return this.REFERENT;
@@ -71,11 +74,13 @@ abstract class VarAbstractRef extends Variable {
      * @return
      * @see Variable#toTypeString()
      */
+    @NotNull
     @Override
     public String toTypeString() {
         return this.REFTYPE.toString();
     }
 
+    @NotNull
     @Override
     public String toValueString() {
         return this.getReferent() != null
@@ -94,6 +99,7 @@ abstract class VarAbstractRef extends Variable {
         }
     }
 
+    @NotNull
     @Override
     public String toString() {
         return this.getType() + " : " + this.toValueString();
@@ -101,5 +107,6 @@ abstract class VarAbstractRef extends Variable {
 
     final private TString REFTYPE;
     final private EID REF;
+    @Nullable
     final private GameElement REFERENT;
 }

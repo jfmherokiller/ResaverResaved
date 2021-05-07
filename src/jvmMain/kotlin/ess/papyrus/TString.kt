@@ -185,17 +185,19 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
         val LINKS: MutableList<String?> = LinkedList()
 
         // Check definitions (Scripts and Structs).
-        Stream.concat(PAPYRUS.scripts.values.stream(), PAPYRUS.structs.values.stream()).parallel()
-            .forEach { def: Definition ->
-                if (this === def.name) {
-                    LINKS.add(def.toHTML(null))
-                }
-                for (member in def.members!!) {
-                    if (this.equals(member!!.name)) {
-                        LINKS.add(def.toHTML(member))
+        if (PAPYRUS != null) {
+            Stream.concat(PAPYRUS.scripts.values.stream(), PAPYRUS.structs.values.stream()).parallel()
+                .forEach { def: Definition ->
+                    if (this === def.name) {
+                        LINKS.add(def.toHTML(null))
+                    }
+                    for (member in def.members!!) {
+                        if (this.equals(member!!.name)) {
+                            LINKS.add(def.toHTML(member))
+                        }
                     }
                 }
-            }
+        }
 
         /*
         // Check function messages.

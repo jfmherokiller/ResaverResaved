@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.ListException;
 import java.nio.ByteBuffer;
 import java.util.Collections;
@@ -43,7 +45,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
      * @param context The <code>PapyrusContext</code> info.
      * @throws PapyrusFormatException
      */
-    public StructInstance(ByteBuffer input, StructMap structs, PapyrusContext context) throws PapyrusFormatException {
+    public StructInstance(@NotNull ByteBuffer input, @NotNull StructMap structs, @NotNull PapyrusContext context) throws PapyrusFormatException {
         super(input, structs, context);
     }
 
@@ -64,7 +66,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
      * @throws PapyrusFormatException
      */
     @Override
-    public void readData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
+    public void readData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
         this.data = new StructData(input, context);
     }
 
@@ -73,7 +75,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
      * @param output
      */
     @Override
-    public void writeData(ByteBuffer output) {
+    public void writeData(@NotNull ByteBuffer output) {
         this.data.write(output);
     }
 
@@ -91,6 +93,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
     /**
      * @return The name of the corresponding <code>Struct</code>.
      */
+    @NotNull
     public TString getStructName() {
         return super.getDefinitionName();
     }
@@ -98,6 +101,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
     /**
      * @return The corresponding <code>Struct</code>.
      */
+    @Nullable
     public Struct getStruct() {
         assert super.getDefinition() instanceof Struct;
         return (Struct) super.getDefinition();
@@ -120,6 +124,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
     /**
      * @return The flag field.
      */
+    @Nullable
     public Flags.Byte getFlag() {
         return null == this.data ? null : this.data.FLAG;
     }
@@ -167,7 +172,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
      * @return
      */
     @Override
-    public String toHTML(Element target) {
+    public String toHTML(@Nullable Element target) {
         if (null == target || null == this.data) {
             return Linkable.makeLink("structinstance", this.getID(), this.toString());
 
@@ -183,7 +188,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
             for (Variable var : this.getVariables()) {
                 if (var.hasRef()) {
                     if (var.getReferent() == target) {
-                        Integer indexOf = this.getVariables().indexOf(var);
+                        int indexOf = this.getVariables().indexOf(var);
                         if (indexOf >= 0) {
                             return Optional.of(indexOf)
                                     .map(index -> Linkable.makeLink("structinstance", this.getID(), index, this.toString()))
@@ -205,7 +210,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
      * @return
      */
     @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
+    public String getInfo(resaver.Analysis analysis, @NotNull ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
         if (null != this.getStruct()) {
             BUILDER.append(String.format("<html><h3>STRUCTURE of %s</h3>", this.getStruct().toHTML(this)));
@@ -257,7 +262,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
          * @param context The <code>PapyrusContext</code> info.
          * @throws PapyrusElementException
          */
-        public StructData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException {
+        public StructData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
             Objects.requireNonNull(input);
             Objects.requireNonNull(context);
 
@@ -276,7 +281,7 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
          * @param output The output stream.
          */
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             Objects.requireNonNull(output);
             getID().write(output);
             this.FLAG.write(output);
@@ -305,13 +310,16 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
         /**
          * @return String representation.
          */
+        @NotNull
         @Override
         public String toString() {
             return getID().toString() + this.VARIABLES;
         }
 
         //final private EID ID;
+        @NotNull
         final private Flags.Byte FLAG;
+        @NotNull
         final private List<Variable> VARIABLES;
 
     }

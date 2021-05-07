@@ -19,6 +19,8 @@ import java.nio.ByteBuffer;
 import java.nio.file.StandardCopyOption;
 
 import mf.Timer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.Game;
 import java.io.IOException;
 import java.nio.Buffer;
@@ -63,7 +65,8 @@ final public class ESS implements Element {
      * @throws IOException
      *
      */
-    static public Result readESS(Path saveFile, ModelBuilder model) throws IOException {
+    @Nullable
+    static public Result readESS(@NotNull Path saveFile, @NotNull ModelBuilder model) throws IOException {
         Objects.requireNonNull(saveFile);
         Objects.requireNonNull(model);
 
@@ -110,7 +113,8 @@ final public class ESS implements Element {
      * @throws IOException
      *
      */
-    static public Result writeESS(ESS ess, Path saveFile) throws IOException {
+    @Nullable
+    static public Result writeESS(@NotNull ESS ess, @NotNull Path saveFile) throws IOException {
         Objects.requireNonNull(ess);
         Objects.requireNonNull(saveFile);
 
@@ -149,12 +153,12 @@ final public class ESS implements Element {
     /**
      * Creates a new <code>ESS</code> by reading from a <code>ByteBuffer</code>.
      *
-     * @param input The input stream for the savegame.
+     * @param buffer The input stream for the savegame.
      * @param saveFile The file containing the <code>ESS</code>.
      * @param model A <code>ModelBuilder</code>.
      * @throws IOException
      */
-    private ESS(ByteBuffer buffer, Path saveFile, ModelBuilder model) throws IOException, DataFormatException {
+    private ESS(@NotNull ByteBuffer buffer, @NotNull Path saveFile, @NotNull ModelBuilder model) throws IOException, DataFormatException {
         Objects.requireNonNull(buffer);
         Objects.requireNonNull(saveFile);
         Objects.requireNonNull(model);
@@ -241,8 +245,8 @@ final public class ESS implements Element {
 
         final mf.Counter SUM = new mf.Counter(buffer.capacity());
         SUM.addCountListener(sum -> {
-            if (this.truncated || sum != ((Buffer) INPUT).position()) {
-                throw new IllegalStateException(String.format("Position mismatch; counted %d but actual %d in %s.", sum, ((Buffer) INPUT).position(), saveFile.getFileName()));
+            if (this.truncated || sum != INPUT.position()) {
+                throw new IllegalStateException(String.format("Position mismatch; counted %d but actual %d in %s.", sum, INPUT.position(), saveFile.getFileName()));
             }
         });
 
@@ -312,7 +316,7 @@ final public class ESS implements Element {
             }
 
             LOG.fine("Reading savegame: read formid array.");
-        } catch (ListException | IllegalArgumentException ex) {
+        } catch ( ListException | IllegalArgumentException ex) {
             this.truncated = true;
             LOG.log(Level.SEVERE, "Error while reading FormID array.", ex);
         } catch (BufferUnderflowException ex) {
@@ -474,7 +478,7 @@ final public class ESS implements Element {
             }
 
             LOG.fine("Reading savegame: read visited worldspace array.");
-        } catch (BufferUnderflowException | IllegalArgumentException ex) {
+        } catch ( BufferUnderflowException | IllegalArgumentException ex) {
             if (!this.truncated) {
                 this.truncated = true;
                 LOG.log(Level.SEVERE, "Error reading VisitedWorldSpace array.", ex);
@@ -484,13 +488,13 @@ final public class ESS implements Element {
         }
 
         // Read whatever is left.
-        final int U3SIZE = INPUT.limit() - ((Buffer) INPUT).position();
+        final int U3SIZE = INPUT.limit() - INPUT.position();
         LOG.fine(String.format("Reading savegame: read unknown block. %d bytes present.", U3SIZE));
         this.UNKNOWN3 = new byte[U3SIZE];
         INPUT.get(this.UNKNOWN3);
 
         long calculatedBodySize = this.calculateBodySize();
-        long bodyPosition = ((Buffer) INPUT).position();
+        long bodyPosition = INPUT.position();
         if (calculatedBodySize != bodyPosition) {
             throw new IllegalStateException(String.format("Missing data, calculated body size is %d but actual body size is %d.", calculatedBodySize, bodyPosition));
         }
@@ -510,7 +514,7 @@ final public class ESS implements Element {
      * @param channel The output channel for the savegame.
      * @throws IOException
      */
-    public void write(FileChannel channel) throws IOException {
+    public void write(@NotNull FileChannel channel) throws IOException {
         final CompressionType COMPRESSION = this.HEADER.getCompression();
 
         // Write the header, with a litte of extra room for compression prefixes.
@@ -541,8 +545,8 @@ final public class ESS implements Element {
                     throw new IOException("Unknown compression type: " + COMPRESSION);
             }
 
-            headerBlock.putInt(((Buffer) UNCOMPRESSED).limit());
-            headerBlock.putInt(((Buffer) COMPRESSED).limit());
+            headerBlock.putInt(UNCOMPRESSED.limit());
+            headerBlock.putInt(COMPRESSED.limit());
             ((Buffer) headerBlock).flip();
             channel.write(headerBlock);
             channel.write(COMPRESSED);
@@ -559,7 +563,7 @@ final public class ESS implements Element {
      * @param output The output stream for the savegame.
      */
     @Override
-    public void write(ByteBuffer output) {
+    public void write(@NotNull ByteBuffer output) {
         // Write the form version.
         output.put(this.FORMVERSION);
 
@@ -692,7 +696,7 @@ final public class ESS implements Element {
     /**
      * @param analysis The analysis data.
      */
-    public void addNames(resaver.Analysis analysis) {
+    public void addNames(@NotNull resaver.Analysis analysis) {
         for (RefID v : this.REFIDS.values()) {
             v.addNames(analysis);
         }
@@ -701,6 +705,7 @@ final public class ESS implements Element {
     /**
      * @return The papyrus section.
      */
+    @Nullable
     public Papyrus getPapyrus() {
         return this.PAPYRUS;
     }
@@ -717,6 +722,7 @@ final public class ESS implements Element {
      * @return The original file containing the <code>ESS</code> when it was
      * readRefID from the disk.
      */
+    @NotNull
     public Path getOriginalFile() {
         return this.ORIGINAL_FILE;
     }
@@ -724,6 +730,7 @@ final public class ESS implements Element {
     /**
      * @return The list of change forms.
      */
+    @NotNull
     public LinkedHashMap<RefID, ChangeForm> getChangeForms() {
         return this.CHANGEFORMS == null
                 ? new LinkedHashMap<>(0)
@@ -733,6 +740,7 @@ final public class ESS implements Element {
     /**
      * @return The array of form IDs.
      */
+    @NotNull
     public int[] getFormIDs() {
         return this.FORMIDARRAY == null
                 ? new int[0]
@@ -742,6 +750,7 @@ final public class ESS implements Element {
     /**
      * @return The list of plugins.
      */
+    @NotNull
     public PluginInfo getPluginInfo() {
         return this.PLUGINS;
     }
@@ -749,6 +758,7 @@ final public class ESS implements Element {
     /**
      * @return The <code>GlobalVariableTable</code>.
      */
+    @Nullable
     public GlobalVariableTable getGlobals() {
         return this.GLOBALS;
     }
@@ -756,6 +766,7 @@ final public class ESS implements Element {
     /**
      * @return The <code>GlobalVariableTable</code>.
      */
+    @NotNull
     public AnimObjects getAnimations() {
         return this.ANIMATIONS;
     }
@@ -798,6 +809,7 @@ final public class ESS implements Element {
      * that were removed, and the second is the number of forms that had entries
      * remvoed.
      */
+    @NotNull
     public int[] cleanseFormLists() {
         int entries = 0;
         int forms = 0;
@@ -827,6 +839,7 @@ final public class ESS implements Element {
      *
      * @return The elements that were removed.
      */
+    @NotNull
     public Set<PapyrusElement> removeNonexistentCreated() {
         final Set<PapyrusElement> NONEXISTENT = new HashSet<>();
         for (ScriptInstance v : this.PAPYRUS.getScriptInstances()
@@ -848,7 +861,8 @@ final public class ESS implements Element {
      * @return The elements that were removed.
      *
      */
-    public java.util.Set<Element> removeElements(java.util.Collection<? extends Element> elements) {
+    @NotNull
+    public java.util.Set<Element> removeElements(@NotNull java.util.Collection<? extends Element> elements) {
         final Set<ChangeForm> ELEM1 = new HashSet<>();
         for (Element element : elements) {
             if (element instanceof ChangeForm) {
@@ -878,7 +892,8 @@ final public class ESS implements Element {
      * @return The number of elements removed.
      *
      */
-    public Set<ChangeForm> removeChangeForms(java.util.Collection<? extends ChangeForm> forms) {
+    @NotNull
+    public Set<ChangeForm> removeChangeForms(@Nullable java.util.Collection<? extends ChangeForm> forms) {
         if (null == forms || forms.contains(null)) {
             throw new NullPointerException("The set of forms to be removed must not be null and must not contain null.");
         }
@@ -962,6 +977,7 @@ final public class ESS implements Element {
     /**
      * @return The value of the header field.
      */
+    @NotNull
     public Header getHeader() {
         return this.HEADER;
     }
@@ -971,7 +987,8 @@ final public class ESS implements Element {
      * @param analysis
      * @return
      */
-    public String getInfo(resaver.Analysis analysis) {
+    @NotNull
+    public String getInfo(@Nullable resaver.Analysis analysis) {
         final StringBuilder BUILDER = new StringBuilder();
         BUILDER.append(String.format("<h3>%s</h3>", this.ORIGINAL_FILE.getFileName()));
 
@@ -1031,6 +1048,7 @@ final public class ESS implements Element {
      * @param formID
      * @return
      */
+    @Nullable
     public Plugin getPluginFor(int formID) {
         final List<Plugin> FULL = this.getPluginInfo().getFullPlugins();
         final List<Plugin> LITE = this.getPluginInfo().getLitePlugins();
@@ -1050,6 +1068,7 @@ final public class ESS implements Element {
     /**
      * @return Returns a new <code>ESSContext</code>.
      */
+    @NotNull
     public ESSContext getContext() {
         return new ESSContext(this);
     }
@@ -1082,34 +1101,42 @@ final public class ESS implements Element {
         return this.FORMVERSION;
     }
 
+    @Nullable
     public String getVersionString() {
         return this.VERSION_STRING;
     }
 
+    @Nullable
     public FileLocationTable getFLT() {
         return this.FLT;
     }
 
+    @Nullable
     public int[] getVisitedWorldspaceArray() {
         return this.VISITEDWORLDSPACEARRAY;
     }
 
+    @NotNull
     public byte[] getUnknown3() {
         return this.UNKNOWN3;
     }
 
+    @Nullable
     public byte[] getCosave() {
         return this.COSAVE;
     }
 
+    @NotNull
     public List<GlobalData> getTable1() {
         return this.TABLE1;
     }
 
+    @NotNull
     public List<GlobalData> getTable2() {
         return this.TABLE2;
     }
 
+    @NotNull
     public List<GlobalData> getTable3() {
         return this.TABLE3;
     }
@@ -1126,7 +1153,7 @@ final public class ESS implements Element {
      * @throws IllegalStateException Thrown if the two instances of
      * <code>ESS</code> are not equal.
      */
-    static public void verifyIdentical(ESS ess1, ESS ess2) throws IllegalStateException {
+    static public void verifyIdentical(@NotNull ESS ess1, @NotNull ESS ess2) throws IllegalStateException {
         if (ess1.calculateBodySize() != ess2.calculateBodySize()) {
             throw new IllegalStateException(String.format("Body size mismatch: %d vs %d.", ess1.calculateBodySize(), ess2.calculateBodySize()));
         } else if (ess1.calculateSize() != ess2.calculateSize()) {
@@ -1177,24 +1204,41 @@ final public class ESS implements Element {
         }
     }
 
+    @NotNull
     final private Header HEADER;
     final private byte FORMVERSION;
+    @Nullable
     final private String VERSION_STRING;
+    @NotNull
     final private PluginInfo PLUGINS;
+    @Nullable
     final private FileLocationTable FLT;
+    @NotNull
     final private List<GlobalData> TABLE1;
+    @NotNull
     final private List<GlobalData> TABLE2;
+    @NotNull
     final private LinkedHashMap<RefID, ChangeForm> CHANGEFORMS;
+    @NotNull
     final private List<GlobalData> TABLE3;
+    @Nullable
     final private int[] FORMIDARRAY;
+    @Nullable
     final private int[] VISITEDWORLDSPACEARRAY;
+    @NotNull
     final private byte[] UNKNOWN3;
+    @NotNull
     final private byte[] COSAVE;
+    @NotNull
     final Path ORIGINAL_FILE;
     final private Long DIGEST;
+    @Nullable
     final private Papyrus PAPYRUS;
+    @NotNull
     final private AnimObjects ANIMATIONS;
+    @NotNull
     final private GlobalVariableTable GLOBALS;
+    @NotNull
     final private java.util.Map<Integer, RefID> REFIDS;
     private resaver.Analysis analysis;
     private boolean truncated = false;
@@ -1227,7 +1271,8 @@ final public class ESS implements Element {
      * @return The backup file.
      * @throws IOException
      */
-    static private Path makeBackupFile(Path file) throws IOException {
+    @NotNull
+    static private Path makeBackupFile(@NotNull Path file) throws IOException {
         final String TIME = new java.text.SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
         final String FILENAME = file.getFileName().toString();
         final Pattern REGEX = Pattern.compile("^(.+)\\.([ -~]+)$");
@@ -1253,7 +1298,7 @@ final public class ESS implements Element {
      */
     final public class Result {
 
-        public Result(Path backup, Timer timer, FilterTreeModel model) {
+        public Result(Path backup, @NotNull Timer timer, FilterTreeModel model) {
             this.ESS = ESS.this;
             this.GAME = ESS.this.getHeader().GAME;
             this.SAVE_FILE = ESS.this.ORIGINAL_FILE;
@@ -1270,8 +1315,11 @@ final public class ESS implements Element {
             this.MODEL = model;
         }
 
+        @NotNull
         final public ESS ESS;
+        @Nullable
         final public Game GAME;
+        @NotNull
         final public Path SAVE_FILE;
         final public Path BACKUP_FILE;
         final public double TIME_S;
@@ -1311,7 +1359,7 @@ final public class ESS implements Element {
          * @param input The input stream.
          * @return The new <code>RefID</code>.
          */
-        public RefID readRefID(ByteBuffer input) {
+        public RefID readRefID(@NotNull ByteBuffer input) {
             Objects.requireNonNull(input);
             final int B1 = input.get();
             final int B2 = input.get();
@@ -1337,6 +1385,7 @@ final public class ESS implements Element {
         /**
          * @return Accessor for the game field.
          */
+        @Nullable
         public Game getGame() {
             return this.ESS.getHeader().GAME;
         }
@@ -1355,7 +1404,8 @@ final public class ESS implements Element {
          * @param number The data to search for.
          * @return Any match of any kind.
          */
-        public Linkable broadSpectrumSearch(Number number) {
+        @Nullable
+        public Linkable broadSpectrumSearch(@NotNull Number number) {
             try {
                 RefID ref = this.makeRefID(number.intValue());
                 if (this.ESS.CHANGEFORMS.containsKey(ref)) {
@@ -1382,6 +1432,7 @@ final public class ESS implements Element {
         /**
          * @return The <code>Path</code> of the original save file.
          */
+        @NotNull
         public Path getPath() {
             return this.ESS.getOriginalFile();
         }

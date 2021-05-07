@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.ListException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -38,7 +40,8 @@ abstract public class Variable implements PapyrusElement, Linkable {
      * @return The new <code>List</code> of <code>Variable</code>.
      * @throws ListException
      */
-    static public java.util.List<Variable> readList(ByteBuffer input, int count, PapyrusContext context) throws ListException {
+    @NotNull
+    static public java.util.List<Variable> readList(@NotNull ByteBuffer input, int count, @NotNull PapyrusContext context) throws ListException {
         final java.util.List<Variable> VARIABLES = new java.util.ArrayList<>(count);
 
         for (int i = 0; i < count; i++) {
@@ -62,7 +65,8 @@ abstract public class Variable implements PapyrusElement, Linkable {
      * @return The new <code>Variable</code>.
      * @throws PapyrusFormatException
      */
-    static public Variable read(ByteBuffer input, PapyrusContext context) throws PapyrusFormatException {
+    @NotNull
+    static public Variable read(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusFormatException {
         Objects.requireNonNull(input);
         Objects.requireNonNull(context);
 
@@ -108,6 +112,7 @@ abstract public class Variable implements PapyrusElement, Linkable {
      * @param target A target within the <code>Linkable</code>.
      * @return
      */
+    @Nullable
     @Override
     public String toHTML(Element target) {
         return this.toString();
@@ -145,6 +150,7 @@ abstract public class Variable implements PapyrusElement, Linkable {
      *
      * @return
      */
+    @Nullable
     public EID getRef() {
         return null;
     }
@@ -155,6 +161,7 @@ abstract public class Variable implements PapyrusElement, Linkable {
      *
      * @return
      */
+    @Nullable
     public GameElement getReferent() {
         return null;
     }

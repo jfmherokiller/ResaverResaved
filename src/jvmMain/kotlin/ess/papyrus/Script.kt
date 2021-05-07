@@ -162,18 +162,18 @@ class Script(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definitio
                 inheritCount
             )
         )
-        val INSTANCES: MutableList<ess.papyrus.ScriptInstance> = ArrayList()
+        val INSTANCES: MutableList<ScriptInstance> = ArrayList()
         for (instance in save!!.papyrus
-            .scriptInstances
-            .values) {
+            ?.scriptInstances
+            ?.values!!) {
             if (instance.script == this) {
                 INSTANCES.add(instance)
             }
         }
-        val REFERENCES: MutableList<ess.papyrus.Reference> = ArrayList()
+        val REFERENCES: MutableList<Reference> = ArrayList()
         for (ref in save.papyrus
-            .references
-            .values) {
+            ?.references
+            ?.values!!) {
             if (ref.script == this) {
                 REFERENCES.add(ref)
             }
@@ -181,7 +181,7 @@ class Script(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definitio
         BUILDER.append(String.format("<p>There are %d instances of this script.</p>", INSTANCES.size))
         if (INSTANCES.size < 20) {
             BUILDER.append("<ul>")
-            INSTANCES.forEach { i: ess.papyrus.ScriptInstance ->
+            INSTANCES.forEach { i: ScriptInstance ->
                 val s = "<li>${i.toHTML(null)}</a>"
                 BUILDER.append(s)
             }
@@ -190,7 +190,7 @@ class Script(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definitio
         BUILDER.append(String.format("<p>There are %d references of this script.</p>", REFERENCES.size))
         if (REFERENCES.size < 20) {
             BUILDER.append("<ul>")
-            REFERENCES.forEach { i: ess.papyrus.Reference ->
+            REFERENCES.forEach { i: Reference ->
                 val s = "<li>${i.toHTML(null)}</a>"
                 BUILDER.append(s)
             }

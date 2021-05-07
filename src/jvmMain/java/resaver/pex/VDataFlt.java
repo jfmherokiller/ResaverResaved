@@ -1,5 +1,8 @@
 package resaver.pex;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -15,7 +18,7 @@ public class VDataFlt extends VData {
     }
 
     @Override
-    public void write(ByteBuffer output) throws IOException {
+    public void write(@NotNull ByteBuffer output) throws IOException {
         output.put((byte) this.getType().ordinal());
         output.putFloat(this.VALUE);
     }
@@ -47,7 +50,7 @@ public class VDataFlt extends VData {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         } else if (obj == null) {

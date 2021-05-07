@@ -25,6 +25,7 @@ import net.jpountz.lz4.LZ4Factory;
 import net.jpountz.lz4.LZ4FastDecompressor;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.mozilla.universalchardet.UniversalDetector;
 
 /**
@@ -39,7 +40,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The <code>String</code>.
      */
-    static public String getLString(ByteBuffer buffer) {
+    @Nullable
+    static public String getLString(@NotNull ByteBuffer buffer) {
         int length = buffer.getInt();
         return readSizedString(buffer, length, false);
     }
@@ -50,7 +52,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    static public byte[] getLStringRaw(ByteBuffer buffer) {
+    @Nullable
+    static public byte[] getLStringRaw(@NotNull ByteBuffer buffer) {
         int length = buffer.getInt();
         return readSizedStringRaw(buffer, length, false);
     }
@@ -61,7 +64,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The <code>String</code>.
      */
-    static public String getWString(ByteBuffer buffer) {
+    @Nullable
+    static public String getWString(@NotNull ByteBuffer buffer) {
         int length = Short.toUnsignedInt(buffer.getShort());
         return readSizedString(buffer, length, false);
     }
@@ -72,7 +76,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    static public byte[] getWStringRaw(ByteBuffer buffer) {
+    @Nullable
+    static public byte[] getWStringRaw(@NotNull ByteBuffer buffer) {
         int length = Short.toUnsignedInt(buffer.getShort());
         return readSizedStringRaw(buffer, length, false);
     }
@@ -83,7 +88,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The <code>String</code>.
      */
-    static public String getBString(ByteBuffer buffer) {
+    @Nullable
+    static public String getBString(@NotNull ByteBuffer buffer) {
         int length = Byte.toUnsignedInt(buffer.get());
         return readSizedString(buffer, length, false);
     }
@@ -94,7 +100,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The <code>String</code>.
      */
-    static public String getLZString(ByteBuffer buffer) {
+    @Nullable
+    static public String getLZString(@NotNull ByteBuffer buffer) {
         int length = buffer.getInt();
         return readSizedString(buffer, length, true);
     }
@@ -105,7 +112,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The <code>String</code>.
      */
-    static public String getWZString(ByteBuffer buffer) {
+    @Nullable
+    static public String getWZString(@NotNull ByteBuffer buffer) {
         int length = Short.toUnsignedInt(buffer.getShort());
         return readSizedString(buffer, length, true);
     }
@@ -116,7 +124,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The <code>String</code>.
      */
-    static public String getBZString(ByteBuffer buffer) {
+    @Nullable
+    static public String getBZString(@NotNull ByteBuffer buffer) {
         int length = Byte.toUnsignedInt(buffer.get());
         return readSizedString(buffer, length, true);
     }
@@ -126,7 +135,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The <code>String</code>.
      */
-    static public String getZString(ByteBuffer buffer) {
+    @Nullable
+    static public String getZString(@NotNull ByteBuffer buffer) {
         final byte[] BYTES = getZStringRaw(buffer);
         return BYTES == null ? null : new String(BYTES, UTF_8);
     }
@@ -136,7 +146,8 @@ public class BufferUtil {
      * @param buffer The <code>ByteBuffer</code> to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    static public byte[] getZStringRaw(ByteBuffer buffer) {
+    @Nullable
+    static public byte[] getZStringRaw(@NotNull ByteBuffer buffer) {
         final int start = buffer.position();
 
         //while (buffer.get() != 0);
@@ -163,7 +174,8 @@ public class BufferUtil {
      * @param size The size of the string, including the terminus (if any).
      * @return The <code>String</code>.
      */
-    static public String readSizedString(ByteBuffer buffer, int size, boolean zterminated) {
+    @Nullable
+    static public String readSizedString(@NotNull ByteBuffer buffer, int size, boolean zterminated) {
         final byte[] BYTES = readSizedStringRaw(buffer, size, zterminated);
         return BYTES == null ? null : new String(BYTES, UTF_8);
     }
@@ -176,7 +188,8 @@ public class BufferUtil {
      * @param size The size of the string, including the terminus (if any).
      * @return The raw byte data, excluding the terminus (if any).
      */
-    static public byte[] readSizedStringRaw(ByteBuffer buffer, int size, boolean zterminated) {
+    @Nullable
+    static public byte[] readSizedStringRaw(@NotNull ByteBuffer buffer, int size, boolean zterminated) {
         try {
             int length = zterminated ? size - 1 : size;
             if (length < 0) {
@@ -207,15 +220,14 @@ public class BufferUtil {
      * @return The <code>String</code>.
      *
      */
-    static public String getUTF(ByteBuffer buffer) {
+    @Nullable
+    static public String getUTF(@NotNull ByteBuffer buffer) {
         int length = Short.toUnsignedInt(buffer.getShort());
         if (length < 0 || length >= 32768) {
             throw new IllegalArgumentException("Invalid string length: " + length);
         }
 
-        if (length < 0) {
-            return null;
-        } else if (length == 0) {
+        if (length == 0) {
             return "";
         } else {
             byte[] bytes = new byte[length];
@@ -231,7 +243,7 @@ public class BufferUtil {
      * @param string The <code>String</code>.
      * @return The <code>ByteBuffer</code> (allows chaining).
      */
-    static public ByteBuffer putZString(ByteBuffer buffer, String string) {
+    static public ByteBuffer putZString(@NotNull ByteBuffer buffer, @NotNull String string) {
         return buffer.put(string.getBytes(UTF_8)).put((byte) 0);
     }
 
@@ -241,7 +253,7 @@ public class BufferUtil {
      * @param string The <code>String</code>.
      * @return The <code>ByteBuffer</code> (allows chaining).
      */
-    static public ByteBuffer putWString(ByteBuffer buffer, String string) {
+    static public ByteBuffer putWString(@NotNull ByteBuffer buffer, @NotNull String string) {
         byte[] bytes = string.getBytes(UTF_8);
         return buffer.putShort((short) bytes.length).put(bytes);
     }
@@ -253,7 +265,8 @@ public class BufferUtil {
      * @param bytes
      * @return
      */
-    static public String mozillaString(byte[] bytes) {
+    @NotNull
+    static public String mozillaString(@NotNull byte[] bytes) {
         DETECTOR.handleData(bytes, 0, bytes.length);
         DETECTOR.dataEnd();
         final String ENCODING = DETECTOR.getDetectedCharset();
@@ -319,7 +332,7 @@ public class BufferUtil {
      * @return
      */
     @NotNull
-    static public ByteBuffer inflateLZ4(ByteBuffer compressed, int uncompressedSize) {
+    static public ByteBuffer inflateLZ4(@NotNull ByteBuffer compressed, int uncompressedSize) {
         ByteBuffer uncompressed = ByteBuffer.allocate(uncompressedSize);
         final LZ4Factory LZ4FACTORY = LZ4Factory.fastestInstance();
         final LZ4FastDecompressor LZ4DECOMP = LZ4FACTORY.fastDecompressor();
@@ -336,7 +349,7 @@ public class BufferUtil {
      * @return
      */
     @NotNull
-    static public ByteBuffer deflateZLIB(ByteBuffer uncompressed, int uncompressedSize) {
+    static public ByteBuffer deflateZLIB(@NotNull ByteBuffer uncompressed, int uncompressedSize) {
         final int SIZE = Math.min(uncompressedSize, uncompressed.limit());
         final byte[] UNCOMPRESSED_BYTES = new byte[SIZE];
         final byte[] COMPRESSED_BYTES = new byte[11 * SIZE / 10];
@@ -365,7 +378,7 @@ public class BufferUtil {
      * @return
      */
     @NotNull
-    static public ByteBuffer deflateLZ4(ByteBuffer uncompressed, int uncompressedSize) {
+    static public ByteBuffer deflateLZ4(@NotNull ByteBuffer uncompressed, int uncompressedSize) {
         final LZ4Factory LZ4FACTORY = LZ4Factory.fastestInstance();
         final LZ4Compressor LZ4COMP = LZ4FACTORY.fastCompressor();
         final ByteBuffer COMPRESSED = ByteBuffer.allocate(LZ4COMP.maxCompressedLength(uncompressedSize));
@@ -377,6 +390,7 @@ public class BufferUtil {
     /**
      * Used to decode strings intelligently.
      */
+    @Nullable
     static final private UniversalDetector DETECTOR = new UniversalDetector(null);
 
     /**

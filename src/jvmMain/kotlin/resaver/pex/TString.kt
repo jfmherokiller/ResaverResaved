@@ -28,7 +28,9 @@ class TString
      */
     @Throws(IOException::class)
     fun writeFull(output: ByteBuffer?) {
-        mf.BufferUtil.putWString(output, super.toString())
+        if (output != null) {
+            mf.BufferUtil.putWString(output, super.toString())
+        }
     }
 
     /**

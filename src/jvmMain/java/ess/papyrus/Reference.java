@@ -15,6 +15,8 @@
  */
 package ess.papyrus;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import resaver.ListException;
 import ess.AnalyzableElement;
 import java.util.Optional;
@@ -41,12 +43,12 @@ final public class Reference extends GameElement implements SeparateData, HasVar
      * @param scripts The <code>ScriptMap</code> containing the definitions.
      * @param context The <code>PapyrusContext</code> info.
      */
-    Reference(ByteBuffer input, ScriptMap scripts, PapyrusContext context) throws PapyrusFormatException {
+    Reference(@NotNull ByteBuffer input, @NotNull ScriptMap scripts, @NotNull PapyrusContext context) throws PapyrusFormatException {
         super(input, scripts, context);
     }
 
     /**
-     * @see ess.Element#write(resaver.ByteBuffer)
+     * @see ess.Element#write(ByteBuffer)
      * @param output The output stream.
      */
     @Override
@@ -63,7 +65,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
      * @throws PapyrusFormatException
      */
     @Override
-    public void readData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
+    public void readData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
         this.data = new ReferenceData(input, context);
     }
 
@@ -72,7 +74,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
      * @param output
      */
     @Override
-    public void writeData(ByteBuffer output) {
+    public void writeData(@NotNull ByteBuffer output) {
         this.data.write(output);
     }
 
@@ -106,6 +108,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
     /**
      * @return The name of the corresponding <code>Script</code>.
      */
+    @NotNull
     public TString getScriptName() {
         return super.getDefinitionName();
     }
@@ -113,6 +116,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
     /**
      * @return The corresponding <code>Script</code>.
      */
+    @Nullable
     public Script getScript() {
         assert super.getDefinition() instanceof Script;
         return (Script) super.getDefinition();
@@ -134,6 +138,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
     /**
      * @return The type of the reference.
      */
+    @Nullable
     public TString getType() {
         return null == this.data ? null : this.data.TYPE;
     }
@@ -153,6 +158,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
      * @see HasVariables#getDescriptors() 
      * @return 
      */
+    @NotNull
     @Override
     public List<MemberDesc> getDescriptors() {
         return this.getScript().getExtendedMembers();
@@ -180,8 +186,9 @@ final public class Reference extends GameElement implements SeparateData, HasVar
      * @param target A target within the <code>Linkable</code>.
      * @return
      */
+    @NotNull
     @Override
-    public String toHTML(Element target) {
+    public String toHTML(@Nullable Element target) {
         if (null != target) {
             if (target instanceof Variable) {
                 int i = this.getVariables().indexOf(target);
@@ -218,8 +225,9 @@ final public class Reference extends GameElement implements SeparateData, HasVar
      * @param save
      * @return
      */
+    @NotNull
     @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
+    public String getInfo(@Nullable resaver.Analysis analysis, @NotNull ESS save) {
         final StringBuilder BUILDER = new StringBuilder();
         if (null != this.getScript()) {
             BUILDER.append(String.format("<html><h3>REFERENCE of %s</h3>", this.getScript().toHTML(this)));
@@ -279,7 +287,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
          * @throws PapyrusElementException
          * @throws PapyrusFormatException
          */
-        public ReferenceData(ByteBuffer input, PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
+        public ReferenceData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
             this.FLAG = input.get();
             this.TYPE = context.readTString(input);
             this.UNKNOWN1 = input.getInt();
@@ -298,7 +306,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
          * @param output The output stream.
          */
         @Override
-        public void write(ByteBuffer output) {
+        public void write(@NotNull ByteBuffer output) {
             getID().write(output);
             output.put(this.FLAG);
             this.TYPE.write(output);
@@ -335,6 +343,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
         final private TString TYPE;
         final private int UNKNOWN1;
         final private int UNKNOWN2;
+        @NotNull
         final private List<Variable> VARIABLES;
 
     }

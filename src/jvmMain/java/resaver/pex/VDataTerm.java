@@ -1,5 +1,8 @@
 package resaver.pex;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -54,7 +57,7 @@ public class VDataTerm extends VData {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@Nullable Object obj) {
         if (this == obj) {
             return true;
         } else if (obj == null) {
@@ -72,5 +75,6 @@ public class VDataTerm extends VData {
     }
 
     final public String VALUE;
+    @NotNull
     final private String PVALUE;
 }
