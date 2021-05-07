@@ -59,7 +59,7 @@ public class RecordTes4 extends Record {
         ctx.pushContext(CODESTRING);
 
         final int DATASIZE = input.getInt();
-        this.HEADER = new Record.Header(input, ctx);
+        this.HEADER = new RecordHeader(input, ctx);
 
         // Read the record data.
         final ByteBuffer FIELDINPUT = advancingSlice(input, DATASIZE);
@@ -154,7 +154,7 @@ public class RecordTes4 extends Record {
     /**
      * @return The record header.
      */
-    public Record.Header getHeader() {
+    public RecordHeader getHeader() {
         return this.HEADER;
     }
 
@@ -200,7 +200,7 @@ public class RecordTes4 extends Record {
     final private PluginInfo PLUGINS;
 
     final private RecordCode CODE;
-    final private Record.Header HEADER;
+    final private RecordHeader HEADER;
     final private FieldList FIELDS;
     final private float VERSION;
     final private int RECORD_COUNT;

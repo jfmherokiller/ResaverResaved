@@ -37,7 +37,7 @@ public class RecordCompressed extends Record {
      * @param input The <code>ByteBuffer</code> to read.
      * @param ctx The mod descriptor.
      */
-    static public void skimRecord(RecordCode recordCode, Record.Header header, ByteBuffer input, ESPContext ctx) throws DataFormatException {
+    static public void skimRecord(RecordCode recordCode, RecordHeader header, ByteBuffer input, ESPContext ctx) throws DataFormatException {
         assert input.hasRemaining();
 
         final int DECOMPRESSED_SIZE = input.getInt();
@@ -63,7 +63,7 @@ public class RecordCompressed extends Record {
      * @param ctx The mod descriptor.
      * @throws java.util.zip.DataFormatException
      */
-    public RecordCompressed(RecordCode recordCode, Record.Header header, ByteBuffer input, ESPContext ctx) throws DataFormatException {
+    public RecordCompressed(RecordCode recordCode, RecordHeader header, ByteBuffer input, ESPContext ctx) throws DataFormatException {
         assert input.hasRemaining();
         this.CODE = recordCode;
         this.HEADER = header;
@@ -160,7 +160,7 @@ public class RecordCompressed extends Record {
     }
 
     final private RecordCode CODE;
-    final private Record.Header HEADER;
+    final private RecordHeader HEADER;
     final private FieldList FIELDS;
 
 }

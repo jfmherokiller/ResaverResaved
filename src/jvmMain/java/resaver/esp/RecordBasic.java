@@ -34,7 +34,7 @@ public class RecordBasic extends Record {
      * @param input The <code>ByteBuffer</code> to read.
      * @param ctx The mod descriptor.
      */
-    static public void skimRecord(RecordCode recordCode, Record.Header header, ByteBuffer input, ESPContext ctx) {
+    static public void skimRecord(RecordCode recordCode, RecordHeader header, ByteBuffer input, ESPContext ctx) {
         final FieldList FIELDS = new FieldList();
 
         while (input.hasRemaining()) {
@@ -53,7 +53,7 @@ public class RecordBasic extends Record {
      * @param input The <code>ByteBuffer</code> to read.
      * @param ctx The mod descriptor.
      */
-    public RecordBasic(RecordCode recordCode, Record.Header header, ByteBuffer input, ESPContext ctx) {
+    public RecordBasic(RecordCode recordCode, RecordHeader header, ByteBuffer input, ESPContext ctx) {
         this.CODE = recordCode;
         this.HEADER = header;       
         this.FIELDS = new FieldList();
@@ -105,7 +105,7 @@ public class RecordBasic extends Record {
     /**
      * @return The record header.
      */
-    public Record.Header getHeader() {
+    public RecordHeader getHeader() {
         return this.HEADER;
     }
 
@@ -122,7 +122,7 @@ public class RecordBasic extends Record {
     }
 
     final private RecordCode CODE;
-    final private Record.Header HEADER;
+    final private RecordHeader HEADER;
     final private FieldList FIELDS;
 
 }
