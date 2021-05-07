@@ -145,7 +145,7 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
     }
 
     /**
-     * @see ess.Element#write(resaver.ByteBuffer)
+     * @see ess.Element#write(ByteBuffer)
      * @param output The output stream.
      */
     @Override
