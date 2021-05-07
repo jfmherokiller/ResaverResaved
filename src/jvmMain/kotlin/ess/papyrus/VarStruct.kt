@@ -10,7 +10,7 @@ class VarStruct : VarAbstractRef {
     constructor(type: TString?, id: EID?, context: PapyrusContext) : super(type, id, context) {}
 
     fun derive(id: Long, context: PapyrusContext): VarStruct {
-        return VarStruct(refType, ref?.derive(id), context)
+        return VarStruct(refType, ref.derive(id), context)
     }
 
     override val type: VarType
