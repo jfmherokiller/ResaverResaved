@@ -128,7 +128,7 @@ final public class ESS implements Element {
 
         if (ess.COSAVE != null) {
             String filename = saveFile.getFileName().toString();
-            String cosaveName = filename.replaceAll(GAME.SAVE_EXT + "$", GAME.COSAVE_EXT);
+            String cosaveName = filename.replaceAll(GAME.getSAVE_EXT() + "$", GAME.getCOSAVE_EXT());
             final Path COSAVE_FILE = saveFile.resolveSibling(cosaveName);
             if (Files.exists(COSAVE_FILE)) {
                 makeBackupFile(COSAVE_FILE);
@@ -171,7 +171,7 @@ final public class ESS implements Element {
 
         // Determine the filename of the co-save.
         String filename = saveFile.getFileName().toString();
-        String cosaveName = filename.replaceAll(GAME.SAVE_EXT + "$", GAME.COSAVE_EXT);
+        String cosaveName = filename.replaceAll(GAME.getSAVE_EXT() + "$", GAME.getCOSAVE_EXT());
         Path cosaveFile = saveFile.resolveSibling(cosaveName);
         this.COSAVE = Files.exists(cosaveFile) ? Files.readAllBytes(cosaveFile) : null;
 
@@ -1070,7 +1070,7 @@ final public class ESS implements Element {
      */
     @Override
     public String toString() {
-        return this.HEADER.GAME.NAME;
+        return this.HEADER.GAME.getNAME();
         /*if (null != this.ORIGINAL_FILE) {
             return this.ORIGINAL_FILE.getFileName().toString();
         } else {

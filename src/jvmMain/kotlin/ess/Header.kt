@@ -226,16 +226,16 @@ class Header(input: ByteBuffer, path: Path?) : Element {
         // Identify which game produced the savefile.
         // Bit of a business, really.
         when (val MAGICSTRING = String(MAGIC).toUpperCase()) {
-            "TESV_SAVEGAME" -> GAME = if (VERSION <= 9 && resaver.Game.SKYRIM_LE.testFilename(path)) {
+            "TESV_SAVEGAME" -> GAME = if (VERSION <= 9 && path?.let { resaver.Game.SKYRIM_LE.testFilename(it) } == true) {
                 resaver.Game.SKYRIM_LE
-            } else if (VERSION >= 12 && resaver.Game.SKYRIM_SE.testFilename(path)) {
+            } else if (VERSION >= 12 && path?.let { resaver.Game.SKYRIM_SE.testFilename(it) } == true) {
                 resaver.Game.SKYRIM_SE
-            } else if (VERSION >= 12 && resaver.Game.SKYRIM_SW.testFilename(path)) {
+            } else if (VERSION >= 12 && path?.let { resaver.Game.SKYRIM_SW.testFilename(it) } == true) {
                 resaver.Game.SKYRIM_SW
             } else {
                 throw IllegalArgumentException("Unknown version of Skyrim: $VERSION")
             }
-            "FO4_SAVEGAME" -> if (11 <= VERSION && resaver.Game.FALLOUT4.testFilename(path)) {
+            "FO4_SAVEGAME" -> if (11 <= VERSION && path?.let { resaver.Game.FALLOUT4.testFilename(it) } == true) {
                 GAME = resaver.Game.FALLOUT4
             } else {
                 throw IllegalArgumentException("Unknown version of Fallout4: $VERSION")

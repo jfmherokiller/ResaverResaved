@@ -18,7 +18,7 @@ package ess
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import resaver.Game.FILTER_ALL
+import resaver.Game
 import resaver.ProgressModel
 import java.io.IOException
 import java.nio.file.Files
@@ -45,7 +45,7 @@ class ESSTest {
         var paths: List<Path>
         try {
             paths = Files.walk(TESTSAVES_DIR)
-                .filter { p: Path -> FILTER_ALL.accept(p.toFile()) }
+                .filter { p: Path -> Game.FILTER_ALL.accept(p.toFile()) }
                 .filter { path: Path? -> Files.isReadable(path!!) }
                 .filter { path: Path? -> Files.isRegularFile(path!!) }
                 .collect(Collectors.toList())
@@ -138,7 +138,7 @@ class ESSTest {
         LOG.parent.handlers[0].level = Level.INFO
         val paths: List<Path> = try {
             Files.walk(TESTSAVES_DIR)
-                .filter { p: Path -> FILTER_ALL.accept(p.toFile()) }
+                .filter { p: Path -> Game.FILTER_ALL.accept(p.toFile()) }
                 .filter { path: Path? -> Files.isReadable(path!!) }
                 .filter { path: Path? -> Files.isRegularFile(path!!) }
                 .collect(Collectors.toList())

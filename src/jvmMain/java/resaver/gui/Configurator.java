@@ -228,7 +228,7 @@ abstract public class Configurator {
         if (parent.isJavaFXAvailable()) {
             javafx.stage.FileChooser CHOOSER = new javafx.stage.FileChooser();
             CHOOSER.setTitle("Enter name for savefile:");
-            javafx.stage.FileChooser.ExtensionFilter FX_FILTER = new javafx.stage.FileChooser.ExtensionFilter(game.FILTER.getDescription(), "**." + game.SAVE_EXT);
+            javafx.stage.FileChooser.ExtensionFilter FX_FILTER = new javafx.stage.FileChooser.ExtensionFilter(game.FILTER.getDescription(), "**." + game.getSAVE_EXT());
             CHOOSER.getExtensionFilters().add(FX_FILTER);
             CHOOSER.setInitialDirectory(startingDirectory.toFile());
             if (startingFile != null) {
@@ -245,7 +245,7 @@ abstract public class Configurator {
                 // Append the file extension if necessary.
                 Path selection = game.FILTER.accept(selected)
                         ? selected.toPath()
-                        : selected.toPath().resolveSibling(selected.getName() + "." + game.SAVE_EXT);
+                        : selected.toPath().resolveSibling(selected.getName() + "." + game.getSAVE_EXT());
 
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
                     final String MSG = String.format("That directory isn't writeable:\n%s", selection);
@@ -272,7 +272,7 @@ abstract public class Configurator {
                 // Append the file extension if necessary.
                 Path selection = game.FILTER.accept(selected)
                         ? selected.toPath()
-                        : selected.toPath().resolveSibling(selected.getName() + "." + game.SAVE_EXT);
+                        : selected.toPath().resolveSibling(selected.getName() + "." + game.getSAVE_EXT());
 
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
                     final String MSG = String.format("That directory isn't writeable:\n%s", selection);
@@ -459,7 +459,7 @@ abstract public class Configurator {
         LOG.info(String.format("Choosing the %s directory.", game));
 
         final JFileChooser CHOOSER = new JFileChooser();
-        CHOOSER.setDialogTitle(String.format("Select %s directory", game.NAME));
+        CHOOSER.setDialogTitle(String.format("Select %s directory", game.getNAME()));
         CHOOSER.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         CHOOSER.setMultiSelectionEnabled(false);
 
@@ -478,7 +478,7 @@ abstract public class Configurator {
             if (null == file || result == JFileChooser.CANCEL_OPTION) {
                 return null;
             } else if (!validateGameDirectory(game, file.toPath())) {
-                final String MSG = String.format("This directory doesn't seem to be the %s directory.", game.NAME);
+                final String MSG = String.format("This directory doesn't seem to be the %s directory.", game.getNAME());
                 JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE);
             } else {
                 return setGameDirectory(game, file.toPath());
@@ -550,7 +550,7 @@ abstract public class Configurator {
      * @return True if the directory contains the game, false otherwise.
      */
     static public boolean validateGameDirectory(Game game, Path dir) {
-        return validDir(dir) && dir.getFileName().equals(game.GAME_DIRECTORY) && Files.exists(dir.resolve(game.EXECUTABLE));
+        return validDir(dir) && dir.getFileName().equals(game.getGAME_DIRECTORY()) && Files.exists(dir.resolve(game.getEXECUTABLE()));
     }
 
     /**
@@ -603,14 +603,14 @@ abstract public class Configurator {
             try {
                 final Game GAME = Game.valueOf(GAME_NAME);
                 setMO2Ini(GAME, mo2Ini);
-                JOptionPane.showMessageDialog(null, "Stored MO2 ini file for " + GAME.NAME, "Success", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(null, "Stored MO2 ini file for " + GAME.getNAME(), "Success", JOptionPane.INFORMATION_MESSAGE);
             } catch (IllegalArgumentException ex) {
             }
 
             for (Game VALUE : Game.VALUES) {
-                if (GAME_PATH.endsWith(VALUE.GAME_DIRECTORY)) {
+                if (GAME_PATH.endsWith(VALUE.getGAME_DIRECTORY())) {
                     setMO2Ini(VALUE, mo2Ini);
-                    JOptionPane.showMessageDialog(null, "Stored MO2 ini file for " + VALUE.NAME, "Success", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(null, "Stored MO2 ini file for " + VALUE.getNAME(), "Success", JOptionPane.INFORMATION_MESSAGE);
                     break;
                 }
             }
@@ -828,7 +828,7 @@ abstract public class Configurator {
      * @return The directory.
      */
     static Path getGameDirectory(Game game) {
-        final String KEY = game.NAME + "_directory";
+        final String KEY = game.getNAME() + "_directory";
         String path = PREFS.get(KEY, "");
         return path.isEmpty() ? null : Paths.get(path);
     }
@@ -841,7 +841,7 @@ abstract public class Configurator {
      * @return The specified <code>Path</code>.
      */
     static Path setGameDirectory(Game game, Path dir) {
-        final String KEY = game.NAME + "_directory";
+        final String KEY = game.getNAME() + "_directory";
         if (dir == null) {
             PREFS.remove(KEY);
         } else {
@@ -857,7 +857,7 @@ abstract public class Configurator {
      * @return The ini file.
      */
     static Path getMO2Ini(Game game) {
-        final Path gameDir = MO2ROOT.resolve(game.NAME);
+        final Path gameDir = MO2ROOT.resolve(game.getNAME());
         final Path iniFile = gameDir.resolve("ModOrganizer.ini");
 
         Path defPath = iniFile.getParent();
@@ -897,7 +897,7 @@ abstract public class Configurator {
      * @return The ini file.
      */
     static Path getSaveDirectory(Game game) {
-        final Path DEFAULT = MYGAMES.resolve(game.SAVE_DIRECTORY);
+        final Path DEFAULT = MYGAMES.resolve(game.getSAVE_DIRECTORY());
         Path STORED = Paths.get(PREFS.get("saveDirectory_" + game, DEFAULT.toString()));
         if (validDir(STORED)) {
             return STORED;
