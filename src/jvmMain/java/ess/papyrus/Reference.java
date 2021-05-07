@@ -174,7 +174,7 @@ final public class Reference extends GameElement implements SeparateData, HasVar
         if (this.data == null || this.data.VARIABLES == null) {
             throw new NullPointerException("The variable list is missing.");
         }
-        if (index <= 0 || index >= this.data.VARIABLES.size()) {
+        if (index < 0 || index >= this.data.VARIABLES.size()) {
             throw new IllegalArgumentException("Invalid variable index: " + index);
         }
         
