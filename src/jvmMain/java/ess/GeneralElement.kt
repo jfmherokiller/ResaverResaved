@@ -13,16 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess;
+package ess
 
-import java.nio.ByteBuffer;
-import java.util.*;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.IString;
-import ess.papyrus.EID;
-import ess.papyrus.PapyrusContext;
+import ess.ESS.ESSContext
+import ess.papyrus.EID
+import ess.papyrus.PapyrusContext
+import mf.BufferUtil
+import resaver.Analysis
+import resaver.IString
+import java.nio.ByteBuffer
+import java.util.*
+import kotlin.collections.LinkedHashMap
+import kotlin.collections.List
+import kotlin.collections.Map
+import kotlin.collections.MutableMap
+import kotlin.collections.Set
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.collections.forEach
+import kotlin.collections.set
+import kotlin.reflect.KClass
+import kotlin.reflect.safeCast
 
 /**
  * A very generalized element. It's not quite as efficient or customizable as
@@ -34,58 +45,44 @@ import ess.papyrus.PapyrusContext;
  *
  * @author Mark Fairchild
  */
-public class GeneralElement implements Element {
-
-    /**
-     * Create a new <code>GeneralElement</code>.
-     */
-    protected GeneralElement() {
-        this.DATA = new LinkedHashMap<>();
-    }
-
+open class GeneralElement protected constructor() : Element {
     /**
      *
-     * @return The number of sub-elements in the <code>Element</code>.
+     * @return The number of sub-elements in the `Element`.
      */
-    final public int count() {
-        return this.DATA.size();
-    }
-
+    fun count(): Int {
+        return DATA.size
+    }//return this.DATA.entrySet().stream()
+    //        .collect(Collectors.toMap(IString k -> k.toString(), v -> v));
     /**
-     * @return Retrieves a copy of the <name,value> map.
-     *
+     * @return Retrieves a copy of the <name></name>,value> map.
      */
-    @NotNull
-    final public Map<IString, Object> getValues() {
-        return this.DATA;
-        //return this.DATA.entrySet().stream()
-        //        .collect(Collectors.toMap(IString k -> k.toString(), v -> v));
-    }
-
+    val values: Map<IString, Any?>
+        get() = DATA
+    //return this.DATA.entrySet().stream()
+    //        .collect(Collectors.toMap(IString k -> k.toString(), v -> v));
     /**
-     * Tests whether the <code>GeneralElement</code> contains a value for a
+     * Tests whether the `GeneralElement` contains a value for a
      * particular name.
      *
      * @param name The name to search for.
-     * @return Retrieves a copy of the <name,value> map.
-     *
+     * @return Retrieves a copy of the <name></name>,value> map.
      */
-    final public boolean hasVal(@NotNull Enum<?> name) {
-        Objects.requireNonNull(name);
-        return this.hasVal(name.toString());
+    fun hasVal(name: Enum<*>): Boolean {
+        Objects.requireNonNull(name)
+        return this.hasVal(name.toString())
     }
 
     /**
-     * Tests whether the <code>GeneralElement</code> contains a value for a
+     * Tests whether the `GeneralElement` contains a value for a
      * particular name.
      *
      * @param name The name to search for.
-     * @return Retrieves a copy of the <name,value> map.
-     *
+     * @return Retrieves a copy of the <name></name>,value> map.
      */
-    final public boolean hasVal(@NotNull String name) {
-        Objects.requireNonNull(name);
-        return this.hasVal(IString.get(name));
+    fun hasVal(name: String): Boolean {
+        Objects.requireNonNull(name)
+        return this.hasVal(IString[name])
     }
 
     /**
@@ -95,56 +92,51 @@ public class GeneralElement implements Element {
      * @return Retrieves the value associated with the specified name, or null
      * if there is no match.
      */
-    final public Object getVal(@NotNull String name) {
-        Objects.requireNonNull(name);
-        return this.getVal(IString.get(name));
+    fun getVal(name: String): Any? {
+        Objects.requireNonNull(name)
+        return this.getVal(IString[name])
     }
 
     /**
-     * Retrieves an <code>Element</code> by name.
+     * Retrieves an `Element` by name.
      *
      * @param name The name to search for.
      * @return Retrieves the value associated with the specified name, or null
-     * if there is no match or the match is not an <code>Element</code>.
+     * if there is no match or the match is not an `Element`.
      */
-    @Nullable
-    final public Element getElement(@NotNull String name) {
-        Objects.requireNonNull(name);
-        Object val = this.getVal(name);
-        if (val instanceof Element) {
-            return (Element) val;
-        }
-        return null;
+    fun getElement(name: String): Element? {
+        Objects.requireNonNull(name)
+        val `val` = this.getVal(name)
+        return if (`val` is Element) {
+            `val`
+        } else null
     }
 
     /**
-     * Retrieves a <code>GeneralElement</code> by name.
+     * Retrieves a `GeneralElement` by name.
      *
      * @param name The name to search for.
      * @return Retrieves the value associated with the specified name, or null
-     * if there is no match or the match is not a <code>GeneralElement</code>.
+     * if there is no match or the match is not a `GeneralElement`.
      */
-    @Nullable
-    final public GeneralElement getGeneralElement(@NotNull String name) {
-        Objects.requireNonNull(name);
-        Object val = this.getVal(name);
-        if (val instanceof GeneralElement) {
-            return (GeneralElement) val;
-        }
-        return null;
+    fun getGeneralElement(name: String): GeneralElement? {
+        Objects.requireNonNull(name)
+        val `val` = this.getVal(name)
+        return if (`val` is GeneralElement) {
+            `val`
+        } else null
     }
 
     /**
-     * Retrieves a <code>GeneralElement</code> by name from an
-     * <code>Enum</code>.
+     * Retrieves a `GeneralElement` by name from an
+     * `Enum`.
      *
      * @param name The name to search for.
      * @return Retrieves the value associated with the specified name, or null
-     * if there is no match or the match is not a <code>GeneralElement</code>.
+     * if there is no match or the match is not a `GeneralElement`.
      */
-    @Nullable
-    final public Element getElement(@NotNull Enum<?> name) {
-        return this.getElement(Objects.requireNonNull(name.toString()));
+    fun getElement(name: Enum<*>): Element? {
+        return this.getElement(Objects.requireNonNull(name.toString()))
     }
 
     /**
@@ -154,12 +146,13 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The byte.
      */
-    final public byte readByte(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        byte val = input.get();
-        return this.addValue(name, val);
+    fun readByte(input: ByteBuffer, name: String): Byte? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val `val` = input.get()
+        return addValue(name, `val`)
     }
+
 
     /**
      * Reads a short.
@@ -168,11 +161,11 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The short.
      */
-    final public short readShort(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        short val = input.getShort();
-        return this.addValue(name, val);
+    fun readShort(input: ByteBuffer, name: String): Short? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val `val` = input.short
+        return addValue(name, `val`)
     }
 
     /**
@@ -182,11 +175,11 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The int.
      */
-    final public int readInt(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        int val = input.getInt();
-        return this.addValue(name, val);
+    fun readInt(input: ByteBuffer, name: String): Int? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val `val` = input.int
+        return addValue(name, `val`)
     }
 
     /**
@@ -196,11 +189,11 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The long.
      */
-    final public long readLong(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        long val = input.getLong();
-        return this.addValue(name, val);
+    fun readLong(input: ByteBuffer, name: String): Long? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val `val` = input.long
+        return addValue(name, `val`)
     }
 
     /**
@@ -210,11 +203,11 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The float.
      */
-    final public float readFloat(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        float val = input.getFloat();
-        return this.addValue(name, val);
+    fun readFloat(input: ByteBuffer, name: String): Float? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val `val` = input.float
+        return addValue(name, `val`)
     }
 
     /**
@@ -224,12 +217,11 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @return The string.
      */
-    @NotNull
-    final public String readZString(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        String val = mf.BufferUtil.getZString(input);
-        return this.addValue(name, val);
+    fun readZString(input: ByteBuffer, name: String): String? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val `val` = BufferUtil.getZString(input)!!
+        return addValue(name, `val`)
     }
 
     /**
@@ -240,11 +232,9 @@ public class GeneralElement implements Element {
      * @param reader The element reader.
      * @param <T> The element type.
      * @return The element.
-     *
-     */
-    @NotNull
-    final public <T extends Element> T readElement(ByteBuffer input, @NotNull Enum<?> name, @NotNull ElementReader<T> reader) {
-        return this.readElement(input, Objects.requireNonNull(name.toString()), reader);
+    </T> */
+    inline fun <reified T : Element?> readElement(input: ByteBuffer?, name: Enum<*>, reader: ElementReader<T>): T? {
+        return this.readElement(input, name.toString(), reader)
     }
 
     /**
@@ -255,14 +245,12 @@ public class GeneralElement implements Element {
      * @param reader The element reader.
      * @param <T> The element type.
      * @return The element.
-     *
-     */
-    @NotNull
-    final public <T extends Element> T readElement(ByteBuffer input, @NotNull String name, @NotNull ElementReader<T> reader) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        T element = reader.read(input);
-        return this.addValue(name, element);
+    </T> */
+    inline fun <reified T : Element?> readElement(input: ByteBuffer?, name: String, reader: ElementReader<T>): T? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val element = reader.read(input)
+        return addValue(name, element)
     }
 
     /**
@@ -272,13 +260,11 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param context The Papyrus context data.
      * @return The ID.
-     *
      */
-    @NotNull
-    final public EID readID32(@NotNull ByteBuffer input, @NotNull String name, @NotNull PapyrusContext context) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        return this.readElement(input, name, i -> context.readEID32(input));
+    fun readID32(input: ByteBuffer, name: String, context: PapyrusContext): EID? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        return this.readElement(input, name) { i: ByteBuffer? -> context.readEID32(input) }
     }
 
     /**
@@ -288,13 +274,11 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param context The Papyrus context data.
      * @return The ID.
-     *
      */
-    @NotNull
-    final public EID readID64(@NotNull ByteBuffer input, @NotNull String name, @NotNull PapyrusContext context) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        return this.readElement(input, name, i -> context.readEID64(input));
+    fun readID64(input: ByteBuffer, name: String, context: PapyrusContext): EID? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        return this.readElement(input, name) { i: ByteBuffer? -> context.readEID64(input) }
     }
 
     /**
@@ -302,15 +286,13 @@ public class GeneralElement implements Element {
      *
      * @param input The inputstream.
      * @param name The name of the new element.
-     * @param context The <code>ESSContext</code>.
+     * @param context The `ESSContext`.
      * @return The RefID.
-     *
      */
-    @NotNull
-    final public RefID readRefID(@NotNull ByteBuffer input, @NotNull String name, @NotNull ESS.ESSContext context) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        return this.readElement(input, name, i -> context.readRefID(input));
+    fun readRefID(input: ByteBuffer, name: String, context: ESSContext): RefID? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        return this.readElement(input, name) { i: ByteBuffer? -> context.readRefID(input) }
     }
 
     /**
@@ -319,14 +301,12 @@ public class GeneralElement implements Element {
      * @param input The inputstream.
      * @param name The name of the new element.
      * @return The RefID.
-     *
      */
-    @NotNull
-    final public VSVal readVSVal(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        VSVal val = new VSVal(input);
-        return this.addValue(name, val);
+    fun readVSVal(input: ByteBuffer, name: String): VSVal? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val `val` = VSVal(input)
+        return addValue(name, `val`)
     }
 
     /**
@@ -336,22 +316,15 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param size The size of the array.
      * @return The array.
-     *
      */
-    @NotNull
-    final public byte[] readBytes(@NotNull ByteBuffer input, @NotNull String name, int size) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        if (size < 0) {
-            throw new IllegalArgumentException("Negative array count: " + size);
-        } else if (256 < size) {
-            throw new IllegalArgumentException("Excessive array count: " + size);
-        }
-
-        byte[] val = new byte[size];
-        input.get(val);
-        return this.addValue(name, val);
+    fun readBytes(input: ByteBuffer, name: String, size: Int): ByteArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        require(size >= 0) { "Negative array count: $size" }
+        require(256 >= size) { "Excessive array count: $size" }
+        val `val` = ByteArray(size)
+        input[`val`]
+        return addValue(name, `val`)
     }
 
     /**
@@ -361,24 +334,17 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param size The size of the array.
      * @return The array.
-     *
      */
-    @NotNull
-    final public short[] readShorts(@NotNull ByteBuffer input, @NotNull String name, int size) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        if (size < 0) {
-            throw new IllegalArgumentException("Negative array count: " + size);
-        } else if (256 < size) {
-            throw new IllegalArgumentException("Excessive array count: " + size);
+    fun readShorts(input: ByteBuffer, name: String, size: Int): ShortArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        require(size >= 0) { "Negative array count: $size" }
+        require(256 >= size) { "Excessive array count: $size" }
+        val `val` = ShortArray(size)
+        for (i in 0 until size) {
+            `val`[i] = input.short
         }
-
-        short[] val = new short[size];
-        for (int i = 0; i < size; i++) {
-            val[i] = input.getShort();
-        }
-        return this.addValue(name, val);
+        return addValue(name, `val`)
     }
 
     /**
@@ -388,24 +354,17 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param size The size of the array.
      * @return The array.
-     *
      */
-    @NotNull
-    final public int[] readInts(@NotNull ByteBuffer input, @NotNull String name, int size) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        if (size < 0) {
-            throw new IllegalArgumentException("Negative array count: " + size);
-        } else if (256 < size) {
-            throw new IllegalArgumentException("Excessive array count: " + size);
+    fun readInts(input: ByteBuffer, name: String, size: Int): IntArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        require(size >= 0) { "Negative array count: $size" }
+        require(256 >= size) { "Excessive array count: $size" }
+        val `val` = IntArray(size)
+        for (i in 0 until size) {
+            `val`[i] = input.int
         }
-
-        int[] val = new int[size];
-        for (int i = 0; i < size; i++) {
-            val[i] = input.getInt();
-        }
-        return this.addValue(name, val);
+        return addValue(name, `val`)
     }
 
     /**
@@ -415,24 +374,17 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param size The size of the array.
      * @return The array.
-     *
      */
-    @NotNull
-    final public long[] readLongs(@NotNull ByteBuffer input, @NotNull String name, int size) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        if (size < 0) {
-            throw new IllegalArgumentException("Negative array count: " + size);
-        } else if (256 < size) {
-            throw new IllegalArgumentException("Excessive array count: " + size);
+    fun readLongs(input: ByteBuffer, name: String, size: Int): LongArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        require(size >= 0) { "Negative array count: $size" }
+        require(256 >= size) { "Excessive array count: $size" }
+        val `val` = LongArray(size)
+        for (i in 0 until size) {
+            `val`[i] = input.long
         }
-
-        long[] val = new long[size];
-        for (int i = 0; i < size; i++) {
-            val[i] = input.getLong();
-        }
-        return this.addValue(name, val);
+        return addValue(name, `val`)
     }
 
     /**
@@ -442,24 +394,17 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param size The size of the array.
      * @return The array.
-     *
      */
-    @NotNull
-    final public float[] readFloats(@NotNull ByteBuffer input, @NotNull String name, int size) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        if (size < 0) {
-            throw new IllegalArgumentException("Negative array count: " + size);
-        } else if (256 < size) {
-            throw new IllegalArgumentException("Excessive array count: " + size);
+    fun readFloats(input: ByteBuffer, name: String, size: Int): FloatArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        require(size >= 0) { "Negative array count: $size" }
+        require(256 >= size) { "Excessive array count: $size" }
+        val `val` = FloatArray(size)
+        for (i in 0 until size) {
+            `val`[i] = input.float
         }
-
-        float[] val = new float[size];
-        for (int i = 0; i < size; i++) {
-            val[i] = input.getFloat();
-        }
-        return this.addValue(name, val);
+        return addValue(name, `val`)
     }
 
     /**
@@ -471,27 +416,24 @@ public class GeneralElement implements Element {
      * @param reader The element reader.
      * @return The array.
      * @param <T> The element type.
-     *
-     */
-    @NotNull
-    final public <T extends Element> Element[] readElements(ByteBuffer input, @NotNull String name, int size, @NotNull ElementReader<T> reader) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(reader);
-
-        if (size < 0) {
-            throw new IllegalArgumentException("Negative array count: " + size);
-        } else if (256 < size) {
-            throw new IllegalArgumentException("Excessive array count: " + size);
+    </T> */
+    fun <T : Element?> readElements(
+        input: ByteBuffer,
+        name: String,
+        size: Int,
+        reader: ElementReader<T>
+    ): MutableList<Element>? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        Objects.requireNonNull(reader)
+        require(size >= 0) { "Negative array count: $size" }
+        require(256 >= size) { "Excessive array count: $size" }
+        val `val` = mutableListOf<Element>()
+        for (i in 0 until size) {
+            val element = reader.read(input) as Element
+            `val`.add(i, element)
         }
-
-        Element[] val = new Element[size];
-
-        for (int i = 0; i < size; i++) {
-            T element = reader.read(input);
-            val[i] = element;
-        }
-        return this.addValue(name, val);
+        return addValue(name, `val`)
     }
 
     /**
@@ -500,18 +442,15 @@ public class GeneralElement implements Element {
      * @param input The inputstream.
      * @param name The name of the new element.
      * @return The array.
-     *
      */
-    @NotNull
-    final public byte[] readBytesVS(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        final VSVal COUNT = this.readVSVal(input, name + "_COUNT");
-        if (COUNT.getValue() < 0) {
-            throw new IllegalArgumentException("Negative array count: " + COUNT);
+    fun readBytesVS(input: ByteBuffer, name: String): ByteArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val COUNT = readVSVal(input, name + "_COUNT")
+        if (COUNT != null) {
+            require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return this.readBytes(input, name, COUNT.getValue());
+        return COUNT?.let { this.readBytes(input, name, it.value) }
     }
 
     /**
@@ -520,18 +459,15 @@ public class GeneralElement implements Element {
      * @param input The inputstream.
      * @param name The name of the new element.
      * @return The array.
-     *
      */
-    @NotNull
-    final public short[] readShortsVS(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        final VSVal COUNT = this.readVSVal(input, name + "_COUNT");
-        if (COUNT.getValue() < 0) {
-            throw new IllegalArgumentException("Negative array count: " + COUNT);
+    fun readShortsVS(input: ByteBuffer, name: String): ShortArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val COUNT = readVSVal(input, name + "_COUNT")
+        if (COUNT != null) {
+            require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return this.readShorts(input, name, COUNT.getValue());
+        return COUNT?.let { readShorts(input, name, it.value) }
     }
 
     /**
@@ -540,18 +476,15 @@ public class GeneralElement implements Element {
      * @param input The inputstream.
      * @param name The name of the new element.
      * @return The array.
-     *
      */
-    @NotNull
-    final public int[] readIntsVS(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        final VSVal COUNT = this.readVSVal(input, name + "_COUNT");
-        if (COUNT.getValue() < 0) {
-            throw new IllegalArgumentException("Negative array count: " + COUNT);
+    fun readIntsVS(input: ByteBuffer, name: String): IntArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val COUNT = readVSVal(input, name + "_COUNT")
+        if (COUNT != null) {
+            require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return this.readInts(input, name, COUNT.getValue());
+        return COUNT?.let { readInts(input, name, it.value) }
     }
 
     /**
@@ -560,18 +493,15 @@ public class GeneralElement implements Element {
      * @param input The inputstream.
      * @param name The name of the new element.
      * @return The array.
-     *
      */
-    @NotNull
-    final public long[] readLongsVS(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        final VSVal COUNT = this.readVSVal(input, name + "_COUNT");
-        if (COUNT.getValue() < 0) {
-            throw new IllegalArgumentException("Negative array count: " + COUNT);
+    fun readLongsVS(input: ByteBuffer, name: String): LongArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val COUNT = readVSVal(input, name + "_COUNT")
+        if (COUNT != null) {
+            require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return this.readLongs(input, name, COUNT.getValue());
+        return COUNT?.let { readLongs(input, name, it.value) }
     }
 
     /**
@@ -580,18 +510,15 @@ public class GeneralElement implements Element {
      * @param input The inputstream.
      * @param name The name of the new element.
      * @return The array.
-     *
      */
-    @NotNull
-    final public float[] readFloatsVS(@NotNull ByteBuffer input, @NotNull String name) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(name);
-
-        final VSVal COUNT = this.readVSVal(input, name + "_COUNT");
-        if (COUNT.getValue() < 0) {
-            throw new IllegalArgumentException("Negative array count: " + COUNT);
+    fun readFloatsVS(input: ByteBuffer, name: String): FloatArray? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(name)
+        val COUNT = readVSVal(input, name + "_COUNT")
+        if (COUNT != null) {
+            require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return this.readFloats(input, name, COUNT.getValue());
+        return COUNT?.let { readFloats(input, name, it.value) }
     }
 
     /**
@@ -602,28 +529,23 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param <T> The element type.
      * @return The array.
-     *
-     */
-    @NotNull
-    @SuppressWarnings("unchecked")
-    final public <T extends Element> T[] readVSElemArray(@NotNull ByteBuffer input, @NotNull String name, @NotNull ElementReader<T> reader) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(reader);
-        Objects.requireNonNull(name);
-
-        final VSVal COUNT = this.readVSVal(input, name + "_COUNT");
-        if (COUNT.getValue() < 0) {
-            throw new IllegalArgumentException("Negative array count: " + COUNT);
+    </T> */
+    fun <T : Element?> readVSElemArray(input: ByteBuffer, name: String, reader: ElementReader<T>): MutableList<Element>? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(reader)
+        Objects.requireNonNull(name)
+        val COUNT = readVSVal(input, name + "_COUNT")
+        if (COUNT != null) {
+            require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-
-        Element[] val = new Element[COUNT.getValue()];
-
-        for (int i = 0; i < COUNT.getValue(); i++) {
-            T e = reader.read(input);
-            val[i] = e;
+        val `val` = mutableListOf<Element>()
+        if (COUNT != null) {
+            for (i in 0 until COUNT.value) {
+                val e = reader.read(input) as Element
+                `val`.add(i,e)
+            }
         }
-
-        return (T[]) this.addValue(name, val);
+        return addValue(name, `val`)
     }
 
     /**
@@ -634,202 +556,209 @@ public class GeneralElement implements Element {
      * @param name The name of the new element.
      * @param <T> The element type.
      * @return The array.
-     *
-     */
-    @NotNull
-    final public <T extends Element> Element[] read32ElemArray(@NotNull ByteBuffer input, @NotNull String name, @NotNull ElementReader<T> reader) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(reader);
-        Objects.requireNonNull(name);
-
-        final int COUNT = this.readInt(input, name + "_COUNT");
-        if (COUNT < 0) {
-            throw new IllegalArgumentException("Count is negative: " + COUNT);
+    </T> */
+    fun <T : Element?> read32ElemArray(input: ByteBuffer, name: String, reader: ElementReader<T>): MutableList<Element>? {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(reader)
+        Objects.requireNonNull(name)
+        val COUNT = readInt(input, name + "_COUNT")
+        if (COUNT != null) {
+            require(COUNT >= 0) { "Count is negative: $COUNT" }
         }
-
-        Element[] val = new Element[COUNT];
-        for (int i = 0; i < COUNT; i++) {
-            T e = reader.read(input);
-            val[i] = e;
+        val `val` = mutableListOf<Element>()
+        for (i in 0 until COUNT!!) {
+            val e = reader.read(input) as Element
+            `val`.add(i,e)
         }
-
-        return this.addValue(name, val);
+        return addValue(name, `val`)
     }
 
     /**
      * Adds an object value.
      *
      * @param name The name of the new element.
-     * @param val The value.
+     * @param `val` The value.
      */
-    @NotNull
-    private <T> T addValue(@NotNull String name, @NotNull T val) {
-        boolean b = true;
-        for (Class<?> type : SUPPORTED) {
-            if (type.isInstance(val)) {
-                b = false;
-                break;
+    inline fun <reified T: Any> addValue(name: String, `val`: T?): T? {
+        var b = false
+        var converted:Any? = null
+        for (type in SUPPORTED) {
+            val casted = type.safeCast(`val`)
+            if (casted != null) {
+                b = true
+                converted = casted
+                break
             }
         }
-        if (b) {
-            throw new IllegalStateException(String.format("Invalid type for %s: %s", name, val.getClass()));
+        if (`val` != null) {
+            check(b) { String.format("Invalid type for %s: %s", name, `val`::class) }
         }
-
-        this.DATA.put(IString.get(name), val);
-        return val;
+        DATA[IString[name]] = converted
+        return converted as T
     }
+//    private fun <T> addValue2(name: String, `val`: T): T {
+//        var b = true
+//        for (type in SUPPORTED) {
+//            if (type.isInstance(`val`)) {
+//                b = false
+//                break
+//            }
+//        }
+//        check(!b) { String.format("Invalid type for %s: %s", name, `val`.javaClass) }
+//        DATA[IString[name]] = `val`
+//        return `val`
+//    }
 
     /**
-     * @see Element#write(ByteBuffer)
+     * @see Element.write
      * @param output output buffer
      */
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        this.DATA.values().forEach(v -> {
-            if (v instanceof Element) {
-                Element element = (Element) v;
-                element.write(output);
-            } else if (v instanceof Byte) {
-                output.put((Byte) v);
-            } else if (v instanceof Short) {
-                output.putShort((Short) v);
-            } else if (v instanceof Integer) {
-                output.putInt((Integer) v);
-            } else if (v instanceof Float) {
-                output.putFloat((Float) v);
-            } else if (v instanceof String) {
-                mf.BufferUtil.putZString(output, (String) v);
-            } else if (v instanceof byte[]) {
-                output.put((byte[]) v);
-            } else if (v instanceof short[]) {
-                final short[] ARR = (short[]) v;
-                for (short s : ARR) {
-                    output.putShort(s);
+    override fun write(output: ByteBuffer?) {
+        DATA.values.forEach { v: Any? ->
+            when (v) {
+                is Element -> {
+                    v.write(output)
                 }
-            } else if (v instanceof int[]) {
-                final int[] ARR = (int[]) v;
-                for (int i : ARR) {
-                    output.putInt(i);
+                is Byte -> {
+                    output?.put((v as Byte?)!!)
                 }
-            } else if (v instanceof float[]) {
-                final float[] ARR = (float[]) v;
-                for (float f : ARR) {
-                    output.putFloat(f);
+                is Short -> {
+                    output?.putShort((v as Short?)!!)
                 }
-            } else if (v instanceof Element[]) {
-                final Element[] ARR = (Element[]) v;
-                for (Element e : ARR) {
-                    e.write(output);
+                is Int -> {
+                    output?.putInt((v as Int?)!!)
                 }
-            } else if (v == null) {
-                throw new IllegalStateException("Null element!");
-            } else {
-                throw new IllegalStateException("Unknown element: " + v.getClass());
+                is Float -> {
+                    output?.putFloat((v as Float?)!!)
+                }
+                is String -> {
+                    BufferUtil.putZString(output!!, (v as String?)!!)
+                }
+                is ByteArray -> {
+                    output?.put(v as ByteArray?)
+                }
+                is ShortArray -> {
+                    for (s in v) {
+                        output?.putShort(s)
+                    }
+                }
+                is IntArray -> {
+                    for (i in v) {
+                        output?.putInt(i)
+                    }
+                }
+                is FloatArray -> {
+                    for (f in v) {
+                        output?.putFloat(f)
+                    }
+                }
+                is Array<*> -> {
+                    for (e in v) {
+                        (e as Element).write(output)
+                    }
+                }
+                else -> checkNotNull(v) { "Null element!" }
             }
-        });
+            throw IllegalStateException("Unknown element: " + v.javaClass)
+        }
     }
 
     /**
-     * @see Element#calculateSize()
+     * @see Element.calculateSize
      * @return
      */
-    @Override
-    public int calculateSize() {
-        if (this.DATA.containsValue(null)) {
-            throw new NullPointerException("GeneralElement may not contain null.");
+    override fun calculateSize(): Int {
+        if (DATA.containsValue(null)) {
+            throw NullPointerException("GeneralElement may not contain null.")
         }
-
-        int sum = 0;
-
-        for (Object v : this.DATA.values()) {
-            if (v instanceof Element) {
-                sum += ((Element) v).calculateSize();
-            } else if (v instanceof Byte) {
-                sum += 1;
-            } else if (v instanceof Short) {
-                sum += 2;
-            } else if (v instanceof Integer) {
-                sum += 4;
-            } else if (v instanceof Float) {
-                sum += 4;
-            } else if (v instanceof String) {
-                sum += 1 + ((String) v).getBytes().length;
-            } else if (v instanceof byte[]) {
-                sum += 1 * ((byte[]) v).length;
-            } else if (v instanceof short[]) {
-                sum += 2 * ((short[]) v).length;
-            } else if (v instanceof int[]) {
-                sum += 4 * ((int[]) v).length;
-            } else if (v instanceof float[]) {
-                sum += 4 * ((float[]) v).length;
-            } else if (v instanceof Element[]) {
-                sum += Arrays.stream((Element[]) v).mapToInt(Element::calculateSize).sum();
-            } else if (v == null) {
-                throw new IllegalStateException("Null element!");
-            } else {
-                throw new IllegalStateException("Unknown element: " + v.getClass());
+        var sum = 0
+        for (v in DATA.values) {
+            when (v) {
+                is Element -> {
+                    sum += v.calculateSize()
+                }
+                is Byte -> {
+                    sum += 1
+                }
+                is Short -> {
+                    sum += 2
+                }
+                is Int -> {
+                    sum += 4
+                }
+                is Float -> {
+                    sum += 4
+                }
+                is String -> {
+                    sum += 1 + v.toByteArray().size
+                }
+                is ByteArray -> {
+                    sum += 1 * v.size
+                }
+                is ShortArray -> {
+                    sum += 2 * v.size
+                }
+                is IntArray -> {
+                    sum += 4 * v.size
+                }
+                is FloatArray -> {
+                    sum += 4 * v.size
+                }
+                is Array<*> -> {
+                    sum += v.map { i:Any? -> i as Element}.sumOf { i -> i.calculateSize() }
+                }
+                else -> checkNotNull(v) {
+                    "Null element!"
+                }
             }
+                throw IllegalStateException("Unknown element: " + v.javaClass)
         }
-
-        return sum;
+        return sum
     }
 
     /**
-     * @see java.lang.Object#hashCode()
+     * @see java.lang.Object.hashCode
      * @return
      */
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(this.DATA);
+    override fun hashCode(): Int {
+        return Objects.hashCode(DATA)
     }
 
     /**
-     * @see java.lang.Object#equals(java.lang.Object)
+     * @see java.lang.Object.equals
      * @return
      */
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        } else if (other == null) {
+            return false
+        } else if (javaClass != other.javaClass) {
+            return false
         }
-
-        final GeneralElement other = (GeneralElement) obj;
-        return Objects.equals(this.DATA, other.DATA);
+        val other2 = other as GeneralElement
+        return DATA == other2.DATA
     }
 
     /**
      *
      * @return String representation.
      */
-    @Override
-    public String toString() {
-        return super.toString();
-    }
-
-    /**
-     *
-     * @return String representation.
-     */
-    public String toTextBlock() {
-        StringJoiner joiner = new StringJoiner(", ", "[", "]");
-        for (IString n : DATA.keySet()) {
-            String format = String.format("%s=%s", n, getVal(n));
-            joiner.add(format);
+    fun toTextBlock(): String {
+        val joiner = StringJoiner(", ", "[", "]")
+        for (n in DATA.keys) {
+            val format = String.format("%s=%s", n, getVal(n))
+            joiner.add(format)
         }
-        return joiner.toString();
+        return joiner.toString()
     }
 
     /**
      * @param level Number of tabs by which to indent.
      * @return String representation.
      */
-    @NotNull
-    public String toString(int level) {
-        return this.toString(null, level);
+    open fun toString(level: Int): String {
+        return this.toString(null, level)
     }
 
     /**
@@ -837,90 +766,95 @@ public class GeneralElement implements Element {
      * @param level Number of tabs by which to indent.
      * @return String representation.
      */
-    @NotNull
-    protected String toString(@Nullable String name, int level) {
-        final StringBuilder BUF = new StringBuilder();
-
-        if (this.DATA.keySet().isEmpty()) {
-            indent(BUF, level);
+    protected fun toString(name: String?, level: Int): String {
+        val BUF = StringBuilder()
+        if (DATA.keys.isEmpty()) {
+            indent(BUF, level)
             if (null != name) {
-                BUF.append(name);
+                BUF.append(name)
             }
-            BUF.append("{}");
-            return BUF.toString();
+            BUF.append("{}")
+            return BUF.toString()
         }
-
-        indent(BUF, level);
+        indent(BUF, level)
         if (null != name) {
-            BUF.append(name);
+            BUF.append(name)
         }
-
-        BUF.append("{\n");
-
-        this.DATA.forEach((key, val) -> {
-            if (val instanceof GeneralElement) {
-                GeneralElement element = (GeneralElement) val;
-                String str = element.toString(key.toString(), level + 1);
-                BUF.append(str);
-                BUF.append('\n');
-            } else if (val instanceof Element[]) {
-                String str = eaToString(key, level + 1, (Element[]) val);
-                BUF.append(str);
-                BUF.append('\n');
+        BUF.append("{\n")
+        DATA.forEach { (key: IString, `val`: Any?) ->
+            if (`val` is GeneralElement) {
+                val str = `val`.toString(key.toString(), level + 1)
+                BUF.append(str)
+                BUF.append('\n')
+            } else if (`val` is Array<*> && `val`.all { i:Any? -> i is Element? }) {
+                val str = `val`.mapNotNull { i: Any? -> i as Element? }
+                    .toTypedArray().let { eaToString(key, level + 1, it) }
+                BUF.append(str)
+                BUF.append('\n')
             } else {
-                indent(BUF, level + 1);
-                String str;
-                if (val instanceof Byte) {
-                    str = String.format("%02x", Byte.toUnsignedInt((Byte) val));
-                } else if (val instanceof Short) {
-                    str = String.format("%04x", Short.toUnsignedInt((Short) val));
-                } else if (val instanceof Integer) {
-                    str = String.format("%08x", Integer.toUnsignedLong((Integer) val));
-                } else if (val instanceof Long) {
-                    str = String.format("%16x", val);
-                } else if (val instanceof Object[]) {
-                    str = Arrays.toString((Object[]) val);
-                } else if (val instanceof boolean[]) {
-                    str = Arrays.toString((boolean[]) val);
-                } else if (val instanceof byte[]) {
-                    str = Arrays.toString((byte[]) val);
-                } else if (val instanceof char[]) {
-                    str = Arrays.toString((char[]) val);
-                } else if (val instanceof double[]) {
-                    str = Arrays.toString((double[]) val);
-                } else if (val instanceof float[]) {
-                    str = Arrays.toString((float[]) val);
-                } else if (val instanceof int[]) {
-                    str = Arrays.toString((int[]) val);
-                } else if (val instanceof long[]) {
-                    str = Arrays.toString((long[]) val);
-                } else if (val instanceof short[]) {
-                    str = Arrays.toString((short[]) val);
-                } else {
-                    str = Objects.toString(val);
+                indent(BUF, level + 1)
+                val str: String = when (`val`) {
+                    is Byte -> {
+                        String.format("%02x", java.lang.Byte.toUnsignedInt((`val` as Byte?)!!))
+                    }
+                    is Short -> {
+                        String.format("%04x", java.lang.Short.toUnsignedInt((`val` as Short?)!!))
+                    }
+                    is Int -> {
+                        String.format("%08x", Integer.toUnsignedLong((`val` as Int?)!!))
+                    }
+                    is Long -> {
+                        String.format("%16x", `val`)
+                    }
+                    is Array<*> -> {
+                        Arrays.toString(`val` as Array<*>?)
+                    }
+                    is BooleanArray -> {
+                        Arrays.toString(`val` as BooleanArray?)
+                    }
+                    is ByteArray -> {
+                        Arrays.toString(`val` as ByteArray?)
+                    }
+                    is CharArray -> {
+                        Arrays.toString(`val` as CharArray?)
+                    }
+                    is DoubleArray -> {
+                        Arrays.toString(`val` as DoubleArray?)
+                    }
+                    is FloatArray -> {
+                        Arrays.toString(`val` as FloatArray?)
+                    }
+                    is IntArray -> {
+                        Arrays.toString(`val` as IntArray?)
+                    }
+                    is LongArray -> {
+                        Arrays.toString(`val` as LongArray?)
+                    }
+                    is ShortArray -> {
+                        Arrays.toString(`val` as ShortArray?)
+                    }
+                    else -> {
+                        Objects.toString(`val`)
+                    }
                 }
-
-                BUF.append(String.format("%s=%s\n", key, str));
+                BUF.append(String.format("%s=%s\n", key, str))
             }
-        });
-
-        indent(BUF, level);
-
-        BUF.append("}");
-        return BUF.toString();
+        }
+        indent(BUF, level)
+        BUF.append("}")
+        return BUF.toString()
     }
 
     /**
-     * Tests whether the <code>GeneralElement</code> contains a value for a
+     * Tests whether the `GeneralElement` contains a value for a
      * particular name.
      *
      * @param name The name to search for.
-     * @return Retrieves a copy of the <name,value> map.
-     *
+     * @return Retrieves a copy of the <name></name>,value> map.
      */
-    final public boolean hasVal(IString name) {
-        Objects.requireNonNull(name);
-        return this.DATA.containsKey(name);
+    fun hasVal(name: IString): Boolean {
+        Objects.requireNonNull(name)
+        return DATA.containsKey(name)
     }
 
     /**
@@ -930,200 +864,187 @@ public class GeneralElement implements Element {
      * @return Retrieves the value associated with the specified name, or null
      * if there is no match.
      */
-    private Object getVal(IString name) {
-        Objects.requireNonNull(name);
-        return this.DATA.get(name);
+    private fun getVal(name: IString): Any? {
+        Objects.requireNonNull(name)
+        return DATA[name]
     }
 
     /**
-     * Appends <code>n</code> indents to a <code>StringBuilder</code>.
-     *
-     * @param b
-     * @param n
-     */
-    static private void indent(@NotNull StringBuilder b, int n) {
-        for (int i = 0; i < n; i++) {
-            b.append('\t');
-        }
-    }
-
-    /**
-     * Creates a string representation of an <code>ElementArrayList</code>.
-     *
-     * @param name A name to display.
-     * @param level Number of tabs by which to indent.
-     * @return String representation.
-     */
-    @NotNull
-    static private String eaToString(@Nullable IString name, int level, @NotNull Element[] list) {
-        final StringBuilder BUF = new StringBuilder();
-
-        if (list.length == 0) {
-            indent(BUF, level);
-            if (null != name) {
-                BUF.append(name);
-            }
-            BUF.append("[]");
-            return BUF.toString();
-        }
-
-        indent(BUF, level);
-        if (null != name) {
-            BUF.append(name);
-        }
-
-        BUF.append("[\n");
-
-        for (Element e : list) {
-            if (e instanceof GeneralElement) {
-                GeneralElement element = (GeneralElement) e;
-                String str = element.toString(level + 1);
-                BUF.append(str).append('\n');
-            } else if (e != null) {
-                indent(BUF, level + 1);
-                String str = e.toString();
-                BUF.append(str).append('\n');
-            } else {
-                BUF.append("null");
-            }
-        }
-
-        indent(BUF, level);
-        BUF.append("]");
-        return BUF.toString();
-    }
-
-    /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @NotNull
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUF = new StringBuilder();
-        BUF.append("<table border=1>");
-
-        this.DATA.forEach((key, val) -> {
-            if (val instanceof Linkable) {
-                final Linkable LINKABLE = (Linkable) val;
-                final String STR = LINKABLE.toHTML(null);
-                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR));
-
-            } else if (val instanceof List<?>) {
-                final List<?> LIST = (List<?>) val;
-                final String STR = GeneralElement.formatList(key.toString(), LIST, analysis, save);
-                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR));
-
-            } else if (val instanceof GeneralElement) {
-                final GeneralElement GEN = (GeneralElement) val;
-                final String STR = GeneralElement.formatGeneralElement(key.toString(), GEN, analysis, save);
-                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR));
-
+    open fun getInfo(analysis: Analysis?, save: ESS?): String {
+        val BUF = StringBuilder()
+        BUF.append("<table border=1>")
+        DATA.forEach { (key: IString, `val`: Any?) ->
+            if (`val` is Linkable) {
+                val STR = `val`.toHTML(null)
+                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR))
+            } else if (`val` is List<*>) {
+                val STR = analysis?.let {
+                    if (save != null) {
+                        formatList(key.toString(), `val`, it, save)
+                    }
+                }
+                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR))
+            } else if (`val` is GeneralElement) {
+                val STR = analysis?.let {
+                    if (save != null) {
+                        formatGeneralElement(key.toString(), `val`, it, save)
+                    }
+                }
+                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR))
             } else {
-                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, val));
+                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, `val`))
             }
-        });
-
-        BUF.append("</table>");
-        return BUF.toString();
-    }
-
-    @NotNull
-    static private String formatElement(String key, @Nullable Object val, resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUF = new StringBuilder();
-        if (val == null) {
-            BUF.append(String.format("%s: <NULL>", key));
-
-        } else if (val instanceof Linkable) {
-            final Linkable LINKABLE = (Linkable) val;
-            final String STR = LINKABLE.toHTML(null);
-            BUF.append(String.format("%s: %s", key, STR));
-
-        } else if (val instanceof List<?>) {
-            final List<?> LIST = (List<?>) val;
-            final String STR = GeneralElement.formatList(key, LIST, analysis, save);
-            BUF.append(String.format("%s: %s", key, STR));
-
-        } else if (val.getClass().isArray()) {
-            if (val instanceof Object[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((Object[]) val)));
-            } else if (val instanceof boolean[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((boolean[]) val)));
-            } else if (val instanceof byte[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((byte[]) val)));
-            } else if (val instanceof char[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((char[]) val)));
-            } else if (val instanceof double[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((double[]) val)));
-            } else if (val instanceof float[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((float[]) val)));
-            } else if (val instanceof int[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((int[]) val)));
-            } else if (val instanceof long[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((long[]) val)));
-            } else if (val instanceof short[]) {
-                BUF.append(String.format("%s: %s", key, Arrays.toString((short[]) val)));
-            }
-            final List<?> LIST = (List<?>) val;
-            final String STR = GeneralElement.formatList(key, LIST, analysis, save);
-            BUF.append(String.format("%s: %s", key, STR));
-
-        } else if (val instanceof GeneralElement) {
-            final GeneralElement GEN = (GeneralElement) val;
-            final String STR = GeneralElement.formatGeneralElement(key, GEN, analysis, save);
-            BUF.append(String.format("%s: %s", key, STR));
-
-        } else {
-            BUF.append(String.format("%s: %s", key, val));
         }
-        return BUF.toString();
-    }
-
-    @NotNull
-    static private String formatGeneralElement(String key, @NotNull GeneralElement gen, resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUF = new StringBuilder();
-        gen.getValues().forEach((k, v) -> {
-            final String S = GeneralElement.formatElement(k.toString(), v, analysis, save);
-            BUF.append(String.format("<p>%s</p>", S));
-        });
-        //BUF.append("</ol>");
-        return BUF.toString();
-    }
-
-    @NotNull
-    static private String formatList(String key, @NotNull List<?> list, resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUF = new StringBuilder();
-        //BUF.append(String.format("<p>%s</p>", key));
-        int i = 0;
-        for (Object val : list) {
-            final String K = Integer.toString(i);
-            final String S = GeneralElement.formatElement(K, val, analysis, save);
-            BUF.append(String.format("<p>%s</p>", S));
-            i++;
-        }
-        //BUF.append("<");
-        return BUF.toString();
+        BUF.append("</table>")
+        return BUF.toString()
     }
 
     /**
      * Stores the actual data.
      */
-    @NotNull
-    final private Map<IString, Object> DATA;
+    public val DATA: MutableMap<IString, Any?>
 
-    static final private Set<Class<?>> SUPPORTED = new HashSet<>(Arrays.asList(
-            Element.class,
-            Byte.class,
-            Short.class,
-            Integer.class,
-            Float.class,
-            String.class,
-            byte[].class,
-            short[].class,
-            int[].class,
-            long[].class,
-            float[].class,
-            Object[].class));
+    companion object {
+        /**
+         * Appends `n` indents to a `StringBuilder`.
+         *
+         * @param b
+         * @param n
+         */
+        private fun indent(b: StringBuilder, n: Int) {
+            for (i in 0 until n) {
+                b.append('\t')
+            }
+        }
 
+        /**
+         * Creates a string representation of an `ElementArrayList`.
+         *
+         * @param name A name to display.
+         * @param level Number of tabs by which to indent.
+         * @return String representation.
+         */
+        private fun eaToString(name: IString?, level: Int, list: Array<Element>): String {
+            val BUF = StringBuilder()
+            if (list.isEmpty()) {
+                indent(BUF, level)
+                if (null != name) {
+                    BUF.append(name)
+                }
+                BUF.append("[]")
+                return BUF.toString()
+            }
+            indent(BUF, level)
+            if (null != name) {
+                BUF.append(name)
+            }
+            BUF.append("[\n")
+            for (e in list) {
+                if (e is GeneralElement) {
+                    val str = e.toString(level + 1)
+                    BUF.append(str).append('\n')
+                } else if (e != null) {
+                    indent(BUF, level + 1)
+                    val str = e.toString()
+                    BUF.append(str).append('\n')
+                } else {
+                    BUF.append("null")
+                }
+            }
+            indent(BUF, level)
+            BUF.append("]")
+            return BUF.toString()
+        }
+
+        private fun formatElement(key: String, `val`: Any?, analysis: Analysis, save: ESS): String {
+            val BUF = StringBuilder()
+            if (`val` == null) {
+                BUF.append(String.format("%s: <NULL>", key))
+            } else if (`val` is Linkable) {
+                val STR = `val`.toHTML(null)
+                BUF.append(String.format("%s: %s", key, STR))
+            } else if (`val` is List<*>) {
+                val STR = formatList(key, `val`, analysis, save)
+                BUF.append(String.format("%s: %s", key, STR))
+            } else if (`val`.javaClass.isArray) {
+                if (`val` is Array<*>) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as Array<Any?>?)))
+                } else if (`val` is BooleanArray) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as BooleanArray?)))
+                } else if (`val` is ByteArray) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as ByteArray?)))
+                } else if (`val` is CharArray) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as CharArray?)))
+                } else if (`val` is DoubleArray) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as DoubleArray?)))
+                } else if (`val` is FloatArray) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as FloatArray?)))
+                } else if (`val` is IntArray) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as IntArray?)))
+                } else if (`val` is LongArray) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as LongArray?)))
+                } else if (`val` is ShortArray) {
+                    BUF.append(String.format("%s: %s", key, Arrays.toString(`val` as ShortArray?)))
+                }
+                val LIST = `val` as List<*>
+                val STR = formatList(key, LIST, analysis, save)
+                BUF.append(String.format("%s: %s", key, STR))
+            } else if (`val` is GeneralElement) {
+                val STR = formatGeneralElement(key, `val`, analysis, save)
+                BUF.append(String.format("%s: %s", key, STR))
+            } else {
+                BUF.append(String.format("%s: %s", key, `val`))
+            }
+            return BUF.toString()
+        }
+
+        private fun formatGeneralElement(key: String, gen: GeneralElement, analysis: Analysis, save: ESS): String {
+            val BUF = StringBuilder()
+            gen.values.forEach { (k: IString, v: Any?) ->
+                val S = formatElement(k.toString(), v, analysis, save)
+                BUF.append(String.format("<p>%s</p>", S))
+            }
+            //BUF.append("</ol>");
+            return BUF.toString()
+        }
+
+        private fun formatList(key: String, list: List<*>, analysis: Analysis, save: ESS): String {
+            val BUF = StringBuilder()
+            //BUF.append(String.format("<p>%s</p>", key));
+            for ((i, `val`) in list.withIndex()) {
+                val K = i.toString()
+                val S = formatElement(K, `val`, analysis, save)
+                BUF.append(String.format("<p>%s</p>", S))
+            }
+            //BUF.append("<");
+            return BUF.toString()
+        }
+
+        val SUPPORTED: Set<KClass<*>> = hashSetOf(
+                Element::class,
+                Byte::class,
+                Short::class,
+                Int::class,
+                Float::class,
+                String::class,
+                ByteArray::class,
+                ShortArray::class,
+                IntArray::class,
+                LongArray::class,
+                FloatArray::class,
+                Array<Any>::class
+        )
+    }
+
+    /**
+     * Create a new `GeneralElement`.
+     */
+    init {
+        DATA = LinkedHashMap()
+    }
 }
