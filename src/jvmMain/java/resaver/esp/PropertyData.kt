@@ -13,340 +13,244 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.function.Supplier;
+import mf.BufferUtil
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.util.function.Supplier
 
 /**
  * Stores the data for a script property. Basically a fancy VarArg.
  *
  * @author Mark Fairchild
  */
-abstract public class PropertyData implements Entry {
-
-    static public PropertyData readPropertyData(byte type, ByteBuffer input, ESPContext ctx) {
-        assert input.hasRemaining() || type == 0 : "No input available, type = " + type;
-
-        switch (type) {
-            case 0:
-                return new NullData(input);
-            case 1:
-                return new ObjectData(input);
-            case 2:
-                return new StringData(input);
-            case 3:
-                return new IntData(input);
-            case 4:
-                return new FloatData(input);
-            case 5:
-                return new BoolData(input);
-            case 6:
-                return new VarData(input);
-            case 7:
-                return new StructData(input, ctx);
-            case 11:
-                return new ArrayData<>(input, () -> new ObjectData(input));
-            case 12:
-                return new ArrayData<>(input, () -> new StringData(input));
-            case 13:
-                return new ArrayData<>(input, () -> new IntData(input));
-            case 14:
-                return new ArrayData<>(input, () -> new FloatData(input));
-            case 15:
-                return new ArrayData<>(input, () -> new BoolData(input));
-            case 16:
-                return new ArrayData<>(input, () -> new VarData(input));
-            case 17:
-                return new ArrayData<>(input, () -> new StructData(input, ctx));
-            default:
-                throw new IllegalStateException(String.format("Invalid property type: %d", type));
-        }
-    }
-
+abstract class PropertyData : Entry {
     /**
      * Stores a Null property data.
      *
      */
-    static public class NullData extends PropertyData {
-
-        public NullData(ByteBuffer input) {
-            //this.DATA = input.readInt();
-        }
-
-        @Override
-        public void write(ByteBuffer output) {
+    class NullData(input: ByteBuffer?) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
             //output.putInt(DATA);
         }
 
-        @Override
-        public int calculateSize() {
-            return 0;
+        override fun calculateSize(): Int {
+            return 0
         }
 
-        @Override
-        public String toString() {
-            return "NULL";
-        }
-        //final private int DATA;
+        override fun toString(): String {
+            return "NULL"
+        } //final private int DATA;
     }
 
     /**
      * Stores an Object property data.
      */
-    static public class ObjectData extends PropertyData {
-
-        public ObjectData(ByteBuffer input) {
-            this.DATA = input.getLong();
+    class ObjectData(input: ByteBuffer) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
+            output!!.putLong(DATA)
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.putLong(DATA);
+        override fun calculateSize(): Int {
+            return 8
         }
 
-        @Override
-        public int calculateSize() {
-            return 8;
+        override fun toString(): String {
+            return String.format("%08x", DATA)
         }
 
-        @Override
-        public String toString() {
-            return String.format("%08x", this.DATA);
-        }
+        private val DATA: Long = input.long
 
-        final private long DATA;
     }
 
     /**
      * Stores a String property data.
      */
-    static public class StringData extends PropertyData {
-
-        public StringData(ByteBuffer input) {
-            this.DATA = mf.BufferUtil.getUTF(input);
+    class StringData(input: ByteBuffer?) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
+            output!!.put(DATA.toByteArray(StandardCharsets.UTF_8))
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.put(DATA.getBytes(UTF_8));
+        override fun calculateSize(): Int {
+            return 2 + DATA.length
         }
 
-        @Override
-        public int calculateSize() {
-            return 2 + this.DATA.length();
+        override fun toString(): String {
+            return DATA
         }
 
-        @Override
-        public String toString() {
-            return this.DATA;
-        }
+        private val DATA: String = BufferUtil.getUTF(input)
 
-        final private String DATA;
     }
 
     /**
      * Stores an integer property data.
      */
-    static public class IntData extends PropertyData {
-
-        public IntData(ByteBuffer input) {
-            this.DATA = input.getInt();
+    class IntData(input: ByteBuffer) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
+            output!!.putInt(DATA)
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.putInt(DATA);
+        override fun calculateSize(): Int {
+            return 4
         }
 
-        @Override
-        public int calculateSize() {
-            return 4;
+        override fun toString(): String {
+            return DATA.toString()
         }
 
-        @Override
-        public String toString() {
-            return Integer.toString(this.DATA);
-        }
+        private val DATA: Int = input.int
 
-        final private int DATA;
     }
 
     /**
      * Stores a float property data.
      */
-    static public class FloatData extends PropertyData {
-
-        public FloatData(ByteBuffer input) {
-            this.DATA = input.getFloat();
+    class FloatData(input: ByteBuffer) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
+            output!!.putFloat(DATA)
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.putFloat(DATA);
+        override fun calculateSize(): Int {
+            return 4
         }
 
-        @Override
-        public int calculateSize() {
-            return 4;
+        override fun toString(): String {
+            return DATA.toString()
         }
 
-        @Override
-        public String toString() {
-            return Float.toString(this.DATA);
-        }
+        private val DATA: Float = input.float
 
-        final private float DATA;
     }
 
     /**
      * Stores a boolean property data.
      */
-    static public class BoolData extends PropertyData {
-
-        public BoolData(ByteBuffer input) {
-            this.DATA = (input.get() != 0);
+    class BoolData(input: ByteBuffer) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
+            output!!.put(if (DATA) 1.toByte() else 0.toByte())
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.put(this.DATA ? (byte) 1 : (byte) 0);
+        override fun calculateSize(): Int {
+            return 1
         }
 
-        @Override
-        public int calculateSize() {
-            return 1;
+        override fun toString(): String {
+            return java.lang.Boolean.toString(DATA)
         }
 
-        @Override
-        public String toString() {
-            return Boolean.toString(this.DATA);
-        }
+        private val DATA: Boolean = input.get().toInt() != 0
 
-        final private boolean DATA;
     }
 
     /**
      * Stores a variant property data.
      */
-    static public class VarData extends PropertyData {
-
-        public VarData(ByteBuffer input) {
-            this.DATA = input.getInt();
+    class VarData(input: ByteBuffer) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
+            output!!.putInt(DATA)
         }
 
-        @Override
-        public void write(ByteBuffer output) {
-            output.putInt(DATA);
+        override fun calculateSize(): Int {
+            return 4
         }
 
-        @Override
-        public int calculateSize() {
-            return 4;
+        override fun toString(): String {
+            return String.format("VAR: %s", DATA)
         }
 
-        @Override
-        public String toString() {
-            return String.format("VAR: %s", this.DATA);
-        }
+        private val DATA: Int = input.int
 
-        final private int DATA;
     }
 
     /**
      * Stores a struct property data.
      */
-    static public class StructData extends PropertyData {
+    class StructData(input: ByteBuffer, ctx: ESPContext?) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
+            output!!.putInt(MEMBERS.size)
+            MEMBERS.forEach { p: Property -> p.write(output) }
+        }
 
-        public StructData(ByteBuffer input, ESPContext ctx) {
-            int memberCount = input.getInt();
-            this.MEMBERS = new java.util.ArrayList<>(memberCount);
+        override fun calculateSize(): Int {
+            val sum = MEMBERS.sumOf { it.calculateSize() }
+            return 4 + sum
+        }
 
-            for (int i = 0; i < memberCount; i++) {
-                Property p = new Property(input, ctx);
-                this.MEMBERS.add(p);
+        override fun toString(): String {
+            return MEMBERS.joinToString(separator = "; ", prefix = "{", postfix = "}") { i: Property -> i.toString() }
+        }
+
+        private val MEMBERS: MutableList<Property>
+
+        init {
+            val memberCount = input.int
+            MEMBERS = mutableListOf()
+            for (i in 0 until memberCount) {
+                val p = Property(input, ctx)
+                MEMBERS.add(p)
             }
         }
-
-        @Override
-        public void write(ByteBuffer output) {
-            output.putInt(this.MEMBERS.size());
-            this.MEMBERS.forEach(p -> p.write(output));
-        }
-
-        @Override
-        public int calculateSize() {
-            int sum = 0;
-            for (Property MEMBER : this.MEMBERS) {
-                int calculateSize = MEMBER.calculateSize();
-                sum += calculateSize;
-            }
-            return 4 + sum;
-        }
-
-        @Override
-        public String toString() {
-            StringJoiner joiner = new StringJoiner("; ", "{", "}");
-            for (Property MEMBER : this.MEMBERS) {
-                String toString = MEMBER.toString();
-                joiner.add(toString);
-            }
-            return joiner.toString();
-        }
-
-        final private List<Property> MEMBERS;
-
     }
 
     /**
      * Stores an Array property data.
      *
      * @param <T> The type of PropertyData stored in the array.
-     */
-    static public class ArrayData<T extends PropertyData> extends PropertyData {
+    </T> */
+    class ArrayData<T : PropertyData?>(input: ByteBuffer, reader: Supplier<T>) : PropertyData() {
+        override fun write(output: ByteBuffer?) {
+            output!!.putInt(MEMBERS.size)
+            MEMBERS.forEach { t: T -> t!!.write(output) }
+        }
 
-        protected ArrayData(ByteBuffer input, Supplier<T> reader) {
-            int memberCount = input.getInt();
-            this.MEMBERS = new java.util.ArrayList<>(memberCount);
+        override fun calculateSize(): Int {
+            var sum = 4
+            val result = MEMBERS.sumOf { it!!.calculateSize() }
+            sum += result
+            return sum
+        }
 
-            for (int i = 0; i < memberCount; i++) {
-                T member = reader.get();
-                this.MEMBERS.add(member);
+        override fun toString(): String {
+            return MEMBERS.joinToString(separator = ", ", prefix = "[", postfix = "]") { i: T -> i.toString() }
+            //return joiner.toString()
+        }
+
+        private val MEMBERS: MutableList<T>
+
+        init {
+            val memberCount = input.int
+            MEMBERS = mutableListOf()
+            for (i in 0 until memberCount) {
+                val member = reader.get()
+                MEMBERS.add(member)
             }
         }
-
-        @Override
-        public void write(ByteBuffer output) {
-            output.putInt(this.MEMBERS.size());
-            this.MEMBERS.forEach(t -> t.write(output));
-        }
-
-        @Override
-        public int calculateSize() {
-            int sum = 4;
-            int result = 0;
-            for (T MEMBER : this.MEMBERS) {
-                int calculateSize = MEMBER.calculateSize();
-                result += calculateSize;
-            }
-            sum += result;
-            return sum;
-        }
-
-        @Override
-        public String toString() {
-            StringJoiner joiner = new StringJoiner(", ", "[", "]");
-            for (T MEMBER : MEMBERS) {
-                String toString = MEMBER.toString();
-                joiner.add(toString);
-            }
-            return joiner.toString();
-        }
-
-        final private List<T> MEMBERS;
     }
 
+    companion object {
+        @JvmStatic
+        fun readPropertyData(type: Byte, input: ByteBuffer, ctx: ESPContext?): PropertyData {
+            assert(input.hasRemaining() || type.toInt() == 0) { "No input available, type = $type" }
+            return when (type.toInt()) {
+                0 -> NullData(input)
+                1 -> ObjectData(input)
+                2 -> StringData(input)
+                3 -> IntData(input)
+                4 -> FloatData(input)
+                5 -> BoolData(input)
+                6 -> VarData(input)
+                7 -> StructData(input, ctx)
+                11 -> ArrayData(input) { ObjectData(input) }
+                12 -> ArrayData(input) { StringData(input) }
+                13 -> ArrayData(input) { IntData(input) }
+                14 -> ArrayData(input) { FloatData(input) }
+                15 -> ArrayData(input) { BoolData(input) }
+                16 -> ArrayData(input) { VarData(input) }
+                17 -> ArrayData(input) { StructData(input, ctx) }
+                else -> throw IllegalStateException(String.format("Invalid property type: %d", type))
+            }
+        }
+    }
 }
