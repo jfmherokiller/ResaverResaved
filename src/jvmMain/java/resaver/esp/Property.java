@@ -48,7 +48,7 @@ final public class Property implements Entry {
     }
 
     /**
-     * @see Entry#write(transposer.ByteBuffer)
+     * @see Entry#write(ByteBuffer)
      * @param output The ByteBuffer.
      */
     @Override
@@ -64,8 +64,7 @@ final public class Property implements Entry {
      */
     @Override
     public int calculateSize() {
-        int sum = 4 + this.NAME.length() + this.DATA.calculateSize();
-        return sum;
+        return 4 + this.NAME.length() + this.DATA.calculateSize();
     }
 
     @Override
