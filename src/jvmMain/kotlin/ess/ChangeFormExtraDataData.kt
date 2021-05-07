@@ -82,7 +82,7 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
      */
     init {
         Objects.requireNonNull(input)
-        val TYPE = java.lang.Byte.toUnsignedInt(super.readByte(input, "TYPE"))
+        val TYPE = super.readByte(input, "TYPE")?.let { java.lang.Byte.toUnsignedInt(it) }!!
         require(!(TYPE < 0 || TYPE >= 256)) { "Invalid extraData type: $TYPE" }
         when (TYPE) {
             22 -> NAME = "Worn"
@@ -102,7 +102,7 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
             }
             26 -> {
                 NAME = "TrespassPackage"
-                val ref = super.readRefID(input, "UNK", context)
+                val ref = super.readRefID(input, "UNK", context)!!
                 if (ref.isZero) {
                     assert(false) { "INCOMPLETE" }
                 }
@@ -175,7 +175,10 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
                 super.readRefID(input, "UNK1", context)
                 super.readRefID(input, "UNK2", context)
                 val flags = super.readElement(input, "NPCChangeFlags") { input: ByteBuffer? -> input?.let { Flags.readIntFlags(it) } }
-                super.readElement(input, "NPC") { `in`: ByteBuffer? -> `in`?.let { ChangeFormNPC(it, flags, context) } }
+                super.readElement(input, "NPC") { `in`: ByteBuffer? -> `in`?.let { flags?.let { it1 ->
+                    ChangeFormNPC(it,
+                        it1, context)
+                } } }
             }
             46 -> {
                 NAME = "LeveledItem"
