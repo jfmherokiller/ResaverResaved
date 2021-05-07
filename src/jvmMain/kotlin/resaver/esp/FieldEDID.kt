@@ -13,53 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-
-import resaver.IString;
+import mf.BufferUtil
+import resaver.IString
+import java.nio.ByteBuffer
 
 /**
  * FieldSimple represents an EDID field.
  *
  * @author Mark Fairchild
  */
-public class FieldEDID extends FieldSimple {
-
-    /**
-     * Creates a new FieldSimple by reading it from a <code>ByteBuffer</code>.
-     *
-     * @param code The field code.
-     * @param input The <code>ByteBuffer</code> to read.
-     * @param size The amount of data.
-     * @param big A flag indicating that this is a BIG field.
-     * @param ctx The mod descriptor.
-     */
-    public FieldEDID(IString code, ByteBuffer input, int size, boolean big, ESPContext ctx) {
-        super(code, input, size, big, ctx);
-        this.VALUE = mf.BufferUtil.getZString(super.getByteBuffer());
-    }
-
-    /**
-     * @return The string value of the EDID.
-     */
-    public String getValue() {
-        return this.VALUE;
-    }
-
+class FieldEDID(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx: ESPContext?) : FieldSimple(
+    code!!, input!!, size, big, ctx
+) {
     /**
      * Returns a String representation of the Field, which will just be the code
      * string.
      *
      * @return A string representation.
-     *
      */
-    @Override
-    public String toString() {
-        final StringBuilder BUF = new StringBuilder();
-        BUF.append(this.getCode()).append("=").append(this.VALUE);
-        return BUF.toString();
+    override fun toString(): String {
+        return "${this.code}=$value"
     }
 
-    final private String VALUE;
+    /**
+     * @return The string value of the EDID.
+     */
+    val value: String = BufferUtil.getZString(super.byteBuffer)
+
 }

@@ -13,68 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import resaver.IString;
+import resaver.IString
+import java.nio.ByteBuffer
 
 /**
  * FieldBasic represents all fields that aren't a VMAD section.
  *
  * @author Mark Fairchild
  */
-public class FieldXXXX implements Field {
-
+class FieldXXXX(code: IString, input: ByteBuffer) : Field {
     /**
-     * Creates a new FieldBasic by reading it from a LittleEndianInput.
-     *
-     * @param code The record code.
-     * @param input The <code>ByteBuffer</code> to read.
+     * @see Entry.write
      */
-    public FieldXXXX(IString code, ByteBuffer input) {
-        assert input.hasRemaining();
-        assert code.equals(IString.get("XXXX"));
-
-        this.CODE = code;
-        this.DATA = input.getInt();
-    }
-
-    /**
-     * @see Entry#write(ByteBuffer)
-     */
-    @Override
-    public void write(ByteBuffer output) {
-        output.put(this.CODE.getUTF8());
-        output.putShort((short) 4);
-        output.putInt(this.DATA);
+    override fun write(output: ByteBuffer?) {
+        output!!.put(this.code.uTF8)
+        output.putShort(4.toShort())
+        output.putInt(data)
     }
 
     /**
      * @return The calculated size of the field.
-     * @see Entry#calculateSize()
+     * @see Entry.calculateSize
      */
-    @Override
-    public int calculateSize() {
-        return 10;
-    }
-
-    /**
-     * Returns the field code.
-     *
-     * @return The field code.
-     */
-    @Override
-    public IString getCode() {
-        return this.CODE;
-    }
-
-    /**
-     * Returns a copy of the data section.
-     *
-     * @return A copy of the data array.
-     */
-    public int getData() {
-        return this.DATA;
+    override fun calculateSize(): Int {
+        return 10
     }
 
     /**
@@ -82,14 +46,35 @@ public class FieldXXXX implements Field {
      * string.
      *
      * @return A string representation.
-     *
      */
-    @Override
-    public String toString() {
-        return this.getCode().toString();
+    override fun toString(): String {
+        return this.code.toString()
     }
 
-    final private IString CODE;
-    final private int DATA;
+    /**
+     * Returns the field code.
+     *
+     * @return The field code.
+     */
+    override val code: IString
 
+    /**
+     * Returns a copy of the data section.
+     *
+     * @return A copy of the data array.
+     */
+    val data: Int
+
+    /**
+     * Creates a new FieldBasic by reading it from a LittleEndianInput.
+     *
+     * @param code The record code.
+     * @param input The `ByteBuffer` to read.
+     */
+    init {
+        assert(input.hasRemaining())
+        assert(code.equals(IString["XXXX"]))
+        this.code = code
+        data = input.int
+    }
 }

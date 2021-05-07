@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
+
+
 
 /**
  *
  * @author Mark
  */
-public class FieldList extends java.util.LinkedList<Field> {
-
-    /*public boolean add(Field field) {
+class FieldList : ArrayList<Field?>() { /*public boolean add(Field field) {
         if (this.containsKey(field.getCode())) {
             throw new IllegalStateException("OVERWRITING FIELD");
         }
@@ -49,5 +49,4 @@ public class FieldList extends java.util.LinkedList<Field> {
                 ? Optional.empty()
                 : Optional.of(val);
     }*/
-
 }
