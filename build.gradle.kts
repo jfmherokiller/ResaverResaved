@@ -73,3 +73,7 @@ tasks.withType<Jar> {
         ))
     }
 }
+tasks.withType<Test> {
+    minHeapSize="2048m"
+    maxHeapSize="4096m"
+}
