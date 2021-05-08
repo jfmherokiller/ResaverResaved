@@ -98,6 +98,8 @@ abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, 
      */
     val definition: Definition?
 
+    open val scriptName: TString
+        get() = definitionName
     /**
      * Creates a new `GameElement` by reading from a
      * `ByteBuffer`. No error handling is performed.
