@@ -13,28 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.logging.Logger;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.mozilla.universalchardet.UniversalDetector;
-import ess.Plugin;
+import ess.Plugin
+import mf.BufferUtil
+import org.mozilla.universalchardet.UniversalDetector
+import java.io.IOException
+import java.nio.Buffer
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.channels.FileChannel
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import java.nio.file.PathMatcher
+import java.util.logging.Logger
 
 /**
  * A StringsFile stores reads and stores strings from the mod stringtables;
@@ -42,188 +36,167 @@ import ess.Plugin;
  *
  * @author Mark Fairchild
  */
-public class StringsFile {
-
-    /**
-     * Reads a <code>StringsFile</code> from a file.
-     *
-     * @param file The path to the file.
-     * @param plugin The <code>Plugin</code> that the <code>StringsFile</code>
-     * supplies.
-     * @return The <code>StringsFile</code>.
-     * @throws IOException
-     */
-    @NotNull
-    static public StringsFile readStringsFile(@NotNull Path file, Plugin plugin) throws IOException {
-        Objects.requireNonNull(file);
-        Objects.requireNonNull(plugin);
-        
-        try (FileChannel channel = FileChannel.open(file)) {
-            final int SIZE = (int) channel.size();
-            final ByteBuffer BUFFER = ByteBuffer.allocate(SIZE);
-            int bytesRead = channel.read(BUFFER);
-            assert bytesRead == SIZE;
-            ((Buffer) BUFFER).flip();
-            return readStringsFile(file, plugin, BUFFER);
-        }
-    }
-
-    /**
-     * Reads a <code>StringsFile</code> from a <code>LittleEndianInput</code>.
-     *
-     * @param file The filename.
-     * @param plugin The <code>Plugin</code> that the <code>StringsFile</code>
-     * supplies.
-     * @param input The input stream.
-     * @return The <code>StringsFile</code>.
-     */
-    @NotNull
-    static public StringsFile readStringsFile(Path file, Plugin plugin, @NotNull ByteBuffer input) {
-        Objects.requireNonNull(file);
-        Objects.requireNonNull(plugin);
-        Objects.requireNonNull(input);
-        
-        StringsFile.Type type = StringsFile.Type.match(file);
-        return new StringsFile(file, plugin, input, type);
-    }
-
-    /**
-     * Reads a <code>StringsFile</code> from a <code>LittleEndianInput</code>.
-     *
-     * @param name The name of the stringtable.
-     * @param plugin The <code>Plugin</code> that the <code>StringsFile</code>
-     * supplies.
-     * @param input The input stream.
-     * @param type The type of stringtable.
-     */
-    private StringsFile(Path path, Plugin plugin, @NotNull ByteBuffer input, Type type) {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(type);
-        input.order(ByteOrder.LITTLE_ENDIAN);
-
-        this.PATH = Objects.requireNonNull(path);
-        this.PLUGIN = Objects.requireNonNull(plugin);
-
-        final int COUNT = input.getInt();
-        final int SIZE = input.getInt();
-        final int DATASTART = 8 + COUNT * 8;
-
-        this.TABLE = new HashMap<>(COUNT);
-
-        final ByteBuffer DIRECTORY = input.slice().order(ByteOrder.LITTLE_ENDIAN);
-        ((Buffer) DIRECTORY).limit(COUNT * 8);
-
-        for (int i = 0; i < COUNT; i++) {
-            final int STRINGID = DIRECTORY.getInt();
-            final int OFFSET = DIRECTORY.getInt();
-
-            ((Buffer) input).position(DATASTART + OFFSET);
-
-            if (type == Type.STRINGS) {
-                byte[] bytes = mf.BufferUtil.getZStringRaw(input);
-                String string = mf.BufferUtil.mozillaString(bytes);
-                this.TABLE.put(STRINGID, string);
-            } else {
-                int length = input.getInt();
-                byte[] bytes = new byte[length];
-                input.get(bytes);
-                String string = mf.BufferUtil.mozillaString(bytes);
-                this.TABLE.put(STRINGID, string);
-            }
-        }
-    }
-
+class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBuffer, type: Type?) {
     /**
      * Retrieves a string using its string ID.
      *
      * @param stringID
      * @return
      */
-    public String get(int stringID) {
-        return this.TABLE.get(stringID);
+    operator fun get(stringID: Int): String? {
+        return TABLE[stringID]
     }
 
     /**
-     * @see Object#toString()
+     * @see Object.toString
      * @return
      */
-    @Override
-    public String toString() {
-        return this.PATH.getFileName().toString();
+    override fun toString(): String {
+        return PATH.fileName.toString()
     }
 
     /**
      * The reference for accessing the stringtable.
      */
-    @NotNull
-    final public Map<Integer, String> TABLE;
+    val TABLE: MutableMap<Int, String>
 
     /**
-     * The <code>Plugin</code> that the <code>StringsFile</code> supplies.
+     * The `Plugin` that the `StringsFile` supplies.
      */
-    final public Plugin PLUGIN;
+    val PLUGIN: Plugin
 
     /**
      * The name of the stringtable.
      */
-    final public Path PATH;
-
-    static final private java.util.Set<Charset> CHARSET_LOG = new java.util.HashSet<>();
-    static final private Logger LOG = Logger.getLogger(StringsFile.class.getName());
-    static final private FileSystem FS = FileSystems.getDefault();
+    val PATH: Path
 
     /**
      * The three different types of Strings file.
      */
-    static public enum Type {
+    enum class Type(glob: String) {
         STRINGS("glob:**.Strings"),
         ILSTRINGS("glob:**.ILStrings"),
         DLSTRINGS("glob:**.DLStrings");
 
-        @Nullable
-        static public Type match(Path file) {
-            if (STRINGS.GLOB.matches(file)) {
-                return STRINGS;
-            } else if (ILSTRINGS.GLOB.matches(file)) {
-                return ILSTRINGS;
-            } else if (DLSTRINGS.GLOB.matches(file)) {
-                return DLSTRINGS;
+        private val GLOB: PathMatcher = FS.getPathMatcher(glob)
+
+        companion object {
+            fun match(file: Path?): Type? {
+                return when {
+                    STRINGS.GLOB.matches(file) -> {
+                        STRINGS
+                    }
+                    ILSTRINGS.GLOB.matches(file) -> {
+                        ILSTRINGS
+                    }
+                    DLSTRINGS.GLOB.matches(file) -> {
+                        DLSTRINGS
+                    }
+                    else -> null
+                }
             }
-            return null;
         }
 
-        private Type(String glob) {
-            this.GLOB = FS.getPathMatcher(glob);
+    }
+
+    companion object {
+        /**
+         * Reads a `StringsFile` from a file.
+         *
+         * @param file The path to the file.
+         * @param plugin The `Plugin` that the `StringsFile`
+         * supplies.
+         * @return The `StringsFile`.
+         * @throws IOException
+         */
+        @Throws(IOException::class)
+        fun readStringsFile(file: Path, plugin: Plugin?): StringsFile {
+            FileChannel.open(file).use { channel ->
+                val SIZE = channel.size().toInt()
+                val BUFFER = ByteBuffer.allocate(SIZE)
+                val bytesRead = channel.read(BUFFER)
+                assert(bytesRead == SIZE)
+                (BUFFER as Buffer).flip()
+                return readStringsFile(file, plugin, BUFFER)
+            }
         }
 
-        final private PathMatcher GLOB;
+        /**
+         * Reads a `StringsFile` from a `LittleEndianInput`.
+         *
+         * @param file The filename.
+         * @param plugin The `Plugin` that the `StringsFile`
+         * supplies.
+         * @param input The input stream.
+         * @return The `StringsFile`.
+         */
+        fun readStringsFile(file: Path, plugin: Plugin?, input: ByteBuffer): StringsFile {
+            val type = Type.match(file)
+            return StringsFile(file, plugin, input, type)
+        }
+
+        private val CHARSET_LOG: MutableSet<Charset?> = HashSet()
+        private val LOG = Logger.getLogger(StringsFile::class.java.name)
+        private val FS = FileSystems.getDefault()
+
+        /**
+         * Makes a string from a byte array in a region-friendly way. Thank you
+         * Mozilla!
+         *
+         * @param bytes
+         * @return
+         */
+        fun makeString(bytes: ByteArray): String {
+            val DETECTOR = UniversalDetector(null)
+            DETECTOR.handleData(bytes, 0, bytes.size)
+            DETECTOR.dataEnd()
+            val ENCODING = DETECTOR.detectedCharset
+            DETECTOR.reset()
+            val CHARSET =
+                (if (null == ENCODING) StandardCharsets.UTF_8 else Charset.forName(ENCODING))
+            if (CHARSET_LOG.add(CHARSET)) {
+                LOG.info(
+                    "Detected a new character encoding: $CHARSET."
+                )
+            }
+            return String(bytes, CHARSET)
+        }
     }
 
     /**
-     * Makes a string from a byte array in a region-friendly way. Thank you
-     * Mozilla!
+     * Reads a `StringsFile` from a `LittleEndianInput`.
      *
-     * @param bytes
-     * @return
+     * @param name The name of the stringtable.
+     * @param plugin The `Plugin` that the `StringsFile`
+     * supplies.
+     * @param input The input stream.
+     * @param type The type of stringtable.
      */
-    @NotNull
-    static String makeString(@NotNull byte[] bytes) {
-        final UniversalDetector DETECTOR = new UniversalDetector(null);
-
-        DETECTOR.handleData(bytes, 0, bytes.length);
-        DETECTOR.dataEnd();
-        final String ENCODING = DETECTOR.getDetectedCharset();
-        DETECTOR.reset();
-
-        final Charset CHARSET = (null == ENCODING ? UTF_8 : Charset.forName(ENCODING));
-        assert null != CHARSET;
-
-        if (CHARSET_LOG.add(CHARSET)) {
-            LOG.info(String.format("Detected a new character encoding: %s.", CHARSET));
+    init {
+        input.order(ByteOrder.LITTLE_ENDIAN)
+        PATH = path
+        PLUGIN = plugin!!
+        val COUNT = input.int
+        val SIZE = input.int
+        val DATASTART = 8 + COUNT * 8
+        TABLE = HashMap(COUNT)
+        val DIRECTORY = input.slice().order(ByteOrder.LITTLE_ENDIAN)
+        (DIRECTORY as Buffer).limit(COUNT * 8)
+        for (i in 0 until COUNT) {
+            val STRINGID = DIRECTORY.int
+            val OFFSET = DIRECTORY.int
+            (input as Buffer).position(DATASTART + OFFSET)
+            if (type == Type.STRINGS) {
+                val bytes = BufferUtil.getZStringRaw(input)
+                val string = BufferUtil.mozillaString(bytes!!)
+                TABLE[STRINGID] = string
+            } else {
+                val length = input.int
+                val bytes = ByteArray(length)
+                input[bytes]
+                val string = BufferUtil.mozillaString(bytes)
+                TABLE[STRINGID] = string
+            }
         }
-
-        final String STR = new String(bytes, CHARSET);
-        return STR;
     }
-
 }
