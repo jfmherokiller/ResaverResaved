@@ -273,7 +273,7 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addChangeForms(changeForms: Map<RefID?, ChangeForm?>) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val DICTIONARY: Map<ChangeFormType, List<ChangeForm>> =
+            val DICTIONARY: Map<ChangeFormType?, List<ChangeForm>> =
                 changeForms.values.toList().filterNotNull().groupBy(ChangeForm::type)
             val NODES: List<Node> = DICTIONARY.entries
                 .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
