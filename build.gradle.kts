@@ -31,7 +31,8 @@ dependencies {
     implementation("org.openjfx:javafx-swing:15")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.0")
     implementation("org.jetbrains:annotations:20.1.0")
-
+    implementation("io.ktor:ktor-server-core:1.5.4")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.0")
 }
 javafx {
     version = "15"
