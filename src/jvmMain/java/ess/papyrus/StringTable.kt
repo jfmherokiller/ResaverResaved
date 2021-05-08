@@ -13,192 +13,163 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Optional;
-
-import ess.ESS;
-import ess.WStringElement;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import ess.ESS.ESSContext
+import ess.WStringElement
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
 
 /**
  * An abstraction describing a string table.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-public class StringTable extends ArrayList<TString> implements PapyrusElement {
-
+class StringTable : ArrayList<TString?>, PapyrusElement {
     /**
-     * Creates a new <code>TString</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
+     * Creates a new `TString` by reading from a
+     * `ByteBuffer`. No error handling is performed.
      *
      * @param input The input stream.
-     * @return The new <code>TString</code>.
+     * @return The new `TString`.
      * @throws PapyrusFormatException
      */
-    public TString read(@NotNull ByteBuffer input) throws PapyrusFormatException {
-        Objects.requireNonNull(input);
-
-        int index;
-
-        if (this.STR32) {
+    @Throws(PapyrusFormatException::class)
+    fun read(input: ByteBuffer): TString? {
+        var index: Int
+        if (STR32) {
             // SkyrimSE, Fallout4, and SkyrimLE with CrashFixes uses 32bit string indices.            
-            index = input.getInt();
-
+            index = input.int
         } else {
-            index = Short.toUnsignedInt(input.getShort());
+            index = java.lang.Short.toUnsignedInt(input.short)
             // SkyrimLegendary and Fallout4 use 16bit string indices.
             // Various corrections are possible though.
-
-            if (index == 0xFFFF && !this.STBCORRECTION) {
-                index = input.getInt();
+            if (index == 0xFFFF && !STBCORRECTION) {
+                index = input.int
             }
         }
-
-        if (index < 0 || index >= this.size()) {
-            throw new PapyrusFormatException(String.format("Invalid TString index: %d / %d", index, this.size()));
+        if (index < 0 || index >= this.size) {
+            throw PapyrusFormatException(String.format("Invalid TString index: %d / %d", index, this.size))
         }
-
-        TString newString = this.get(index);
-        return newString;
+        return get(index)
     }
 
     /**
-     * Creates a new <code>StringTable</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
+     * Creates a new `StringTable` by reading from a
+     * `ByteBuffer`. No error handling is performed.
      *
      * @param input The input stream.
-     * @param context The <code>ESSContext</code> info.
+     * @param context The `ESSContext` info.
      * @throws PapyrusElementException
      */
-    public StringTable(@NotNull ByteBuffer input, @NotNull ESS.ESSContext context) throws PapyrusElementException {
-        this.STR32 = context.isStr32();
-
-        int strCount;
-
-        if (this.STR32) {
+    constructor(input: ByteBuffer, context: ESSContext) {
+        STR32 = context.isStr32
+        var strCount: Int
+        if (STR32) {
             // SkyrimSE uses 32bit string indices.            
-            strCount = input.getInt();
-            STBCORRECTION = false;
-
+            strCount = input.int
+            STBCORRECTION = false
         } else {
             // Skyrim Legendary (without CrashFixes) and old versions of 
             // Fallout4 use 16bit string indices.
             // Various corrections are possible though.           
-            strCount = Short.toUnsignedInt(input.getShort());
+            strCount = java.lang.Short.toUnsignedInt(input.short)
 
             // Large string table version.
             if (strCount == 0xFFFF) {
-                strCount = input.getInt();
+                strCount = input.int
             }
 
             // Fallback for catching the stringtable bug.
-            if ((context.getGame().isFO4() && strCount < 7000) || (context.getGame().isSkyrim()&& strCount < 20000)) {
-                strCount |= 0x10000;
-                STBCORRECTION = true;
+            if (context.game!!.isFO4 && strCount < 7000 || context.game!!.isSkyrim && strCount < 20000) {
+                strCount = strCount or 0x10000
+                STBCORRECTION = true
             } else {
-                STBCORRECTION = false;
+                STBCORRECTION = false
             }
         }
 
         // Store the string count.
-        this.STRCOUNT = strCount;
-        
+        STRCOUNT = strCount
+
         // Read the actual strings.
         try {
-            this.ensureCapacity(strCount);
-            for (int i = 0; i < strCount; i++) {
+            ensureCapacity(strCount)
+            for (i in 0 until strCount) {
                 try {
-                    final WStringElement WSTR = WStringElement.read(input);
-                    final TString TSTR = this.STR32
-                            ? new TString32(WSTR, i)
-                            : new TString16(this, WSTR, i);
-                    this.add(TSTR);
-
-                } catch (BufferUnderflowException ex) {
-                    throw new PapyrusException("Error reading string #" + i, ex, null);
+                    val WSTR = WStringElement.read(input)
+                    val TSTR = if (STR32) TString32(WSTR, i) else TString16(this, WSTR, i)
+                    this.add(TSTR)
+                } catch (ex: BufferUnderflowException) {
+                    throw PapyrusException("Error reading string #$i", ex, null)
                 }
             }
-        } catch (BufferUnderflowException ex) {
-            this.TRUNCATED = true;
-            String msg = String.format("Error; read %d/%d strings.", this.size(), strCount);
-            throw new PapyrusElementException(msg, ex, this);
+        } catch (ex: BufferUnderflowException) {
+            isTruncated = true
+            val msg = String.format("Error; read %d/%d strings.", this.size, strCount)
+            throw PapyrusElementException(msg, ex, this)
         }
-
-        this.TRUNCATED = false;
+        isTruncated = false
     }
 
     /**
-     * Creates an empty <code>StringTable</code> with the truncated flag.
+     * Creates an empty `StringTable` with the truncated flag.
      */
-    public StringTable() {
-        this.STBCORRECTION = false;
-        this.STR32 = false;
-        this.TRUNCATED = true;
-        this.STRCOUNT = 0;
+    constructor() {
+        STBCORRECTION = false
+        STR32 = false
+        isTruncated = true
+        STRCOUNT = 0
     }
 
     /**
-     * @see ess.Element#write(ByteBuffer)
+     * @see ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        if (this.STBCORRECTION) {
-            throw new IllegalStateException("String-Table-Bug correction in effect. Cannot write.");
-        } else if (this.TRUNCATED) {
-            throw new IllegalStateException("StringTable is truncated. Cannot write.");
-        }
-
-        if (this.STR32) {
+    override fun write(output: ByteBuffer?) {
+        check(!STBCORRECTION) { "String-Table-Bug correction in effect. Cannot write." }
+        check(!isTruncated) { "StringTable is truncated. Cannot write." }
+        if (STR32) {
             // SkyrimSE uses 32bit string indices.
-            output.putInt(this.size());
-
-        } else // SkyrimLegendary and Fallout4 use 16bit string indices.
+            output?.putInt(this.size)
+        } else  // SkyrimLegendary and Fallout4 use 16bit string indices.
         // Various corrections are possible though.           
         // Large string table version.
         {
-            if (this.size() > 0xFFF0 && !this.STBCORRECTION) {
-                output.putShort((short) 0xFFFF);
-                output.putInt(this.size());
+            if (this.size > 0xFFF0 && !STBCORRECTION) {
+                output?.putShort(0xFFFF.toShort())
+                output?.putInt(this.size)
             } else {
-                output.putShort((short) this.size());
+                output?.putShort(this.size.toShort())
             }
         }
 
         // Write the actual strings.
-        this.forEach(tstr -> tstr.writeFull(output));
+        this.forEach { tstr: TString? -> tstr?.writeFull(output) }
     }
 
     /**
-     * @see ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 0;
-
-        if (this.STR32) {
-            sum += 4;
-        } else if (this.size() > 0xFFF0 && !this.STBCORRECTION) {
-            sum += 6;
+    override fun calculateSize(): Int {
+        var sum = 0
+        sum += if (STR32) {
+            4
+        } else if (this.size > 0xFFF0 && !STBCORRECTION) {
+            6
         } else {
-            sum += 2;
+            2
         }
-
-        int result = 0;
-        for (TString tString : this) {
-            int calculateFullSize = tString.calculateFullSize();
-            result += calculateFullSize;
+        var result = 0
+        for (tString in this) {
+            val calculateFullSize = tString?.calculateFullSize()
+            if (calculateFullSize != null) {
+                result += calculateFullSize
+            }
         }
-        sum += result;
-        return sum;
+        sum += result
+        return sum
     }
 
     /**
@@ -206,66 +177,56 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      * @param str
      * @return
      */
-    @Nullable
-    public TString resolve(String str) {
-        for (TString tstr : this) {
-            if (tstr.equals(str)) {
-                return tstr;
+    fun resolve(str: String?): TString? {
+        for (tstr in this) {
+            if (tstr?.equals(str) == true) {
+                return tstr
             }
         }
-        return null;
+        return null
     }
 
     /**
-     * Checks if the <code>StringTable</code> contains a <code>TString</code>
+     * Checks if the `StringTable` contains a `TString`
      * that matches a specified string value.
      *
      * @param val The value to match against.
-     * @return True if the <code>StringTable</code> contains a matching
-     * <code>TString</code>, false otherwise.
+     * @return True if the `StringTable` contains a matching
+     * `TString`, false otherwise.
      */
-    public boolean containsMatching(String val) {
-        for (TString v : this) {
-            if (v.equals(val)) {
-                return true;
+    fun containsMatching(`val`: String?): Boolean {
+        for (v in this) {
+            if (v != null) {
+                if (v.equals(`val`)) {
+                    return true
+                }
             }
         }
-        return false;
+        return false
     }
 
     /**
-     * Adds a new string to the <code>StringTable</code> and returns the
-     * corresponding <code>TString</code>.
+     * Adds a new string to the `StringTable` and returns the
+     * corresponding `TString`.
      *
      * @param val The value of the new string.
-     * @return The new <code>TString</code>, or the existing one if the
-     * <code>StringTable</code> already contained a match.
+     * @return The new `TString`, or the existing one if the
+     * `StringTable` already contained a match.
      */
-    @NotNull
-    public TString addString(String val) {
-        Optional<TString> match = Optional.empty();
-        for (TString v : this) {
-            if (v.equals(val)) {
-                match = Optional.of(v);
-                break;
+    fun addString(`val`: String?): TString {
+        var match: TString? = null
+        for (v in this) {
+            if (v?.equals(`val`) == true) {
+                match = v
+                break
             }
         }
-        if (match.isPresent()) {
-            return match.get();
+        if (match != null) {
+            return match
         }
-
-        TString tstr = this.STR32
-                ? new TString32(val, this.size())
-                : new TString16(this, val, this.size());
-        this.add(tstr);
-        return tstr;
-    }
-
-    /**
-     * @return A flag indicating that the string table is truncated.
-     */
-    public boolean isTruncated() {
-        return this.TRUNCATED;
+        val tstr = if (STR32) TString32(`val`, this.size) else TString16(this, `val`, this.size)
+        this.add(tstr)
+        return tstr
     }
 
     /**
@@ -274,37 +235,37 @@ public class StringTable extends ArrayList<TString> implements PapyrusElement {
      *
      * @return
      */
-    public boolean hasSTB() {
-        return this.STBCORRECTION;
+    fun hasSTB(): Boolean {
+        return STBCORRECTION
     }
 
     /**
-     * @return For a truncated <code>StringTable</code> returns the number of
+     * @return For a truncated `StringTable` returns the number of
      * missing strings. Otherwise returns 0.
      */
-    public int getMissingCount() {
-        return this.STRCOUNT - this.size();
-    }
+    val missingCount: Int
+        get() = STRCOUNT - this.size
 
     /**
      * A flag indicating that the string-table-bug correction is in effect.
      */
-    final public boolean STBCORRECTION;
-
+    val STBCORRECTION: Boolean
+    /**
+     * @return A flag indicating that the string table is truncated.
+     */
     /**
      * Stores the truncated condition.
      */
-    final private boolean TRUNCATED;
+    val isTruncated: Boolean
 
     /**
      * Stores the parsing context information.
      */
-    final private boolean STR32;
+    private val STR32: Boolean
 
     /**
-     * Stores the declared string table size. If the <code>StringTable</code> is
+     * Stores the declared string table size. If the `StringTable` is
      * truncated, this will not actually match the size of the list.
      */
-    final private int STRCOUNT;
-
+    private val STRCOUNT: Int
 }

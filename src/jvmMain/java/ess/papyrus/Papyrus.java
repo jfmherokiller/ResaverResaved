@@ -75,9 +75,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             StringTable stringTable = null;
             try {
                 stringTable = new StringTable(input, context);
-            } catch (PapyrusElementException ex) {
-                stringTable = (StringTable) ex.getPartial();
-                throw new PapyrusException("Error reading StringTable.", ex, this);
             } finally {
                 this.STRINGS = stringTable;
                 model.addStringTable(stringTable);

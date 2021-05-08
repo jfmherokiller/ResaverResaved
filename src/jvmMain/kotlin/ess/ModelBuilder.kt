@@ -405,7 +405,7 @@ class ModelBuilder(progress: ProgressModel) {
         /**
          * Maps a `TString` to a character.
          */
-        val ALPHABETICAL = Function { v: Element ->
+        val ALPHABETICAL = Function { v: Element? ->
             val str = v.toString()
             val firstChar = if (str.isEmpty()) '0' else Character.toUpperCase(str[0])
             val category = if (Character.isLetter(firstChar)) firstChar else '0'
