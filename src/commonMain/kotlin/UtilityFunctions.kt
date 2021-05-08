@@ -73,6 +73,39 @@ class UtilityFunctions {
         fun toUnsignedInt(x: Short): Int {
             return x.toInt() and 0xffff
         }
-    }
 
+        /**
+         * Compares two `long` values numerically treating the values
+         * as unsigned.
+         *
+         * @param  x the first `long` to compare
+         * @param  y the second `long` to compare
+         * @return the value `0` if `x == y`; a value less
+         * than `0` if `x < y` as unsigned values; and
+         * a value greater than `0` if `x > y` as
+         * unsigned values
+         * @since 1.8
+         */
+        fun compareUnsigned(x: Long, y: Long): Int {
+            return compare(x + Long.MIN_VALUE, y + Long.MIN_VALUE)
+        }
+
+        /**
+         * Compares two `long` values numerically.
+         * The value returned is identical to what would be returned by:
+         * <pre>
+         * Long.valueOf(x).compareTo(Long.valueOf(y))
+        </pre> *
+         *
+         * @param  x the first `long` to compare
+         * @param  y the second `long` to compare
+         * @return the value `0` if `x == y`;
+         * a value less than `0` if `x < y`; and
+         * a value greater than `0` if `x > y`
+         * @since 1.7
+         */
+        fun compare(x: Long, y: Long): Int {
+            return if (x < y) -1 else if (x == y) 0 else 1
+        }
+    }
 }
