@@ -25,7 +25,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class UnbindMap : PapyrusElementMap<QueuedUnbind?> {
+class UnbindMap : PapyrusElementMap<QueuedUnbind> {
     internal constructor(input: ByteBuffer, context: PapyrusContext) : super(
         input,
         PapyrusElementReader<QueuedUnbind> { b: ByteBuffer? ->
