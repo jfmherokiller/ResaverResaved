@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import java.util.HashMap;
-import java.util.Set;
-import ess.Linkable;
+
+import ess.Linkable
 
 /**
  *
  */
-@SuppressWarnings("serial")
-public class ReferrentMap extends HashMap<Class<? extends Linkable>, Set<Linkable>> {
-}
+class ReferrentMap : HashMap<Class<out Linkable?>?, Set<Linkable?>?>()
