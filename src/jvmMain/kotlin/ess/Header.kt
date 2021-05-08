@@ -179,7 +179,7 @@ class Header(input: ByteBuffer, path: Path?) : Element {
     private var compression: CompressionType?
     @JvmField
     var GAME: resaver.Game? = null
-    val SCREENSHOT: ByteArray
+    var SCREENSHOT: ByteArray
     private var IMAGE: BufferedImage? = null
 
     companion object {
@@ -267,6 +267,7 @@ class Header(input: ByteBuffer, path: Path?) : Element {
             resaver.Game.FALLOUT4, resaver.Game.SKYRIM_SE -> 4
             else -> throw IllegalArgumentException("Invalid game: $GAME")
         }
+        //todo figure out how i broke this
         SCREENSHOT = ByteArray(BYPP * SCREENSHOT_WIDTH * SCREENSHOT_HEIGHT)
         input[SCREENSHOT]
         if (SCREENSHOT.size < 10) {
@@ -278,11 +279,16 @@ class Header(input: ByteBuffer, path: Path?) : Element {
             var i = 0
             while (i < SCREENSHOT.size) {
                 var rgb = 0
-                rgb = rgb or ((SCREENSHOT[i + 2] and 0xFF.toByte()).toInt())
-                rgb = rgb or ((SCREENSHOT[i + 1] and 0xFF.toByte()).toInt() shl 8)
-                rgb = rgb or ((SCREENSHOT[i + 0] and 0xFF.toByte()).toInt() shl 16)
+
+                val r = SCREENSHOT[i + 2]
+                val g = SCREENSHOT[i + 1]
+                val b = SCREENSHOT[i + 0]
+                rgb = rgb or (( r and 0xFF.toByte()).toInt())
+                rgb = rgb or ((g  and 0xFF.toByte()).toInt() shl 8)
+                rgb = rgb or ((b  and 0xFF.toByte()).toInt() shl 16)
                 if (BYPP == 4) {
-                    rgb = rgb or ((SCREENSHOT[i + 3] and 0xFF.toByte()).toInt() shl 24)
+                    val a = SCREENSHOT[i + 3]
+                    rgb = rgb or ((a and 0xFF.toByte()).toInt() shl 24)
                 }
                 IMAGE!!.setRGB(x, y, rgb)
                 x++
