@@ -16,7 +16,7 @@
 package ess.papyrus
 
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * Describes an EID of a papyrus element.
@@ -126,25 +126,24 @@ private constructor() : PapyrusElement, Comparable<EID> {
     }
 
     override fun compareTo(other: EID): Int {
-        Objects.requireNonNull(other)
-        return java.lang.Long.compareUnsigned(longValue(), other.longValue())
+        return UtilityFunctions.compareUnsigned(longValue(), other.longValue())
     }
 
     override fun hashCode(): Int {
-        return java.lang.Long.hashCode(longValue())
+        return longValue().hashCode()
     }
 
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (obj == null) {
+        if (other == null) {
             return false
         }
-        if (obj !is EID) {
+        if (other !is EID) {
             return false
         }
-        return longValue() == obj.longValue()
+        return longValue() == other.longValue()
     }
 
     companion object {
@@ -157,8 +156,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @return The `EID`.
          */
         @JvmStatic
-        fun read4byte(input: ByteBuffer, pap: ess.papyrus.Papyrus): EID {
-            Objects.requireNonNull(input)
+        fun read4byte(input: ByteBuffer, pap: Papyrus): EID {
             val VAL = input.int
             return make4byte(VAL, pap)
         }
@@ -172,8 +170,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @return The `EID`.
          */
         @JvmStatic
-        fun read8byte(input: ByteBuffer, pap: ess.papyrus.Papyrus): EID {
-            Objects.requireNonNull(input)
+        fun read8byte(input: ByteBuffer, pap: Papyrus): EID {
             val VAL = input.long
             return make8Byte(VAL, pap)
         }
@@ -187,7 +184,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @return The `EID`.
          */
         @JvmStatic
-        fun make4byte(`val`: Int, pap: ess.papyrus.Papyrus): EID {
+        fun make4byte(`val`: Int, pap: Papyrus): EID {
             return pap.EIDS.computeIfAbsent(`val`) { v: Number? -> EID32(`val`) }
         }
 
@@ -200,7 +197,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @return The `EID`.
          */
         @JvmStatic
-        fun make8Byte(`val`: Long, pap: ess.papyrus.Papyrus): EID {
+        fun make8Byte(`val`: Long, pap: Papyrus): EID {
             return pap.EIDS.computeIfAbsent(`val`) { v: Number? -> EID64(`val`) }
         }
 
@@ -224,7 +221,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @return
          */
         fun pad16(id: Long): String {
-            val hex = java.lang.Long.toHexString(id)
+            val hex =id.toString(16)
             val length = hex.length
             return ZEROES[16 - length].toString() + hex
         }
