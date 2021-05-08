@@ -90,9 +90,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ScriptMap scriptMap = null;
             try {
                 scriptMap = new ScriptMap(scriptCount, input, CONTEXT);
-            } catch (PapyrusElementException ex) {
-                scriptMap = (ScriptMap) ex.getPartial();
-                throw new PapyrusException("Error reading Scripts.", ex, this);
             } finally {
                 this.SCRIPTS = scriptMap;
                 this.SCRIPTS.values().forEach(script -> script.resolveParent(this.SCRIPTS));
@@ -107,9 +104,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 StructMap structMap = null;
                 try {
                     structMap = new StructMap(structCount, input, CONTEXT);
-                } catch (PapyrusElementException ex) {
-                    structMap = (StructMap) ex.getPartial();
-                    throw new PapyrusException("Error reading Structs.", ex, this);
                 } finally {
                     this.STRUCTS = structMap;
                     model.addStructs(this.STRUCTS);
@@ -121,9 +115,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
             ScriptInstanceMap scriptInstanceMap = null;
             try {
                 scriptInstanceMap = new ScriptInstanceMap(input, this.SCRIPTS, CONTEXT);
-            } catch (PapyrusElementException ex) {
-                scriptInstanceMap = (ScriptInstanceMap) ex.getPartial();
-                throw new PapyrusException("Error reading ScriptInstances.", ex, this);
             } finally {
                 this.SCRIPT_INSTANCES = scriptInstanceMap;
                 SUM.click(this.SCRIPT_INSTANCES.calculateSize());
@@ -145,9 +136,6 @@ final public class Papyrus implements PapyrusElement, GlobalDataBlock {
                 StructInstanceMap structInstanceMap = null;
                 try {
                     structInstanceMap = new StructInstanceMap(input, this.STRUCTS, CONTEXT);
-                } catch (PapyrusElementException ex) {
-                    structInstanceMap = (StructInstanceMap) ex.getPartial();
-                    throw new PapyrusException("Error reading StructInstances.", ex, this);
                 } finally {
                     this.STRUCT_INSTANCES = structInstanceMap;
                     SUM.click(this.STRUCT_INSTANCES.calculateSize());

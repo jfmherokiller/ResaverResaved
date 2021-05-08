@@ -338,7 +338,7 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
         if (this.VARIABLES == null) {
             throw new NullPointerException("The variable list is missing.");
         }
-        if (index <= 0 || index >= this.VARIABLES.size()) {
+        if (index < 0 || index >= this.VARIABLES.size()) {
             throw new IllegalArgumentException("Invalid variable index: " + index);
         }
         
