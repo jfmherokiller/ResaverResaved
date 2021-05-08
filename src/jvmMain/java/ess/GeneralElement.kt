@@ -22,6 +22,7 @@ import mf.BufferUtil
 import resaver.Analysis
 import resaver.IString
 import java.nio.ByteBuffer
+import java.util.logging.Logger
 import kotlin.collections.LinkedHashMap
 import kotlin.collections.List
 import kotlin.collections.Map
@@ -534,8 +535,8 @@ open class GeneralElement protected constructor() : Element {
             }
         }
         if (`val` != null) {
-            LOG
-            check(b) { String.format("Invalid type for %s: %s", name, `val`::class) }
+            check(b) { "Invalid type for $name: ${`val`::class}" }
+            LOG.severe("Invalid type for $name: ${`val`::class}")
         }
         DATA[IString[name]] = converted
         return converted as T
@@ -847,12 +848,14 @@ open class GeneralElement protected constructor() : Element {
     public val DATA: MutableMap<IString, Any?>
 
     companion object {
+        public val LOG = Logger.getLogger(ChangeForm::class.java.canonicalName)
         /**
          * Appends `n` indents to a `StringBuilder`.
          *
          * @param b
          * @param n
          */
+
         private fun indent(b: StringBuilder, n: Int) {
             for (i in 0 until n) {
                 b.append('\t')
