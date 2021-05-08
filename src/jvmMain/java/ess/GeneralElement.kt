@@ -23,15 +23,6 @@ import resaver.Analysis
 import resaver.IString
 import java.nio.ByteBuffer
 import java.util.logging.Logger
-import kotlin.collections.LinkedHashMap
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.Set
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.forEach
-import kotlin.collections.set
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
@@ -536,7 +527,9 @@ open class GeneralElement protected constructor() : Element {
         }
         if (`val` != null) {
             check(b) { "Invalid type for $name: ${`val`::class}" }
-            LOG.severe("Invalid type for $name: ${`val`::class}")
+            if(!b) {
+                LOG.severe("Invalid type for $name: ${`val`::class}")
+            }
         }
         DATA[IString[name]] = converted
         return converted as T
@@ -602,6 +595,11 @@ open class GeneralElement protected constructor() : Element {
                         (e as Element).write(output)
                     }
                 }
+                is ArrayList<*> -> {
+                    for (e in v) {
+                        (e as Element).write(output)
+                    }
+                }
                 else -> checkNotNull(v) { "Null element!" }
             }
             throw IllegalStateException("Unknown element: " + v.javaClass)
@@ -650,6 +648,9 @@ open class GeneralElement protected constructor() : Element {
                     sum += 4 * v.size
                 }
                 is Array<*> -> {
+                    sum += v.map { i:Any? -> i as Element}.sumOf { i -> i.calculateSize() }
+                }
+                is List<*> -> {
                     sum += v.map { i:Any? -> i as Element}.sumOf { i -> i.calculateSize() }
                 }
                 else -> checkNotNull(v) {
@@ -735,16 +736,19 @@ open class GeneralElement protected constructor() : Element {
                 indent(BUF, level + 1)
                 val str: String = when (`val`) {
                     is Byte -> {
-                        String.format("%02x", java.lang.Byte.toUnsignedInt((`val` as Byte?)!!))
+                        String.format("%02x", (`val` as Byte?)?.toUInt()!!)
                     }
                     is Short -> {
-                        String.format("%04x", java.lang.Short.toUnsignedInt((`val` as Short?)!!))
+                        String.format("%04x", (`val` as Short?)?.toUInt()!!)
                     }
                     is Int -> {
-                        String.format("%08x", Integer.toUnsignedLong((`val` as Int?)!!))
+                        String.format("%08x", (`val` as Int?)?.toUInt()!!)
                     }
                     is Long -> {
                         String.format("%16x", `val`)
+                    }
+                    is ArrayList<*> -> {
+                        (`val` as ArrayList<*>?)?.joinToString(",","[","]").toString()
                     }
                     is Array<*> -> {
                         (`val` as Array<*>?)?.joinToString(",","[","]").toString()
@@ -777,7 +781,7 @@ open class GeneralElement protected constructor() : Element {
                         `val`.toString()
                     }
                 }
-                BUF.append(String.format("%s=%s\n", key, str))
+                BUF.append("$key=$str\n")
             }
         }
         indent(BUF, level)
@@ -845,7 +849,7 @@ open class GeneralElement protected constructor() : Element {
     /**
      * Stores the actual data.
      */
-    public val DATA: MutableMap<IString, Any?>
+    public val DATA: MutableMap<IString, Any?> = mutableMapOf()
 
     companion object {
         public val LOG = Logger.getLogger(ChangeForm::class.java.canonicalName)
@@ -974,7 +978,7 @@ open class GeneralElement protected constructor() : Element {
         private fun formatList(key: String, list: List<*>, analysis: Analysis, save: ESS): String {
             val BUF = StringBuilder()
             //BUF.append(String.format("<p>%s</p>", key));
-            for ((i, `val`) in list.withIndex()) {
+            for ((i: Int, `val`: Any?) in list.withIndex()) {
                 val K = i.toString()
                 val S = formatElement(K, `val`, analysis, save)
                 BUF.append(String.format("<p>%s</p>", S))
@@ -998,12 +1002,5 @@ open class GeneralElement protected constructor() : Element {
                 Array<Any>::class,
                 ArrayList::class,
         )
-    }
-
-    /**
-     * Create a new `GeneralElement`.
-     */
-    init {
-        DATA = LinkedHashMap()
     }
 }

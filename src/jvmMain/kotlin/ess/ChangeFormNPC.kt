@@ -39,7 +39,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.Int, context: ESSContext) : 
      * @param save
      * @return
      */
-    override fun getInfo(analysis: resaver.Analysis?, save: ess.ESS?): String {
+    override fun getInfo(analysis: resaver.Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         BUILDER.append("<hr/><p>NPC:</p>")
         if (this.hasVal("FULLNAME")) {
@@ -56,19 +56,43 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.Int, context: ESSContext) : 
             BUILDER.append("\n")
         }
         if (this.hasVal("FACTIONRANKS")) {
-            val UncastedFactions = super.getVal("FACTIONRANKS") as ArrayList<*>
-            val ranks: List<FactionRank> = UncastedFactions.map { i -> i as FactionRank }
+            val UncastedFactions = super.getVal("FACTIONRANKS")
+            var ranks: List<FactionRank> = listOf()
+            if(UncastedFactions is Array<*>) {
+                ranks = UncastedFactions.map { i -> i as FactionRank }
+            }
+            if(UncastedFactions is List<*>) {
+                ranks = UncastedFactions.map { i -> i as FactionRank }
+            }
             BUILDER.append(String.format("<p>%s faction ranks.</p><ul>", ranks.size))
             ranks.forEach { v: FactionRank? -> BUILDER.append(String.format("<li>%s", v)) }
             BUILDER.append("</ul>")
         }
         if (super.hasVal("SPELLS")) {
-            val UncastedSpells = super.getVal("SPELLS") as Array<*>
-            val spells = UncastedSpells.map { i -> i as RefID }
-            val uncastedLVLSpells = super.getVal("SPELLS_LEVELLED") as Array<*>
-            val spells_levelled = uncastedLVLSpells.map { i -> i as RefID }
-            val uncastedShouts = super.getVal("SHOUTS") as Array<*>
-            val shouts = uncastedShouts.map { i -> i as RefID }
+            val UncastedSpells = super.getVal("SPELLS")
+            var spells:List<RefID> = listOf()
+            if(UncastedSpells is Array<*>) {
+                spells = UncastedSpells.map { i -> i as RefID }
+            }
+            if(UncastedSpells is List<*>) {
+                spells = UncastedSpells.map { i -> i as RefID }
+            }
+            val uncastedLVLSpells = super.getVal("SPELLS_LEVELLED")
+            var spells_levelled:List<RefID> = listOf()
+            if(uncastedLVLSpells is Array<*>) {
+                spells_levelled = uncastedLVLSpells.map { i -> i as RefID }
+            }
+            if(uncastedLVLSpells is List<*>) {
+                spells_levelled = uncastedLVLSpells.map { i -> i as RefID }
+            }
+            val uncastedShouts = super.getVal("SHOUTS")
+            var shouts:List<RefID> = listOf()
+            if(uncastedShouts is Array<*>) {
+                shouts = uncastedShouts.map { i -> i as RefID }
+            }
+            if(uncastedShouts is List<*>) {
+                shouts = uncastedShouts.map { i -> i as RefID }
+            }
             BUILDER.append(String.format("<p>%s spells.</p><ul>", spells.size))
             spells.forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
             BUILDER.append("</ul>")

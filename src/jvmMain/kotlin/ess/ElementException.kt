@@ -30,4 +30,11 @@ class ElementException
  * @param msg the detail message.
  * @param cause
  * @param partial
- */(msg: String?, cause: Throwable?, val partial: Element) : RuntimeException(msg, cause)
+ */
+    : RuntimeException {
+    val partial: Element
+
+    constructor(msg: String?, cause: Throwable?, partial: Element) : super(msg, cause) {
+        this.partial = partial
+    }
+}

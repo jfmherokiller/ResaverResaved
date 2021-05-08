@@ -294,7 +294,11 @@ class ModelBuilder(progress: ProgressModel) {
             val OTHERDATA_NODES: MutableList<Node> = LinkedList()
             data?.values?.forEach { (key: IString?, `val`: Any?) ->
                 if (`val` is Array<*>) {
-                    OTHERDATA_NODES.add(ContainerNode(key, listOf(*`val`) as List<Element?>))
+                    val convertedArray = `val`.map {i:Any? -> i as Element?}
+                    OTHERDATA_NODES.add(ContainerNode(key, convertedArray))
+                } else if (`val` is List<*>) {
+                    val convertedArray = `val`.map {i:Any? -> i as Element?}
+                    OTHERDATA_NODES.add(ContainerNode(key, convertedArray))
                 }
             }
             val NODE = ContainerNode("Mystery Arrays").addAll(OTHERDATA_NODES).sort()
