@@ -13,209 +13,164 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.ListException;
-import java.nio.ByteBuffer;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-
-import ess.AnalyzableElement;
-import ess.ESS;
-import ess.Element;
-import ess.Flags;
-import ess.Linkable;
+import ess.ESS
+import ess.Element
+import ess.Flags
+import ess.Flags.Companion.readByteFlags
+import ess.Linkable.Companion.makeLink
+import ess.papyrus.Variable.Companion.readList
+import resaver.Analysis
+import resaver.ListException
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.function.Consumer
 
 /**
  *
  * @author Mark Fairchild
  */
-public class StructInstance extends GameElement implements SeparateData, HasVariables {
-
+class StructInstance
+/**
+ * Creates a new `Struct` by reading from a
+ * `ByteBuffer`. No error handling is performed.
+ *
+ * @param input The input stream.
+ * @param structs The `StructMap` containing the definitions.
+ * @param context The `PapyrusContext` info.
+ * @throws PapyrusFormatException
+ */
+    (input: ByteBuffer, structs: StructMap, context: PapyrusContext, override val descriptors: List<MemberDesc?>?) : GameElement(input, structs, context),
+    SeparateData, HasVariables {
     /**
-     * Creates a new <code>Struct</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param structs The <code>StructMap</code> containing the definitions.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     */
-    public StructInstance(@NotNull ByteBuffer input, @NotNull StructMap structs, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        super(input, structs, context);
-    }
-
-    /**
-     * @see ess.Element#write(resaver.ByteBuffer)
+     * @see ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(ByteBuffer output) {
-        super.write(output);
+    override fun write(output: ByteBuffer?) {
+        super.write(output)
     }
 
     /**
-     * @see SeparateData#readData(java.nio.ByteBuffer, ess.ESS)
+     * @see SeparateData.readData
      * @param input
      * @param context
      * @throws PapyrusElementException
      * @throws PapyrusFormatException
      */
-    @Override
-    public void readData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
-        this.data = new StructData(input, context);
+    @Throws(PapyrusElementException::class, PapyrusFormatException::class)
+    override fun readData(input: ByteBuffer?, context: PapyrusContext?) {
+        data = StructData(input!!, context!!)
     }
 
     /**
-     * @see SeparateData#writeData(java.nio.ByteBuffer)
-     * @param output
+     * @see SeparateData.writeData
+     * @param input
      */
-    @Override
-    public void writeData(@NotNull ByteBuffer output) {
-        this.data.write(output);
+    override fun writeData(input: ByteBuffer?) {
+        data!!.write(input)
     }
 
     /**
-     * @see ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = super.calculateSize();
-        sum += this.data == null ? 0 : this.data.calculateSize();
-        return sum;
+    override fun calculateSize(): Int {
+        var sum = super.calculateSize()
+        sum += if (data == null) 0 else data!!.calculateSize()
+        return sum
     }
 
     /**
-     * @return The name of the corresponding <code>Struct</code>.
+     * @return The corresponding `Struct`.
      */
-    @NotNull
-    public TString getStructName() {
-        return super.getDefinitionName();
-    }
-
-    /**
-     * @return The corresponding <code>Struct</code>.
-     */
-    @Nullable
-    public Struct getStruct() {
-        assert super.getDefinition() instanceof Struct;
-        return (Struct) super.getDefinition();
-    }
-
-    /**
-     * @return A flag indicating if the <code>StructInstance</code> is
-     * undefined.
-     *
-     */
-    @Override
-    public boolean isUndefined() {
-        if (null != this.getStruct()) {
-            return this.getStruct().isUndefined();
+    val struct: Struct?
+        get() {
+            assert(super.definition is Struct)
+            return super.definition as Struct?
         }
 
-        return false;
-    }
+    /**
+     * @return A flag indicating if the `StructInstance` is
+     * undefined.
+     */
+    override val isUndefined: Boolean
+        get() = if (null != struct) {
+            struct!!.isUndefined
+        } else false
 
     /**
      * @return The flag field.
      */
-    @Nullable
-    public Flags.Byte getFlag() {
-        return null == this.data ? null : this.data.FLAG;
-    }
+    val flag: Flags.Byte?
+        get() = if (null == data) null else data!!.FLAG
 
     /**
-     * @see HasVariables#getVariables()
+     * @see HasVariables.getVariables
      * @return
      */
-    @Override
-    public List<Variable> getVariables() {
-        return this.data == null 
-                ? Collections.emptyList() 
-                : Collections.unmodifiableList(this.data.VARIABLES);
-    }
+    override val variables: List<Variable>
+        get() = if (data == null) emptyList() else data!!.VARIABLES.filterNotNull()
 
     /**
-     * @see HasVariables#getDescriptors() 
-     * @return 
-     */
-    @Override
-    public List<MemberDesc> getDescriptors() {
-        return this.getStruct().getMembers();
-    }
-
-    /**
-     * @see HasVariables#setVariable(int, ess.papyrus.Variable)
+     * @see HasVariables.setVariable
      * @param index
-     * @param newVar 
+     * @param newVar
      */
-    @Override
-    public void setVariable(int index, Variable newVar) {
-        if (this.data == null || this.data.VARIABLES == null) {
-            throw new NullPointerException("The variable list is missing.");
+    override fun setVariable(index: Int, newVar: Variable?) {
+        if (data == null || data!!.VARIABLES == null) {
+            throw NullPointerException("The variable list is missing.")
         }
-        if (index <= 0 || index >= this.data.VARIABLES.size()) {
-            throw new IllegalArgumentException("Invalid variable index: " + index);
-        }
-        
-        this.data.VARIABLES.set(index, newVar);
+        require(!(index <= 0 || index >= data!!.VARIABLES.size)) { "Invalid variable index: $index" }
+        data!!.VARIABLES.set(index, newVar)
     }
 
     /**
-     * @see ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(@Nullable Element target) {
-        if (null == target || null == this.data) {
-            return Linkable.makeLink("structinstance", this.getID(), this.toString());
-
-        } else if (target instanceof Variable) {
-            int index = this.getVariables().indexOf(target);
+    override fun toHTML(target: Element?): String? {
+        return if (null == target || null == data) {
+            makeLink("structinstance", iD, this.toString())
+        } else if (target is Variable) {
+            val index = variables.indexOf(target)
             if (index >= 0) {
-                return Linkable.makeLink("structinstance", this.getID(), index, this.toString());
+                makeLink("structinstance", iD, index, this.toString())
             } else {
-                return Linkable.makeLink("structinstance", this.getID(), this.toString());
+                makeLink("structinstance", iD, this.toString())
             }
-
         } else {
-            for (Variable var : this.getVariables()) {
-                if (var.hasRef()) {
-                    if (var.getReferent() == target) {
-                        int indexOf = this.getVariables().indexOf(var);
+            for (`var` in variables) {
+                if (`var`.hasRef()) {
+                    if (`var`.referent === target) {
+                        val indexOf = variables.indexOf(`var`)
                         if (indexOf >= 0) {
                             return Optional.of(indexOf)
-                                    .map(index -> Linkable.makeLink("structinstance", this.getID(), index, this.toString()))
-                                    .orElse(Linkable.makeLink("structinstance", this.getID(), this.toString()));
+                                .map { index: Int? -> makeLink("structinstance", iD, index!!, this.toString()) }
+                                .orElse(makeLink("structinstance", iD, this.toString()))
                         }
                     }
                 }
             }
-            return Optional.<Integer>empty()
-                    .map(index -> Linkable.makeLink("structinstance", this.getID(), index, this.toString()))
-                    .orElse(Linkable.makeLink("structinstance", this.getID(), this.toString()));
+            Optional.empty<Int>()
+                .map { index: Int? -> makeLink("structinstance", iD, index!!, this.toString()) }
+                .orElse(makeLink("structinstance", iD, this.toString()))
         }
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(resaver.Analysis analysis, @NotNull ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-        if (null != this.getStruct()) {
-            BUILDER.append(String.format("<html><h3>STRUCTURE of %s</h3>", this.getStruct().toHTML(this)));
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
+        val BUILDER = StringBuilder()
+        if (null != struct) {
+            BUILDER.append(String.format("<html><h3>STRUCTURE of %s</h3>", struct!!.toHTML(this)))
         } else {
-            BUILDER.append(String.format("<html><h3>STRUCTURE of %s</h3>", this.getStructName()));
+            BUILDER.append(String.format("<html><h3>STRUCTURE of %s</h3>", StructName))
         }
 
         /*if (null != analysis) {
@@ -230,97 +185,83 @@ public class StructInstance extends GameElement implements SeparateData, HasVari
                     BUILDER.append("</ul>");
                 }
             }
-        }*/
-        BUILDER.append(String.format("<p>ID: %s</p>", this.getID()));
-
-        if (null == this.data) {
-            BUILDER.append("<h3>DATA MISSING</h3>");
+        }*/BUILDER.append(String.format("<p>ID: %s</p>", iD))
+        if (null == data) {
+            BUILDER.append("<h3>DATA MISSING</h3>")
         } else {
-            BUILDER.append(String.format("<p>Flag: %s</p>", this.getFlag()));
+            BUILDER.append(String.format("<p>Flag: %s</p>", flag))
         }
-
-        save.getPapyrus().printReferrents(this, BUILDER, "struct");
-
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        save?.papyrus!!.printReferrents(this, BUILDER, "struct")
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
-    private StructData data;
+    private var data: StructData? = null
 
     /**
      * Describes struct data in a Skyrim savegame.
      *
      * @author Mark Fairchild
      */
-    final private class StructData implements PapyrusDataFor<StructInstance> {
-
+    private inner class StructData(input: ByteBuffer, context: PapyrusContext) : PapyrusDataFor<StructInstance?> {
         /**
-         * Creates a new <code>StructData</code> by reading from a
-         * <code>ByteBuffer</code>. No error handling is performed.
-         *
-         * @param input The input stream.
-         * @param context The <code>PapyrusContext</code> info.
-         * @throws PapyrusElementException
-         */
-        public StructData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
-            Objects.requireNonNull(input);
-            Objects.requireNonNull(context);
-
-            this.FLAG = Flags.readByteFlags(input);
-
-            try {
-                int count = input.getInt();
-                this.VARIABLES = Variable.readList(input, count, context);
-            } catch (ListException ex) {
-                throw new PapyrusElementException("Couldn't read struct variables.", ex, this);
-            }
-        }
-
-        /**
-         * @see ess.Element#write(resaver.ByteBuffer)
+         * @see ess.Element.write
          * @param output The output stream.
          */
-        @Override
-        public void write(@NotNull ByteBuffer output) {
-            Objects.requireNonNull(output);
-            getID().write(output);
-            this.FLAG.write(output);
-            output.putInt(this.VARIABLES.size());
-            this.VARIABLES.forEach(var -> var.write(output));
+        override fun write(output: ByteBuffer?) {
+            Objects.requireNonNull(output)
+            iD.write(output)
+            FLAG.write(output)
+            output?.putInt(VARIABLES.size)
+            VARIABLES.forEach(Consumer { `var`: Variable? -> `var`!!.write(output) })
         }
 
         /**
-         * @see ess.Element#calculateSize()
-         * @return The size of the <code>Element</code> in bytes.
+         * @see ess.Element.calculateSize
+         * @return The size of the `Element` in bytes.
          */
-        @Override
-        public int calculateSize() {
-            int sum = 4;
-            sum += this.FLAG.calculateSize();
-            sum += getID().calculateSize();
-            int result = 0;
-            for (Variable VARIABLE : this.VARIABLES) {
-                int calculateSize = VARIABLE.calculateSize();
-                result += calculateSize;
+        override fun calculateSize(): Int {
+            var sum = 4
+            sum += FLAG.calculateSize()
+            sum += iD.calculateSize()
+            var result = 0
+            for (VARIABLE in VARIABLES) {
+                val calculateSize = VARIABLE!!.calculateSize()
+                result += calculateSize
             }
-            sum += result;
-            return sum;
+            sum += result
+            return sum
         }
 
         /**
          * @return String representation.
          */
-        @NotNull
-        @Override
-        public String toString() {
-            return getID().toString() + this.VARIABLES;
+        override fun toString(): String {
+            return iD.toString() + VARIABLES
         }
 
         //final private EID ID;
-        @NotNull
-        final private Flags.Byte FLAG;
-        @NotNull
-        final private List<Variable> VARIABLES;
+        val FLAG: Flags.Byte
+        var VARIABLES: MutableList<Variable?> = mutableListOf()
 
+        /**
+         * Creates a new `StructData` by reading from a
+         * `ByteBuffer`. No error handling is performed.
+         *
+         * @param input The input stream.
+         * @param context The `PapyrusContext` info.
+         * @throws PapyrusElementException
+         */
+        init {
+            Objects.requireNonNull(input)
+            Objects.requireNonNull(context)
+            FLAG = readByteFlags(input)
+            try {
+                val count = input.int
+                VARIABLES = readList(input, count, context).toMutableList()
+            } catch (ex: ListException) {
+                throw PapyrusElementException("Couldn't read struct variables.", ex, this)
+            }
+        }
     }
 }

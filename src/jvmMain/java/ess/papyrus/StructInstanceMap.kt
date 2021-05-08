@@ -30,7 +30,7 @@ class StructInstanceMap : PapyrusElementMap<StructInstance> {
         input,
         PapyrusElementReader<StructInstance> { b: ByteBuffer ->
             StructInstance(
-                b, structs, context
+                b, structs, context,null
             )
         }) {
     }

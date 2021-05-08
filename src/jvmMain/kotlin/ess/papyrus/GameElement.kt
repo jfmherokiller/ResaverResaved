@@ -15,9 +15,9 @@
  */
 package ess.papyrus
 
-import resaver.Analysis
 import ess.AnalyzableElement
 import ess.Linkable
+import resaver.Analysis
 import java.nio.ByteBuffer
 import java.util.*
 
@@ -97,6 +97,12 @@ abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, 
      * @return The corresponding `Definition`.
      */
     val definition: Definition?
+
+    /**
+     * @return The name of the corresponding `Struct`.
+     */
+    open val StructName: TString
+        get() = definitionName
 
     open val scriptName: TString
         get() = definitionName
