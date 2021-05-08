@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
+import ess.papyrus.PapyrusElementMap
+import ess.papyrus.SuspendedStack
+import ess.papyrus.PapyrusContext
+import ess.papyrus.QueuedUnbind
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class UnbindMap extends PapyrusElementMap<QueuedUnbind> {
-
-    UnbindMap(@NotNull java.nio.ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
-        super(input, b -> new QueuedUnbind(b, context));
+class UnbindMap : PapyrusElementMap<QueuedUnbind?> {
+    internal constructor(input: ByteBuffer, context: PapyrusContext) : super(
+        input,
+        PapyrusElementReader<QueuedUnbind> { b: ByteBuffer? ->
+            QueuedUnbind(
+                b!!, context
+            )
+        }) {
     }
 
-    UnbindMap() {
-    }
-
+    internal constructor() {}
 }

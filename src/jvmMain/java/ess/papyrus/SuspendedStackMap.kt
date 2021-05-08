@@ -13,21 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
+import ess.papyrus.PapyrusElementMap
+import ess.papyrus.SuspendedStack
+import ess.papyrus.PapyrusContext
+import ess.papyrus.QueuedUnbind
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark
  */
-final public class SuspendedStackMap extends PapyrusElementMap<SuspendedStack> {
-
-    SuspendedStackMap(@NotNull java.nio.ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
-        super(input, b -> new SuspendedStack(b, context));
+class SuspendedStackMap : PapyrusElementMap<SuspendedStack> {
+    internal constructor(input: ByteBuffer, context: PapyrusContext) : super(
+        input,
+        PapyrusElementReader<SuspendedStack> { b: ByteBuffer? ->
+            SuspendedStack(
+                b!!, context
+            )
+        }) {
     }
 
-    SuspendedStackMap() {
-    }
-
+    internal constructor() {}
 }
