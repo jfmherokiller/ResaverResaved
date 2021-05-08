@@ -1,7 +1,6 @@
 package ess.papyrus
 
 import java.nio.ByteBuffer
-import java.util.*
 
 /**
  * Types of parameters. Not quite a perfect overlap with the other Type
@@ -21,8 +20,7 @@ enum class ParamType : PapyrusElement {
     companion object {
         @Throws(PapyrusFormatException::class)
         fun read(input: ByteBuffer): ParamType {
-            Objects.requireNonNull(input)
-            val `val` = java.lang.Byte.toUnsignedInt(input.get())
+            val `val` = UtilityFunctions.toUnsignedInt(input.get())
             if (`val` < 0 || `val` >= VALUES.size) {
                 throw PapyrusFormatException("Invalid type: $`val`")
             }

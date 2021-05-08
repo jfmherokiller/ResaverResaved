@@ -75,7 +75,7 @@ abstract class Record : Entry {
 
             // Read the record size.
             val BIG = bigSize > 0
-            val DATASIZE = java.lang.Short.toUnsignedInt(input.short)
+            val DATASIZE = UtilityFunctions.toUnsignedInt(input.short)
             val ACTUALSIZE = if (BIG) bigSize else DATASIZE
 
             // This list will hold between zero and two fields that are read.

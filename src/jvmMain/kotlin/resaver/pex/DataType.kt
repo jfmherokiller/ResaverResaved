@@ -37,7 +37,7 @@ enum class DataType {
         @JvmStatic
         @Throws(IOException::class)
         fun read(input: ByteBuffer): DataType {
-            val index = java.lang.Byte.toUnsignedInt(input.get())
+            val index = UtilityFunctions.toUnsignedInt(input.get())
             if (index < 0 || index >= VALUES.size) {
                 throw IOException("Invalid DataType.")
             }

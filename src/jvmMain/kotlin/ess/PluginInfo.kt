@@ -188,7 +188,7 @@ class PluginInfo(input: ByteBuffer, supportsESL: Boolean) : Element {
      */
     init {
         val pluginInfoSize = input.int
-        val numberOfFull = java.lang.Byte.toUnsignedInt(input.get())
+        val numberOfFull = UtilityFunctions.toUnsignedInt(input.get())
         require(!(numberOfFull < 0 || numberOfFull >= 256)) { "Invalid full plugin count: $numberOfFull" }
         PLUGINS_FULL = mutableListOf()
         for (i in 0 until numberOfFull) {

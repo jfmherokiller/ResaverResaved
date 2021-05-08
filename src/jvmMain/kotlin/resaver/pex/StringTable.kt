@@ -38,7 +38,7 @@ class StringTable(input: ByteBuffer) : ArrayList<TString?>() {
     @Throws(IOException::class)
     fun read(input: ByteBuffer): TString {
         Objects.requireNonNull(input)
-        val index = java.lang.Short.toUnsignedInt(input.short)
+        val index = UtilityFunctions.toUnsignedInt(input.short)
         if (index < 0 || index >= this.size) {
             throw IOException(String.format("Invalid TString index: %d (size %d)", index, this.size))
         }
@@ -131,7 +131,7 @@ class StringTable(input: ByteBuffer) : ArrayList<TString?>() {
      * @param input The input stream.
      */
     init {
-        val strCount = java.lang.Short.toUnsignedInt(input.short)
+        val strCount = UtilityFunctions.toUnsignedInt(input.short)
         ensureCapacity(strCount)
         for (i in 0 until strCount) {
             try {

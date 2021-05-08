@@ -421,7 +421,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
     init {
         refID = context.readRefID(input)
         changeFlags = Flags.readIntFlags(input)
-        TYPEFIELD = java.lang.Byte.toUnsignedInt(input.get())
+        TYPEFIELD = UtilityFunctions.toUnsignedInt(input.get())
         VERSION = input.get()
         val typeCode = TYPEFIELD and 0x3F
         val type = context.game.let { it?.let { it1 -> ChangeFormType.getType(it1, typeCode) } }
@@ -429,12 +429,12 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         this.type = type
         when (dataLength) {
             LengthSize.INT8 -> {
-                length1 = java.lang.Byte.toUnsignedInt(input.get())
-                length2 = java.lang.Byte.toUnsignedInt(input.get())
+                length1 = UtilityFunctions.toUnsignedInt(input.get())
+                length2 = UtilityFunctions.toUnsignedInt(input.get())
             }
             LengthSize.INT16 -> {
-                length1 = java.lang.Short.toUnsignedInt(input.short)
-                length2 = java.lang.Short.toUnsignedInt(input.short)
+                length1 = UtilityFunctions.toUnsignedInt(input.short)
+                length2 = UtilityFunctions.toUnsignedInt(input.short)
             }
             LengthSize.INT32 -> {
                 length1 = input.int

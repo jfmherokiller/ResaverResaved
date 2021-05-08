@@ -15,7 +15,7 @@
  */
 package resaver.archive
 
-import mf.BufferUtil
+
 import java.nio.channels.FileChannel
 import java.util.function.Supplier
 import java.io.IOException
@@ -83,7 +83,7 @@ internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: Fi
         BLOCK.order(ByteOrder.LITTLE_ENDIAN)
         (BLOCK as Buffer).flip()
         if (header.INCLUDE_DIRECTORYNAMES) {
-            val NAMELEN = java.lang.Byte.toUnsignedInt(BLOCK.get())
+            val NAMELEN = UtilityFunctions.toUnsignedInt(BLOCK.get())
             NAME = mf.BufferUtil.getZString(BLOCK)
         } else {
             NAME = null

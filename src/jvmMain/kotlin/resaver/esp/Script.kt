@@ -15,7 +15,7 @@
  */
 package resaver.esp
 
-import mf.BufferUtil
+
 import resaver.IString
 import java.nio.ByteBuffer
 
@@ -77,7 +77,7 @@ class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
         else {
             ctx.pushContext("script:$NAME")
             STATUS = input.get()
-            val propertyCount = java.lang.Short.toUnsignedInt(input.short)
+            val propertyCount = UtilityFunctions.toUnsignedInt(input.short)
             PROPERTIES = mutableListOf()
             try {
                 for (i in 0 until propertyCount) {

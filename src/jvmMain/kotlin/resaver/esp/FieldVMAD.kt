@@ -102,7 +102,7 @@ class FieldVMAD(recordCode: RecordCode, fieldCode: IString, input: ByteBuffer, b
         SCRIPTS = mutableListOf()
         FRAGMENTS = mutableListOf()
         BIG = big
-        val scriptCount = java.lang.Short.toUnsignedInt(input.short)
+        val scriptCount = UtilityFunctions.toUnsignedInt(input.short)
         for (i in 0 until scriptCount) {
             val script = Script(input, ctx)
             ctx.PLUGIN_INFO.addScriptData(script)

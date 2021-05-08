@@ -100,7 +100,7 @@ internal class PropertyGroup(input: ByteBuffer, strings: StringTable) {
         GROUPNAME = strings.read(input)
         DOCSTRING = strings.read(input)
         USERFLAGS = input.int
-        val propertyCount = java.lang.Short.toUnsignedInt(input.short)
+        val propertyCount = UtilityFunctions.toUnsignedInt(input.short)
         PROPERTIES = ArrayList(propertyCount)
         for (i in 0 until propertyCount) {
             PROPERTIES.add(strings.read(input))

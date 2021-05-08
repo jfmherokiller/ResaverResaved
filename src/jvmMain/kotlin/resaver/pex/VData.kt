@@ -77,14 +77,14 @@ abstract class VData {
             return when (TYPE) {
                 DataType.NONE -> VDataNone()
                 DataType.IDENTIFIER -> {
-                    val index = java.lang.Short.toUnsignedInt(input.short)
+                    val index = UtilityFunctions.toUnsignedInt(input.short)
                     if (index < 0 || index >= strings.size) {
                         throw IOException()
                     }
                     VDataID(strings[index])
                 }
                 DataType.STRING -> {
-                    val index = java.lang.Short.toUnsignedInt(input.short)
+                    val index = UtilityFunctions.toUnsignedInt(input.short)
                     if (index < 0 || index >= strings.size) {
                         throw IOException()
                     }

@@ -252,13 +252,13 @@ class PexFile private constructor(input: ByteBuffer, game: resaver.Game) {
             HEADER = Header(input)
             STRINGS = StringTable(input)
             DEBUG = DebugInfo(this, input, STRINGS)
-            var flagCount = java.lang.Short.toUnsignedInt(input.short)
+            var flagCount = UtilityFunctions.toUnsignedInt(input.short)
             USERFLAGDEFS = mutableListOf()
             while (0 < flagCount) {
                 USERFLAGDEFS!!.add(UserFlag(input, STRINGS!!))
                 flagCount--
             }
-            var scriptCount = java.lang.Short.toUnsignedInt(input.short)
+            var scriptCount = UtilityFunctions.toUnsignedInt(input.short)
             check(scriptCount >= 1) { "Pex files must contain at least one script." }
             SCRIPTS = mutableListOf()
             while (0 < scriptCount) {

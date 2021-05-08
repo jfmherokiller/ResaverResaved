@@ -135,18 +135,18 @@ class DebugInfo internal constructor(private val pexFile: PexFile, input: ByteBu
         if (hasDebugInfo.toInt() == 0) {
         } else {
             modificationTime = input.long
-            val functionCount = java.lang.Short.toUnsignedInt(input.short)
+            val functionCount = UtilityFunctions.toUnsignedInt(input.short)
             DEBUGFUNCTIONS.ensureCapacity(functionCount)
             for (i in 0 until functionCount) {
                 DEBUGFUNCTIONS.add(DebugFunction(input, strings!!))
             }
             if (pexFile.GAME!!.isFO4) {
-                val propertyCount = java.lang.Short.toUnsignedInt(input.short)
+                val propertyCount = UtilityFunctions.toUnsignedInt(input.short)
                 PROPERTYGROUPS.ensureCapacity(propertyCount)
                 for (i in 0 until propertyCount) {
                     PROPERTYGROUPS.add(PropertyGroup(input, strings!!))
                 }
-                val orderCount = java.lang.Short.toUnsignedInt(input.short)
+                val orderCount = UtilityFunctions.toUnsignedInt(input.short)
                 STRUCTORDERS.ensureCapacity(orderCount)
                 for (i in 0 until orderCount) {
                     strings?.let { StructOrder(input, it) }?.let { STRUCTORDERS.add(it) }

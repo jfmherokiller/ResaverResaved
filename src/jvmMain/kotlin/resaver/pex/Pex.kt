@@ -466,7 +466,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          */
         init {
             this.NAME = strings.read(input)
-            val numMembers = java.lang.Short.toUnsignedInt(input.short)
+            val numMembers = UtilityFunctions.toUnsignedInt(input.short)
             MEMBERS = ArrayList(numMembers)
             for (i in 0 until numMembers) {
                 MEMBERS.add(Member(input, strings))
@@ -843,7 +843,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          */
         init {
             this.NAME = strings.read(input)
-            val numFunctions = java.lang.Short.toUnsignedInt(input.short)
+            val numFunctions = UtilityFunctions.toUnsignedInt(input.short)
             FUNCTIONS = ArrayList(numFunctions)
             for (i in 0 until numFunctions) {
                 FUNCTIONS.add(Function(input, true, strings))
@@ -1259,17 +1259,17 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             DOC = strings.read(input)
             this.USERFLAGS = input.int
             FLAGS = input.get()
-            val paramsCount = java.lang.Short.toUnsignedInt(input.short)
+            val paramsCount = UtilityFunctions.toUnsignedInt(input.short)
             PARAMS = ArrayList(paramsCount)
             for (i in 0 until paramsCount) {
                 PARAMS.add(readParam(input, strings))
             }
-            val localsCount = java.lang.Short.toUnsignedInt(input.short)
+            val localsCount = UtilityFunctions.toUnsignedInt(input.short)
             LOCALS = ArrayList(localsCount)
             for (i in 0 until localsCount) {
                 LOCALS.add(readLocal(input, strings))
             }
-            val instructionsCount = java.lang.Short.toUnsignedInt(input.short)
+            val instructionsCount = UtilityFunctions.toUnsignedInt(input.short)
             INSTRUCTIONS = ArrayList(instructionsCount)
             for (i in 0 until instructionsCount) {
                 INSTRUCTIONS.add(Instruction(input, strings))
@@ -1429,7 +1429,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         AUTOSTATENAME = strings.read(input)
         AUTOVARMAP = hashMapOf()
         if (game.isFO4) {
-            val numStructs = java.lang.Short.toUnsignedInt(input.short)
+            val numStructs = UtilityFunctions.toUnsignedInt(input.short)
             STRUCTS = arrayListOf()
             for (i in 0 until numStructs) {
                 STRUCTS!!.add(Struct(input, strings))
@@ -1437,17 +1437,17 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         } else {
             STRUCTS = arrayListOf()
         }
-        val numVariables = java.lang.Short.toUnsignedInt(input.short)
+        val numVariables = UtilityFunctions.toUnsignedInt(input.short)
         VARIABLES = ArrayList(numVariables)
         for (i in 0 until numVariables) {
             VARIABLES.add(Variable(input, strings))
         }
-        val numProperties = java.lang.Short.toUnsignedInt(input.short)
+        val numProperties = UtilityFunctions.toUnsignedInt(input.short)
         PROPERTIES = ArrayList(numProperties)
         for (i in 0 until numProperties) {
             PROPERTIES.add(Property(input, strings))
         }
-        val numStates = java.lang.Short.toUnsignedInt(input.short)
+        val numStates = UtilityFunctions.toUnsignedInt(input.short)
         STATES = ArrayList(numStates)
         for (i in 0 until numStates) {
             STATES.add(State(input, strings))

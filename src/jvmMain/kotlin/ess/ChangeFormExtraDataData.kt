@@ -82,7 +82,7 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
      */
     init {
         Objects.requireNonNull(input)
-        val TYPE = super.readByte(input, "TYPE")?.let { java.lang.Byte.toUnsignedInt(it) }!!
+        val TYPE = super.readByte(input, "TYPE")?.let { UtilityFunctions.toUnsignedInt(it) }!!
         require(!(TYPE < 0 || TYPE >= 256)) { "Invalid extraData type: $TYPE" }
         when (TYPE) {
             22 -> NAME = "Worn"

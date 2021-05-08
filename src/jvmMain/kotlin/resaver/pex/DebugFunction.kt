@@ -97,10 +97,10 @@ internal class DebugFunction(input: ByteBuffer, strings: StringTable) {
      * @throws IOException Exceptions aren't handled.
      */
     init {
-        val instructionCount = java.lang.Short.toUnsignedInt(input.short)
+        val instructionCount = UtilityFunctions.toUnsignedInt(input.short)
         INSTRUCTIONS = mutableListOf()
         for (i in 0 until instructionCount) {
-            INSTRUCTIONS.add(java.lang.Short.toUnsignedInt(input.short))
+            INSTRUCTIONS.add(UtilityFunctions.toUnsignedInt(input.short))
         }
     }
 }
