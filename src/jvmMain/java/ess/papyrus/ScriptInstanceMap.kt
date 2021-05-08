@@ -15,10 +15,7 @@
  */
 package ess.papyrus
 
-import ess.papyrus.PapyrusElementMap
-import ess.papyrus.ScriptInstance
-import ess.papyrus.ScriptMap
-import ess.papyrus.PapyrusContext
+import ess.papyrus.PapyrusElementMap.PapyrusElementReader
 import java.nio.ByteBuffer
 
 /**

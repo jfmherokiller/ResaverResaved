@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-
-import java.nio.ByteBuffer;
+import ess.papyrus.PapyrusDefinitionMap
+import ess.papyrus.PapyrusContext
+import java.nio.ByteBuffer
 
 /**
  * Convenience class for Structure maps.
  *
  * @author Mark Fairchild
  */
-final public class StructMap extends PapyrusDefinitionMap<Struct> {
-
-    StructMap(int count, ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
-        super(count, input, b -> new Struct(b, context));
+class StructMap : PapyrusDefinitionMap<Struct> {
+    internal constructor(count: Int, input: ByteBuffer?, context: PapyrusContext) : super(
+        count,
+        input,
+        PapyrusElementReader<Struct> { b: ByteBuffer? ->
+            Struct(
+                b!!, context
+            )
+        }) {
     }
 
-    StructMap() {
-    }
-
+    internal constructor() {}
 }
