@@ -1,98 +1,68 @@
-package resaver.pex;
+package resaver.pex
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
-
-import static resaver.pex.DataType.IDENTIFIER;
+import java.io.IOException
+import java.nio.ByteBuffer
+import java.util.regex.Pattern
 
 /**
  * VData that stores an identifier.
  */
-public class VDataID extends VData {
-
-    VDataID(TString val) {
-        this.value = Objects.requireNonNull(val);
+class VDataID internal constructor(`val`: TString?) : VData() {
+    @Throws(IOException::class)
+    override fun write(output: ByteBuffer?) {
+        output?.put(type.ordinal.toByte())
+        value.write(output)
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) throws IOException {
-        output.put((byte) this.getType().ordinal());
-        this.value.write(output);
+    override fun calculateSize(): Int {
+        return 3
     }
 
-    @Override
-    public int calculateSize() {
-        return 3;
+    override fun collectStrings(strings: MutableSet<TString?>?) {
+        strings?.add(value)
     }
 
-    @Override
-    public void collectStrings(@NotNull Set<TString> strings) {
-        strings.add(this.value);
-    }
+    override val type: DataType
+        get() = DataType.IDENTIFIER
 
-    @Override
-    public DataType getType() {
-        return IDENTIFIER;
-    }
-
-    @NotNull
-    @Override
-    public String toString() {
+    override fun toString(): String {
         //return String.format("ID[%s]", this.VALUE);
-        return this.value.toString();
+        return value.toString()
     }
 
-    public TString getValue() {
-        return this.value;
+    val isTemp: Boolean
+        get() = (TEMP_PATTERN.test(value.toString())
+                && !AUTOVAR_PATTERN.test(value.toString())
+                && !NONE_PATTERN.test(value.toString()))
+    val isAutovar: Boolean
+        get() = AUTOVAR_PATTERN.test(value.toString())
+    val isNonevar: Boolean
+        get() = NONE_PATTERN.test(value.toString())
+
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 83 * hash + value.hashCode()
+        return hash
     }
 
-    void setValue(TString val) {
-        this.value = Objects.requireNonNull(val);
-    }
-
-    public boolean isTemp() {
-        return TEMP_PATTERN.test(this.value.toString())
-                && !AUTOVAR_PATTERN.test(this.value.toString())
-                && !NONE_PATTERN.test(this.value.toString());
-    }
-
-    public boolean isAutovar() {
-        return AUTOVAR_PATTERN.test(this.value.toString());
-    }
-
-    public boolean isNonevar() {
-        return NONE_PATTERN.test(this.value.toString());
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 83 * hash + this.value.hashCode();
-        return hash;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
+            return true
+        } else if (other == null) {
+            return false
+        } else if (javaClass != other.javaClass) {
+            return false
         }
-        final VDataID other = (VDataID) obj;
-        return Objects.equals(this.value, other.value);
+        val other2 = other as VDataID
+        return value == other2.value
     }
 
-    private TString value;
-    static final Predicate<String> TEMP_PATTERN = Pattern.compile("^::.+$", Pattern.CASE_INSENSITIVE).asPredicate();
-    static final Predicate<String> NONE_PATTERN = Pattern.compile("^::NoneVar$", Pattern.CASE_INSENSITIVE).asPredicate();
-    static final Predicate<String> AUTOVAR_PATTERN = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE).asPredicate();
+    var value: TString = `val`!!
+
+    companion object {
+        val TEMP_PATTERN = Pattern.compile("^::.+$", Pattern.CASE_INSENSITIVE).asPredicate()
+        val NONE_PATTERN = Pattern.compile("^::NoneVar$", Pattern.CASE_INSENSITIVE).asPredicate()
+        val AUTOVAR_PATTERN = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE).asPredicate()
+    }
+
 }

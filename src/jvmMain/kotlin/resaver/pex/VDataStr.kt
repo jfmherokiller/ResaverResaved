@@ -1,73 +1,58 @@
-package resaver.pex;
+package resaver.pex
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import java.io.IOException
+import java.nio.ByteBuffer
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Objects;
-import java.util.Set;
-
-import static resaver.pex.DataType.STRING;
 
 /**
  * VData that stores a string.
  */
-public class VDataStr extends VData {
-
-    VDataStr(TString val) {
-        this.VALUE = Objects.requireNonNull(val);
+class VDataStr internal constructor(`val`: TString?) : VData() {
+    @Throws(IOException::class)
+    override fun write(output: ByteBuffer?) {
+        output?.put(type.ordinal.toByte())
+        string.write(output)
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) throws IOException {
-        output.put((byte) this.getType().ordinal());
-        this.VALUE.write(output);
+    override fun calculateSize(): Int {
+        return 3
     }
 
-    @Override
-    public int calculateSize() {
-        return 3;
+    override fun collectStrings(strings: MutableSet<TString?>?) {
+        strings?.add(string)
     }
 
-    @Override
-    public void collectStrings(@NotNull Set<TString> strings) {
-        strings.add(this.VALUE);
+    override val type: DataType
+        get() = DataType.STRING
+
+    override fun toString(): String {
+        return String.format("\"%s\"", string)
     }
 
-    @Override
-    public DataType getType() {
-        return STRING;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 83 * hash + string.hashCode()
+        return hash
     }
 
-    @Override
-    public String toString() {
-        return String.format("\"%s\"", this.VALUE);
-    }
-
-    public TString getString() {
-        return this.VALUE;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 83 * hash + this.VALUE.hashCode();
-        return hash;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+    override fun equals(other: Any?): Boolean {
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as VDataStr
+                string == other2.string
+            }
         }
-        final VDataStr other = (VDataStr) obj;
-        return Objects.equals(this.VALUE, other.VALUE);
     }
 
-    final private TString VALUE;
+    val string: TString = `val`!!
+
 }

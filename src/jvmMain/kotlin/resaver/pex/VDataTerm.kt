@@ -1,80 +1,62 @@
-package resaver.pex;
+package resaver.pex
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Objects;
-import java.util.Set;
-
-import static resaver.pex.DataType.IDENTIFIER;
+import java.io.IOException
+import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * VData that stores a "term", for disassembly purposes.
  */
-public class VDataTerm extends VData {
-
-    public VDataTerm(String val) {
-        this.VALUE = Objects.requireNonNull(val);
-        this.PVALUE = "(" + this.VALUE + ")";
+class VDataTerm(`val`: String) : VData() {
+    @Throws(IOException::class)
+    override fun write(output: ByteBuffer?) {
+        throw IllegalStateException("Not valid for Terms.")
     }
 
-    @Override
-    public void write(ByteBuffer output) throws IOException {
-        throw new IllegalStateException("Not valid for Terms.");
+    override fun calculateSize(): Int {
+        throw IllegalStateException("Not valid for Terms.")
     }
 
-    @Override
-    public int calculateSize() {
-        throw new IllegalStateException("Not valid for Terms.");
+    override fun collectStrings(strings: MutableSet<TString?>?) {
+        throw IllegalStateException("Not valid for Terms.")
     }
 
-    @Override
-    public void collectStrings(Set<TString> strings) {
-        throw new IllegalStateException("Not valid for Terms.");
+    override val type: DataType
+        get() = DataType.IDENTIFIER
+
+    override fun toString(): String {
+        return value
     }
 
-    @Override
-    public DataType getType() {
-        return IDENTIFIER;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 83 * hash + Objects.hashCode(value)
+        return hash
     }
 
-    @Override
-    public String toString() {
-        return this.VALUE;
-    }
-
-    public String getValue() {
-        return this.VALUE;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 83 * hash + Objects.hashCode(this.VALUE);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+    override fun equals(other: Any?): Boolean {
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as VDataTerm
+                value == other2.value
+            }
         }
-        final VDataTerm other = (VDataTerm) obj;
-        return Objects.equals(this.VALUE, other.VALUE);
     }
 
-    @Override
-    public String paren() {
-        return this.PVALUE;
+    override fun paren(): String {
+        return PVALUE
     }
 
-    final public String VALUE;
-    @NotNull
-    final private String PVALUE;
+    val value: String = Objects.requireNonNull(`val`)
+    private val PVALUE: String = "($value)"
+
 }

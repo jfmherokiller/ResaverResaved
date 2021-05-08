@@ -1,66 +1,52 @@
-package resaver.pex;
+package resaver.pex
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import static resaver.pex.DataType.FLOAT;
+import kotlin.Throws
+import java.io.IOException
+import java.nio.ByteBuffer
 
 /**
  * VData that stores a float.
  */
-public class VDataFlt extends VData {
-
-    VDataFlt(float val) {
-        this.VALUE = val;
+class VDataFlt internal constructor(val value: Float) : VData() {
+    @Throws(IOException::class)
+    override fun write(output: ByteBuffer?) {
+        output?.put(type.ordinal.toByte())
+        output?.putFloat(value)
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) throws IOException {
-        output.put((byte) this.getType().ordinal());
-        output.putFloat(this.VALUE);
+    override fun calculateSize(): Int {
+        return 5
     }
 
-    @Override
-    public int calculateSize() {
-        return 5;
+    override val type: DataType
+        get() = DataType.FLOAT
+
+    override fun toString(): String {
+        return String.format("%g", value)
     }
 
-    @Override
-    public DataType getType() {
-        return FLOAT;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 83 * hash + value.hashCode()
+        return hash
     }
 
-    @Override
-    public String toString() {
-        return String.format("%g", this.VALUE);
-    }
-
-    public float getValue() {
-        return this.VALUE;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 83 * hash + Float.hashCode(this.VALUE);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else if (getClass() != obj.getClass()) {
-            return false;
+    override fun equals(other: Any?): Boolean {
+        when {
+            this === other -> {
+                return true
+            }
+            other == null -> {
+                return false
+            }
+            javaClass != other.javaClass -> {
+                return false
+            }
+            else -> {
+                val other2 = other as VDataFlt
+                return value == other2.value
+            }
         }
-        final VDataFlt other = (VDataFlt) obj;
-        return this.VALUE == other.VALUE;
     }
 
-    final private float VALUE;
 }

@@ -1,56 +1,44 @@
-package resaver.pex;
+package resaver.pex
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.io.IOException;
-import java.nio.ByteBuffer;
-
-import static resaver.pex.DataType.NONE;
+import kotlin.Throws
+import java.io.IOException
+import java.nio.ByteBuffer
 
 /**
  * VData that stores nothing.
  */
-public class VDataNone extends VData {
-
-    VDataNone() {
+class VDataNone internal constructor() : VData() {
+    @Throws(IOException::class)
+    override fun write(output: ByteBuffer?) {
+        output?.put(type.ordinal.toByte())
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) throws IOException {
-        output.put((byte) this.getType().ordinal());
+    override fun calculateSize(): Int {
+        return 1
     }
 
-    @Override
-    public int calculateSize() {
-        return 1;
+    override val type: DataType
+        get() = DataType.NONE
+
+    override fun toString(): String {
+        return "NONE"
     }
 
-    @Override
-    public DataType getType() {
-        return NONE;
+    override fun hashCode(): Int {
+        var hash = 7
+        hash = 83 * hash + VDataNone::class.hashCode()
+        return hash
     }
 
-    @NotNull
-    @Override
-    public String toString() {
-        return "NONE";
+    override fun equals(other: Any?): Boolean {
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            else -> javaClass == other.javaClass
+        }
     }
-
-    @Override
-    public int hashCode() {
-        int hash = 7;
-        hash = 83 * hash + VDataNone.class.hashCode();
-        return hash;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null) {
-            return false;
-        } else return getClass() == obj.getClass();
-    }
-
 }

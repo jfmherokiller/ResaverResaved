@@ -1190,7 +1190,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
              *
              * @param strings The set of strings.
              */
-            fun collectStrings(strings: Set<TString?>?) {
+            fun collectStrings(strings: MutableSet<TString?>?) {
                 for (arg in ARGS) {
                     arg.collectStrings(strings)
                 }
@@ -1213,8 +1213,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
              * @param scheme The replacement scheme.
              */
             fun remapVariables(scheme: Scheme) {
-                val firstArg: Int
-                firstArg = when (OPCODE) {
+                val firstArg: Int = when (OPCODE) {
                     Opcode.CALLSTATIC -> 2
                     Opcode.CALLMETHOD, Opcode.CALLPARENT, Opcode.PROPGET, Opcode.PROPSET -> 1
                     else -> 0

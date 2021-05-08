@@ -47,13 +47,13 @@ abstract class VData {
      *
      * @param strings The set of strings.
      */
-    open fun collectStrings(strings: Set<TString?>?) {}
+    open fun collectStrings(strings: MutableSet<TString?>?) {}
 
     /**
      * The `VData` is a `Term`, returns it encloded in
      * brackets. Otherwise it is identical to `toString()`.
      */
-    open fun paren(): String? {
+    open fun paren(): String {
         return this.toString()
     }
 
