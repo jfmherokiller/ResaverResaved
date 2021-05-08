@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
+import ess.papyrus.PapyrusElementMap
+import ess.papyrus.ScriptInstance
+import ess.papyrus.ScriptMap
+import ess.papyrus.PapyrusContext
+import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class ScriptInstanceMap extends PapyrusElementMap<ScriptInstance> {
-
-    ScriptInstanceMap(@NotNull java.nio.ByteBuffer input, @NotNull ScriptMap scripts, @NotNull PapyrusContext context) throws PapyrusElementException {
-        super(input, b -> new ScriptInstance(b, scripts, context));
+class ScriptInstanceMap : PapyrusElementMap<ScriptInstance> {
+    internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusContext) : super(
+        input,
+        PapyrusElementReader<ScriptInstance> { b: ByteBuffer? ->
+            ScriptInstance(
+                b!!, scripts, context
+            )
+        }) {
     }
 
-    ScriptInstanceMap() {
-    }
-
+    internal constructor() {}
 }

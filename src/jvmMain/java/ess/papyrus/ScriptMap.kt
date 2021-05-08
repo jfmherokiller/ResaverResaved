@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
+import ess.papyrus.PapyrusDefinitionMap
+import ess.papyrus.PapyrusContext
+import java.nio.ByteBuffer
 
 /**
  * Convenience class for script maps.
  *
  * @author Mark Fairchild
  */
-final public class ScriptMap extends PapyrusDefinitionMap<Script> {
-
-    ScriptMap(int count, java.nio.ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException {
-        super(count, input, b -> new Script(b, context));
+class ScriptMap : PapyrusDefinitionMap<Script> {
+    internal constructor(count: Int, input: ByteBuffer?, context: PapyrusContext) : super(
+        count,
+        input,
+        PapyrusElementReader<Script> { b: ByteBuffer? ->
+            Script(
+                b!!, context
+            )
+        }) {
     }
 
-    ScriptMap() {
-    }
-
+    internal constructor() {}
 }
