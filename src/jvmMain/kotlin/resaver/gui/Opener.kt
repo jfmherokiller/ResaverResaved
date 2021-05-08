@@ -56,7 +56,7 @@ class Opener(window: resaver.gui.SaveWindow?, savefile: Path, worrier: ess.papyr
                 WORRIER.check(RESULT)
             }
             if (RESULT != null) {
-                WINDOW.setESS(RESULT.SAVE_FILE, RESULT.ESS, RESULT.MODEL, WORRIER.shouldDisableSaving())
+                RESULT.MODEL?.let { WINDOW.setESS(RESULT.SAVE_FILE, RESULT.ESS, it, WORRIER.shouldDisableSaving()) }
             }
             if (WORRIER.shouldWorry() || WORRIER.shouldDisableSaving()) {
                 Thread(Toolkit.getDefaultToolkit().getDesktopProperty("win.sound.exclamation") as Runnable).start()
