@@ -84,8 +84,8 @@ class FileLocationTable : Element {
         }
         var changeFormsSize = 0
         for (changeForm in ess.changeForms.values) {
-            val calculateSize = changeForm.calculateSize()
-            changeFormsSize += calculateSize
+            val calculateSize = changeForm?.calculateSize()
+            changeFormsSize += calculateSize!!
         }
         table1Offset = 0
         table1Offset += ess.header.calculateSize()
@@ -129,8 +129,8 @@ class FileLocationTable : Element {
         }
         var changeFormsSize = 0
         for (changeForm in ess.changeForms.values) {
-            val calculateSize = changeForm.calculateSize()
-            changeFormsSize += calculateSize
+            val calculateSize = changeForm?.calculateSize()
+            changeFormsSize += calculateSize!!
         }
         table1Offset = 0
         table1Offset += ess.header.calculateSize()

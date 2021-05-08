@@ -534,6 +534,7 @@ open class GeneralElement protected constructor() : Element {
             }
         }
         if (`val` != null) {
+            LOG
             check(b) { String.format("Invalid type for %s: %s", name, `val`::class) }
         }
         DATA[IString[name]] = converted
@@ -991,7 +992,8 @@ open class GeneralElement protected constructor() : Element {
                 IntArray::class,
                 LongArray::class,
                 FloatArray::class,
-                Array<Any>::class
+                Array<Any>::class,
+                ArrayList::class,
         )
     }
 

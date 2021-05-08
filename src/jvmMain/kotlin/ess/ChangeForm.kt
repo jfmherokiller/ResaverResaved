@@ -36,8 +36,8 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
-        refID.write(output)
-        changeFlags.write(output)
+        refID?.write(output)
+        changeFlags?.write(output)
         val RAWTYPE = TYPEFIELD and 0x3F
         when (dataLength) {
             LengthSize.INT8 -> {
@@ -69,8 +69,8 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      */
     override fun calculateSize(): Int {
         var sum = 2
-        sum += refID.calculateSize()
-        sum += changeFlags.calculateSize()
+        sum += refID?.calculateSize() ?: 0
+        sum += changeFlags?.calculateSize() ?: 0
         sum += when (dataLength) {
             LengthSize.INT8 -> 2
             LengthSize.INT16 -> 4
@@ -141,9 +141,11 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * @return The raw form of the `ChangeFormData`.
      */
     val bodyData: ByteBuffer?
-        get() = if (isCompressed) decompress(RAWDATA, length2) else ByteBuffer.allocate(RAWDATA.size).put(
-            RAWDATA
-        )
+        get() = if (isCompressed) RAWDATA?.let { decompress(it, length2) } else RAWDATA?.let {
+            ByteBuffer.allocate(it.size).put(
+                RAWDATA
+            )
+        }
 
     /**
      * Parses the changeform's data and returns it, handling decompression as
@@ -170,11 +172,17 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         (BODYDATA as Buffer).position(0)
         try {
             parsedData = when (type) {
-                ess.ChangeFormType.FLST -> context?.let { ChangeFormFLST(BODYDATA, changeFlags, it) }
-                ess.ChangeFormType.LVLN -> ChangeFormLVLN(BODYDATA, changeFlags, context)
-                ess.ChangeFormType.REFR -> ChangeFormRefr(BODYDATA, changeFlags, refID, analysis, context)
-                ess.ChangeFormType.ACHR -> ChangeFormACHR(BODYDATA, changeFlags, refID, context)
-                ess.ChangeFormType.NPC_ -> context?.let { ChangeFormNPC(BODYDATA, changeFlags, it) }
+                ess.ChangeFormType.FLST -> context?.let { changeFlags?.let { it1 -> ChangeFormFLST(BODYDATA, it1, it) } }
+                ess.ChangeFormType.LVLN -> changeFlags?.let { ChangeFormLVLN(BODYDATA, it, context) }
+                ess.ChangeFormType.REFR -> changeFlags?.let { refID?.let { it1 ->
+                    ChangeFormRefr(BODYDATA, it,
+                        it1, analysis, context)
+                } }
+                ess.ChangeFormType.ACHR -> changeFlags?.let { refID?.let { it1 ->
+                    ChangeFormACHR(BODYDATA, it,
+                        it1, context)
+                } }
+                ess.ChangeFormType.NPC_ -> context?.let { changeFlags?.let { it1 -> ChangeFormNPC(BODYDATA, it1, it) } }
                 else -> if (bestEffort) {
                     ChangeFormDefault(BODYDATA, length1)
                 } else {
@@ -216,7 +224,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * @return
      */
     override fun toHTML(target: Element?): String {
-        return refID.toHTML(target)
+        return refID?.toHTML(target) ?: ""
     }
 
     /**
@@ -225,9 +233,9 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
     override fun toString(): String {
         val BUF = StringBuilder()
         BUF.append(type)
-        if (null != refID.PLUGIN) {
-            BUF.append(" (").append(refID.PLUGIN).append(")")
-        } else if (refID.type === RefID.Type.FORMIDX) {
+        if (null != refID?.PLUGIN) {
+            BUF.append(" (").append(refID!!.PLUGIN).append(")")
+        } else if (refID!!.type === RefID.Type.FORMIDX) {
             val k = 0
         }
         BUF.append(" refid=").append(refID)
@@ -260,10 +268,10 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
             ?.toList()?.toSet()
         BUILDER.append("<html><h3>CHANGEFORM</h3>")
         BUILDER.append(String.format("<p>RefID: %s</p>", refID))
-        BUILDER.append(String.format("<p style=\"display:inline-table;\">ChangeFlags: %s</p>", changeFlags.toHTML()))
+        BUILDER.append(String.format("<p style=\"display:inline-table;\">ChangeFlags: %s</p>", changeFlags?.toHTML() ?: ""))
         BUILDER.append("<p>")
         BUILDER.append(String.format("DataLength: %s<br/>", dataLength))
-        BUILDER.append(String.format("Type: %s (%d : %d)<br/>", type, type.SKYRIMCODE, type.FULL))
+        BUILDER.append(type?.let { String.format("Type: %s (%d : %d)<br/>", type, it.SKYRIMCODE, type!!.FULL) })
         BUILDER.append(String.format("Version: %d<br/>", VERSION))
         if (length2 > 0) {
             BUILDER.append(String.format("Length: %d bytes (%d bytes uncompressed)<br/>", length1, length2))
@@ -290,7 +298,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
                 BUILDER.append("</ul>")
             }
         }
-        BUILDER.append(String.format("<h3>ANALYZE RAW DATA: %s</h3>", refID.toHTML(null)))
+        BUILDER.append(refID?.let { String.format("<h3>ANALYZE RAW DATA: %s</h3>", it.toHTML(null)) })
         val BODY = getData(analysis, save.context, true)
         when (BODY) {
             null -> {
@@ -323,25 +331,25 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
     /**
      * The `RefID` of the `ChangeForm`.
      */
-    val refID: RefID
+    var refID: RefID? = null
     /**
      * @return The changeflag field.
      */
     /**
      * ChangeFlags describe what parts of the form have changed.
      */
-    val changeFlags: Flags.Int
+    var changeFlags: Flags.Int? = null
 
     /**
      * The type of Form.
      */
-    private val TYPEFIELD: Int
+    private var TYPEFIELD: Int = 0
 
     /**
      * @return The type field.
      */
-    val type: ess.ChangeFormType
-    private val VERSION: Byte
+    var type: ess.ChangeFormType? = null
+    private var VERSION: Byte = 0
 
     /**
      * For compressed changeForms, length1 represents the size of the compressed
@@ -358,9 +366,9 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
     /**
      * @return Whether the data is compressed.
      */
-    val isCompressed: Boolean
-    private val RAWDATA: ByteArray
-    private var parsedData: ChangeFormData?
+    var isCompressed: Boolean = false
+    private var RAWDATA: ByteArray? = null
+    private var parsedData: ChangeFormData? = null
 
     /**
      * Data sizes for the length fields.
@@ -416,7 +424,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         TYPEFIELD = java.lang.Byte.toUnsignedInt(input.get())
         VERSION = input.get()
         val typeCode = TYPEFIELD and 0x3F
-        val type = context.game?.let { ChangeFormType.getType(it, typeCode) }
+        val type = context.game.let { it?.let { it1 -> ChangeFormType.getType(it1, typeCode) } }
             ?: throw IllegalStateException("Invalid changeform type index: $typeCode")
         this.type = type
         when (dataLength) {

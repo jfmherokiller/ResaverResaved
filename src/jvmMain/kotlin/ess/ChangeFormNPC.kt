@@ -56,7 +56,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.Int, context: ESSContext) : 
             BUILDER.append("\n")
         }
         if (this.hasVal("FACTIONRANKS")) {
-            val UncastedFactions = super.getVal("FACTIONRANKS") as Array<*>
+            val UncastedFactions = super.getVal("FACTIONRANKS") as ArrayList<*>
             val ranks: List<FactionRank> = UncastedFactions.map { i -> i as FactionRank }
             BUILDER.append(String.format("<p>%s faction ranks.</p><ul>", ranks.size))
             ranks.forEach { v: FactionRank? -> BUILDER.append(String.format("<li>%s", v)) }
