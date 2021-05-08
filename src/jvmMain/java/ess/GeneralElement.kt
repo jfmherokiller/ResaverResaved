@@ -736,13 +736,16 @@ open class GeneralElement protected constructor() : Element {
                 indent(BUF, level + 1)
                 val str: String = when (`val`) {
                     is Byte -> {
-                        String.format("%02x", (`val` as Byte?)?.toUInt()!!)
+                        val special = (`val` as Byte?)?.toUInt()?.toLong()
+                        String.format("%02x",special!!)
                     }
                     is Short -> {
-                        String.format("%04x", (`val` as Short?)?.toUInt()!!)
+                        val special = (`val` as Short?)?.toUInt()?.toLong()
+                        String.format("%04x",special!!)
                     }
                     is Int -> {
-                        String.format("%08x", (`val` as Int?)?.toUInt()!!)
+                        val special = (`val` as Int?)?.toUInt()?.toLong()
+                        String.format("%08x",special!!)
                     }
                     is Long -> {
                         String.format("%16x", `val`)
@@ -823,23 +826,23 @@ open class GeneralElement protected constructor() : Element {
         DATA.forEach { (key: IString, `val`: Any?) ->
             if (`val` is Linkable) {
                 val STR = `val`.toHTML(null)
-                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR))
+                BUF.append("<td>$key</td><td>$STR</td></tr>")
             } else if (`val` is List<*>) {
                 val STR = analysis?.let {
                     if (save != null) {
                         formatList(key.toString(), `val`, it, save)
                     }
                 }
-                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR))
+                BUF.append("<td>$key</td><td>$STR</td></tr>")
             } else if (`val` is GeneralElement) {
                 val STR = analysis?.let {
                     if (save != null) {
                         formatGeneralElement(key.toString(), `val`, it, save)
                     }
                 }
-                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, STR))
+                BUF.append("<td>$key</td><td>$STR</td></tr>")
             } else {
-                BUF.append(String.format("<td>%s</td><td>%s</td></tr>", key, `val`))
+                BUF.append("<td>$key</td><td>$`val`</td></tr>")
             }
         }
         BUF.append("</table>")
@@ -910,56 +913,56 @@ open class GeneralElement protected constructor() : Element {
             val BUF = StringBuilder()
             when {
                 `val` == null -> {
-                    BUF.append(String.format("%s: <NULL>", key))
+                    BUF.append("$key: <NULL>")
                 }
                 `val` is Linkable -> {
                     val STR = `val`.toHTML(null)
-                    BUF.append(String.format("%s: %s", key, STR))
+                    BUF.append("$key: $STR")
                 }
                 `val` is List<*> -> {
                     val STR = formatList(key, `val`, analysis, save)
-                    BUF.append(String.format("%s: %s", key, STR))
+                    BUF.append("$key: $STR")
                 }
                 `val`.javaClass.isArray -> {
                     when (`val`) {
                         is Array<*> -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as Array<*>?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as Array<*>?)?.joinToString(",", "[", "]").toString()}")
                         }
                         is BooleanArray -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as BooleanArray?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as BooleanArray?)?.joinToString(",", "[", "]").toString()}")
                         }
                         is ByteArray -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as ByteArray?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as ByteArray?)?.joinToString(",", "[", "]").toString()}")
                         }
                         is CharArray -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as CharArray?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as CharArray?)?.joinToString(",", "[", "]").toString()}")
                         }
                         is DoubleArray -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as DoubleArray?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as DoubleArray?)?.joinToString(",", "[", "]").toString()}")
                         }
                         is FloatArray -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as FloatArray?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as FloatArray?)?.joinToString(",", "[", "]").toString()}")
                         }
                         is IntArray -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as IntArray?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as IntArray?)?.joinToString(",", "[", "]").toString()}")
                         }
                         is LongArray -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as LongArray?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as LongArray?)?.joinToString(",", "[", "]").toString()}")
                         }
                         is ShortArray -> {
-                            BUF.append(String.format("%s: %s", key, (`val` as ShortArray?)?.joinToString(",","[","]").toString()))
+                            BUF.append("$key: ${(`val` as ShortArray?)?.joinToString(",", "[", "]").toString()}")
                         }
                     }
                     val LIST = `val` as List<*>
                     val STR = formatList(key, LIST, analysis, save)
-                    BUF.append(String.format("%s: %s", key, STR))
+                    BUF.append("$key: $STR")
                 }
                 `val` is GeneralElement -> {
                     val STR = formatGeneralElement(key, `val`, analysis, save)
-                    BUF.append(String.format("%s: %s", key, STR))
+                    BUF.append("$key: $STR")
                 }
                 else -> {
-                    BUF.append(String.format("%s: %s", key, `val`))
+                    BUF.append("$key: $`val`")
                 }
             }
             return BUF.toString()
@@ -1000,7 +1003,7 @@ open class GeneralElement protected constructor() : Element {
                 LongArray::class,
                 FloatArray::class,
                 Array<Any>::class,
-                ArrayList::class,
+                ArrayList::class,  //Check other places where lists are being pulled instead of arrays (kotlin being special)
         )
     }
 }
