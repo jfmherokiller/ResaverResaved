@@ -25,7 +25,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-internal class VariableType private constructor(input: ByteBuffer, strings: StringTable, role: Role) {
+class VariableType private constructor(input: ByteBuffer, strings: StringTable, role: Role) {
     /**
      * The role of the `VariableType`.
      */

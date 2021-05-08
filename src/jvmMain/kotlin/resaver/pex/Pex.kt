@@ -168,9 +168,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         get() {
             val NAMES: MutableSet<IString> = HashSet()
             for (state in STATES) {
-                for (func in state.FUNCTIONS) {
-                    NAMES.add(func.fullName)
-                }
+                state.FUNCTIONS.mapTo(NAMES) { it.fullName }
             }
             return NAMES
         }
@@ -210,7 +208,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         }
         code.add(S.toString())
         if (null != DOCSTRING && DOCSTRING.isNotEmpty()) {
-            code.add(String.format("{%s}\n", DOCSTRING))
+            code.add("{$DOCSTRING}\n")
         }
         code.add("")
         val AUTOVARS: MutableMap<Property, Variable> = hashMapOf()
@@ -259,9 +257,9 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
      */
     override fun toString(): String {
         val buf = StringBuilder()
-        buf.append(String.format("ScriptName %s extends %s %s\n", NAME, PARENTNAME, getFlags(USERFLAGS)))
-        buf.append(String.format("{%s}\n", DOCSTRING))
-        buf.append(String.format("\tInitial state: %s\n", AUTOSTATENAME))
+        buf.append("ScriptName $NAME extends $PARENTNAME ${getFlags(USERFLAGS)}\n")
+        buf.append("{$DOCSTRING}\n")
+        buf.append("\tInitial state: $AUTOSTATENAME\n")
         buf.append("\n")
         for (prop in PROPERTIES) {
             buf.append(prop.toString())
@@ -642,7 +640,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             }
             code.add(S.toString())
             if (null != DOC && DOC.isNotEmpty()) {
-                code.add(String.format("{%s}", DOC))
+                code.add("{$DOC}")
             }
             if (hasReadHandler()) {
                 assert(null != READHANDLER)
@@ -664,12 +662,12 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          */
         override fun toString(): String {
             val buf = StringBuilder()
-            buf.append(String.format("\tProperty %s %s", TYPE.toString(), this.NAME.toString()))
+            buf.append("\tProperty $TYPE ${this.NAME}")
             if (hasAutoVar()) {
-                buf.append(String.format(" AUTO(%s) ", AUTOVARNAME))
+                buf.append(" AUTO($AUTOVARNAME) ")
             }
             buf.append(getFlags(this.USERFLAGS))
-            buf.append(String.format("\n\t\tDoc: %s\n", DOC))
+            buf.append("\n\t\tDoc: $DOC\n")
             buf.append(String.format("\t\tFlags: %d\n", FLAGS))
             if (hasReadHandler()) {
                 buf.append("ReadHandler: ")
@@ -824,7 +822,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          */
         override fun toString(): String {
             val buf = StringBuilder()
-            buf.append(String.format("\tState %s\n", this.NAME))
+            buf.append("\tState ${this.NAME}\n")
             for (function in FUNCTIONS) {
                 buf.append(function.toString())
             }
@@ -989,14 +987,14 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             indent: Int
         ) {
             val S = StringBuilder()
-            S.append(resaver.pex.Disassembler.tab(indent))
+            S.append(Disassembler.tab(indent))
             if (null != RETURNTYPE && RETURNTYPE.isNotEmpty() && !RETURNTYPE.equals("NONE")) {
                 S.append(RETURNTYPE).append(" ")
             }
             if (null != nameOverride) {
-                S.append(String.format("Function %s%s", nameOverride, resaver.pex.Disassembler.paramList(PARAMS)))
+                S.append("Function $nameOverride${Disassembler.paramList(PARAMS)}")
             } else {
-                S.append(String.format("Function %s%s", this.NAME, resaver.pex.Disassembler.paramList(PARAMS)))
+                S.append("Function ${this.NAME}${Disassembler.paramList(PARAMS)}")
             }
             val FLAGOBJS = getFlags(this.USERFLAGS)
             for (flag in FLAGOBJS) {
@@ -1010,7 +1008,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             }
             code.add(S.toString())
             if (null != DOC && DOC.isNotEmpty()) {
-                code.add(String.format("%s{%s}", resaver.pex.Disassembler.tab(indent + 1), DOC))
+                code.add("${Disassembler.tab(indent + 1)}{$DOC}")
             }
             val GROUPS: MutableSet<IString> = HashSet()
             for (LOCAL in LOCALS) {
@@ -1021,7 +1019,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             }
             for (t in GROUPS) {
                 val DECL = StringBuilder()
-                DECL.append(resaver.pex.Disassembler.tab(indent + 1))
+                DECL.append(Disassembler.tab(indent + 1))
                 DECL.append("; ").append(t).append(' ')
                 val output = LOCALS
                     .filter { it.isTemp && it.TYPE === t }
@@ -1043,24 +1041,24 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
                 INSTRUCTIONS
             )
             when (level) {
-                AssemblyLevel.STRIPPED -> resaver.pex.Disassembler.preMap(block, types, terms)
+                AssemblyLevel.STRIPPED -> Disassembler.preMap(block.toMutableList(), types, terms)
                 AssemblyLevel.BYTECODE -> {
-                    resaver.pex.Disassembler.preMap(block, types, terms)
+                    Disassembler.preMap(block.toMutableList(), types, terms)
                     for (v in block) {
-                        code.add(String.format("%s%s", resaver.pex.Disassembler.tab(indent + 1), v))
+                        code.add("${Disassembler.tab(indent + 1)}$v")
                     }
                 }
                 AssemblyLevel.FULL -> try {
-                    resaver.pex.Disassembler.preMap(block, types, terms)
+                    Disassembler.preMap(block.toMutableList(), types, terms)
                     val code2 = resaver.pex.Disassembler.disassemble(block, types, indent + 1)
                     code.addAll(code2)
                 } catch (ex: DisassemblyException) {
                     code.addAll(ex.partial)
-                    val MSG = String.format("Error disassembling %s.", fullName)
+                    val MSG = "Error disassembling $fullName."
                     throw IllegalStateException(MSG, ex)
                 }
             }
-            code.add(String.format("%sEndFunction", resaver.pex.Disassembler.tab(indent)))
+            code.add("${Disassembler.tab(indent)}EndFunction")
         }
 
         /**
@@ -1071,14 +1069,14 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         override fun toString(): String {
             val buf = StringBuilder()
             if (this.NAME != null) {
-                buf.append(String.format("Function %s ", this.NAME))
+                buf.append("Function ${this.NAME} ")
             } else {
                 buf.append("Function (UNNAMED) ")
             }
             buf.append(PARAMS.toString())
-            buf.append(String.format(" returns %s\n", RETURNTYPE.toString()))
-            buf.append(String.format("\tDoc: %s\n", DOC.toString()))
-            buf.append(String.format("\tFlags: %s\n", getFlags(this.USERFLAGS)))
+            buf.append(" returns ${RETURNTYPE.toString()}\n")
+            buf.append("\tDoc: ${DOC.toString()}\n")
+            buf.append("\tFlags: ${getFlags(this.USERFLAGS)}\n")
             buf.append("\tLocals: ")
             buf.append(LOCALS.toString())
             buf.append("\n\tBEGIN\n")
@@ -1348,9 +1346,9 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         fun disassemble(code: MutableList<String?>, level: AssemblyLevel?) {
             val S = StringBuilder()
             if (DATA.type !== DataType.NONE) {
-                S.append(String.format("%s %s = %s", TYPE, this.NAME, DATA))
+                S.append("$TYPE ${this.NAME} = $DATA")
             } else {
-                S.append(String.format("%s %s", TYPE, this.NAME))
+                S.append("$TYPE ${this.NAME}")
             }
             if (CONST.toInt() != 0) {
                 S.append(" ").append("const")
