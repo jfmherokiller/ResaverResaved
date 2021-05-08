@@ -37,15 +37,17 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.text.SimpleDateFormat
-import java.util.*
-import java.util.function.Consumer
 import java.util.function.Predicate
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.regex.Pattern
 import java.util.zip.CRC32
 import java.util.zip.DataFormatException
-
+import kotlin.collections.ArrayDeque
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
+import kotlin.collections.LinkedHashMap
+import java.util.*
 
 /**
  * Describes a Skyrim or Fallout4 savegame.
@@ -78,8 +80,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
 
         // Do the decompression, if necessary.
         if (COMPRESSION.isCompressed) {
-            val COMPRESSED: ByteBuffer
-            COMPRESSED = when (COMPRESSION) {
+            val COMPRESSED: ByteBuffer = when (COMPRESSION) {
                 CompressionType.ZLIB -> BufferUtil.deflateZLIB(UNCOMPRESSED, UNCOMPRESSED_LEN)
                 CompressionType.LZ4 -> BufferUtil.deflateLZ4(UNCOMPRESSED, UNCOMPRESSED_LEN)
                 else -> throw IOException("Unknown compression type: $COMPRESSION")
@@ -119,40 +120,40 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         fLT!!.rebuild(this)
         fLT.write(output)
         LOG.fine("Writing savegame: rebuilt and wrote file location table.")
-        TABLE1.forEach(Consumer { data: GlobalData ->
+        TABLE1.forEach { data: GlobalData ->
             try {
                 data.write(output)
                 LOG.log(Level.FINE, "Writing savegame: \tGlobalData type {0}.", data.type)
             } catch (ex: RuntimeException) {
                 throw ElementException("GlobalDataTable1", ex, data)
             }
-        })
+        }
         LOG.fine("Writing savegame: wrote GlobalDataTable #1.")
-        TABLE2.forEach(Consumer { data: GlobalData ->
+        TABLE2.forEach { data: GlobalData ->
             try {
                 data.write(output)
                 LOG.log(Level.FINE, "Writing savegame: \tGlobalData type {0}.", data.type)
             } catch (ex: RuntimeException) {
                 throw ElementException("GlobalDataTable2", ex, data)
             }
-        })
+        }
         LOG.fine("Writing savegame: wrote GlobalDataTable #2.")
-        CHANGEFORMS.values.forEach(Consumer { form: ChangeForm? ->
+        CHANGEFORMS.values.forEach { form: ChangeForm? ->
             try {
                 form!!.write(output)
             } catch (ex: RuntimeException) {
                 throw ElementException("Error writing ChangeForm", ex, form!!)
             }
-        })
+        }
         LOG.fine("Writing savegame: wrote changeform table.")
-        TABLE3.forEach(Consumer { data: GlobalData ->
+        TABLE3.forEach { data: GlobalData ->
             try {
                 data.write(output)
                 LOG.log(Level.FINE, "Writing savegame: \tGlobalData type {0}.", data.type)
             } catch (ex: RuntimeException) {
                 throw ElementException("GlobalDataTable3", ex, data)
             }
-        })
+        }
         LOG.fine("Writing savegame: wrote GlobalDataTable #3.")
         output?.putInt(FORMIDARRAY!!.size)
         if (FORMIDARRAY != null) {
@@ -191,29 +192,13 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         }
         sum += pluginInfo.calculateSize()
         sum += fLT!!.calculateSize()
-        var sum1 = 0
-        for (globalData in TABLE1) {
-            val calculateSize = globalData.calculateSize()
-            sum1 += calculateSize
-        }
+        val sum1 = TABLE1.sumOf { it.calculateSize() }
         sum += sum1
-        var result1 = 0
-        for (globalData in TABLE2) {
-            val calculateSize = globalData.calculateSize()
-            result1 += calculateSize
-        }
+        val result1 = TABLE2.sumOf { it.calculateSize() }
         sum += result1
-        var result = 0
-        for (changeForm in CHANGEFORMS.values) {
-            val i = changeForm!!.calculateSize()
-            result += i
-        }
+        val result = CHANGEFORMS.values.sumOf { it!!.calculateSize() }
         sum += result
-        var sum2 = 0
-        for (globalData in TABLE3) {
-            val calculateSize = globalData.calculateSize()
-            sum2 += calculateSize
-        }
+        val sum2 = TABLE3.sumOf { it.calculateSize() }
         sum += sum2
         sum += 4
         sum += if (FORMIDARRAY == null) 0 else 4 * FORMIDARRAY.size
@@ -247,7 +232,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
     /**
      * @return The `GlobalVariableTable`.
      */
-    val globals: GlobalVariableTable?
+    val globals: GlobalVariableTable
         get() = GLOBALS
 
     /**
@@ -316,7 +301,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
      * @return The elements that were removed.
      */
     fun removeNonexistentCreated(): Set<PapyrusElement> {
-        val NONEXISTENT: MutableSet<PapyrusElement> = HashSet()
+        val NONEXISTENT: MutableSet<PapyrusElement> = mutableSetOf()
         for (v in papyrus!!.scriptInstances
             .values) {
             if (v.refID.type === RefID.Type.CREATED) {
@@ -363,10 +348,10 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         if (null == forms || forms.contains<ChangeForm?>(null)) {
             throw NullPointerException("The set of forms to be removed must not be null and must not contain null.")
         }
-        val FORMS = LinkedList(forms)
-        val REMOVED: MutableSet<ChangeForm?> = HashSet(forms.size)
-        while (!FORMS.isEmpty()) {
-            val FORM = FORMS.pop()
+        val FORMS = ArrayDeque(forms)
+        val REMOVED: MutableSet<ChangeForm?> = mutableSetOf()
+        while (FORMS.isNotEmpty()) {
+            val FORM = FORMS.removeLast()
             REMOVED.add(CHANGEFORMS.remove(FORM.refID))
         }
         REMOVED.remove(null)
@@ -425,7 +410,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
      */
     fun getInfo(analysis: Analysis?): String {
         val BUILDER = StringBuilder()
-        BUILDER.append(String.format("<h3>%s</h3>", originalFile.fileName))
+        BUILDER.append("<h3>${originalFile.fileName}</h3>")
         val race = header.RACEID.toString().replace("Race", "")
         val name = header.NAME.toString()
         val level = header.LEVEL
@@ -439,13 +424,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         val DATE = Date(millis)
         BUILDER.append(
             String.format(
-                "<h3>%s the level %s %s %s, in %s on %s (%1.0f/%1.0f xp).</h3>",
-                name,
-                level,
-                race,
-                gender,
-                location,
-                gameDate,
+                "<h3>$name the level $level $race $gender, in $location on $gameDate (%1.0f/%1.0f xp).</h3>",
                 xp,
                 nexp
             )
@@ -466,11 +445,9 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                 val fileSize = Files.size(originalFile) / 1048573.0f
                 BUILDER.append(
                     String.format(
-                        "<li>Total size: %1.1f mb (%1.1f mb with %s)</li>",
+                        "<li>Total size: %1.1f mb (%1.1f mb with ${header.getCompression()})</li>",
                         actualSize,
-                        fileSize,
-                        header.getCompression()
-                    )
+                        fileSize)
                 )
             } catch (ex: IOException) {
                 LOG.log(Level.WARNING, "Error retrieving savefile size on disk.", ex)
@@ -504,7 +481,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         val LITE = pluginInfo.litePlugins
         val INDEX = formID ushr 24
         val SUBINDEX = formID and 0xFFFFFF ushr 12
-        return if (INDEX >= 0 && INDEX < 0xFE && INDEX < FULL.size) {
+        return if (INDEX in 0..0xfd && INDEX < FULL.size) {
             FULL[INDEX]
         } else if (INDEX == 0xFE && SUBINDEX >= 0 && SUBINDEX < LITE.size) {
             if (pluginInfo.hasLite()) LITE[SUBINDEX] else null
@@ -620,8 +597,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             SAVE_FILE = originalFile
             BACKUP_FILE = backup
             TIME_S = timer.elapsed / 1.0e9
-            val size: Double
-            size = try {
+            val size: Double = try {
                 Files.size(SAVE_FILE) / 1048576.0
             } catch (ex: IOException) {
                 Double.NEGATIVE_INFINITY
@@ -642,7 +618,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          * @param ess
          */
         constructor(ess: ESS?) {
-            eSS = Objects.requireNonNull(ess)!!
+            eSS = ess!!
         }
 
         /**
@@ -652,7 +628,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          * @param context
          */
         constructor(context: ESSContext?) {
-            eSS = Objects.requireNonNull(context)!!.eSS
+            eSS = context!!.eSS
         }
 
         /**
@@ -663,7 +639,6 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          * @return The new `RefID`.
          */
         fun readRefID(input: ByteBuffer): RefID {
-            Objects.requireNonNull(input)
             val B1 = input.get().toInt()
             val B2 = input.get().toInt()
             val B3 = input.get().toInt()
@@ -748,15 +723,13 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         @JvmStatic
         @Throws(IOException::class)
         fun readESS(saveFile: Path, model: ModelBuilder): Result {
-            Objects.requireNonNull(saveFile)
-            Objects.requireNonNull(model)
 
             // Timer, for analyzing stuff.
             val TIMER = startNew("reading savefile")
 
             // Doublecheck that the savefile has a correct extension.
             if (!Game.FILTER_ALL.accept(saveFile.toFile())) {
-                throw IOException(String.format("Filename extension not recognized: %s", saveFile))
+                throw IOException("Filename extension not recognized: $saveFile")
             }
 
             // Read the savefile.
@@ -772,14 +745,14 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                     val TREEMODEL = model.finish(ESS)
                     TIMER.stop()
                     val SIZE = ESS.calculateSize() / 1048576.0f
-                    LOG.fine(String.format("Savegame read: %.1f mb in %s (%s).", SIZE, TIMER.formattedTime, saveFile))
+                    LOG.fine(String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE))
                     return ESS.Result(null, TIMER, TREEMODEL)
                 }
             } catch (ex: IOException) {
-                val msg = String.format("Failed to load %s\n%s", saveFile, ex.message)
+                val msg = "Failed to load $saveFile\n${ex.message}"
                 throw IOException(msg, ex)
             } catch (ex: DataFormatException) {
-                val msg = String.format("Failed to load %s\n%s", saveFile, ex.message)
+                val msg = "Failed to load $saveFile\n${ex.message}"
                 throw IOException(msg, ex)
             }
         }
@@ -795,11 +768,9 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          * @throws IOException
          */
         @Throws(IOException::class)
-        fun writeESS(ess: ESS, saveFile: Path): Result? {
-            Objects.requireNonNull(ess)
-            Objects.requireNonNull(saveFile)
+        fun writeESS(ess: ESS, saveFile: Path): Result {
             if (ess.truncated) {
-                throw IOException(String.format("%s is truncated and can't be saved.", ess.originalFile.fileName))
+                throw IOException("${ess.originalFile.fileName} is truncated and can't be saved.")
             }
             val TIMER = startNew("writing savefile")
             val GAME: Game = ess.header.GAME!!
@@ -809,7 +780,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             }
             if (ess.COSAVE != null) {
                 val filename = saveFile.fileName.toString()
-                val cosaveName = filename.replace(GAME.SAVE_EXT + "$".toRegex(), GAME.COSAVE_EXT)
+                val cosaveName = filename.replace("${GAME.SAVE_EXT}${"$".toRegex()}", GAME.COSAVE_EXT)
                 val COSAVE_FILE = saveFile.resolveSibling(cosaveName)
                 if (Files.exists(COSAVE_FILE)) {
                     makeBackupFile(COSAVE_FILE)
@@ -824,7 +795,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             ).use { channel -> ess.write(channel) }
             val SIZE = Files.size(saveFile) / 1048576.0f
             TIMER.stop()
-            LOG.fine(String.format("Savegame written: %.1f mb in %s (%s).", SIZE, TIMER.formattedTime, saveFile))
+            LOG.fine(String.format("Savegame written: %.1f mb in ${TIMER.formattedTime} ($saveFile).",SIZE))
             return ess.Result(backup, TIMER, null)
         }
 
@@ -875,7 +846,8 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             val BUF2 = ByteBuffer.allocate(PAP2.calculateSize())
             PAP1.write(BUF1)
             PAP2.write(BUF2)
-            check(Arrays.equals(BUF1.array(), BUF2.array())) { "Papyrus mismatch." }
+
+            check(BUF1.array().contentEquals(BUF2.array())) { "Papyrus mismatch." }
         }
 
         private val LOG = Logger.getLogger(ESS::class.java.canonicalName)
@@ -910,13 +882,12 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             val FILENAME = file.fileName.toString()
             val REGEX = Pattern.compile("^(.+)\\.([ -~]+)$")
             val MATCHER = REGEX.matcher(FILENAME)
-            val NEWNAME: String
-            NEWNAME = if (MATCHER.matches()) {
+            val NEWNAME: String = if (MATCHER.matches()) {
                 val NAME = MATCHER.group(1)
                 val EXT = MATCHER.group(2)
-                String.format("%s.%s.%s", NAME, TIME, EXT)
+                "$NAME.$TIME.$EXT"
             } else {
-                String.format("%s.%s", FILENAME, TIME)
+                "$FILENAME.$TIME"
             }
             val NEWFILE = file.resolveSibling(NEWNAME)
             Files.copy(file, NEWFILE, StandardCopyOption.REPLACE_EXISTING)
@@ -933,10 +904,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
      * @throws IOException
      */
     init {
-        Objects.requireNonNull(buffer)
-        Objects.requireNonNull(saveFile)
-        Objects.requireNonNull(model)
-        REFIDS = HashMap(100000)
+        REFIDS = hashMapOf()
         originalFile = saveFile
         LOG.fine("Reading savegame.")
 
@@ -1246,11 +1214,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         }
         animations = result1
         model.addAnimations(animations)
-        var sum2 = 0
-        for (t in TABLE3) {
-            val i = t.calculateSize()
-            sum2 += i
-        }
+        val sum2 = TABLE3.sumOf { it.calculateSize() }
         SUM.click(sum2)
         LOG.fine("Reading savegame: read GlobalDataTable #3.")
 

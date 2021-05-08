@@ -195,13 +195,9 @@ class Header(input: ByteBuffer, path: Path?) : Element {
         @Throws(IllegalStateException::class)
         fun verifyIdentical(h1: Header, h2: Header) {
             check(h1.MAGIC.contentEquals(h2.MAGIC)) {
-                String.format(
-                    "Magic mismatch: %s vs %s.",
-                    h1.MAGIC.contentToString(),
-                    h2.MAGIC.contentToString()
-                )
+                "Magic mismatch: ${h1.MAGIC.contentToString()} vs ${h2.MAGIC.contentToString()}."
             }
-            check(h1.NAME.equals(h2.NAME)) { String.format("Name mismatch: %s vs %s.", h1.NAME, h2.NAME) }
+            check(h1.NAME.equals(h2.NAME)) { "Name mismatch: ${h1.NAME} vs ${h2.NAME}." }
         }
     }
 
