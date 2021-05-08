@@ -13,130 +13,108 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.esp;
+package resaver.esp
 
-import java.nio.ByteBuffer;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import java.util.List;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.IString;
+import mf.BufferUtil
+import resaver.IString
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
 
 /**
  * Describes script fragments for PERK records.
  *
  * @author Mark Fairchild
  */
-public class FragmentPerk extends FragmentBase {
+class FragmentPerk(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
+    override fun write(output: ByteBuffer?) {
+        output?.put(UNKNOWN)
+        if (null != SCRIPT) {
+            SCRIPT?.write(output)
+        }
+        if (null != FILENAME) {
+            output?.put(FILENAME?.toByteArray(StandardCharsets.UTF_8))
+        }
+        output?.putShort(FRAGMENTS.size.toShort())
+        FRAGMENTS.forEach { fragment: Fragment -> fragment.write(output) }
+    }
 
-    public FragmentPerk(@NotNull ByteBuffer input, @NotNull ESPContext ctx) {
-        try {
-            this.UNKNOWN = input.get();
+    override fun calculateSize(): Int {
+        var sum = 3
+        sum += SCRIPT?.calculateSize() ?: 0
+        sum += if (null != FILENAME) 2 + FILENAME?.length!! else 0
+        var result = 0
+        for (FRAGMENT in FRAGMENTS) {
+            val calculateSize = FRAGMENT.calculateSize()
+            result += calculateSize
+        }
+        sum += result
+        return sum
+    }
 
-            if (ctx.GAME.isFO4()) {
-                ctx.pushContext("FragmentPerk");
-                this.FILENAME = null;
-                this.SCRIPT = new Script(input, ctx);
-                ctx.PLUGIN_INFO.addScriptData(this.SCRIPT);
-            } else {
-                this.FILENAME = mf.BufferUtil.getUTF(input);
-                this.SCRIPT = null;
-                ctx.pushContext("FragmentPerk:" + this.FILENAME);
+    override fun toString(): String {
+        return when {
+            null != SCRIPT -> {
+                String.format("Perk: %s (%d, %d frags)", SCRIPT!!.NAME, UNKNOWN, FRAGMENTS.size)
             }
-
-            int fragmentCount = Short.toUnsignedInt(input.getShort());
-            this.FRAGMENTS = new java.util.ArrayList<>(fragmentCount);
-            for (int i = 0; i < fragmentCount; i++) {
-                Fragment fragment = new Fragment(input);
-                this.FRAGMENTS.add(fragment);
+            null != FILENAME -> {
+                String.format("Perk: %s (%d, %d frags)", FILENAME, UNKNOWN, FRAGMENTS.size)
             }
-
-        } finally {
-            ctx.popContext();
+            else -> {
+                String.format("Perk: (%d, %d frags)", UNKNOWN, FRAGMENTS.size)
+            }
         }
     }
 
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        output.put(this.UNKNOWN);
-        if (null != this.SCRIPT) {
-            this.SCRIPT.write(output);
-        }
-        if (null != this.FILENAME) {
-            output.put(this.FILENAME.getBytes(UTF_8));
-        }
-
-        output.putShort((short) this.FRAGMENTS.size());
-        this.FRAGMENTS.forEach(fragment -> fragment.write(output));
-    }
-
-    @Override
-    public int calculateSize() {
-        int sum = 3;
-        sum += (null != this.SCRIPT ? this.SCRIPT.calculateSize() : 0);
-        sum += (null != this.FILENAME ? 2 + this.FILENAME.length() : 0);
-        int result = 0;
-        for (Fragment FRAGMENT : this.FRAGMENTS) {
-            int calculateSize = FRAGMENT.calculateSize();
-            result += calculateSize;
-        }
-        sum += result;
-        return sum;
-    }
-
-    @Override
-    public String toString() {
-        if (null != this.SCRIPT) {
-            return String.format("Perk: %s (%d, %d frags)", this.SCRIPT.NAME, this.UNKNOWN, this.FRAGMENTS.size());
-        } else if (null != this.FILENAME) {
-            return String.format("Perk: %s (%d, %d frags)", this.FILENAME, this.UNKNOWN, this.FRAGMENTS.size());
-        } else {
-            return String.format("Perk: (%d, %d frags)", this.UNKNOWN, this.FRAGMENTS.size());
-        }
-    }
-
-    final private byte UNKNOWN;
-    @Nullable
-    final private String FILENAME;
-    @Nullable
-    final private Script SCRIPT;
-    @NotNull
-    final private List<Fragment> FRAGMENTS;
+    private var UNKNOWN: Byte = 0
+    private var FILENAME: String? = null
+    private var SCRIPT: Script? = null
+    private var FRAGMENTS: MutableList<Fragment> = mutableListOf()
 
     /**
      *
      */
-    public class Fragment implements Entry {
-
-        public Fragment(@NotNull ByteBuffer input) {
-            this.INDEX = Short.toUnsignedInt(input.getShort());
-            this.UNKNOWN1 = input.getShort();
-            this.UNKNOWN2 = input.get();
-            this.SCRIPTNAME = IString.get(mf.BufferUtil.getUTF(input));
-            this.FRAGMENTNAME = IString.get(mf.BufferUtil.getUTF(input));
+    inner class Fragment(input: ByteBuffer) : Entry {
+        override fun write(output: ByteBuffer?) {
+            output?.putShort(INDEX.toShort())
+            output?.putShort(UNKNOWN1)
+            output?.put(UNKNOWN2)
+            output?.put(SCRIPTNAME.uTF8)
+            output?.put(FRAGMENTNAME.uTF8)
         }
 
-        @Override
-        public void write(@NotNull ByteBuffer output) {
-            output.putShort((short) this.INDEX);
-            output.putShort(this.UNKNOWN1);
-            output.put(this.UNKNOWN2);
-            output.put(this.SCRIPTNAME.getUTF8());
-            output.put(this.FRAGMENTNAME.getUTF8());
+        override fun calculateSize(): Int {
+            return 9 + SCRIPTNAME.length + FRAGMENTNAME.length
         }
 
-        @Override
-        public int calculateSize() {
-            return 9 + this.SCRIPTNAME.length() + this.FRAGMENTNAME.length();
-        }
+        private val INDEX: Int = UtilityFunctions.toUnsignedInt(input.short)
+        private val UNKNOWN1: Short = input.short
+        private val UNKNOWN2: Byte = input.get()
+        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)!!]
+        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)!!]
 
-        final private int INDEX;
-        final private short UNKNOWN1;
-        final private byte UNKNOWN2;
-        @NotNull
-        final private IString SCRIPTNAME;
-        @NotNull
-        final private IString FRAGMENTNAME;
+    }
+
+    init {
+        try {
+            UNKNOWN = input.get()
+            if (ctx.GAME.isFO4) {
+                ctx.pushContext("FragmentPerk")
+                FILENAME = null
+                SCRIPT = Script(input, ctx)
+                ctx.PLUGIN_INFO.addScriptData(SCRIPT!!)
+            } else {
+                FILENAME = BufferUtil.getUTF(input)
+                SCRIPT = null
+                ctx.pushContext("FragmentPerk:$FILENAME")
+            }
+            val fragmentCount = UtilityFunctions.toUnsignedInt(input.short)
+            FRAGMENTS = ArrayList(fragmentCount)
+            for (i in 0 until fragmentCount) {
+                val fragment = Fragment(input)
+                FRAGMENTS.add(fragment)
+            }
+        } finally {
+            ctx.popContext()
+        }
     }
 }
