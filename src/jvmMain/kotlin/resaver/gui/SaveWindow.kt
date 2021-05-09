@@ -352,8 +352,9 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             val size: Float = try {
                 if (savefile != null) {
                     Files.size(savefile).toFloat() / 1048576.0f
+                } else {
+                    0.0f
                 }
-                0.0f
             } catch (ex: IOException) {
                 LOG.log(Level.WARNING, "Error setting title.", ex)
                 Float.NEGATIVE_INFINITY
