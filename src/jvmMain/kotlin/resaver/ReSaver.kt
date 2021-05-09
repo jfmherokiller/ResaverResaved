@@ -83,7 +83,7 @@ class ReSaver : Callable<Int> {
         LOG.parent.handlers[0].level = Level.INFO
 
         // Check the autoparse setting.
-        val PREVIOUS = resaver.gui.Configurator.getPreviousSave()
+        val PREVIOUS = resaver.gui.Configurator.previousSave
         val WINDOW: resaver.gui.SaveWindow = if (PATH_PARAMETER != null && PATH_PARAMETER!!.isNotEmpty() && resaver.gui.Configurator.validateSavegame(
                 PATH_PARAMETER!![0])) {
             resaver.gui.SaveWindow(PATH_PARAMETER!![0], AUTOPARSE_OPTION)

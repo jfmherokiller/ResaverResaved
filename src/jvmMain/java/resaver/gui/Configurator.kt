@@ -13,100 +13,111 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.Game;
-import resaver.Mod;
-
-import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import javafx.stage.FileChooser
+import resaver.Game
+import resaver.Mod
+import resaver.Mod.Companion.createMod
+import resaver.ReSaver
+import java.io.IOException
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.*
+import java.util.Scanner
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.FutureTask
+import java.util.function.Predicate
+import java.util.function.Supplier
+import java.util.logging.Level
+import java.util.logging.Logger
+import java.util.prefs.Preferences
+import java.util.regex.Pattern
+import javax.swing.JFileChooser
+import javax.swing.JOptionPane
+import javax.swing.filechooser.FileNameExtensionFilter
 
 /**
- * Displays dialog boxes for configuring <code>ModChooser</code> and
- * <code>SaveWindow</code>.
+ * Displays dialog boxes for configuring `ModChooser` and
+ * `SaveWindow`.
  *
  * @author Mark Fairchild
  */
-abstract public class Configurator {
-
+object Configurator {
     /**
-     * Generalized way to get a <code>Path</code>.
+     * Generalized way to get a `Path`.
      *
      * @param owner
-     * @param defval <code>Supplier</code> for getting a default
-     * <code>Path</code>.
-     * @param request <code>Supplier</code> for asking the user to supply the
-     * <code>Path</code>.
-     * @param check A <code>Predicate</code> for verifying the
-     * <code>Path</code>.
+     * @param defval `Supplier` for getting a default
+     * `Path`.
+     * @param request `Supplier` for asking the user to supply the
+     * `Path`.
+     * @param check A `Predicate` for verifying the
+     * `Path`.
      * @param interactive A flag indicating whether prompting the user is
      * allowed.
      * @return
      */
-    @Nullable
-    static public Path choosePathModal(@NotNull SaveWindow owner, Supplier<Path> defval, Supplier<Path> request, @NotNull Predicate<Path> check, boolean interactive) {
-        try {
-            final FutureTask<Path> PROMPT = new FutureTask<>(() -> choosePath(defval, request, check, interactive));
-
+    @JvmStatic
+    fun choosePathModal(
+        owner: SaveWindow,
+        defval: Supplier<Path?>?,
+        request: Supplier<Path?>?,
+        check: Predicate<Path?>,
+        interactive: Boolean
+    ): Path? {
+        return try {
+            val PROMPT = FutureTask { choosePath(defval, request, check, interactive) }
             if (interactive) {
-                final ModalProgressDialog MODAL = new ModalProgressDialog(owner, "File Selection", PROMPT);
-                MODAL.setVisible(true);
+                val MODAL = ModalProgressDialog(owner, "File Selection", PROMPT)
+                MODAL.isVisible = true
             } else {
-                PROMPT.run();
+                PROMPT.run()
             }
-            return PROMPT.get();
-
-        } catch (InterruptedException | ExecutionException ex) {
-            LOG.log(Level.SEVERE, "Interrupted while displaying FileChooser.", ex);
-            return null;
+            PROMPT.get()
+        } catch (ex: InterruptedException) {
+            LOG.log(Level.SEVERE, "Interrupted while displaying FileChooser.", ex)
+            null
+        } catch (ex: ExecutionException) {
+            LOG.log(Level.SEVERE, "Interrupted while displaying FileChooser.", ex)
+            null
         }
     }
 
     /**
-     * Generalized way to get a <code>Path</code>.
+     * Generalized way to get a `Path`.
      *
-     * @param defval A <code>Supplier</code> for getting a default
-     * <code>Path</code>.
-     * @param request A <code>Supplier</code> for asking the user to supply the
-     * <code>Path</code>.
-     * @param check A <code>Predicate</code> for checking the validity of the
-     * <code>Path</code>.
+     * @param defval A `Supplier` for getting a default
+     * `Path`.
+     * @param request A `Supplier` for asking the user to supply the
+     * `Path`.
+     * @param check A `Predicate` for checking the validity of the
+     * `Path`.
      * @param interactive A flag indicating whether prompting the user is
      * allowed.
      * @return
      */
-    @Nullable
-    static public Path choosePath(@Nullable Supplier<Path> defval, @Nullable Supplier<Path> request, @NotNull Predicate<Path> check, boolean interactive) {
+    fun choosePath(
+        defval: Supplier<Path?>?,
+        request: Supplier<Path?>?,
+        check: Predicate<Path?>,
+        interactive: Boolean
+    ): Path? {
         if (defval != null) {
-            final Path DEFAULT = defval.get();
+            val DEFAULT = defval.get()
             if (check.test(DEFAULT)) {
-                return DEFAULT;
+                return DEFAULT
             }
         }
-
         if (interactive && request != null) {
-            final Path REQUESTED = request.get();
+            val REQUESTED = request.get()
             if (check.test(REQUESTED)) {
-                return REQUESTED;
+                return REQUESTED
             }
         }
-
-        return null;
+        return null
     }
 
     /**
@@ -114,94 +125,83 @@ abstract public class Configurator {
      *
      * @param parent The parent component.
      * @param savefile The savefile for which the list is being generated.
-     * @return A <code>Path</code> pointing to the export file, or
-     * <code>null</code> if a file was not selected.
+     * @return A `Path` pointing to the export file, or
+     * `null` if a file was not selected.
      */
-    @Nullable
-    static public Path selectPluginsExport(@NotNull SaveWindow parent, @Nullable Path savefile) {
-        LOG.info("Choosing an export file.");
-
-        Path previousExport = getPreviousPluginsExport();
-        Path exportPath;
-
-        if (null != savefile && previousExport != null && Files.exists(previousExport.getParent())) {
-            exportPath = previousExport.resolveSibling(savefile.getFileName().toString() + ".txt");
+    @JvmStatic
+    fun selectPluginsExport(parent: SaveWindow, savefile: Path?): Path? {
+        LOG.info("Choosing an export file.")
+        val previousExport = previousPluginsExport
+        val exportPath: Path
+        exportPath = if (null != savefile && previousExport != null && Files.exists(previousExport.parent)) {
+            previousExport.resolveSibling(savefile.fileName.toString() + ".txt")
         } else if (null != savefile) {
-            exportPath = savefile.resolveSibling(savefile.getFileName().toString() + ".txt");
-        } else if (null != previousExport) {
-            exportPath = previousExport;
-        } else {
-            exportPath = MYGAMES;
-        }
-
-        if (parent.isJavaFXAvailable()) {
-            javafx.stage.FileChooser CHOOSER = new javafx.stage.FileChooser();
-            CHOOSER.setTitle("Enter name for export file:");
-            javafx.stage.FileChooser.ExtensionFilter FX_FILTER = new javafx.stage.FileChooser.ExtensionFilter(TEXTFILES.getDescription(), "**.TXT");
-            CHOOSER.getExtensionFilters().add(FX_FILTER);
-
+            savefile.resolveSibling(savefile.fileName.toString() + ".txt")
+        } else previousExport ?: MYGAMES
+        if (parent.isJavaFXAvailable) {
+            val CHOOSER = FileChooser()
+            CHOOSER.title = "Enter name for export file:"
+            val FX_FILTER = FileChooser.ExtensionFilter(TEXTFILES.description, "**.TXT")
+            CHOOSER.extensionFilters.add(FX_FILTER)
             if (Files.isDirectory(exportPath)) {
-                CHOOSER.setInitialDirectory(exportPath.toFile());
+                CHOOSER.initialDirectory = exportPath.toFile()
             } else {
-                CHOOSER.setInitialDirectory(exportPath.getParent().toFile());
-                CHOOSER.setInitialFileName(exportPath.getFileName().toString());
+                CHOOSER.initialDirectory = exportPath.parent.toFile()
+                CHOOSER.initialFileName = exportPath.fileName.toString()
             }
-
             while (true) {
-                File exportFile = CHOOSER.showSaveDialog(null);
-
+                val exportFile = CHOOSER.showSaveDialog(null)
                 if (exportFile == null) {
-                    LOG.fine("User cancelled.");
-                    return null;
+                    LOG.fine("User cancelled.")
+                    return null
                 }
 
                 // Append the ".txt" if necessary.
-                Path selection = TEXTFILES.accept(exportFile)
-                        ? exportFile.toPath()
-                        : exportFile.toPath().resolveSibling(exportFile.getName() + ".txt");
-
+                val selection = if (TEXTFILES.accept(exportFile)) exportFile.toPath() else exportFile.toPath()
+                    .resolveSibling(exportFile.name + ".txt")
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
-                    final String MSG = String.format("That directory isn't writeable:\n%s", selection);
-                    JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE);
+                    val MSG = String.format("That directory isn't writeable:\n%s", selection)
+                    JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE)
                 } else {
-                    setPreviousPluginsExport(selection);
-                    return selection;
+                    setPreviousPluginsExport(selection)
+                    return selection
                 }
             }
         } else {
-            final JFileChooser CHOOSER = new JFileChooser();
-            CHOOSER.setMultiSelectionEnabled(false);
-            CHOOSER.setDialogTitle("Enter name for export file:");
-            CHOOSER.setFileFilter(TEXTFILES);
-
+            val CHOOSER = JFileChooser()
+            CHOOSER.isMultiSelectionEnabled = false
+            CHOOSER.dialogTitle = "Enter name for export file:"
+            CHOOSER.fileFilter = TEXTFILES
             while (true) {
-                int result = CHOOSER.showSaveDialog(parent);
-                File exportFile = CHOOSER.getSelectedFile();
-
-                if (result == JFileChooser.CANCEL_OPTION || CHOOSER.getSelectedFile() == null) {
-                    LOG.fine("User cancelled.");
-                    return null;
+                val result = CHOOSER.showSaveDialog(parent)
+                val exportFile = CHOOSER.selectedFile
+                if (result == JFileChooser.CANCEL_OPTION || CHOOSER.selectedFile == null) {
+                    LOG.fine("User cancelled.")
+                    return null
                 }
 
                 // Append the ".txt" if necessary.
-                Path selection = TEXTFILES.accept(exportFile)
-                        ? exportFile.toPath()
-                        : exportFile.toPath().resolveSibling(exportFile.getName() + ".txt");
-
+                val selection = if (TEXTFILES.accept(exportFile)) exportFile.toPath() else exportFile.toPath()
+                    .resolveSibling(exportFile.name + ".txt")
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
-                    final String MSG = String.format("That directory isn't writeable:\n%s", selection);
-                    JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE);
+                    val MSG = String.format("That directory isn't writeable:\n%s", selection)
+                    JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE)
                 } else if (Files.exists(selection)) {
-                    final String MSG = "That file already exists. Replace it?";
-                    int overwrite = JOptionPane.showConfirmDialog(parent, MSG, "File Exists", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-
+                    val MSG = "That file already exists. Replace it?"
+                    val overwrite = JOptionPane.showConfirmDialog(
+                        parent,
+                        MSG,
+                        "File Exists",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.WARNING_MESSAGE
+                    )
                     if (overwrite == JOptionPane.OK_OPTION) {
-                        setPreviousPluginsExport(selection);
-                        return selection;
+                        setPreviousPluginsExport(selection)
+                        return selection
                     }
                 } else {
-                    setPreviousPluginsExport(selection);
-                    return selection;
+                    setPreviousPluginsExport(selection)
+                    return selection
                 }
             }
         }
@@ -213,78 +213,64 @@ abstract public class Configurator {
      *
      * @param parent The parent component.
      * @param game Which game the save is for.
-     * @return A <code>Path</code> pointing to the savefile file, or
-     * <code>null</code> if a file was not selected.
+     * @return A `Path` pointing to the savefile file, or
+     * `null` if a file was not selected.
      */
-    @Nullable
-    static public Path selectNewSaveFile(@NotNull SaveWindow parent, @NotNull Game game) {
-        LOG.info("Choosing a savefile.");
-
-        Path previousSave = getPreviousSave();
-
-        Path startingDirectory = previousSave != null && Configurator.validDir(previousSave.getParent())
-                ? previousSave.getParent()
-                : MYGAMES;
-
-        Path startingFile = Configurator.validateSavegame(previousSave)
-                ? previousSave
-                : null;
-
-        if (parent.isJavaFXAvailable()) {
-            javafx.stage.FileChooser CHOOSER = new javafx.stage.FileChooser();
-            CHOOSER.setTitle("Enter name for savefile:");
-            javafx.stage.FileChooser.ExtensionFilter FX_FILTER = new javafx.stage.FileChooser.ExtensionFilter(game.FILTER.getDescription(), "**." + game.getSAVE_EXT());
-            CHOOSER.getExtensionFilters().add(FX_FILTER);
-            CHOOSER.setInitialDirectory(startingDirectory.toFile());
+    @JvmStatic
+    fun selectNewSaveFile(parent: SaveWindow, game: Game): Path? {
+        LOG.info("Choosing a savefile.")
+        val previousSave = previousSave
+        val startingDirectory =
+            if (previousSave != null && validDir(previousSave.parent)) previousSave.parent else MYGAMES
+        val startingFile = if (validateSavegame(previousSave!!)) previousSave else null
+        if (parent.isJavaFXAvailable) {
+            val CHOOSER = FileChooser()
+            CHOOSER.title = "Enter name for savefile:"
+            val FX_FILTER = FileChooser.ExtensionFilter(game.FILTER.description, "**." + game.SAVE_EXT)
+            CHOOSER.extensionFilters.add(FX_FILTER)
+            CHOOSER.initialDirectory = startingDirectory.toFile()
             if (startingFile != null) {
-                CHOOSER.setInitialFileName(startingFile.getFileName().toString());
+                CHOOSER.initialFileName = startingFile.fileName.toString()
             }
-
             while (true) {
-                File selected = CHOOSER.showSaveDialog(null);
+                val selected = CHOOSER.showSaveDialog(null)
                 if (null == selected) {
-                    LOG.fine("User cancelled.");
-                    return null;
+                    LOG.fine("User cancelled.")
+                    return null
                 }
 
                 // Append the file extension if necessary.
-                Path selection = game.FILTER.accept(selected)
-                        ? selected.toPath()
-                        : selected.toPath().resolveSibling(selected.getName() + "." + game.getSAVE_EXT());
-
+                val selection = if (game.FILTER.accept(selected)) selected.toPath() else selected.toPath()
+                    .resolveSibling(selected.name + "." + game.SAVE_EXT)
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
-                    final String MSG = String.format("That directory isn't writeable:\n%s", selection);
-                    JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE);
+                    val MSG = String.format("That directory isn't writeable:\n%s", selection)
+                    JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE)
                 } else {
-                    return setPreviousSave(selection);
+                    return setPreviousSave(selection)
                 }
             }
         } else {
-            final JFileChooser CHOOSER = new JFileChooser();
-            CHOOSER.setMultiSelectionEnabled(false);
-            CHOOSER.setDialogTitle("Enter name for savefile:");
-            CHOOSER.setFileFilter(game.FILTER);
-
+            val CHOOSER = JFileChooser()
+            CHOOSER.isMultiSelectionEnabled = false
+            CHOOSER.dialogTitle = "Enter name for savefile:"
+            CHOOSER.fileFilter = game.FILTER
             while (true) {
-                int result = CHOOSER.showSaveDialog(parent);
-                File selected = CHOOSER.getSelectedFile();
-
+                val result = CHOOSER.showSaveDialog(parent)
+                val selected = CHOOSER.selectedFile
                 if (result == JFileChooser.CANCEL_OPTION || null == selected) {
-                    LOG.fine("User cancelled.");
-                    return null;
+                    LOG.fine("User cancelled.")
+                    return null
                 }
 
                 // Append the file extension if necessary.
-                Path selection = game.FILTER.accept(selected)
-                        ? selected.toPath()
-                        : selected.toPath().resolveSibling(selected.getName() + "." + game.getSAVE_EXT());
-
+                val selection = if (game.FILTER.accept(selected)) selected.toPath() else selected.toPath()
+                    .resolveSibling(selected.name + "." + game.SAVE_EXT)
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
-                    final String MSG = String.format("That directory isn't writeable:\n%s", selection);
-                    JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE);
+                    val MSG = String.format("That directory isn't writeable:\n%s", selection)
+                    JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE)
                 } else {
-                    setPreviousSave(selection);
-                    return confirmSaveFile(parent, game, selection);
+                    setPreviousSave(selection)
+                    return confirmSaveFile(parent, game, selection)
                 }
             }
         }
@@ -295,37 +281,36 @@ abstract public class Configurator {
      *
      * @param parent The parent component.
      * @param game Which game the save is for.
-     * @param selectedPath The <code>Path</code> to confirm.
-     * @return A <code>File</code> pointing to the savefile file, or
-     * <code>null</code> if a file was not selected.
+     * @param selectedPath The `Path` to confirm.
+     * @return A `File` pointing to the savefile file, or
+     * `null` if a file was not selected.
      */
-    @Nullable
-    static public Path confirmSaveFile(@NotNull SaveWindow parent, @NotNull Game game, @NotNull Path selectedPath) {
-        LOG.info("Choosing a savefile.");
-
-        if (Files.exists(selectedPath) && !Files.isWritable(selectedPath)) {
-            final String MSG = String.format("That directory isn't writeable:\n%s", selectedPath);
-            final String TITLE = "Can't Write";
-            JOptionPane.showMessageDialog(parent, MSG, TITLE, JOptionPane.ERROR_MESSAGE);
-            return null;
-
+    @JvmStatic
+    fun confirmSaveFile(parent: SaveWindow, game: Game, selectedPath: Path): Path? {
+        LOG.info("Choosing a savefile.")
+        return if (Files.exists(selectedPath) && !Files.isWritable(selectedPath)) {
+            val MSG = String.format("That directory isn't writeable:\n%s", selectedPath)
+            val TITLE = "Can't Write"
+            JOptionPane.showMessageDialog(parent, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
+            null
         } else if (Files.exists(selectedPath)) {
-            final String MSG = "That file already exists. Replace it?";
-            final String TITLE = "File Exists";
-            LOG.warning(MSG);
-            int overwrite = JOptionPane.showConfirmDialog(parent, MSG, TITLE, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-
-            switch (overwrite) {
-                case JOptionPane.YES_OPTION:
-                    return selectedPath;
-                case JOptionPane.CANCEL_OPTION:
-                    return null;
-                default:
-                    return selectNewSaveFile(parent, game);
+            val MSG = "That file already exists. Replace it?"
+            val TITLE = "File Exists"
+            LOG.warning(MSG)
+            val overwrite = JOptionPane.showConfirmDialog(
+                parent,
+                MSG,
+                TITLE,
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            )
+            when (overwrite) {
+                JOptionPane.YES_OPTION -> selectedPath
+                JOptionPane.CANCEL_OPTION -> null
+                else -> selectNewSaveFile(parent, game)
             }
-
         } else {
-            return selectedPath;
+            selectedPath
         }
     }
 
@@ -333,70 +318,59 @@ abstract public class Configurator {
      * Shows a file chooser dialog to allow the user to select a savefile.
      *
      * @param parent The parent component.
-     * @return A <code>File</code> pointing to the savefile, or
-     * <code>null</code> if a file was not selected.
+     * @return A `File` pointing to the savefile, or
+     * `null` if a file was not selected.
      */
-    @Nullable
-    static public Path selectSaveFile(@NotNull SaveWindow parent) {
-        LOG.info("Choosing a savefile.");
-
-        Path previousSave = getPreviousSave();
-
-        Path startingDirectory = previousSave != null && Configurator.validDir(previousSave.getParent())
-                ? previousSave.getParent()
-                : MYGAMES;
-
-        Path startingFile = Configurator.validateSavegame(previousSave)
-                ? previousSave
-                : null;
-
-        if (parent.isJavaFXAvailable()) {
-            javafx.stage.FileChooser CHOOSER = new javafx.stage.FileChooser();
-            CHOOSER.setTitle("Select savefile:");
-            javafx.stage.FileChooser.ExtensionFilter FX_FILTER = new javafx.stage.FileChooser.ExtensionFilter(Game.FILTER_ALL.getDescription(), "**.ESS", "**.FOS", "**.SAV0");
-            CHOOSER.getExtensionFilters().add(FX_FILTER);
-            CHOOSER.setInitialDirectory(startingDirectory.toFile());
+    @JvmStatic
+    fun selectSaveFile(parent: SaveWindow): Path? {
+        LOG.info("Choosing a savefile.")
+        val previousSave = previousSave
+        val startingDirectory =
+            if (previousSave != null && validDir(previousSave.parent)) previousSave.parent else MYGAMES
+        val startingFile = if (validateSavegame(previousSave!!)) previousSave else null
+        if (parent.isJavaFXAvailable) {
+            val CHOOSER = FileChooser()
+            CHOOSER.title = "Select savefile:"
+            val FX_FILTER = FileChooser.ExtensionFilter(Game.FILTER_ALL.description, "**.ESS", "**.FOS", "**.SAV0")
+            CHOOSER.extensionFilters.add(FX_FILTER)
+            CHOOSER.initialDirectory = startingDirectory.toFile()
             if (startingFile != null) {
-                CHOOSER.setInitialFileName(startingFile.getFileName().toString());
+                CHOOSER.initialFileName = startingFile.fileName.toString()
             }
-
             while (true) {
-                File selected = CHOOSER.showOpenDialog(null);
-
+                val selected = CHOOSER.showOpenDialog(null)
                 if (selected == null) {
-                    LOG.fine("User cancelled.");
-                    return null;
+                    LOG.fine("User cancelled.")
+                    return null
                 } else if (!validateSavegame(selected.toPath())) {
-                    final String MSG = "That does not seem to be a valid savegame.";
-                    JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE);
+                    val MSG = "That does not seem to be a valid savegame."
+                    JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE)
                 } else {
-                    return setPreviousSave(selected.toPath());
+                    return setPreviousSave(selected.toPath())
                 }
             }
         } else {
-            final JFileChooser CHOOSER = new JFileChooser();
-            CHOOSER.setMultiSelectionEnabled(false);
-            CHOOSER.setDialogTitle("Select savefile:");
-            CHOOSER.getActionMap().get("viewTypeDetails").actionPerformed(null);
-            CHOOSER.setFileFilter(Game.FILTER_ALL);
+            val CHOOSER = JFileChooser()
+            CHOOSER.isMultiSelectionEnabled = false
+            CHOOSER.dialogTitle = "Select savefile:"
+            CHOOSER.actionMap["viewTypeDetails"].actionPerformed(null)
+            CHOOSER.fileFilter = Game.FILTER_ALL
             if (startingFile != null) {
-                CHOOSER.setSelectedFile(startingFile.toFile());
+                CHOOSER.selectedFile = startingFile.toFile()
             } else {
-                CHOOSER.setCurrentDirectory(startingDirectory.toFile());
+                CHOOSER.currentDirectory = startingDirectory.toFile()
             }
-
             while (true) {
-                int result = CHOOSER.showOpenDialog(parent);
-                File selected = CHOOSER.getSelectedFile();
-
+                val result = CHOOSER.showOpenDialog(parent)
+                val selected = CHOOSER.selectedFile
                 if (result == JFileChooser.CANCEL_OPTION || null == selected) {
-                    LOG.fine("User cancelled.");
-                    return null;
+                    LOG.fine("User cancelled.")
+                    return null
                 } else if (!validateSavegame(selected.toPath())) {
-                    final String MSG = "That does not seem to be a valid savegame.";
-                    JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE);
+                    val MSG = "That does not seem to be a valid savegame."
+                    JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE)
                 } else {
-                    return setPreviousSave(selected.toPath());
+                    return setPreviousSave(selected.toPath())
                 }
             }
         }
@@ -409,47 +383,43 @@ abstract public class Configurator {
      *
      * @param parent The parent component.
      * @param game The game whose directory should be selected.
-     * @return A <code>File</code> pointing to the selected ModOrganizer ini
-     * file, or <code>null</code> if a file was not selected.
+     * @return A `File` pointing to the selected ModOrganizer ini
+     * file, or `null` if a file was not selected.
      */
-    @Nullable
-    static public Path selectMO2Ini(SaveWindow parent, @NotNull Game game) {
-        LOG.info("Choosing the ModOrganizer path.");
-
-        final JFileChooser CHOOSER = new JFileChooser();
-        CHOOSER.setDialogTitle("Locate ModOrganizer.ini");
-        CHOOSER.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        CHOOSER.setMultiSelectionEnabled(false);
-
-        if (validateMODir(getMO2Ini(game))) {
-            LOG.fine("Choosing a ModOrganizer path: trying the pre-existing path.");
-            CHOOSER.setSelectedFile(getMO2Ini(game).toFile());
+    @JvmStatic
+    fun selectMO2Ini(parent: SaveWindow?, game: Game): Path? {
+        LOG.info("Choosing the ModOrganizer path.")
+        val CHOOSER = JFileChooser()
+        CHOOSER.dialogTitle = "Locate ModOrganizer.ini"
+        CHOOSER.fileSelectionMode = JFileChooser.FILES_ONLY
+        CHOOSER.isMultiSelectionEnabled = false
+        if (validateMODir(getMO2Ini(game)!!)) {
+            LOG.fine("Choosing a ModOrganizer path: trying the pre-existing path.")
+            CHOOSER.selectedFile = getMO2Ini(game)!!.toFile()
         } else {
-            CHOOSER.setCurrentDirectory(MO2ROOT.toFile());
+            CHOOSER.currentDirectory = MO2ROOT.toFile()
         }
-
-        for (;;) {
-            loadChooserPrefs(CHOOSER);
-            int result = CHOOSER.showDialog(parent, "Select");
-            java.io.File file = CHOOSER.getSelectedFile();
-            saveChooserPrefs(CHOOSER);
-
+        while (true) {
+            loadChooserPrefs(CHOOSER)
+            val result = CHOOSER.showDialog(parent, "Select")
+            val file = CHOOSER.selectedFile
+            saveChooserPrefs(CHOOSER)
             if (null == file || result == JFileChooser.CANCEL_OPTION) {
-                LOG.fine("User cancelled.");
-                return null;
+                LOG.fine("User cancelled.")
+                return null
             } else if (!validateMO2Ini(game, file.toPath())) {
                 if (!Files.exists(file.toPath())) {
-                    final String MSG = String.format("That file doesn't exist:\n%s", file);
-                    JOptionPane.showMessageDialog(parent, MSG, "Doesn't Exist", JOptionPane.ERROR_MESSAGE);
+                    val MSG = String.format("That file doesn't exist:\n%s", file)
+                    JOptionPane.showMessageDialog(parent, MSG, "Doesn't Exist", JOptionPane.ERROR_MESSAGE)
                 } else if (!Files.isReadable(file.toPath())) {
-                    final String MSG = String.format("That file isn't readable:\n%s", file);
-                    JOptionPane.showMessageDialog(parent, MSG, "Not readable", JOptionPane.ERROR_MESSAGE);
+                    val MSG = String.format("That file isn't readable:\n%s", file)
+                    JOptionPane.showMessageDialog(parent, MSG, "Not readable", JOptionPane.ERROR_MESSAGE)
                 } else {
-                    final String MSG = String.format("That directory doesn't seem to contain Mod Organizer:\n%s", file);
-                    JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE);
+                    val MSG = String.format("That directory doesn't seem to contain Mod Organizer:\n%s", file)
+                    JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE)
                 }
             } else {
-                return setMO2Ini(game, file.toPath());
+                return setMO2Ini(game, file.toPath())
             }
         }
     }
@@ -460,37 +430,33 @@ abstract public class Configurator {
      *
      * @param parent The parent component.
      * @param game The game whose directory should be selected.
-     * @return A <code>File</code> pointing to the selected game directory, or
-     * <code>null</code> if a directory was not selected.
+     * @return A `File` pointing to the selected game directory, or
+     * `null` if a directory was not selected.
      */
-    @Nullable
-    static public Path selectGameDirectory(SaveWindow parent, @NotNull Game game) {
-        LOG.info(String.format("Choosing the %s directory.", game));
-
-        final JFileChooser CHOOSER = new JFileChooser();
-        CHOOSER.setDialogTitle(String.format("Select %s directory", game.getNAME()));
-        CHOOSER.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        CHOOSER.setMultiSelectionEnabled(false);
-
-        final Path PREV_DIR = getGameDirectory(game);
-        if (Configurator.validateGameDirectory(game, PREV_DIR)) {
-            LOG.fine("Trying to use the stored value for the game directory.");
-            CHOOSER.setSelectedFile(PREV_DIR.toFile());
+    @JvmStatic
+    fun selectGameDirectory(parent: SaveWindow?, game: Game): Path? {
+        LOG.info(String.format("Choosing the %s directory.", game))
+        val CHOOSER = JFileChooser()
+        CHOOSER.dialogTitle = String.format("Select %s directory", game.NAME)
+        CHOOSER.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+        CHOOSER.isMultiSelectionEnabled = false
+        val PREV_DIR = getGameDirectory(game)
+        if (validateGameDirectory(game, PREV_DIR!!)) {
+            LOG.fine("Trying to use the stored value for the game directory.")
+            CHOOSER.selectedFile = PREV_DIR.toFile()
         }
-
-        for (;;) {
-            loadChooserPrefs(CHOOSER);
-            int result = CHOOSER.showOpenDialog(parent);
-            java.io.File file = CHOOSER.getSelectedFile();
-            saveChooserPrefs(CHOOSER);
-
+        while (true) {
+            loadChooserPrefs(CHOOSER)
+            val result = CHOOSER.showOpenDialog(parent)
+            val file = CHOOSER.selectedFile
+            saveChooserPrefs(CHOOSER)
             if (null == file || result == JFileChooser.CANCEL_OPTION) {
-                return null;
+                return null
             } else if (!validateGameDirectory(game, file.toPath())) {
-                final String MSG = String.format("This directory doesn't seem to be the %s directory.", game.getNAME());
-                JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE);
+                val MSG = String.format("This directory doesn't seem to be the %s directory.", game.NAME)
+                JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE)
             } else {
-                return setGameDirectory(game, file.toPath());
+                return setGameDirectory(game, file.toPath())
             }
         }
     }
@@ -501,41 +467,36 @@ abstract public class Configurator {
      *
      * @param parent The parent component.
      * @param game The game whose directory should be selected.
-     * @return A <code>Path</code> pointing to the savefile directory, or
-     * <code>null</code> if a directory was not selected.
+     * @return A `Path` pointing to the savefile directory, or
+     * `null` if a directory was not selected.
      */
-    @Nullable
-    static public Path selectSavefileDirectory(SaveWindow parent, @NotNull Game game) {
-        LOG.info("Choosing a directory to watch.");
-
-        final JFileChooser CHOOSER = new JFileChooser();
-        CHOOSER.setDialogTitle("Select folder to watch");
-        CHOOSER.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        CHOOSER.setMultiSelectionEnabled(false);
-
-        Path previousDir = getSaveDirectory(game);
-
-        if (Configurator.validDir(previousDir)) {
-            LOG.fine("Trying to use the stored value for the savefile directory.");
-            CHOOSER.setSelectedFile(previousDir.toFile());
+    @JvmStatic
+    fun selectSavefileDirectory(parent: SaveWindow?, game: Game): Path? {
+        LOG.info("Choosing a directory to watch.")
+        val CHOOSER = JFileChooser()
+        CHOOSER.dialogTitle = "Select folder to watch"
+        CHOOSER.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+        CHOOSER.isMultiSelectionEnabled = false
+        val previousDir = getSaveDirectory(game)
+        if (validDir(previousDir)) {
+            LOG.fine("Trying to use the stored value for the savefile directory.")
+            CHOOSER.selectedFile = previousDir.toFile()
         } else {
-            CHOOSER.setSelectedFile(MO2ROOT.toFile());
+            CHOOSER.selectedFile = MO2ROOT.toFile()
         }
-
-        for (;;) {
-            loadChooserPrefs(CHOOSER);
-            int result = CHOOSER.showOpenDialog(parent);
-            java.io.File file = CHOOSER.getSelectedFile();
-            saveChooserPrefs(CHOOSER);
-
+        while (true) {
+            loadChooserPrefs(CHOOSER)
+            val result = CHOOSER.showOpenDialog(parent)
+            val file = CHOOSER.selectedFile
+            saveChooserPrefs(CHOOSER)
             if (null == file || result == JFileChooser.CANCEL_OPTION) {
-                LOG.fine("User cancelled.");
-                return null;
+                LOG.fine("User cancelled.")
+                return null
             } else if (Files.exists(file.toPath()) && !Files.isReadable(file.toPath())) {
-                final String MSG = String.format("That directory isn't readable:\n%s", file);
-                JOptionPane.showMessageDialog(parent, MSG, "Not Readable", JOptionPane.ERROR_MESSAGE);
+                val MSG = String.format("That directory isn't readable:\n%s", file)
+                JOptionPane.showMessageDialog(parent, MSG, "Not Readable", JOptionPane.ERROR_MESSAGE)
             } else {
-                return setSaveDirectory(game, file.toPath());
+                return setSaveDirectory(game, file.toPath())
             }
         }
     }
@@ -547,8 +508,8 @@ abstract public class Configurator {
      * @param dir The directory to validate.
      * @return True if the directory contains ModOrganizer, false otherwise.
      */
-    static public boolean validateMODir(@NotNull Path dir) {
-        return validDir(dir) && Files.exists(dir.resolve("mods"));
+    fun validateMODir(dir: Path): Boolean {
+        return validDir(dir) && Files.exists(dir.resolve("mods"))
     }
 
     /**
@@ -559,8 +520,9 @@ abstract public class Configurator {
      * @param dir The directory to validate.
      * @return True if the directory contains the game, false otherwise.
      */
-    static public boolean validateGameDirectory(@NotNull Game game, @NotNull Path dir) {
-        return validDir(dir) && dir.getFileName().equals(game.getGAME_DIRECTORY()) && Files.exists(dir.resolve(game.getEXECUTABLE()));
+    @JvmStatic
+    fun validateGameDirectory(game: Game, dir: Path): Boolean {
+        return validDir(dir) && dir.fileName == game.GAME_DIRECTORY && Files.exists(dir.resolve(game.EXECUTABLE))
     }
 
     /**
@@ -571,8 +533,9 @@ abstract public class Configurator {
      * @param path The file to validate.
      * @return True if the file is probably a savefile.
      */
-    static public boolean validateSavegame(@NotNull Path path) {
-        return validFile(path) && Game.FILTER_ALL.accept(path.toFile());
+    @JvmStatic
+    fun validateSavegame(path: Path): Boolean {
+        return validFile(path) && Game.FILTER_ALL.accept(path.toFile())
     }
 
     /**
@@ -581,52 +544,60 @@ abstract public class Configurator {
      *
      * @param mo2Ini The ini file to validate and store.
      */
-    static public void storeMO2Ini(@NotNull Path mo2Ini) {
+    @JvmStatic
+    fun storeMO2Ini(mo2Ini: Path) {
         if (!validFile(mo2Ini)) {
-            return;
+            return
         }
-
-        try (final java.util.Scanner SCANNER = new java.util.Scanner(mo2Ini)) {
-            final Map<String, String> TOKENS = new java.util.TreeMap<>();
-
-            while (SCANNER.hasNextLine()) {
-                final String TOKEN = SCANNER.nextLine();
-                Matcher MATCHER = KEY_VALUE.matcher(TOKEN);
-                if (MATCHER.find()) {
-                    final String KEY = MATCHER.group(1).toLowerCase();
-                    final String VALUE = getFirst(MATCHER.group(2), MATCHER.group(3));
-                    TOKENS.put(KEY, VALUE);
+        try {
+            Scanner(mo2Ini).use { SCANNER ->
+                val TOKENS: MutableMap<String, String?> = TreeMap()
+                while (SCANNER.hasNextLine()) {
+                    val TOKEN = SCANNER.nextLine()
+                    val MATCHER = KEY_VALUE.matcher(TOKEN)
+                    if (MATCHER.find()) {
+                        val KEY = MATCHER.group(1).toLowerCase()
+                        val VALUE = getFirst(MATCHER.group(2), MATCHER.group(3))
+                        TOKENS[KEY] = VALUE
+                    }
+                }
+                val GAME_NAME = TOKENS["gamename"]
+                val GAME_DIR = TOKENS["gamepath"]
+                val GAME_PATH = Paths.get(GAME_DIR!!)
+                LOG.info(String.format("Scanned %s", mo2Ini))
+                LOG.info(String.format("GameName=%s", GAME_NAME))
+                if (!Files.exists(GAME_PATH)) {
+                    LOG.warning(String.format("Directory %s missing.", GAME_PATH))
+                    return
+                }
+                try {
+                    val GAME = Game.valueOf(GAME_NAME!!)
+                    setMO2Ini(GAME, mo2Ini)
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Stored MO2 ini file for " + GAME.NAME,
+                        "Success",
+                        JOptionPane.INFORMATION_MESSAGE
+                    )
+                } catch (ex: IllegalArgumentException) {
+                }
+                for (VALUE in Game.VALUES) {
+                    if (GAME_PATH.endsWith(VALUE.GAME_DIRECTORY)) {
+                        setMO2Ini(VALUE, mo2Ini)
+                        JOptionPane.showMessageDialog(
+                            null,
+                            "Stored MO2 ini file for " + VALUE.NAME,
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE
+                        )
+                        break
+                    }
                 }
             }
-
-            final String GAME_NAME = TOKENS.get("gamename");
-            final String GAME_DIR = TOKENS.get("gamepath");
-            final Path GAME_PATH = Paths.get(GAME_DIR);
-            LOG.info(String.format("Scanned %s", mo2Ini));
-            LOG.info(String.format("GameName=%s", GAME_NAME));
-
-            if (!Files.exists(GAME_PATH)) {
-                LOG.warning(String.format("Directory %s missing.", GAME_PATH));
-                return;
-            }
-
-            try {
-                final Game GAME = Game.valueOf(GAME_NAME);
-                setMO2Ini(GAME, mo2Ini);
-                JOptionPane.showMessageDialog(null, "Stored MO2 ini file for " + GAME.getNAME(), "Success", JOptionPane.INFORMATION_MESSAGE);
-            } catch (IllegalArgumentException ex) {
-            }
-
-            for (Game VALUE : Game.VALUES) {
-                if (GAME_PATH.endsWith(VALUE.getGAME_DIRECTORY())) {
-                    setMO2Ini(VALUE, mo2Ini);
-                    JOptionPane.showMessageDialog(null, "Stored MO2 ini file for " + VALUE.getNAME(), "Success", JOptionPane.INFORMATION_MESSAGE);
-                    break;
-                }
-            }
-
-        } catch (IOException | RuntimeException ex) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex);
+        } catch (ex: IOException) {
+            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+        } catch (ex: RuntimeException) {
+            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
         }
     }
 
@@ -639,57 +610,53 @@ abstract public class Configurator {
      * @return True if the ini file exists and is readable and contains relevant
      * info.
      */
-    static public boolean validateMO2Ini(Game game, @NotNull Path mo2Ini) {
+    @JvmStatic
+    fun validateMO2Ini(game: Game?, mo2Ini: Path): Boolean {
         if (!validFile(mo2Ini)) {
-            return false;
+            return false
         }
-
-        try (final java.util.Scanner SCANNER = new java.util.Scanner(mo2Ini)) {
-            final Map<String, String> TOKENS = new java.util.TreeMap<>();
-
-            while (SCANNER.hasNext()) {
-                final String TOKEN = SCANNER.next();
-                Matcher MATCHER = KEY_VALUE.matcher(TOKEN);
-                if (MATCHER.find()) {
-                    final String KEY = MATCHER.group(1).toLowerCase();
-                    final String VALUE = getFirst(MATCHER.group(2), MATCHER.group(3));
-                    TOKENS.put(KEY, VALUE);
+        try {
+            Scanner(mo2Ini).use { SCANNER ->
+                val TOKENS: MutableMap<String, String?> = TreeMap()
+                while (SCANNER.hasNext()) {
+                    val TOKEN = SCANNER.next()
+                    val MATCHER = KEY_VALUE.matcher(TOKEN)
+                    if (MATCHER.find()) {
+                        val KEY = MATCHER.group(1).toLowerCase()
+                        val VALUE = getFirst(MATCHER.group(2), MATCHER.group(3))
+                        TOKENS[KEY] = VALUE
+                    }
+                }
+                val GAME_NAME = TOKENS["gamename"]
+                val PROFILE_NAME = TOKENS["selected_profile"]
+                val BASEDIR_NAME = TOKENS["base_directory"]
+                val BASEDIR = if (BASEDIR_NAME == null) mo2Ini.parent else Paths.get(BASEDIR_NAME)
+                val MODS = BASEDIR.resolve("mods")
+                val PROFILES = BASEDIR.resolve("profiles")
+                val PROFILE = PROFILES.resolve(PROFILE_NAME)
+                LOG.info(String.format("Scanned %s", mo2Ini))
+                LOG.info(String.format("GameName=%s", GAME_NAME))
+                LOG.info(String.format("selected_profile=%s", PROFILE_NAME))
+                LOG.info(String.format("base_directory=%s", BASEDIR_NAME))
+                return if (!Files.exists(MODS)) {
+                    LOG.warning(String.format("Directory %s missing.", MODS))
+                    false
+                } else if (!Files.exists(PROFILES)) {
+                    LOG.warning(String.format("Directory %s missing.", PROFILES))
+                    false
+                } else if (!Files.exists(PROFILE)) {
+                    LOG.warning(String.format("Directory %s missing.", PROFILE))
+                    false
+                } else {
+                    validateMODir(BASEDIR)
                 }
             }
-
-            final String GAME_NAME = TOKENS.get("gamename");
-            final String PROFILE_NAME = TOKENS.get("selected_profile");
-            final String BASEDIR_NAME = TOKENS.get("base_directory");
-
-            final Path BASEDIR = BASEDIR_NAME == null
-                    ? mo2Ini.getParent()
-                    : Paths.get(BASEDIR_NAME);
-
-            final Path MODS = BASEDIR.resolve("mods");
-            final Path PROFILES = BASEDIR.resolve("profiles");
-            final Path PROFILE = PROFILES.resolve(PROFILE_NAME);
-
-            LOG.info(String.format("Scanned %s", mo2Ini));
-            LOG.info(String.format("GameName=%s", GAME_NAME));
-            LOG.info(String.format("selected_profile=%s", PROFILE_NAME));
-            LOG.info(String.format("base_directory=%s", BASEDIR_NAME));
-
-            if (!Files.exists(MODS)) {
-                LOG.warning(String.format("Directory %s missing.", MODS));
-                return false;
-            } else if (!Files.exists(PROFILES)) {
-                LOG.warning(String.format("Directory %s missing.", PROFILES));
-                return false;
-            } else if (!Files.exists(PROFILE)) {
-                LOG.warning(String.format("Directory %s missing.", PROFILE));
-                return false;
-            } else {
-                return Configurator.validateMODir(BASEDIR);
-            }
-
-        } catch (IOException | RuntimeException ex) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex);
-            return false;
+        } catch (ex: IOException) {
+            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            return false
+        } catch (ex: RuntimeException) {
+            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            return false
         }
     }
 
@@ -701,56 +668,50 @@ abstract public class Configurator {
      * @param mo2Ini The ModOrganizer ini file.
      * @return The list of Mods, or null if the modlist file could not be read
      * for any reason.
-     *
      */
-    @Nullable
-    static public List<Mod> analyzeModOrganizer2(Game game, @NotNull Path mo2Ini) {
-        try (final java.util.Scanner SCANNER = new java.util.Scanner(mo2Ini)) {
-            final Map<String, String> TOKENS = new java.util.TreeMap<>();
-
-            while (SCANNER.hasNext()) {
-                final String TOKEN = SCANNER.next();
-                Matcher MATCHER = KEY_VALUE.matcher(TOKEN);
-                if (MATCHER.find()) {
-                    final String KEY = MATCHER.group(1).toLowerCase();
-                    final String VALUE = getFirst(MATCHER.group(2), MATCHER.group(3));
-                    TOKENS.put(KEY, VALUE);
+    fun analyzeModOrganizer2(game: Game?, mo2Ini: Path): List<Mod>? {
+        try {
+            Scanner(mo2Ini).use { SCANNER ->
+                val TOKENS: MutableMap<String, String?> = TreeMap()
+                while (SCANNER.hasNext()) {
+                    val TOKEN = SCANNER.next()
+                    val MATCHER = KEY_VALUE.matcher(TOKEN)
+                    if (MATCHER.find()) {
+                        val KEY = MATCHER.group(1).toLowerCase()
+                        val VALUE = getFirst(MATCHER.group(2), MATCHER.group(3))
+                        TOKENS[KEY] = VALUE
+                    }
+                }
+                val GAME_NAME = TOKENS["gamename"]
+                val PROFILE_NAME = TOKENS["selected_profile"]
+                val BASEDIR_NAME = TOKENS["base_directory"]
+                val BASEDIR = if (BASEDIR_NAME == null) mo2Ini.parent else Paths.get(BASEDIR_NAME)
+                val MODS = BASEDIR.resolve("mods")
+                val PROFILES = BASEDIR.resolve("profiles")
+                val PROFILE = PROFILES.resolve(PROFILE_NAME)
+                LOG.info(String.format("Scanned %s", mo2Ini))
+                LOG.info(String.format("GameName=%s", GAME_NAME))
+                LOG.info(String.format("selected_profile=%s", PROFILE_NAME))
+                LOG.info(String.format("base_directory=%s", BASEDIR_NAME))
+                return if (!Files.exists(MODS)) {
+                    LOG.warning(String.format("Directory %s missing.", MODS))
+                    null
+                } else if (!Files.exists(PROFILES)) {
+                    LOG.warning(String.format("Directory %s missing.", PROFILES))
+                    null
+                } else if (!Files.exists(PROFILE)) {
+                    LOG.warning(String.format("Directory %s missing.", PROFILE))
+                    null
+                } else {
+                    analyzeModDirectory(game, PROFILE, MODS)
                 }
             }
-
-            final String GAME_NAME = TOKENS.get("gamename");
-            final String PROFILE_NAME = TOKENS.get("selected_profile");
-            final String BASEDIR_NAME = TOKENS.get("base_directory");
-
-            final Path BASEDIR = BASEDIR_NAME == null
-                    ? mo2Ini.getParent()
-                    : Paths.get(BASEDIR_NAME);
-
-            final Path MODS = BASEDIR.resolve("mods");
-            final Path PROFILES = BASEDIR.resolve("profiles");
-            final Path PROFILE = PROFILES.resolve(PROFILE_NAME);
-
-            LOG.info(String.format("Scanned %s", mo2Ini));
-            LOG.info(String.format("GameName=%s", GAME_NAME));
-            LOG.info(String.format("selected_profile=%s", PROFILE_NAME));
-            LOG.info(String.format("base_directory=%s", BASEDIR_NAME));
-
-            if (!Files.exists(MODS)) {
-                LOG.warning(String.format("Directory %s missing.", MODS));
-                return null;
-            } else if (!Files.exists(PROFILES)) {
-                LOG.warning(String.format("Directory %s missing.", PROFILES));
-                return null;
-            } else if (!Files.exists(PROFILE)) {
-                LOG.warning(String.format("Directory %s missing.", PROFILE));
-                return null;
-            } else {
-                return Configurator.analyzeModDirectory(game, PROFILE, MODS);
-            }
-
-        } catch ( IOException | RuntimeException ex) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex);
-            return null;
+        } catch (ex: IOException) {
+            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            return null
+        } catch (ex: RuntimeException) {
+            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            return null
         }
     }
 
@@ -763,49 +724,39 @@ abstract public class Configurator {
      * @param modDir The ModOranizer mod folder.
      * @return The list of Mods, or null if the modlist file could not be read
      * for any reason.
-     *
      */
-    @Nullable
-    static public List<Mod> analyzeModDirectory(Game game, @NotNull Path profile, @NotNull Path modDir) {
-        LOG.info("Attempting to analyze the Mod Organizer directory.");
-
-        try {
-            final Path MOD_LIST = profile.resolve(Configurator.MODLIST_PATH);
-
-            LOG.info("Reading the profile's \"ModList.txt\".");
-            final List<String> MODNAMES = new java.util.LinkedList<>();
-
-            try (BufferedReader input = Files.newBufferedReader(MOD_LIST)) {
-                LOG.fine("Reading from \"ModList.txt\".");
-
+    fun analyzeModDirectory(game: Game?, profile: Path, modDir: Path): List<Mod>? {
+        LOG.info("Attempting to analyze the Mod Organizer directory.")
+        return try {
+            val MOD_LIST = profile.resolve(MODLIST_PATH)
+            LOG.info("Reading the profile's \"ModList.txt\".")
+            val MODNAMES: MutableList<String> = LinkedList()
+            Files.newBufferedReader(MOD_LIST).use { input ->
+                LOG.fine("Reading from \"ModList.txt\".")
                 while (input.ready()) {
-                    String line = input.readLine();
-                    Matcher matcher = MODLIST_REGEX.matcher(line);
+                    val line = input.readLine()
+                    val matcher = MODLIST_REGEX.matcher(line)
                     if (matcher.matches()) {
-                        if (matcher.group(1).equals("+")) {
-                            MODNAMES.add(matcher.group(2));
+                        if (matcher.group(1) == "+") {
+                            MODNAMES.add(matcher.group(2))
                         }
                     }
                 }
-
-                LOG.fine(String.format("\"ModList.txt\" contained %d mod names.", MODNAMES.size()));
+                LOG.fine(String.format("\"ModList.txt\" contained %d mod names.", MODNAMES.size))
             }
-
-            final List<Mod> MODS = new ArrayList<>();
-            for (String MODNAME : MODNAMES) {
-                Path path = modDir.resolve(MODNAME);
-                Mod mod = Mod.createMod(game, path);
+            val MODS: MutableList<Mod> = ArrayList()
+            for (MODNAME in MODNAMES) {
+                val path = modDir.resolve(MODNAME)
+                val mod = createMod(game, path)
                 if (mod != null) {
-                    MODS.add(mod);
+                    MODS.add(mod)
                 }
             }
-
-            LOG.info(String.format("analyzeModDirectory: checked %d mods.", MODS.size()));
-            return MODS;
-
-        } catch (IOException ex) {
-            LOG.severe("Something went wrong while analyzing ModOrganizer. Let's not stress about what it was, let's just fail and return.");
-            return null;
+            LOG.info(String.format("analyzeModDirectory: checked %d mods.", MODS.size))
+            MODS
+        } catch (ex: IOException) {
+            LOG.severe("Something went wrong while analyzing ModOrganizer. Let's not stress about what it was, let's just fail and return.")
+            null
         }
     }
 
@@ -813,24 +764,24 @@ abstract public class Configurator {
      *
      * @param chooser
      */
-    static private void saveChooserPrefs(@NotNull JFileChooser chooser) {
-        PREFS.putInt("chooserWidth", chooser.getSize().width);
-        PREFS.putInt("chooserHeight", chooser.getSize().height);
-        PREFS.putInt("chooserX", chooser.getLocation().x);
-        PREFS.putInt("chooserY", chooser.getLocation().y);
+    private fun saveChooserPrefs(chooser: JFileChooser) {
+        PREFS.putInt("chooserWidth", chooser.size.width)
+        PREFS.putInt("chooserHeight", chooser.size.height)
+        PREFS.putInt("chooserX", chooser.location.x)
+        PREFS.putInt("chooserY", chooser.location.y)
     }
 
     /**
      *
      * @param chooser
      */
-    static private void loadChooserPrefs(@NotNull JFileChooser chooser) {
-        int width = PREFS.getInt("chooserWidth", chooser.getSize().width);
-        int height = PREFS.getInt("chooserHeight", chooser.getSize().height);
-        int x = PREFS.getInt("chooserX", chooser.getLocation().x);
-        int y = PREFS.getInt("chooserY", chooser.getLocation().y);
-        chooser.setSize(width, height);
-        chooser.setLocation(x, y);
+    private fun loadChooserPrefs(chooser: JFileChooser) {
+        val width = PREFS.getInt("chooserWidth", chooser.size.width)
+        val height = PREFS.getInt("chooserHeight", chooser.size.height)
+        val x = PREFS.getInt("chooserX", chooser.location.x)
+        val y = PREFS.getInt("chooserY", chooser.location.y)
+        chooser.setSize(width, height)
+        chooser.setLocation(x, y)
     }
 
     /**
@@ -839,11 +790,11 @@ abstract public class Configurator {
      * @param game The game.
      * @return The directory.
      */
-    @Nullable
-    static Path getGameDirectory(@NotNull Game game) {
-        final String KEY = game.getNAME() + "_directory";
-        String path = PREFS.get(KEY, "");
-        return path.isEmpty() ? null : Paths.get(path);
+    @JvmStatic
+    fun getGameDirectory(game: Game): Path? {
+        val KEY = game.NAME + "_directory"
+        val path = PREFS[KEY, ""]
+        return if (path.isEmpty()) null else Paths.get(path)
     }
 
     /**
@@ -851,17 +802,16 @@ abstract public class Configurator {
      *
      * @param game The game.
      * @param dir The new directory.
-     * @return The specified <code>Path</code>.
+     * @return The specified `Path`.
      */
-    @Nullable
-    static Path setGameDirectory(@NotNull Game game, @Nullable Path dir) {
-        final String KEY = game.getNAME() + "_directory";
+    fun setGameDirectory(game: Game, dir: Path?): Path? {
+        val KEY = game.NAME + "_directory"
         if (dir == null) {
-            PREFS.remove(KEY);
+            PREFS.remove(KEY)
         } else {
-            PREFS.put(KEY, dir.toString());
+            PREFS.put(KEY, dir.toString())
         }
-        return dir;
+        return dir
     }
 
     /**
@@ -870,22 +820,18 @@ abstract public class Configurator {
      * @param game The game whose MO ini file should be stored.
      * @return The ini file.
      */
-    @Nullable
-    static Path getMO2Ini(@NotNull Game game) {
-        final Path gameDir = MO2ROOT.resolve(game.getNAME());
-        final Path iniFile = gameDir.resolve("ModOrganizer.ini");
-
-        Path defPath = iniFile.getParent();
-        while (!Files.exists(defPath) && defPath.getNameCount() > 0) {
-            defPath = defPath.getParent();
+    @JvmStatic
+    fun getMO2Ini(game: Game): Path? {
+        val gameDir = MO2ROOT.resolve(game.NAME)
+        val iniFile = gameDir.resolve("ModOrganizer.ini")
+        var defPath = iniFile.parent
+        while (!Files.exists(defPath) && defPath.nameCount > 0) {
+            defPath = defPath.parent
         }
-
-        String path = PREFS.get("modOrganizerIni_" + game, defPath.toString());
-        if (path.isEmpty()) {
-            return null;
-        }
-
-        return Paths.get(path);
+        val path = PREFS["modOrganizerIni_$game", defPath.toString()]
+        return if (path.isEmpty()) {
+            null
+        } else Paths.get(path)
     }
 
     /**
@@ -893,17 +839,16 @@ abstract public class Configurator {
      *
      * @param game The game whose MO ini file should be stored.
      * @param file The new ini file.
-     * @return The specified <code>Path</code>.
+     * @return The specified `Path`.
      */
-    @Nullable
-    static Path setMO2Ini(Game game, @Nullable Path file) {
-        final String KEY = "modOrganizerIni_" + game;
+    fun setMO2Ini(game: Game, file: Path?): Path? {
+        val KEY = "modOrganizerIni_$game"
         if (file == null) {
-            PREFS.remove(KEY);
+            PREFS.remove(KEY)
         } else {
-            PREFS.put(KEY, file.toString());
+            PREFS.put(KEY, file.toString())
         }
-        return file;
+        return file
     }
 
     /**
@@ -912,16 +857,20 @@ abstract public class Configurator {
      * @param game The game whose MO ini file should be stored.
      * @return The ini file.
      */
-    @NotNull
-    static Path getSaveDirectory(@NotNull Game game) {
-        final Path DEFAULT = MYGAMES.resolve(game.getSAVE_DIRECTORY());
-        Path STORED = Paths.get(PREFS.get("saveDirectory_" + game, DEFAULT.toString()));
-        if (validDir(STORED)) {
-            return STORED;
-        } else if (validDir(DEFAULT)) {
-            return DEFAULT;
-        } else {
-            return MYGAMES;
+    @JvmStatic
+    fun getSaveDirectory(game: Game): Path {
+        val DEFAULT = MYGAMES.resolve(game.SAVE_DIRECTORY)
+        val STORED = Paths.get(PREFS["saveDirectory_$game", DEFAULT.toString()])
+        return when {
+            validDir(STORED) -> {
+                STORED
+            }
+            validDir(DEFAULT) -> {
+                DEFAULT
+            }
+            else -> {
+                MYGAMES
+            }
         }
     }
 
@@ -930,17 +879,16 @@ abstract public class Configurator {
      *
      * @param game The game whose MO ini file should be stored.
      * @param file The new ini file.
-     * @return The specified <code>Path</code>.
+     * @return The specified `Path`.
      */
-    @Nullable
-    static Path setSaveDirectory(Game game, @Nullable Path file) {
-        final String KEY = "saveDirectory_" + game;
+    fun setSaveDirectory(game: Game, file: Path?): Path? {
+        val KEY = "saveDirectory_$game"
         if (file == null) {
-            PREFS.remove(KEY);
+            PREFS.remove(KEY)
         } else {
-            PREFS.put(KEY, file.toString());
+            PREFS.put(KEY, file.toString())
         }
-        return file;
+        return file
     }
 
     /**
@@ -948,31 +896,28 @@ abstract public class Configurator {
      *
      * @return The file.
      */
-    @Nullable
-    public static Path getPreviousSave() {
-        String path = PREFS.get("previousSave", "");
-        if (path.isEmpty()) {
-            return null;
+    val previousSave: Path?
+        get() {
+            val path = PREFS["previousSave", ""]
+            return if (path.isEmpty()) {
+                null
+            } else Paths.get(path)
         }
-
-        return Paths.get(path);
-    }
 
     /**
      * Setter for the previous save field.
      *
      * @param file The new file.
-     * @return The specified <code>Path</code>.
+     * @return The specified `Path`.
      */
-    @Nullable
-    static Path setPreviousSave(@Nullable Path file) {
-        final String KEY = "previousSave";
+    fun setPreviousSave(file: Path?): Path? {
+        val KEY = "previousSave"
         if (file == null) {
-            PREFS.remove(KEY);
+            PREFS.remove(KEY)
         } else {
-            PREFS.put(KEY, file.toString());
+            PREFS.put(KEY, file.toString())
         }
-        return file;
+        return file
     }
 
     /**
@@ -980,31 +925,28 @@ abstract public class Configurator {
      *
      * @return The file.
      */
-    @Nullable
-    static Path getPreviousPluginsExport() {
-        String path = PREFS.get("previousPluginsExport", "");
-        if (path.isEmpty()) {
-            return null;
+    val previousPluginsExport: Path?
+        get() {
+            val path = PREFS["previousPluginsExport", ""]
+            return if (path.isEmpty()) {
+                null
+            } else Paths.get(path)
         }
-
-        return Paths.get(path);
-    }
 
     /**
      * Setter for the previous plugins export field.
      *
      * @param file The new file.
-     * @return The specified <code>Path</code>.
+     * @return The specified `Path`.
      */
-    @Nullable
-    static Path setPreviousPluginsExport(@Nullable Path file) {
-        final String KEY = "previousPluginsExport";
+    fun setPreviousPluginsExport(file: Path?): Path? {
+        val KEY = "previousPluginsExport"
         if (file == null) {
-            PREFS.remove(KEY);
+            PREFS.remove(KEY)
         } else {
-            PREFS.put(KEY, file.toString());
+            PREFS.put(KEY, file.toString())
         }
-        return file;
+        return file
     }
 
     /**
@@ -1013,18 +955,18 @@ abstract public class Configurator {
      * @param path
      * @return
      */
-    static public boolean validFile(@Nullable Path path) {
-        if (null == path) {
-            LOG.info("validFile check: null.");
-            return false;
+    fun validFile(path: Path?): Boolean {
+        return if (null == path) {
+            LOG.info("validFile check: null.")
+            false
         } else if (!Files.isRegularFile(path)) {
-            LOG.info("validFile check: irregular.");
-            return false;
+            LOG.info("validFile check: irregular.")
+            false
         } else if (!Files.isReadable(path)) {
-            LOG.info("validFile check: unreadable.");
-            return false;
+            LOG.info("validFile check: unreadable.")
+            false
         } else {
-            return true;
+            true
         }
     }
 
@@ -1034,11 +976,10 @@ abstract public class Configurator {
      * @param path
      * @return
      */
-    static public boolean validDir(@Nullable Path path) {
-        if (null == path) {
-            return false;
-        }
-        return Files.isDirectory(path) && Files.exists(path) && Files.isReadable(path);
+    fun validDir(path: Path?): Boolean {
+        return if (null == path) {
+            false
+        } else Files.isDirectory(path) && Files.exists(path) && Files.isReadable(path)
     }
 
     /**
@@ -1047,15 +988,16 @@ abstract public class Configurator {
      * @param path
      * @return
      */
-    static public boolean validWrite(@Nullable Path path) {
-        if (null == path) {
-            return false;
+    @JvmStatic
+    fun validWrite(path: Path?): Boolean {
+        return if (null == path) {
+            false
         } else if (Files.exists(path) && !Files.isRegularFile(path)) {
-            return false;
+            false
         } else if (Files.exists(path) && !Files.isWritable(path)) {
-            return false;
+            false
         } else {
-            return Files.isWritable(path.getParent());
+            Files.isWritable(path.parent)
         }
     }
 
@@ -1064,11 +1006,11 @@ abstract public class Configurator {
      * @param items
      * @return
      */
-    static public Path getFirst(@NotNull Path... items) {
+    fun getFirst(vararg items: Path): Path? {
         return Arrays.stream(items)
-                .filter(Objects::nonNull)
-                .filter(Files::exists)
-                .findFirst().orElse(null);
+            .filter { obj: Path? -> Objects.nonNull(obj) }
+            .filter { path: Path? -> Files.exists(path) }
+            .findFirst().orElse(null)
     }
 
     /**
@@ -1076,24 +1018,22 @@ abstract public class Configurator {
      * @param items
      * @return
      */
-    static public String getFirst(@NotNull String... items) {
-        return Arrays.stream(items).filter(Objects::nonNull).findFirst().orElse(null);
+    fun getFirst(vararg items: String): String? {
+        return Arrays.stream(items).filter { obj: String? -> Objects.nonNull(obj) }.findFirst().orElse(null)
     }
 
-    static final private Logger LOG = Logger.getLogger(Configurator.class.getCanonicalName());
-    static final String MODS_PATH = "mods";
-    static final String PROFILES_PATH = "profiles";
-    static final String INI_PATH = "ModOrganizer.ini";
-    static final String MODLIST_PATH = "modlist.txt";
-    static final String MODLIST_PATTERN = "^([+-])(.+)$";
-    static final Pattern MODLIST_REGEX = Pattern.compile(MODLIST_PATTERN);
-
-    static final public PathMatcher GLOB_INI = FileSystems.getDefault().getPathMatcher("glob:**.ini");
-
-    static private final FileNameExtensionFilter TEXTFILES = new FileNameExtensionFilter("Text file", "txt");
-    static final private java.util.prefs.Preferences PREFS = java.util.prefs.Preferences.userNodeForPackage(resaver.ReSaver.class);
-    static final private Pattern KEY_VALUE = Pattern.compile("^(.+)=(?:@ByteArray\\((.+)\\)|(.+))$", Pattern.CASE_INSENSITIVE);
-    static private final Path MO2ROOT = Paths.get(System.getProperty("user.home"), "appData", "local", "ModOrganizer");
-    static private final Path MYGAMES = new JFileChooser().getFileSystemView().getDefaultDirectory().toPath().resolve("My Games");
-
+    private val LOG = Logger.getLogger(Configurator::class.java.canonicalName)
+    const val MODS_PATH = "mods"
+    const val PROFILES_PATH = "profiles"
+    const val INI_PATH = "ModOrganizer.ini"
+    const val MODLIST_PATH = "modlist.txt"
+    const val MODLIST_PATTERN = "^([+-])(.+)$"
+    val MODLIST_REGEX = Pattern.compile(MODLIST_PATTERN)
+    @JvmField
+    val GLOB_INI = FileSystems.getDefault().getPathMatcher("glob:**.ini")
+    private val TEXTFILES = FileNameExtensionFilter("Text file", "txt")
+    private val PREFS = Preferences.userNodeForPackage(ReSaver::class.java)
+    private val KEY_VALUE = Pattern.compile("^(.+)=(?:@ByteArray\\((.+)\\)|(.+))$", Pattern.CASE_INSENSITIVE)
+    private val MO2ROOT = Paths.get(System.getProperty("user.home"), "appData", "local", "ModOrganizer")
+    private val MYGAMES = JFileChooser().fileSystemView.defaultDirectory.toPath().resolve("My Games")
 }
