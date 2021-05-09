@@ -13,260 +13,208 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.ListException;
-import ess.AnalyzableElement;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.SortedSet;
-import resaver.IString;
-import java.nio.ByteBuffer;
-import resaver.Analysis;
-import ess.ESS;
+import ess.AnalyzableElement
+import ess.ESS
+import ess.papyrus.Variable.Companion.read
+import ess.papyrus.Variable.Companion.readList
+import resaver.Analysis
+import resaver.IString
+import resaver.IString.Companion.format
+import resaver.ListException
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.function.Consumer
 
 /**
  * Describes a function message data in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-public class FunctionMessageData implements PapyrusElement, AnalyzableElement, HasVariables {
-
+class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: PapyrusContext) : PapyrusElement,
+    AnalyzableElement, HasVariables {
     /**
-     * Creates a new <code>FunctionMessageData</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param parent The parent of the message.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     * @throws PapyrusElementException
-     */
-    public FunctionMessageData(@NotNull ByteBuffer input, PapyrusElement parent, @NotNull PapyrusContext context) throws PapyrusFormatException, PapyrusElementException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(context);
-
-        this.UNKNOWN = input.get();
-        this.SCRIPTNAME = context.readTString(input);
-        this.SCRIPT = context.findScript(this.SCRIPTNAME);
-
-        this.EVENT = context.readTString(input);
-        this.UNKNOWNVAR = Variable.read(input, context);
-
-        try {
-            int count = input.getInt();
-            this.VARIABLES = Variable.readList(input, count, context);
-        } catch (ListException ex) {
-            throw new PapyrusElementException("Failed to read FunctionMessage variables.", ex, this);
-        }
-    }
-
-    /**
-     * @see ess.Element#write(resaver.ByteBuffer)
+     * @see ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        output.put(this.UNKNOWN);
-        this.SCRIPTNAME.write(output);
-        this.EVENT.write(output);
-        this.UNKNOWNVAR.write(output);
-        output.putInt(this.VARIABLES.size());
-        this.VARIABLES.forEach(var -> var.write(output));
+    override fun write(output: ByteBuffer?) {
+        output?.put(UNKNOWN)
+        scriptName.write(output)
+        event.write(output)
+        UNKNOWNVAR.write(output)
+        output?.putInt(VARIABLES.size)
+        VARIABLES.forEach(Consumer { `var`: Variable? -> `var`!!.write(output) })
     }
 
     /**
-     * @see ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 1;
-        sum += this.SCRIPTNAME.calculateSize();
-        sum += this.EVENT.calculateSize();
-        sum += this.UNKNOWNVAR.calculateSize();
-        sum += 4;
-        int result = 0;
-        for (Variable VARIABLE : this.VARIABLES) {
-            int calculateSize = VARIABLE.calculateSize();
-            result += calculateSize;
+    override fun calculateSize(): Int {
+        var sum = 1
+        sum += scriptName.calculateSize()
+        sum += event.calculateSize()
+        sum += UNKNOWNVAR.calculateSize()
+        sum += 4
+        var result = 0
+        for (VARIABLE in VARIABLES) {
+            val calculateSize = VARIABLE!!.calculateSize()
+            result += calculateSize
         }
-        sum += result;
-        return sum;
+        sum += result
+        return sum
     }
 
     /**
-     * @return The script name field.
-     */
-    public TString getScriptName() {
-        return this.SCRIPTNAME;
-    }
-
-    /**
-     * @return The script field.
-     */
-    public Script getScript() {
-        return this.SCRIPT;
-    }
-
-    /**
-     * @return The event field.
-     */
-    public TString getEvent() {
-        return this.EVENT;
-    }
-
-    /**
-     * @see HasVariables#getVariables()
+     * @see HasVariables.getVariables
      * @return
      */
-    @Override
-    public List<Variable> getVariables() {
-        return this.VARIABLES == null 
-                ? Collections.emptyList() 
-                : Collections.unmodifiableList(this.VARIABLES);
-    }
+    override val variables: List<Variable>
+        get() = if (VARIABLES == null) emptyList() else VARIABLES.filterNotNull()
 
     /**
-     * @see HasVariables#getDescriptors() 
-     * @return 
+     * @see HasVariables.getDescriptors
+     * @return
      */
-    @Override
-    public List<MemberDesc> getDescriptors() {
-        return this.getScript().getExtendedMembers();
-    }
+    override val descriptors: List<MemberDesc>
+        get() = script!!.extendedMembers
 
     /**
-     * @see HasVariables#setVariable(int, ess.papyrus.Variable)
+     * @see HasVariables.setVariable
      * @param index
-     * @param newVar 
+     * @param newVar
      */
-    @Override
-    public void setVariable(int index, Variable newVar) {
-        if (this.VARIABLES == null) {
-            throw new NullPointerException("The variable list is missing.");
+    override fun setVariable(index: Int, newVar: Variable?) {
+        if (VARIABLES == null) {
+            throw NullPointerException("The variable list is missing.")
         }
-        if (index <= 0 || index >= this.VARIABLES.size()) {
-            throw new IllegalArgumentException("Invalid variable index: " + index);
-        }
-        
-        this.VARIABLES.set(index, newVar);
+        require(!(index <= 0 || index >= VARIABLES.size)) { "Invalid variable index: $index" }
+        VARIABLES[index] = newVar
     }
 
     /**
      * @return The qualified name of the function being executed.
      */
-    @NotNull
-    public IString getFName() {
-        IString fname = IString.format("%s.%s", this.SCRIPTNAME, this.EVENT);
-        return fname;
-    }
+    val fName: IString
+        get() = format("%s.%s", scriptName, event)
 
     /**
      * @return String representation.
      */
-    @NotNull
-    @Override
-    public String toString() {
-        if (this.isUndefined()) {
-            return "#" + this.SCRIPTNAME + "#." + this.EVENT;
+    override fun toString(): String {
+        return if (isUndefined) {
+            "#$scriptName#.$event"
         } else {
-            return this.SCRIPTNAME + "." + this.EVENT;
+            "$scriptName.$event"
         }
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @Override
-    public String getInfo(@Nullable resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-        if (null != this.SCRIPT) {
-            BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGEDATA of %s</h3>", this.SCRIPT.toHTML(null)));
+    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
+        val BUILDER = StringBuilder()
+        if (null != script) {
+            BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGEDATA of %s</h3>", script.toHTML(null)))
         } else {
-            BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGEDATA of %s</h3>", this.SCRIPTNAME));
+            BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGEDATA of %s</h3>", scriptName))
         }
-
         if (null != analysis) {
-            SortedSet<String> providers = analysis.SCRIPT_ORIGINS.get(this.SCRIPTNAME.toIString());
+            val providers = analysis.SCRIPT_ORIGINS[scriptName.toIString()]
             if (null != providers) {
-                String probablyProvider = providers.last();
-                BUILDER.append(String.format("<p>This message probably came from \"%s\".</p>", probablyProvider));
-                if (providers.size() > 1) {
-                    BUILDER.append("<p>Full list of providers:</p><ul>");
-                    providers.forEach(mod -> BUILDER.append(String.format("<li>%s", mod)));
-                    BUILDER.append("</ul>");
+                val probablyProvider = providers.last()
+                BUILDER.append(String.format("<p>This message probably came from \"%s\".</p>", probablyProvider))
+                if (providers.size > 1) {
+                    BUILDER.append("<p>Full list of providers:</p><ul>")
+                    providers.forEach(Consumer { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) })
+                    BUILDER.append("</ul>")
                 }
             }
         }
-
-        BUILDER.append("<p>");
-
-        if (null != this.SCRIPT) {
-            BUILDER.append(String.format("Script: %s<br/>", this.SCRIPT.toHTML(null)));
+        BUILDER.append("<p>")
+        if (null != script) {
+            BUILDER.append(String.format("Script: %s<br/>", script.toHTML(null)))
         } else {
-            BUILDER.append(String.format("Script: %s<br/>", this.SCRIPTNAME));
+            BUILDER.append(String.format("Script: %s<br/>", scriptName))
         }
-
-        BUILDER.append(String.format("Event: %s<br/>", this.EVENT));
-        BUILDER.append(String.format("Unknown: %02x<br/>", this.UNKNOWN));
-
-        if (null != this.UNKNOWNVAR) {
-            BUILDER.append(String.format("Unknown variable: %s<br/>", this.UNKNOWNVAR.toHTML(null)));
+        BUILDER.append(String.format("Event: %s<br/>", event))
+        BUILDER.append(String.format("Unknown: %02x<br/>", UNKNOWN))
+        if (null != UNKNOWNVAR) {
+            BUILDER.append(String.format("Unknown variable: %s<br/>", UNKNOWNVAR.toHTML(null)))
         } else {
-            BUILDER.append("Unknown variable: null<br/>");
+            BUILDER.append("Unknown variable: null<br/>")
         }
-
-        BUILDER.append(String.format("%d function variables.<br/>", this.VARIABLES.size()));
-        BUILDER.append("</p>");
-        BUILDER.append("</html>");
-        return BUILDER.toString();
-
+        BUILDER.append(String.format("%d function variables.<br/>", VARIABLES.size))
+        BUILDER.append("</p>")
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(resaver.Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(@NotNull Analysis analysis, String mod) {
-        Objects.requireNonNull(analysis);
-        Objects.requireNonNull(mod);
-
-        final SortedSet<String> OWNERS = analysis.SCRIPT_ORIGINS.get(this.SCRIPTNAME.toIString());
-        if (null == OWNERS) {
-            return false;
-        }
-        return OWNERS.contains(mod);
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+        Objects.requireNonNull(analysis)
+        Objects.requireNonNull(mod)
+        val OWNERS = analysis?.SCRIPT_ORIGINS?.get(scriptName.toIString()) ?: return false
+        return OWNERS.contains(mod)
     }
 
     /**
-     * @return A flag indicating if the <code>FunctionMessageData</code> is
+     * @return A flag indicating if the `FunctionMessageData` is
      * undefined.
-     *
      */
-    public boolean isUndefined() {
-        if (null != this.SCRIPT) {
-            return this.SCRIPT.isUndefined();
+    val isUndefined: Boolean
+        get() = script?.isUndefined ?: !Script.NATIVE_SCRIPTS.contains(scriptName.toWString())
+    private val UNKNOWN: Byte
+
+    /**
+     * @return The script name field.
+     */
+    val scriptName: TString
+
+    /**
+     * @return The script field.
+     */
+    val script: Script?
+
+    /**
+     * @return The event field.
+     */
+    val event: TString
+    private val UNKNOWNVAR: Variable
+    private var VARIABLES: MutableList<Variable?> = mutableListOf()
+
+    /**
+     * Creates a new `FunctionMessageData` by reading from a
+     * `ByteBuffer`. No error handling is performed.
+     *
+     * @param input The input stream.
+     * @param parent The parent of the message.
+     * @param context The `PapyrusContext` info.
+     * @throws PapyrusFormatException
+     * @throws PapyrusElementException
+     */
+    init {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(context)
+        UNKNOWN = input.get()
+        scriptName = context.readTString(input)
+        script = context.findScript(scriptName)
+        event = context.readTString(input)
+        UNKNOWNVAR = read(input, context)
+        try {
+            val count = input.int
+            VARIABLES = readList(input, count, context).toMutableList()
+        } catch (ex: ListException) {
+            throw PapyrusElementException("Failed to read FunctionMessage variables.", ex, this)
         }
-
-        return !Script.NATIVE_SCRIPTS.contains(this.SCRIPTNAME.toWString());
     }
-
-    final private byte UNKNOWN;
-    final private TString SCRIPTNAME;
-    final private Script SCRIPT;
-    final private TString EVENT;
-    @NotNull
-    final private Variable UNKNOWNVAR;
-    @NotNull
-    final private List<Variable> VARIABLES;
 }
