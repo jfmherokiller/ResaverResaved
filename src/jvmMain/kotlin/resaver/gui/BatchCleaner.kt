@@ -148,7 +148,7 @@ class BatchCleaner(window: SaveWindow?, save: ess.ESS?) : SwingWorker<Boolean, D
                 return false
             }
             val PAPYRUS = SAVE.papyrus
-            val THREADS: MutableSet<ess.papyrus.ActiveScript> = hashSetOf()
+            val THREADS: MutableSet<ActiveScript> = hashSetOf()
             for (def in CLEAN_NAMES) {
                 if (def is Script) {
                     if (PAPYRUS != null) {
@@ -160,9 +160,11 @@ class BatchCleaner(window: SaveWindow?, save: ess.ESS?) : SwingWorker<Boolean, D
                     }
                 }
             }
-            THREADS.forEach { obj: ess.papyrus.ActiveScript -> obj.zero() }
+            THREADS.forEach { obj: ActiveScript -> obj.zero() }
             val REMOVED = SAVE.papyrus?.removeElements(CLEAN_NAMES)
-            WINDOW.deleteNodesFor(REMOVED)
+            if (REMOVED != null) {
+                WINDOW.deleteNodesFor(REMOVED)
+            }
             var scripts = 0L
             if (REMOVED != null) {
                 for (papyrusElement in REMOVED) {

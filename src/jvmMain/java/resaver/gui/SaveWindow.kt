@@ -13,411 +13,328 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import mf.Duad;
-import mf.JValueMenuItem;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.Analysis;
-import resaver.Game;
-import resaver.Mod;
-import resaver.ProgressModel;
-import ess.*;
-import ess.papyrus.*;
-import resaver.gui.FilterTreeModel.Node;
-import resaver.pex.AssemblyLevel;
-import resaver.pex.PexFile;
-
-import javax.swing.*;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
-import javax.swing.plaf.basic.BasicComboBoxRenderer;
-import javax.swing.text.Document;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.tree.TreePath;
-import java.awt.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.FutureTask;
-import java.util.function.Predicate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.prefs.BackingStoreException;
-import java.util.regex.Pattern;
+import ess.*
+import ess.ESS.Companion.readESS
+import ess.ESS.Companion.verifyIdentical
+import ess.papyrus.*
+import mf.Duad
+import mf.Duad.Companion.make
+import mf.JValueMenuItem
+import mf.Timer
+import resaver.*
+import resaver.gui.AboutDialog.show
+import resaver.gui.AboutDialog.version
+import resaver.gui.AutoCompletion.Companion.enable
+import resaver.gui.Configurator.choosePathModal
+import resaver.gui.Configurator.confirmSaveFile
+import resaver.gui.Configurator.getGameDirectory
+import resaver.gui.Configurator.getMO2Ini
+import resaver.gui.Configurator.selectGameDirectory
+import resaver.gui.Configurator.selectMO2Ini
+import resaver.gui.Configurator.selectNewSaveFile
+import resaver.gui.Configurator.selectPluginsExport
+import resaver.gui.Configurator.selectSaveFile
+import resaver.gui.Configurator.storeMO2Ini
+import resaver.gui.Configurator.validWrite
+import resaver.gui.Configurator.validateGameDirectory
+import resaver.gui.Configurator.validateMO2Ini
+import resaver.gui.Configurator.validateSavegame
+import resaver.gui.DataAnalyzer.Companion.showDataAnalyzer
+import resaver.gui.FilterMaker.createFilter
+import resaver.pex.AssemblyLevel
+import resaver.pex.PexFile.Companion.readScript
+import java.awt.*
+import java.awt.event.*
+import java.io.IOException
+import java.nio.ByteBuffer
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.FutureTask
+import java.util.function.Predicate
+import java.util.function.Supplier
+import java.util.logging.Level
+import java.util.logging.Logger
+import java.util.prefs.BackingStoreException
+import java.util.prefs.Preferences
+import java.util.regex.Pattern
+import javax.imageio.ImageIO
+import javax.swing.*
+import javax.swing.border.Border
+import javax.swing.event.HyperlinkEvent
+import javax.swing.event.HyperlinkListener
+import javax.swing.event.TreeSelectionEvent
+import javax.swing.plaf.basic.BasicComboBoxRenderer
+import javax.swing.text.BadLocationException
+import javax.swing.text.StyleConstants
+import javax.swing.text.StyleContext
 
 /**
  * A window that displays savegame data and allows limited editing.
  *
  * @author Mark Fairchild
  */
-@SuppressWarnings("serial")
-final public class SaveWindow extends JFrame {
-
-    /**
-     * Create a new <code>SaveWindow</code> with a <code>Path</code>. If the
-     * <code>Path</code> is a savefile, it will be opened.
-     *
-     * @param path The <code>Path</code> to open.
-     * @param autoParse Automatically parse the specified savefile.
-     */
-    public SaveWindow(Path path, boolean autoParse) {
-        super.setExtendedState(PREFS.getInt("settings.extendedState", JFrame.MAXIMIZED_BOTH));
-
-        this.JFXPANEL = PREFS.getBoolean("settings.javafx", false)
-                ? this.initializeJavaFX()
-                : null;
-
-        this.TIMER = new mf.Timer("SaveWindow timer");
-        this.TIMER.start();
-        LOG.info("Created timer.");
-
-        this.save = null;
-        this.analysis = null;
-        this.filter = (x -> true);
-        this.scanner = null;
-
-        this.TREE = new FilterTree();
-        this.TREESCROLLER = new JScrollPane(this.TREE);
-        this.TOPPANEL = new JPanel();
-        this.MODPANEL = new JPanel(new FlowLayout(FlowLayout.LEADING));
-        this.MODLABEL = new JLabel("Mod Filter:");
-        this.MODCOMBO = new JComboBox<>();
-        this.PLUGINCOMBO = new JComboBox<>();
-        this.FILTERFIELD = new JTreeFilterField(() -> updateFilters(false), PREFS.get("settings.regex", ""));
-        this.FILTERPANEL = new JPanel(new FlowLayout(FlowLayout.LEADING));
-        this.MAINPANEL = new JPanel(new BorderLayout());
-        this.PROGRESSPANEL = new JPanel();
-        this.PROGRESS = new ProgressIndicator();
-        this.STATUSPANEL = new JPanel(new BorderLayout());
-        this.TREEHISTORY = new JTreeHistory(this.TREE);
-
-        this.TABLE = new VariableTable(this);
-        this.INFOPANE = new InfoPane(null, this::hyperlinkUpdate);
-
-        this.DATASCROLLER = new JScrollPane(this.TABLE);
-        this.INFOSCROLLER = new JScrollPane(this.INFOPANE);
-        this.RIGHTSPLITTER = new JSplitPane(JSplitPane.VERTICAL_SPLIT, this.INFOSCROLLER, this.DATASCROLLER);
-        this.MAINSPLITTER = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.MAINPANEL, this.RIGHTSPLITTER);
-        this.MENUBAR = new JMenuBar();
-        this.FILEMENU = new JMenu("File");
-        this.CLEANMENU = new JMenu("Clean");
-        this.OPTIONSMENU = new JMenu("Options");
-        this.DATAMENU = new JMenu("Data");
-        this.HELPMENU = new JMenu("Help");
-
-        this.MI_EXIT = new JMenuItem("Exit", KeyEvent.VK_E);
-        this.MI_LOAD = new JMenuItem("Open", KeyEvent.VK_O);
-        this.MI_LOADESPS = new JMenuItem("Parse ESP/ESMs.", KeyEvent.VK_P);
-        this.MI_SAVE = new JMenuItem("Save", KeyEvent.VK_S);
-        this.MI_SAVEAS = new JMenuItem("Save As", KeyEvent.VK_A);
-        this.MI_EXPORTPLUGINS = new JMenuItem("Export plugin list", KeyEvent.VK_X);
-        this.MI_SETTINGS = new JMenuItem("Settings");
-        this.MI_WATCHSAVES = new JCheckBoxMenuItem("Watch Savefile Directory", PREFS.getBoolean("settings.watch", false));
-
-        this.MI_USEMO2 = new JCheckBoxMenuItem("Mod Organizer 2 integration", PREFS.getBoolean("settings.useMO2", false));
-        this.MI_SHOWUNATTACHED = new JCheckBoxMenuItem("Show unattached instances", false);
-        this.MI_SHOWUNDEFINED = new JCheckBoxMenuItem("Show undefined elements", false);
-        this.MI_SHOWMEMBERLESS = new JCheckBoxMenuItem("Show memberless instances", false);
-        this.MI_SHOWCANARIES = new JCheckBoxMenuItem("Show zeroed canaries", false);
-        this.MI_SHOWNULLREFS = new JCheckBoxMenuItem("Show Formlists containg nullrefs", false);
-        this.MI_SHOWNONEXISTENTCREATED = new JCheckBoxMenuItem("Show non-existent-form instances", false);
-        this.MI_SHOWLONGSTRINGS = new JCheckBoxMenuItem("Show long strings (512ch or more)", false);
-        this.MI_SHOWDELETED = new JCheckBoxMenuItem("Show cell(-1) changeforms", false);
-        this.MI_SHOWEMPTY = new JCheckBoxMenuItem("Show empty REFR", false);
-        this.MI_CHANGEFILTER = new JValueMenuItem<>("ChangeFlag filter (%s)", null);
-        this.MI_CHANGEFORMFILTER = new JValueMenuItem<>("ChangeFormFlag filter (%s)", null);
-
-        this.MI_REMOVEUNATTACHED = new JMenuItem("Remove unattached instances", KeyEvent.VK_1);
-        this.MI_REMOVEUNDEFINED = new JMenuItem("Remove undefined elements", KeyEvent.VK_2);
-        this.MI_RESETHAVOK = new JMenuItem("Reset Havok", KeyEvent.VK_3);
-        this.MI_CLEANSEFORMLISTS = new JMenuItem("Purify FormLists", KeyEvent.VK_4);
-        this.MI_REMOVENONEXISTENT = new JMenuItem("Remove non-existent form instances", KeyEvent.VK_5);
-        this.MI_BATCHCLEAN = new JMenuItem("Batch Clean", KeyEvent.VK_6);
-        this.MI_KILL = new JMenuItem("Kill Listed");
-
-        this.MI_SHOWMODS = new JCheckBoxMenuItem("Show Mod Filter box", PREFS.getBoolean("settings.showMods", false));
-
-        this.MI_LOOKUPID = new JMenuItem("Lookup ID by name");
-        this.MI_LOOKUPBASE = new JMenuItem("Lookup base object/npc");
-        this.MI_ANALYZE_ARRAYS = new JMenuItem("Analyze Arrays Block");
-        this.MI_COMPARETO = new JMenuItem("Compare To");
-
-        this.MI_SHOWLOG = new JMenuItem("Show Log", KeyEvent.VK_S);
-        this.MI_ABOUT = new JMenuItem("About", KeyEvent.VK_A);
-
-        this.BTN_CLEAR_FILTER = new JButton("Clear Filters");
-        this.LOGWINDOW = new LogWindow();
-        this.LBL_MEMORY = new MemoryLabel();
-        this.LBL_WATCHING = new JLabel("WATCHING");
-        this.LBL_SCANNING = new JLabel("SCANNING");
-        this.WORRIER = new Worrier();
-        this.WATCHER = new Watcher(this, this.WORRIER);
-
-        this.initComponents(path, autoParse);
-
-        TIMER.stop();
-        LOG.info(String.format("Version: %s", AboutDialog.getVersion()));
-        LOG.info(String.format("SaveWindow constructed; took %s.", this.TIMER.getFormattedTime()));
-    }
-
+class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
     /**
      * Initialize the swing and AWT components.
      *
-     * @param path The <code>Path</code> to open.
+     * @param path The `Path` to open.
      * @param autoParse Automatically parse the specified savefile.
-     *
      */
-    private void initComponents(@NotNull Path path, boolean autoParse) {
-        this.resetTitle(null);
-        this.setDropTarget(new ReSaverDropTarget(f -> open(f, PREFS.getBoolean("settings.alwaysParse", false))));
-        this.TREE.addTreeSelectionListener(e -> updateContextInformation());
-        this.DATASCROLLER.setBorder(BorderFactory.createTitledBorder(this.DATASCROLLER.getBorder(), "Data"));
-        this.INFOSCROLLER.setBorder(BorderFactory.createTitledBorder(this.INFOSCROLLER.getBorder(), "Information"));
-        this.MAINSPLITTER.setResizeWeight(0.5);
-        this.MAINSPLITTER.setDividerLocation(0.5);
-        this.RIGHTSPLITTER.setResizeWeight(0.66);
-        this.RIGHTSPLITTER.setDividerLocation(0.5);
-        this.MAINPANEL.setMinimumSize(new Dimension(350, 400));
-        this.PLUGINCOMBO.setRenderer(new PluginListCellRenderer());
-        this.PLUGINCOMBO.setPrototypeDisplayValue(Plugin.PROTOTYPE);
-        this.PLUGINCOMBO.setToolTipText("Select a plugin for filtering.");
-
-        AutoCompletion.enable(this.PLUGINCOMBO);
-        AutoCompletion.enable(this.MODCOMBO);
-
-        this.PROGRESSPANEL.add(this.LBL_MEMORY);
-        this.PROGRESSPANEL.add(this.LBL_WATCHING);
-        this.PROGRESSPANEL.add(this.LBL_SCANNING);
-        this.PROGRESSPANEL.add(this.PROGRESS);
-
-        this.STATUSPANEL.add(this.PROGRESSPANEL, BorderLayout.LINE_START);
-        this.STATUSPANEL.add(this.TREEHISTORY, BorderLayout.LINE_END);
-
-        this.TREESCROLLER.getViewport().putClientProperty("EnableWindowBlit", Boolean.TRUE);
-        this.FILTERPANEL.add(this.FILTERFIELD);
-        this.FILTERPANEL.add(this.PLUGINCOMBO);
-        this.FILTERPANEL.add(this.BTN_CLEAR_FILTER);
-
-        this.MODPANEL.add(this.MODLABEL);
-        this.MODPANEL.add(this.MODCOMBO);
-        this.MODPANEL.setVisible(false);
-        this.MODCOMBO.setRenderer(new ModListCellRenderer());
-
-        this.TOPPANEL.setLayout(new BoxLayout(this.TOPPANEL, BoxLayout.Y_AXIS));
-        this.TOPPANEL.add(this.MODPANEL);
-        this.TOPPANEL.add(this.FILTERPANEL);
-
-        this.MAINPANEL.add(this.TREESCROLLER, BorderLayout.CENTER);
-        this.MAINPANEL.add(this.TOPPANEL, BorderLayout.PAGE_START);
-        this.MAINPANEL.add(this.STATUSPANEL, BorderLayout.PAGE_END);
-
-        this.FILEMENU.add(this.MI_LOAD);
-        this.FILEMENU.add(this.MI_SAVE);
-        this.FILEMENU.add(this.MI_SAVEAS);
-        this.FILEMENU.addSeparator();
-        this.FILEMENU.add(this.MI_LOADESPS);
-        this.FILEMENU.add(this.MI_WATCHSAVES);
-        this.FILEMENU.addSeparator();
-        this.FILEMENU.add(this.MI_EXPORTPLUGINS);
-        this.FILEMENU.addSeparator();
-        this.FILEMENU.add(this.MI_EXIT);
-        this.FILEMENU.setMnemonic('f');
-
-        this.CLEANMENU.add(this.MI_SHOWUNATTACHED);
-        this.CLEANMENU.add(this.MI_SHOWUNDEFINED);
-        this.CLEANMENU.add(this.MI_SHOWMEMBERLESS);
-        this.CLEANMENU.add(this.MI_SHOWCANARIES);
-        this.CLEANMENU.add(this.MI_SHOWNULLREFS);
-        this.CLEANMENU.add(this.MI_SHOWNONEXISTENTCREATED);
-        this.CLEANMENU.add(this.MI_SHOWLONGSTRINGS);
-        this.CLEANMENU.add(this.MI_SHOWDELETED);
-        this.CLEANMENU.add(this.MI_SHOWEMPTY);
-        this.CLEANMENU.add(this.MI_CHANGEFILTER);
-        this.CLEANMENU.add(this.MI_CHANGEFORMFILTER);
-        this.CLEANMENU.addSeparator();
-        this.CLEANMENU.add(this.MI_REMOVEUNATTACHED);
-        this.CLEANMENU.add(this.MI_REMOVEUNDEFINED);
-        this.CLEANMENU.add(this.MI_RESETHAVOK);
-        this.CLEANMENU.add(this.MI_CLEANSEFORMLISTS);
-        this.CLEANMENU.add(this.MI_REMOVENONEXISTENT);
-        this.CLEANMENU.addSeparator();
-        this.CLEANMENU.add(this.MI_BATCHCLEAN);
-        this.CLEANMENU.add(this.MI_KILL);
-        this.CLEANMENU.setMnemonic('c');
-
-        this.OPTIONSMENU.add(this.MI_USEMO2);
-        this.OPTIONSMENU.add(this.MI_SHOWMODS);
-        this.OPTIONSMENU.add(this.MI_SETTINGS);
-        this.OPTIONSMENU.setMnemonic('o');
-
-        this.DATAMENU.add(this.MI_LOOKUPID);
-        this.DATAMENU.add(this.MI_LOOKUPBASE);
-        this.DATAMENU.add(this.MI_ANALYZE_ARRAYS);
-        this.DATAMENU.add(this.MI_COMPARETO);
-
-        this.DATAMENU.setMnemonic('d');
-        this.MI_LOOKUPID.setEnabled(false);
-        this.MI_LOOKUPBASE.setEnabled(false);
-        this.MI_LOADESPS.setEnabled(false);
-
-        this.HELPMENU.add(this.MI_SHOWLOG);
-        this.HELPMENU.add(this.MI_ABOUT);
-        this.HELPMENU.setMnemonic('h');
-
-        this.MENUBAR.add(this.FILEMENU);
-        this.MENUBAR.add(this.CLEANMENU);
-        this.MENUBAR.add(this.OPTIONSMENU);
-        this.MENUBAR.add(this.DATAMENU);
-        this.MENUBAR.add(this.HELPMENU);
-
-        this.MI_EXIT.addActionListener(e -> exitWithPrompt());
-        this.MI_LOAD.addActionListener(e -> openWithPrompt());
-        this.MI_LOADESPS.addActionListener(e -> scanESPs(true));
-        this.MI_WATCHSAVES.addActionListener(e -> PREFS.putBoolean("settings.watch", MI_WATCHSAVES.isSelected()));
-        this.MI_WATCHSAVES.addActionListener(e -> setWatching(MI_WATCHSAVES.isSelected()));
-        this.MI_SAVE.addActionListener(e -> save(false, null));
-        this.MI_SAVEAS.addActionListener(e -> save(true, null));
-        this.MI_EXPORTPLUGINS.addActionListener(e -> exportPlugins());
-        this.MI_SETTINGS.addActionListener(e -> showSettings());
-        this.MI_SHOWUNATTACHED.addActionListener(e -> updateFilters(false));
-        this.MI_SHOWUNDEFINED.addActionListener(e -> updateFilters(false));
-        this.MI_SHOWMEMBERLESS.addActionListener(e -> updateFilters(false));
-        this.MI_SHOWCANARIES.addActionListener(e -> updateFilters(false));
-        this.MI_SHOWNULLREFS.addActionListener(e -> updateFilters(false));
-        this.MI_SHOWNONEXISTENTCREATED.addActionListener(e -> updateFilters(false));
-        this.MI_SHOWLONGSTRINGS.addActionListener(e -> updateFilters(false));
-        this.MI_SHOWDELETED.addActionListener(e -> updateFilters(false));
-        this.MI_SHOWEMPTY.addActionListener(e -> updateFilters(false));
-        this.MI_CHANGEFILTER.addActionListener(e -> setChangeFlagFilter());
-        this.MI_CHANGEFORMFILTER.addActionListener(e -> setChangeFormFlagFilter());
-        this.MI_REMOVEUNATTACHED.addActionListener(e -> cleanUnattached());
-        this.MI_REMOVEUNDEFINED.addActionListener(e -> cleanUndefined());
-        this.MI_RESETHAVOK.addActionListener(e -> resetHavok());
-        this.MI_CLEANSEFORMLISTS.addActionListener(e -> cleanseFormLists());
-        this.MI_REMOVENONEXISTENT.addActionListener(e -> cleanNonexistent());
-        this.MI_BATCHCLEAN.addActionListener(e -> batchClean());
-        this.MI_KILL.addActionListener(e -> kill());
-        this.MI_SHOWMODS.addActionListener(e -> this.setAnalysis(this.analysis));
-        this.MI_SHOWMODS.addActionListener(e -> PREFS.putBoolean("settings.showMods", this.MI_SHOWMODS.isSelected()));
-        this.MI_LOOKUPID.addActionListener(e -> lookupID());
-        this.MI_LOOKUPBASE.addActionListener(e -> lookupBase());
-        this.MI_ANALYZE_ARRAYS.addActionListener(e -> showDataAnalyzer(this.save.getPapyrus().getArraysBlock()));
-        this.MI_COMPARETO.addActionListener(e -> compareTo());
-        this.MI_SHOWLOG.addActionListener(e -> showLog());
-        this.MI_ABOUT.addActionListener(e -> AboutDialog.show(this));
-        this.MI_USEMO2.addActionListener(e -> PREFS.putBoolean("settings.useMO2", this.MI_USEMO2.isSelected()));
-
-        this.MI_EXIT.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK));
-        this.MI_LOAD.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
-        this.MI_LOADESPS.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_P, KeyEvent.CTRL_DOWN_MASK));
-        this.MI_SAVE.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK));
-        this.MI_SAVEAS.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK));
-        this.MI_BATCHCLEAN.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_6, KeyEvent.CTRL_DOWN_MASK));
-
-        this.BTN_CLEAR_FILTER.addActionListener(e -> updateFilters(true));
-
-        this.MODCOMBO.setToolTipText("Select a mod for filtering.");
-        this.LBL_MEMORY.setToolTipText("Current memory usage.");
-        this.LBL_WATCHING.setToolTipText("When you save your game, ReSaver will automatcally open the new savefile.");
-        this.LBL_SCANNING.setToolTipText("ReSaver is scanning your plugins so that it can add proper names to everything.");
-        this.BTN_CLEAR_FILTER.setToolTipText("Clear all filters.");
-        this.MI_ABOUT.setToolTipText("Shows version information, system information, and an original colour photograph of cats.");
-        this.MI_SHOWLOG.setToolTipText("Show ReSaver's internal log. For development purposes only.");
-        this.MI_ANALYZE_ARRAYS.setToolTipText("Displays the dataAnalyzer for the 'Arrays' section, which hasn't been fully decoded yet. For development purposes only.");
-        this.MI_COMPARETO.setToolTipText("Compare the current savefile to another one. For development purposes only.");
-
-        this.MI_CHANGEFILTER.setToolTipText("Sets a ChangeFlag filter. ChangeFlags describe what kind of changes are present in ChangeForms.");
-        this.MI_CHANGEFORMFILTER.setToolTipText("Sets a ChangeFormFlag filter. ChangeFormFlags are part of a ChangeForm and modify the Form's flags. You can examine those flags in xEdit for more information.");
-        this.MI_REMOVENONEXISTENT.setToolTipText("Removes ScriptInstances attached to non-existent ChangeForms. These ScriptInstances can be left behind when in-game objects are created and then destroyed. Cleaning them can cause some mods to stop working though.");
-        this.MI_REMOVEUNATTACHED.setToolTipText("Removes ScriptInstances that aren't attached to anything. These ScriptInstances are usually left behind when mods are uinstalled. However in Fallout 4 they are used deliberately, so use caution when removing them.");
-        this.MI_REMOVEUNDEFINED.setToolTipText("Removes Scripts and ScriptInstances for which the script itself is missing, as well as terminating any ActiveScripts associated with them. SKSE and F4SE usually remove these automatically; if it doesn't, there's probably a good reason. So use caution when removing them.");
-
-        final javax.swing.border.Border BORDER = BorderFactory.createCompoundBorder(BorderFactory.createLoweredBevelBorder(), BorderFactory.createEmptyBorder(1, 1, 1, 1));
-
-        this.LBL_MEMORY.setBorder(BORDER);
-        this.LBL_WATCHING.setBorder(BORDER);
-        this.LBL_SCANNING.setBorder(BORDER);
-
-        final java.awt.Font DEFFONT = this.LBL_MEMORY.getFont();
-        final java.awt.Font MONO = new java.awt.Font(java.awt.Font.MONOSPACED, DEFFONT.getStyle(), DEFFONT.getSize());
-        this.LBL_MEMORY.setFont(MONO);
-        this.LBL_WATCHING.setFont(MONO);
-        this.LBL_SCANNING.setFont(MONO);
-
-        this.LBL_WATCHING.setVisible(false);
-        this.LBL_SCANNING.setVisible(false);
-
-        LOG.getParent().addHandler(this.LOGWINDOW.getHandler());
-
-        this.setJMenuBar(this.MENUBAR);
-        this.setContentPane(this.MAINSPLITTER);
-        this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        this.setPreferredSize(new java.awt.Dimension(800, 600));
-        this.pack();
-        SaveWindow.this.restoreWindowPosition();
-        this.setLocationRelativeTo(null);
-
-        this.MI_SHOWNONEXISTENTCREATED.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                final String WARN = "Non-existent forms are used intentionally by some mods. Use caution when deleting them.";
-                final String WARN_TITLE = "Warning";
-                JOptionPane.showMessageDialog(this, WARN, WARN_TITLE, JOptionPane.WARNING_MESSAGE);
-            }
-        });
-
-        this.setWatching(this.MI_WATCHSAVES.isSelected());
-
-        this.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent evt) {
-                SaveWindow.this.exitWithPrompt();
-            }
-
-            @Override
-            public void windowOpened(WindowEvent evt) {
-                if (Configurator.validateSavegame(path)) {
-                    boolean parse = autoParse || PREFS.getBoolean("settings.alwaysParse", false);
-                    SaveWindow.this.open(path, parse);
-                } else {
-                    SaveWindow.this.open();
-                }
-                SaveWindow.this.updateFilters(false);
-            }
-        });
-
-        try {
-            final java.io.InputStream INPUT = this.getClass().getClassLoader().getResourceAsStream("Disk.png");
-            final Image ICON = javax.imageio.ImageIO.read(INPUT);
-            super.setIconImage(ICON);
-        } catch ( IOException | NullPointerException | IllegalArgumentException ex) {
-            LOG.warning("Failed to load icon.");
+    private fun initComponents(path: Path?, autoParse: Boolean) {
+        resetTitle(null)
+        dropTarget = ReSaverDropTarget { f: Path -> open(f, PREFS.getBoolean("settings.alwaysParse", false)) }
+        TREE.addTreeSelectionListener { e: TreeSelectionEvent? -> updateContextInformation() }
+        DATASCROLLER.border = BorderFactory.createTitledBorder(DATASCROLLER.border, "Data")
+        INFOSCROLLER.border = BorderFactory.createTitledBorder(INFOSCROLLER.border, "Information")
+        MAINSPLITTER.resizeWeight = 0.5
+        MAINSPLITTER.setDividerLocation(0.5)
+        RIGHTSPLITTER!!.resizeWeight = 0.66
+        RIGHTSPLITTER.setDividerLocation(0.5)
+        MAINPANEL.minimumSize = Dimension(350, 400)
+        PLUGINCOMBO.renderer = PluginListCellRenderer()
+        PLUGINCOMBO.prototypeDisplayValue = Plugin.PROTOTYPE
+        PLUGINCOMBO.toolTipText = "Select a plugin for filtering."
+        enable(PLUGINCOMBO)
+        enable(MODCOMBO)
+        PROGRESSPANEL.add(LBL_MEMORY)
+        PROGRESSPANEL.add(LBL_WATCHING)
+        PROGRESSPANEL.add(LBL_SCANNING)
+        PROGRESSPANEL.add(progressIndicator)
+        STATUSPANEL.add(PROGRESSPANEL, BorderLayout.LINE_START)
+        STATUSPANEL.add(TREEHISTORY, BorderLayout.LINE_END)
+        TREESCROLLER.viewport.putClientProperty("EnableWindowBlit", java.lang.Boolean.TRUE)
+        FILTERPANEL.add(FILTERFIELD)
+        FILTERPANEL.add(PLUGINCOMBO)
+        FILTERPANEL.add(BTN_CLEAR_FILTER)
+        MODPANEL.add(MODLABEL)
+        MODPANEL.add(MODCOMBO)
+        MODPANEL.isVisible = false
+        MODCOMBO.renderer = ModListCellRenderer()
+        TOPPANEL.layout = BoxLayout(TOPPANEL, BoxLayout.Y_AXIS)
+        TOPPANEL.add(MODPANEL)
+        TOPPANEL.add(FILTERPANEL)
+        MAINPANEL.add(TREESCROLLER, BorderLayout.CENTER)
+        MAINPANEL.add(TOPPANEL, BorderLayout.PAGE_START)
+        MAINPANEL.add(STATUSPANEL, BorderLayout.PAGE_END)
+        FILEMENU.add(MI_LOAD)
+        FILEMENU.add(MI_SAVE)
+        FILEMENU.add(MI_SAVEAS)
+        FILEMENU.addSeparator()
+        FILEMENU.add(MI_LOADESPS)
+        FILEMENU.add(MI_WATCHSAVES)
+        FILEMENU.addSeparator()
+        FILEMENU.add(MI_EXPORTPLUGINS)
+        FILEMENU.addSeparator()
+        FILEMENU.add(MI_EXIT)
+        FILEMENU.setMnemonic('f')
+        CLEANMENU.add(MI_SHOWUNATTACHED)
+        CLEANMENU.add(MI_SHOWUNDEFINED)
+        CLEANMENU.add(MI_SHOWMEMBERLESS)
+        CLEANMENU.add(MI_SHOWCANARIES)
+        CLEANMENU.add(MI_SHOWNULLREFS)
+        CLEANMENU.add(MI_SHOWNONEXISTENTCREATED)
+        CLEANMENU.add(MI_SHOWLONGSTRINGS)
+        CLEANMENU.add(MI_SHOWDELETED)
+        CLEANMENU.add(MI_SHOWEMPTY)
+        CLEANMENU.add(MI_CHANGEFILTER)
+        CLEANMENU.add(MI_CHANGEFORMFILTER)
+        CLEANMENU.addSeparator()
+        CLEANMENU.add(MI_REMOVEUNATTACHED)
+        CLEANMENU.add(MI_REMOVEUNDEFINED)
+        CLEANMENU.add(MI_RESETHAVOK)
+        CLEANMENU.add(MI_CLEANSEFORMLISTS)
+        CLEANMENU.add(MI_REMOVENONEXISTENT)
+        CLEANMENU.addSeparator()
+        CLEANMENU.add(MI_BATCHCLEAN)
+        CLEANMENU.add(MI_KILL)
+        CLEANMENU.setMnemonic('c')
+        OPTIONSMENU.add(MI_USEMO2)
+        OPTIONSMENU.add(MI_SHOWMODS)
+        OPTIONSMENU.add(MI_SETTINGS)
+        OPTIONSMENU.setMnemonic('o')
+        DATAMENU.add(MI_LOOKUPID)
+        DATAMENU.add(MI_LOOKUPBASE)
+        DATAMENU.add(MI_ANALYZE_ARRAYS)
+        DATAMENU.add(MI_COMPARETO)
+        DATAMENU.setMnemonic('d')
+        MI_LOOKUPID.isEnabled = false
+        MI_LOOKUPBASE.isEnabled = false
+        MI_LOADESPS.isEnabled = false
+        HELPMENU.add(MI_SHOWLOG)
+        HELPMENU.add(MI_ABOUT)
+        HELPMENU.setMnemonic('h')
+        MENUBAR.add(FILEMENU)
+        MENUBAR.add(CLEANMENU)
+        MENUBAR.add(OPTIONSMENU)
+        MENUBAR.add(DATAMENU)
+        MENUBAR.add(HELPMENU)
+        MI_EXIT.addActionListener { e: ActionEvent? -> exitWithPrompt() }
+        MI_LOAD.addActionListener { e: ActionEvent? -> openWithPrompt() }
+        MI_LOADESPS.addActionListener { e: ActionEvent? -> scanESPs(true) }
+        MI_WATCHSAVES.addActionListener { e: ActionEvent? ->
+            PREFS.putBoolean(
+                "settings.watch",
+                MI_WATCHSAVES.isSelected
+            )
         }
-        this.MODCOMBO.addItemListener(e -> updateFilters(false));
-        this.PLUGINCOMBO.addItemListener(e -> updateFilters(false));
-        this.TREE.setDeleteHandler(this::deletePaths);
-        this.TREE.setEditHandler(this::editElement);
-        this.TREE.setPurgeHandler(plugins -> purgePlugins(plugins, true, true));
-        this.TREE.setDeleteFormsHandler((plugin) -> purgePlugins(Collections.singleton(plugin), false, true));
-        this.TREE.setDeleteInstancesHandler((plugin) -> purgePlugins(Collections.singleton(plugin), true, false));
-        this.TREE.setFilterPluginsHandler(PLUGINCOMBO::setSelectedItem);
-        this.TREE.setZeroThreadHandler(this::zeroThreads);
-        this.TREE.setFindHandler(this::findElement);
-        this.TREE.setCleanseFLSTHandler(this::cleanseFormList);
-        this.TREE.setCompressionHandler(this::setCompressionType);
-        this.LBL_MEMORY.initialize();
+        MI_WATCHSAVES.addActionListener { e: ActionEvent? -> setWatching(MI_WATCHSAVES.isSelected) }
+        MI_SAVE.addActionListener { e: ActionEvent? -> save(false, null) }
+        MI_SAVEAS.addActionListener { e: ActionEvent? -> save(true, null) }
+        MI_EXPORTPLUGINS.addActionListener { e: ActionEvent? -> exportPlugins() }
+        MI_SETTINGS.addActionListener { e: ActionEvent? -> showSettings() }
+        MI_SHOWUNATTACHED.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_SHOWUNDEFINED.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_SHOWMEMBERLESS.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_SHOWCANARIES.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_SHOWNULLREFS.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_SHOWNONEXISTENTCREATED.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_SHOWLONGSTRINGS.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_SHOWDELETED.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_SHOWEMPTY.addActionListener { e: ActionEvent? -> updateFilters(false) }
+        MI_CHANGEFILTER.addActionListener { e: ActionEvent? -> setChangeFlagFilter() }
+        MI_CHANGEFORMFILTER!!.addActionListener { e: ActionEvent? -> setChangeFormFlagFilter() }
+        MI_REMOVEUNATTACHED.addActionListener { e: ActionEvent? -> cleanUnattached() }
+        MI_REMOVEUNDEFINED.addActionListener { e: ActionEvent? -> cleanUndefined() }
+        MI_RESETHAVOK.addActionListener { e: ActionEvent? -> resetHavok() }
+        MI_CLEANSEFORMLISTS.addActionListener { e: ActionEvent? -> cleanseFormLists() }
+        MI_REMOVENONEXISTENT.addActionListener { e: ActionEvent? -> cleanNonexistent() }
+        MI_BATCHCLEAN.addActionListener { e: ActionEvent? -> batchClean() }
+        MI_KILL.addActionListener { e: ActionEvent? -> kill() }
+        MI_SHOWMODS.addActionListener { e: ActionEvent? -> setAnalysis(analysis) }
+        MI_SHOWMODS.addActionListener { e: ActionEvent? ->
+            PREFS.putBoolean(
+                "settings.showMods",
+                MI_SHOWMODS.isSelected
+            )
+        }
+        MI_LOOKUPID.addActionListener { e: ActionEvent? -> lookupID() }
+        MI_LOOKUPBASE.addActionListener { e: ActionEvent? -> lookupBase() }
+        MI_ANALYZE_ARRAYS.addActionListener { e: ActionEvent? ->
+            showDataAnalyzer(
+                save!!.papyrus!!.arraysBlock
+            )
+        }
+        MI_COMPARETO.addActionListener { e: ActionEvent? -> compareTo() }
+        MI_SHOWLOG.addActionListener { e: ActionEvent? -> showLog() }
+        MI_ABOUT.addActionListener { e: ActionEvent? -> show(this) }
+        MI_USEMO2.addActionListener { e: ActionEvent? -> PREFS.putBoolean("settings.useMO2", MI_USEMO2.isSelected) }
+        MI_EXIT.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK)
+        MI_LOAD.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK)
+        MI_LOADESPS.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_P, KeyEvent.CTRL_DOWN_MASK)
+        MI_SAVE.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_S, KeyEvent.CTRL_DOWN_MASK)
+        MI_SAVEAS.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_A, KeyEvent.CTRL_DOWN_MASK)
+        MI_BATCHCLEAN.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_6, KeyEvent.CTRL_DOWN_MASK)
+        BTN_CLEAR_FILTER.addActionListener { e: ActionEvent? -> updateFilters(true) }
+        MODCOMBO.toolTipText = "Select a mod for filtering."
+        LBL_MEMORY.toolTipText = "Current memory usage."
+        LBL_WATCHING.toolTipText = "When you save your game, ReSaver will automatcally open the new savefile."
+        LBL_SCANNING.toolTipText = "ReSaver is scanning your plugins so that it can add proper names to everything."
+        BTN_CLEAR_FILTER.toolTipText = "Clear all filters."
+        MI_ABOUT.toolTipText =
+            "Shows version information, system information, and an original colour photograph of cats."
+        MI_SHOWLOG.toolTipText = "Show ReSaver's internal log. For development purposes only."
+        MI_ANALYZE_ARRAYS.toolTipText =
+            "Displays the dataAnalyzer for the 'Arrays' section, which hasn't been fully decoded yet. For development purposes only."
+        MI_COMPARETO.toolTipText = "Compare the current savefile to another one. For development purposes only."
+        MI_CHANGEFILTER.toolTipText =
+            "Sets a ChangeFlag filter. ChangeFlags describe what kind of changes are present in ChangeForms."
+        MI_CHANGEFORMFILTER.toolTipText =
+            "Sets a ChangeFormFlag filter. ChangeFormFlags are part of a ChangeForm and modify the Form's flags. You can examine those flags in xEdit for more information."
+        MI_REMOVENONEXISTENT.toolTipText =
+            "Removes ScriptInstances attached to non-existent ChangeForms. These ScriptInstances can be left behind when in-game objects are created and then destroyed. Cleaning them can cause some mods to stop working though."
+        MI_REMOVEUNATTACHED.toolTipText =
+            "Removes ScriptInstances that aren't attached to anything. These ScriptInstances are usually left behind when mods are uinstalled. However in Fallout 4 they are used deliberately, so use caution when removing them."
+        MI_REMOVEUNDEFINED.toolTipText =
+            "Removes Scripts and ScriptInstances for which the script itself is missing, as well as terminating any ActiveScripts associated with them. SKSE and F4SE usually remove these automatically; if it doesn't, there's probably a good reason. So use caution when removing them."
+        val BORDER: Border = BorderFactory.createCompoundBorder(
+            BorderFactory.createLoweredBevelBorder(),
+            BorderFactory.createEmptyBorder(1, 1, 1, 1)
+        )
+        LBL_MEMORY.border = BORDER
+        LBL_WATCHING.border = BORDER
+        LBL_SCANNING.border = BORDER
+        val DEFFONT = LBL_MEMORY.font
+        val MONO = Font(Font.MONOSPACED, DEFFONT.style, DEFFONT.size)
+        LBL_MEMORY.font = MONO
+        LBL_WATCHING.font = MONO
+        LBL_SCANNING.font = MONO
+        LBL_WATCHING.isVisible = false
+        LBL_SCANNING.isVisible = false
+        LOG.parent.addHandler(LOGWINDOW.handler)
+        this.jMenuBar = MENUBAR
+        this.contentPane = MAINSPLITTER
+        defaultCloseOperation = DO_NOTHING_ON_CLOSE
+        this.preferredSize = Dimension(800, 600)
+        pack()
+        restoreWindowPosition()
+        setLocationRelativeTo(null)
+        MI_SHOWNONEXISTENTCREATED.addItemListener { e: ItemEvent ->
+            if (e.stateChange == ItemEvent.SELECTED) {
+                val WARN = "Non-existent forms are used intentionally by some mods. Use caution when deleting them."
+                val WARN_TITLE = "Warning"
+                JOptionPane.showMessageDialog(this, WARN, WARN_TITLE, JOptionPane.WARNING_MESSAGE)
+            }
+        }
+        setWatching(MI_WATCHSAVES.isSelected)
+        addWindowListener(object : WindowAdapter() {
+            override fun windowClosing(evt: WindowEvent) {
+                exitWithPrompt()
+            }
+
+            override fun windowOpened(evt: WindowEvent) {
+                if (validateSavegame(path)) {
+                    val parse = autoParse || PREFS.getBoolean("settings.alwaysParse", false)
+                    if (path != null) {
+                        this@SaveWindow.open(path, parse)
+                    }
+                } else {
+                    this@SaveWindow.open()
+                }
+                updateFilters(false)
+            }
+        })
+        try {
+            val INPUT = this.javaClass.classLoader.getResourceAsStream("Disk.png")
+            val ICON: Image = ImageIO.read(INPUT)
+            super.setIconImage(ICON)
+        } catch (ex: IOException) {
+            LOG.warning("Failed to load icon.")
+        } catch (ex: NullPointerException) {
+            LOG.warning("Failed to load icon.")
+        } catch (ex: IllegalArgumentException) {
+            LOG.warning("Failed to load icon.")
+        }
+        MODCOMBO.addItemListener { e: ItemEvent? -> updateFilters(false) }
+        PLUGINCOMBO.addItemListener { e: ItemEvent? -> updateFilters(false) }
+        TREE.setDeleteHandler { elements: Map<Element, FilterTreeModel.Node> ->
+            deletePaths(
+                elements.toMap()
+            )
+        }
+        TREE.setEditHandler { element: Element -> editElement(element) }
+        TREE.setPurgeHandler { plugins: MutableList<Plugin> -> purgePlugins(plugins.toMutableList(),
+            purgeScripts = true,
+            purgeForms = true
+        ) }
+        TREE.setDeleteFormsHandler { plugin: Plugin? -> purgePlugins(mutableListOf(plugin),
+            purgeScripts = false,
+            purgeForms = true
+        ) }
+        TREE.setDeleteInstancesHandler { plugin: Plugin? -> purgePlugins(mutableListOf(plugin),
+            purgeScripts = true,
+            purgeForms = false
+        ) }
+        TREE.setFilterPluginsHandler { anObject: Plugin? -> PLUGINCOMBO.setSelectedItem(anObject) }
+        TREE.setZeroThreadHandler { threads: List<ActiveScript> -> zeroThreads(threads) }
+        TREE.setFindHandler { element: Element? -> this.findElement(element) }
+        TREE.setCleanseFLSTHandler { flst: ChangeFormFLST -> cleanseFormList(flst) }
+        TREE.setCompressionHandler { newCompressionType: CompressionType? -> setCompressionType(newCompressionType) }
+        LBL_MEMORY.initialize()
     }
 
     /**
@@ -425,205 +342,176 @@ final public class SaveWindow extends JFrame {
      *
      * @param savefile A new value for the path.
      */
-    void resetTitle(@NotNull Path savefile) {
-        this.modified = false;
-
-        if (this.save == null) {
-            final String TITLE = String.format("ReSaver %s: (no save loaded)", AboutDialog.getVersion());
-            this.setTitle(TITLE);
-
+    fun resetTitle(savefile: Path?) {
+        modified = false
+        if (save == null) {
+            val TITLE = "ReSaver $version: (no save loaded)"
+            title = TITLE
         } else {
             // Get the filesize if possible.
-            float size;
-            try {
-                size = (float) Files.size(savefile) / 1048576.0f;
-            } catch (IOException ex) {
-                LOG.log(Level.WARNING, "Error setting title.", ex);
-                size = Float.NEGATIVE_INFINITY;
+            val size: Float = try {
+                if (savefile != null) {
+                    Files.size(savefile).toFloat() / 1048576.0f
+                }
+                0.0f
+            } catch (ex: IOException) {
+                LOG.log(Level.WARNING, "Error setting title.", ex)
+                Float.NEGATIVE_INFINITY
             }
 
             // Get the file digest.
-            final Long DIGEST = this.save.getDigest();
+            val DIGEST = save!!.digest
 
             // Make an abbreviated filename.
-            String fullName = savefile.getFileName().toString();
-            final int MAXLEN = 80;
-            final String NAME = (fullName.length() > MAXLEN
-                    ? (fullName.substring(0, MAXLEN) + "...")
-                    : fullName);
-
-            final String TITLE = String.format("ReSaver %s: %s (%1.2f mb, digest = %08x)", AboutDialog.getVersion(), NAME, size, DIGEST);
-            this.setTitle(TITLE);
+            val fullName = savefile?.fileName.toString()
+            val MAXLEN = 80
+            val NAME = if (fullName.length > MAXLEN) fullName.substring(0, MAXLEN) + "..." else fullName
+            val TITLE = String.format("ReSaver %s: %s (%1.2f mb, digest = %08x)", version, NAME, size, DIGEST)
+            title = TITLE
         }
     }
 
     /**
      * Sets the modified flag.
      */
-    void setModified() {
-        this.modified = true;
+    fun setModified() {
+        modified = true
     }
 
     /**
-     * Sets the <code>Analysis</code>.
+     * Sets the `Analysis`.
      *
      * @param newAnalysis The mod data, or null if there is no mod data
      * available.
-     *
      */
-    void setAnalysis(Analysis newAnalysis) {
-        if (newAnalysis != this.analysis) {
-            this.analysis = newAnalysis;
-            this.updateContextInformation();
-            this.save.addNames(analysis);
-            this.refreshTree();
+    fun setAnalysis(newAnalysis: Analysis?) {
+        if (newAnalysis != analysis) {
+            analysis = newAnalysis
+            updateContextInformation()
+            save!!.addNames(analysis!!)
+            refreshTree()
         }
-
-        if (null != this.analysis) {
-            this.MI_LOOKUPID.setEnabled(true);
-            this.MI_LOOKUPBASE.setEnabled(true);
+        if (null != analysis) {
+            MI_LOOKUPID.isEnabled = true
+            MI_LOOKUPBASE.isEnabled = true
         } else {
-            this.MI_LOOKUPID.setEnabled(false);
-            this.MI_LOOKUPBASE.setEnabled(false);
+            MI_LOOKUPID.isEnabled = false
+            MI_LOOKUPBASE.isEnabled = false
         }
-
-        if (null == this.analysis || !this.MI_SHOWMODS.isSelected()) {
-            this.MODCOMBO.setModel(new DefaultComboBoxModel<>());
-            this.MODPANEL.setVisible(false);
-
+        if (null == analysis || !MI_SHOWMODS.isSelected) {
+            MODCOMBO.model = DefaultComboBoxModel()
+            MODPANEL.isVisible = false
         } else {
-            final Mod[] MODS = new Mod[this.analysis.MODS.size()];
-            this.analysis.MODS.toArray(MODS);
-            Arrays.sort(MODS, (a, b) -> a.getName().compareToIgnoreCase(b.getName()));
-
-            DefaultComboBoxModel<Mod> modModel = new DefaultComboBoxModel<>(MODS);
-            modModel.insertElementAt(null, 0);
-            this.MODCOMBO.setModel(modModel);
-            this.MODCOMBO.setSelectedIndex(0);
-            this.MODPANEL.setVisible(true);
+            val MODS = analysis!!.MODS.sortedWith { a:Mod, b:Mod -> a.getName()!!.compareTo(b.getName()!!,ignoreCase = true) }.toTypedArray()
+            val modModel = DefaultComboBoxModel(MODS)
+            modModel.insertElementAt(null, 0)
+            MODCOMBO.model = modModel
+            MODCOMBO.selectedIndex = 0
+            MODPANEL.isVisible = true
         }
-
-        this.refreshTree();
+        refreshTree()
     }
 
     /**
      * Regenerates the treeview if the underlying model has changed.
      *
      */
-    void refreshTree() {
-        if (null == this.save) {
-            return;
+    fun refreshTree() {
+        if (null == save) {
+            return
         }
-
-        this.TREE.getModel().refresh();
-        this.TREE.updateUI();
+        TREE.model!!.refresh()
+        TREE.updateUI()
     }
 
     /**
-     * Makes the <code>ProgressIndicator</code> component available to subtasks.
-     *
-     * @return
+     * Clears the `ESS`.
      */
-    @NotNull
-    ProgressIndicator getProgressIndicator() {
-        return this.PROGRESS;
+    fun clearESS() {
+        MI_SAVE.isEnabled = false
+        MI_EXPORTPLUGINS.isEnabled = false
+        MI_REMOVEUNATTACHED.isEnabled = false
+        MI_REMOVEUNDEFINED.isEnabled = false
+        MI_RESETHAVOK.isEnabled = false
+        MI_CLEANSEFORMLISTS.isEnabled = false
+        MI_REMOVENONEXISTENT.isEnabled = false
+        MI_LOOKUPID.isEnabled = false
+        MI_LOOKUPBASE.isEnabled = false
+        MI_LOADESPS.isEnabled = false
+        PLUGINCOMBO.model = DefaultComboBoxModel()
+        save = null
+        resetTitle(null)
+        clearContextInformation()
+        val TITLE = "ReSaver $version: (no save loaded)"
+        title = TITLE
     }
 
     /**
-     * Clears the <code>ESS</code>.
-     */
-    void clearESS() {
-        this.MI_SAVE.setEnabled(false);
-        this.MI_EXPORTPLUGINS.setEnabled(false);
-        this.MI_REMOVEUNATTACHED.setEnabled(false);
-        this.MI_REMOVEUNDEFINED.setEnabled(false);
-        this.MI_RESETHAVOK.setEnabled(false);
-        this.MI_CLEANSEFORMLISTS.setEnabled(false);
-        this.MI_REMOVENONEXISTENT.setEnabled(false);
-        this.MI_LOOKUPID.setEnabled(false);
-        this.MI_LOOKUPBASE.setEnabled(false);
-        this.MI_LOADESPS.setEnabled(false);
-        this.PLUGINCOMBO.setModel(new DefaultComboBoxModel<>());
-
-        this.save = null;
-        this.resetTitle(null);
-        this.clearContextInformation();
-
-        final String TITLE = String.format("ReSaver %s: (no save loaded)", AboutDialog.getVersion());
-        this.setTitle(TITLE);
-    }
-
-    /**
-     * Sets the <code>ESS</code> containing the papyrus section to display.
+     * Sets the `ESS` containing the papyrus section to display.
      *
-     * @param savefile The file that contains the <code>ESS</code>.
-     * @param newSave The new <code>ESS</code>.
-     * @param model The <code>FilterTreeModel</code>.
+     * @param savefile The file that contains the `ESS`.
+     * @param newSave The new `ESS`.
+     * @param model The `FilterTreeModel`.
      * @param disableSaving A flag indicating that saving should be disabled.
-     *
      */
-    void setESS(@NotNull Path savefile, @NotNull ESS newSave, @NotNull FilterTreeModel model, boolean disableSaving) {
-        Objects.requireNonNull(savefile);
-        Objects.requireNonNull(newSave);
-
-        LOG.info("================");
-        LOG.info("setESS");
-        TIMER.restart();
+    fun setESS(savefile: Path, newSave: ESS, model: FilterTreeModel, disableSaving: Boolean) {
+        Objects.requireNonNull(savefile)
+        Objects.requireNonNull(newSave)
+        LOG.info("================")
+        LOG.info("setESS")
+        TIMER.restart()
 
         // If the game is Skyrim Legendary, and the string table bug was
         // detected, disable the save menu command.
         if (disableSaving) {
-            this.MI_SAVE.setEnabled(false);
-            this.MI_SAVEAS.setEnabled(false);
+            MI_SAVE.isEnabled = false
+            MI_SAVEAS.isEnabled = false
         } else {
-            this.MI_SAVE.setEnabled(true);
-            this.MI_SAVEAS.setEnabled(true);
+            MI_SAVE.isEnabled = true
+            MI_SAVEAS.isEnabled = true
         }
 
         // Enable editing functions.
-        this.MI_EXPORTPLUGINS.setEnabled(true);
-        this.MI_REMOVEUNATTACHED.setEnabled(true);
-        this.MI_REMOVEUNDEFINED.setEnabled(true);
-        this.MI_RESETHAVOK.setEnabled(true);
-        this.MI_CLEANSEFORMLISTS.setEnabled(true);
-        this.MI_REMOVENONEXISTENT.setEnabled(true);
-        this.MI_LOADESPS.setEnabled(true);
+        MI_EXPORTPLUGINS.isEnabled = true
+        MI_REMOVEUNATTACHED.isEnabled = true
+        MI_REMOVEUNDEFINED.isEnabled = true
+        MI_RESETHAVOK.isEnabled = true
+        MI_CLEANSEFORMLISTS.isEnabled = true
+        MI_REMOVENONEXISTENT.isEnabled = true
+        MI_LOADESPS.isEnabled = true
 
         // Clear the context info box.
-        this.clearContextInformation();
+        clearContextInformation()
 
         // Set the save field.
-        this.save = newSave;
+        save = newSave
 
         // Set up the Plugins combobox.
-        final java.util.List<Plugin> PLUGINS = new java.util.LinkedList<>();
-        PLUGINS.addAll(newSave.getPluginInfo().getFullPlugins());
-        PLUGINS.addAll(newSave.getPluginInfo().getLitePlugins());
-        PLUGINS.sort(Plugin::compareTo);
-        PLUGINS.add(0, null);
-        DefaultComboBoxModel<Plugin> pluginModel = new DefaultComboBoxModel<>(PLUGINS.toArray(new Plugin[0]));
+        val PLUGINS: MutableList<Plugin?> = mutableListOf()
+        PLUGINS.addAll(newSave.pluginInfo.fullPlugins)
+        PLUGINS.addAll(newSave.pluginInfo.litePlugins)
+        PLUGINS.sortWith { obj: Plugin?, other: Plugin? -> obj!!.compareTo(other) }
+        PLUGINS.add(0, null)
+        val pluginModel = DefaultComboBoxModel(PLUGINS.toTypedArray())
 
         // If a plugin was previously selected, attempt to re-select it.
-        if (null != this.PLUGINCOMBO.getSelectedItem() && this.PLUGINCOMBO.getSelectedItem() instanceof Plugin) {
-            final Plugin PREV = (Plugin) this.PLUGINCOMBO.getSelectedItem();
-            this.PLUGINCOMBO.setModel(pluginModel);
-            this.PLUGINCOMBO.setSelectedItem(PREV);
+        if (null != PLUGINCOMBO.selectedItem && PLUGINCOMBO.selectedItem is Plugin) {
+            val PREV = PLUGINCOMBO.selectedItem as Plugin
+            PLUGINCOMBO.setModel(pluginModel)
+            PLUGINCOMBO.setSelectedItem(PREV)
         } else {
-            this.PLUGINCOMBO.setModel(pluginModel);
-            this.PLUGINCOMBO.setSelectedIndex(0);
+            PLUGINCOMBO.setModel(pluginModel)
+            PLUGINCOMBO.setSelectedIndex(0)
         }
 
         // Rebuild the tree.
-        this.TREE.setESS(newSave, model, this.filter);
-        this.refreshTree();
-
-        TreePath path = model.getPath(model.getRoot());
-        this.TREE.setSelectionPath(path);
-
-        this.resetTitle(savefile);
-
-        TIMER.stop();
-        LOG.info(String.format("Treeview initialized, took %s.", TIMER.getFormattedTime()));
+        TREE.setESS(newSave, model, filter)
+        refreshTree()
+        val path = model.getPath(model.root!!)
+        TREE.selectionPath = path
+        resetTitle(savefile)
+        TIMER.stop()
+        LOG.info("Treeview initialized, took ${TIMER.formattedTime}.")
     }
 
     /**
@@ -631,36 +519,34 @@ final public class SaveWindow extends JFrame {
      *
      * @param model The model to which the filters should be applied.
      */
-    private boolean createFilter(@NotNull FilterTreeModel model) {
-        LOG.info("Creating filters.");
-        final Mod MOD = this.MODCOMBO.getItemAt(this.MODCOMBO.getSelectedIndex());
-        final Plugin PLUGIN = (Plugin) this.PLUGINCOMBO.getSelectedItem();
-        final String TXT = this.FILTERFIELD.getText();
-
-        Predicate<Node> mainfilter = this.save == null
-                ? null
-                : FilterMaker.createFilter(this.save,
-                        MOD, PLUGIN, TXT, this.analysis,
-                        this.MI_SHOWUNDEFINED.isSelected(),
-                        this.MI_SHOWUNATTACHED.isSelected(),
-                        this.MI_SHOWMEMBERLESS.isSelected(),
-                        this.MI_SHOWCANARIES.isSelected(),
-                        this.MI_SHOWNULLREFS.isSelected(),
-                        this.MI_SHOWNONEXISTENTCREATED.isSelected(),
-                        this.MI_SHOWLONGSTRINGS.isSelected(),
-                        this.MI_SHOWDELETED.isSelected(),
-                        this.MI_SHOWEMPTY.isSelected(),
-                        this.MI_CHANGEFILTER.getValue(),
-                        this.MI_CHANGEFORMFILTER.getValue());
-
+    private fun createFilter(model: FilterTreeModel): Boolean {
+        LOG.info("Creating filters.")
+        val MOD = MODCOMBO.getItemAt(MODCOMBO.selectedIndex)
+        val PLUGIN = PLUGINCOMBO.selectedItem as Plugin?
+        val TXT = FILTERFIELD.text
+        val mainfilter = if (save == null) null else createFilter(
+            save!!,
+            MOD, PLUGIN, TXT, analysis,
+            MI_SHOWUNDEFINED.isSelected,
+            MI_SHOWUNATTACHED.isSelected,
+            MI_SHOWMEMBERLESS.isSelected,
+            MI_SHOWCANARIES.isSelected,
+            MI_SHOWNULLREFS.isSelected,
+            MI_SHOWNONEXISTENTCREATED.isSelected,
+            MI_SHOWLONGSTRINGS.isSelected,
+            MI_SHOWDELETED.isSelected,
+            MI_SHOWEMPTY.isSelected,
+            MI_CHANGEFILTER.getValue(),
+            MI_CHANGEFORMFILTER!!.getValue()
+        )
         if (null == mainfilter) {
-            this.filter = null;
-            model.removeFilter();
+            filter = null
+            model.removeFilter()
         } else {
-            this.filter = mainfilter;
-            model.setFilter(this.filter);
+            filter = mainfilter
+            model.setFilter(filter!!)
         }
-        return true;
+        return true
     }
 
     /**
@@ -669,145 +555,128 @@ final public class SaveWindow extends JFrame {
      * @param clear A flag indicating to clear the filters instead of reading
      * the setFilter settings.
      */
-    private void updateFilters(boolean clear) {
-        PREFS.put("settings.regex", this.FILTERFIELD.getText());
-
-        if (null == this.save) {
-            SwingUtilities.invokeLater(() -> {
+    private fun updateFilters(clear: Boolean) {
+        PREFS.put("settings.regex", FILTERFIELD.text)
+        if (null == save) {
+            SwingUtilities.invokeLater {
                 try {
-                    TIMER.restart();
-                    LOG.info("Updating filters.");
-
+                    TIMER.restart()
+                    LOG.info("Updating filters.")
                     if (clear) {
-                        this.MI_SHOWNONEXISTENTCREATED.setSelected(false);
-                        this.MI_SHOWNULLREFS.setSelected(false);
-                        this.MI_SHOWUNDEFINED.setSelected(false);
-                        this.MI_SHOWUNATTACHED.setSelected(false);
-                        this.MI_SHOWMEMBERLESS.setSelected(false);
-                        this.MI_SHOWCANARIES.setSelected(false);
-                        this.MI_SHOWLONGSTRINGS.setSelected(false);
-                        this.MI_SHOWDELETED.setSelected(false);
-                        this.MI_SHOWEMPTY.setSelected(false);
-                        this.FILTERFIELD.setText("");
-                        this.MODCOMBO.setSelectedItem(null);
-                        this.MI_CHANGEFILTER.setValue(null);
-                        this.MI_CHANGEFORMFILTER.setValue(null);
-                        this.PLUGINCOMBO.setSelectedItem(null);
+                        MI_SHOWNONEXISTENTCREATED.isSelected = false
+                        MI_SHOWNULLREFS.isSelected = false
+                        MI_SHOWUNDEFINED.isSelected = false
+                        MI_SHOWUNATTACHED.isSelected = false
+                        MI_SHOWMEMBERLESS.isSelected = false
+                        MI_SHOWCANARIES.isSelected = false
+                        MI_SHOWLONGSTRINGS.isSelected = false
+                        MI_SHOWDELETED.isSelected = false
+                        MI_SHOWEMPTY.isSelected = false
+                        FILTERFIELD.text = ""
+                        MODCOMBO.selectedItem = null
+                        MI_CHANGEFILTER.setValue(null)
+                        MI_CHANGEFORMFILTER!!.setValue(null)
+                        PLUGINCOMBO.selectedItem = null
                     }
-
-                    this.createFilter(this.TREE.getModel());
-
+                    this.createFilter(TREE.model!!)
                 } finally {
-                    TIMER.stop();
-                    LOG.info(String.format("Filter updated, took %s.", TIMER.getFormattedTime()));
+                    TIMER.stop()
+                    LOG.info("Filter updated, took ${TIMER.formattedTime}.")
                 }
-            });
-
+            }
         } else {
-
-            final ProgressModel MODEL = new ProgressModel(10);
-            this.PROGRESS.start("Updating");
-            this.PROGRESS.setModel(MODEL);
-
-            SwingUtilities.invokeLater(() -> {
+            val MODEL = ProgressModel(10)
+            progressIndicator.start("Updating")
+            progressIndicator.setModel(MODEL)
+            SwingUtilities.invokeLater {
                 try {
-                    TIMER.restart();
-                    LOG.info("Updating filters.");
-
-                    TreePath path = this.TREE.getSelectionPath();
+                    TIMER.restart()
+                    LOG.info("Updating filters.")
+                    val path = TREE.selectionPath
                     if (clear) {
-                        this.MI_SHOWNONEXISTENTCREATED.setSelected(false);
-                        this.MI_SHOWNULLREFS.setSelected(false);
-                        this.MI_SHOWUNDEFINED.setSelected(false);
-                        this.MI_SHOWUNATTACHED.setSelected(false);
-                        this.MI_SHOWMEMBERLESS.setSelected(false);
-                        this.MI_SHOWCANARIES.setSelected(false);
-                        this.MI_SHOWLONGSTRINGS.setSelected(false);
-                        this.MI_SHOWDELETED.setSelected(false);
-                        this.MI_SHOWEMPTY.setSelected(false);
-                        this.FILTERFIELD.setText("");
-                        this.MODCOMBO.setSelectedItem(null);
-                        this.PLUGINCOMBO.setSelectedItem(null);
-                        this.MI_CHANGEFILTER.setValue(null);
-                        this.MI_CHANGEFORMFILTER.setValue(null);
+                        MI_SHOWNONEXISTENTCREATED.isSelected = false
+                        MI_SHOWNULLREFS.isSelected = false
+                        MI_SHOWUNDEFINED.isSelected = false
+                        MI_SHOWUNATTACHED.isSelected = false
+                        MI_SHOWMEMBERLESS.isSelected = false
+                        MI_SHOWCANARIES.isSelected = false
+                        MI_SHOWLONGSTRINGS.isSelected = false
+                        MI_SHOWDELETED.isSelected = false
+                        MI_SHOWEMPTY.isSelected = false
+                        FILTERFIELD.text = ""
+                        MODCOMBO.selectedItem = null
+                        PLUGINCOMBO.selectedItem = null
+                        MI_CHANGEFILTER.setValue(null)
+                        MI_CHANGEFORMFILTER!!.setValue(null)
                     }
-
-                    MODEL.setValue(2);
-
-                    boolean result = this.createFilter(this.TREE.getModel());
+                    MODEL.value = 2
+                    val result = this.createFilter(TREE.model!!)
                     if (!result) {
-                        return;
+                        return@invokeLater
                     }
-
-                    MODEL.setValue(5);
-                    this.refreshTree();
-                    MODEL.setValue(9);
-
+                    MODEL.value = 5
+                    refreshTree()
+                    MODEL.value = 9
                     if (null != path) {
-                        LOG.info(String.format("Updating filter: restoring path = %s", path));
-
-                        if (path.getLastPathComponent() == null) {
-                            this.TREE.clearSelection();
-                            this.clearContextInformation();
+                        LOG.info("Updating filter: restoring path = $path")
+                        if (path.lastPathComponent == null) {
+                            TREE.clearSelection()
+                            clearContextInformation()
                         } else {
-                            this.TREE.setSelectionPath(path);
-                            this.TREE.scrollPathToVisible(path);
+                            TREE.selectionPath = path
+                            TREE.scrollPathToVisible(path)
                         }
                     }
-                    MODEL.setValue(10);
-
+                    MODEL.value = 10
                 } finally {
-                    TIMER.stop();
-                    PROGRESS.stop();
-                    LOG.info(String.format("Filter updated, took %s.", TIMER.getFormattedTime()));
+                    TIMER.stop()
+                    progressIndicator.stop()
+                    LOG.info("Filter updated, took ${TIMER.formattedTime}.")
                 }
-            });
+            }
         }
     }
 
     /**
      * Exits the application immediately.
      */
-    void exit() {
-        javax.swing.SwingUtilities.invokeLater(() -> {
-            saveWindowPosition();
+    fun exit() {
+        SwingUtilities.invokeLater {
+            saveWindowPosition()
             try {
-                PREFS.flush();
-            } catch (BackingStoreException ex) {
-                LOG.log(Level.WARNING, "Error saving preferences.", ex);
+                PREFS.flush()
+            } catch (ex: BackingStoreException) {
+                LOG.log(Level.WARNING, "Error saving preferences.", ex)
             }
-            this.FILTERFIELD.terminate();
-            this.LBL_MEMORY.terminate();
-            this.setVisible(false);
-            this.dispose();
-
-            if (this.JFXPANEL != null) {
-                this.terminateJavaFX();
+            FILTERFIELD.terminate()
+            LBL_MEMORY.terminate()
+            this.isVisible = false
+            dispose()
+            if (JFXPANEL != null) {
+                terminateJavaFX()
             }
-        });
+        }
     }
 
     /**
      * Exits the application after checking if the user wishes to save.
      */
-    void exitWithPrompt() {
-        if (null != this.save && this.modified) {
-            int result = JOptionPane.showConfirmDialog(this, "Do you want to save the current file first?", "Save First?", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-
-            switch (result) {
-                case JOptionPane.CANCEL_OPTION:
-                    return;
-
-                case JOptionPane.YES_OPTION:
-                    this.save(false, this::exit);
-                    break;
-
-                case JOptionPane.NO_OPTION:
-                    this.exit();
-                    break;
+    fun exitWithPrompt() {
+        if (null != save && modified) {
+            val result = JOptionPane.showConfirmDialog(
+                this,
+                "Do you want to save the current file first?",
+                "Save First?",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            )
+            when (result) {
+                JOptionPane.CANCEL_OPTION -> return
+                JOptionPane.YES_OPTION -> save(false) { exit() }
+                JOptionPane.NO_OPTION -> exit()
             }
         } else {
-            this.exit();
+            exit()
         }
     }
 
@@ -818,73 +687,70 @@ final public class SaveWindow extends JFrame {
      * filename to use.
      * @param doAfter A task to run after the save is complete.
      */
-    private void save(boolean promptForFile, Runnable doAfter) {
-        if (null == this.save) {
-            return;
+    private fun save(promptForFile: Boolean, doAfter: Runnable?) {
+        if (null == save) {
+            return
         }
-
         try {
-            final FutureTask<Path> PROMPT = new FutureTask<>(() -> {
-                Path newSaveFile = promptForFile
-                        ? Configurator.selectNewSaveFile(this, this.save.getHeader().GAME)
-                        : Configurator.confirmSaveFile(this, this.save.getHeader().GAME, this.save.getOriginalFile());
-
-                if (Configurator.validWrite(newSaveFile)) {
-                    return newSaveFile;
+            val PROMPT = FutureTask( Callable<Path?> {
+                val newSaveFile = if (promptForFile) selectNewSaveFile(this, save!!.header.GAME!!) else confirmSaveFile(
+                    this,
+                    save!!.header.GAME!!,
+                    save!!.originalFile
+                )
+                if (validWrite(newSaveFile)) {
+                    return@Callable newSaveFile
                 }
-                return null;
-            });
-
-            final ModalProgressDialog MODAL = new ModalProgressDialog(this, "File Selection", PROMPT);
-            MODAL.setVisible(true);
-            final Path SAVEFILE = PROMPT.get();
-
-            if (!Configurator.validWrite(SAVEFILE)) {
-                return;
+                null
+            })
+            val MODAL = ModalProgressDialog(this, "File Selection", PROMPT)
+            MODAL.isVisible = true
+            val SAVEFILE = PROMPT.get()
+            if (!validWrite(SAVEFILE)) {
+                return
             }
-
-            final Saver SAVER = new Saver(this, SAVEFILE, this.save, doAfter);
-            SAVER.execute();
-
-        } catch ( InterruptedException | ExecutionException ex) {
-            LOG.log(Level.SEVERE, "Error while saving.", ex);
+            val SAVER = Saver(this, SAVEFILE!!, save, doAfter)
+            SAVER.execute()
+        } catch (ex: InterruptedException) {
+            LOG.log(Level.SEVERE, "Error while saving.", ex)
+        } catch (ex: ExecutionException) {
+            LOG.log(Level.SEVERE, "Error while saving.", ex)
         }
     }
 
     /**
      * Starts a batch cleaning operation.
      */
-    private void batchClean() {
-        if (null == this.save) {
-            return;
+    private fun batchClean() {
+        if (null == save) {
+            return
         }
-
-        final BatchCleaner CLEANER = new BatchCleaner(this, this.save);
-        CLEANER.execute();
+        val CLEANER = BatchCleaner(this, save)
+        CLEANER.execute()
     }
 
     /**
      * Opens a savefile, preceded with a prompt to save the current one.
      *
      */
-    void openWithPrompt() {
-        if (null == this.save || !this.modified) {
-            this.open();
-
+    fun openWithPrompt() {
+        if (null == save || !modified) {
+            this.open()
         } else {
-            int result = JOptionPane.showConfirmDialog(this, "Do you want to save the current file first?", "Save First?", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-            switch (result) {
-                case JOptionPane.YES_OPTION:
-                    this.save(false, this::open);
-                    break;
-
-                case JOptionPane.NO_OPTION:
-                    this.open();
-                    break;
-
-                case JOptionPane.CANCEL_OPTION:
-                default:
-                    break;
+            val result = JOptionPane.showConfirmDialog(
+                this,
+                "Do you want to save the current file first?",
+                "Save First?",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+            )
+            when (result) {
+                JOptionPane.YES_OPTION -> save(false) { this.open() }
+                JOptionPane.NO_OPTION -> this.open()
+                JOptionPane.CANCEL_OPTION -> {
+                }
+                else -> {
+                }
             }
         }
     }
@@ -893,15 +759,14 @@ final public class SaveWindow extends JFrame {
      * Opens a save file.
      *
      */
-    void open() {
-        final Path SAVEFILE = Configurator.choosePathModal(this,
-                null,
-                () -> Configurator.selectSaveFile(this),
-                Configurator::validateSavegame,
-                true);
-
+    fun open() {
+        val SAVEFILE = choosePathModal(this,
+            null,
+            Supplier { selectSaveFile(this) }, Predicate { obj: Path? -> validateSavegame(obj) },
+            true
+        )
         if (SAVEFILE != null) {
-            open(SAVEFILE, PREFS.getBoolean("settings.alwaysParse", false));
+            open(SAVEFILE, PREFS.getBoolean("settings.alwaysParse", false))
         }
     }
 
@@ -910,38 +775,41 @@ final public class SaveWindow extends JFrame {
      *
      * @param path The savefile or script to read.
      * @param parse
-     *
      */
-    void open(@NotNull Path path, boolean parse) {
-        if (Configurator.validateSavegame(path)) {
-            if (this.scanner != null) {
-                this.setScanning(false);
-                this.scanner.cancel(true);
-                this.scanner = null;
-            }
-
-            Runnable doAfter = parse ? () -> scanESPs(false) : null;
-            final Opener OPENER = new Opener(this, path, this.WORRIER, doAfter);
-            OPENER.execute();
-
-        } else if (Mod.GLOB_SCRIPT.matches(path)) {
-            try {
-                final PexFile SCRIPT = PexFile.readScript(path);
-                final java.util.List<String> SOURCE = new java.util.LinkedList<>();
-                SCRIPT.disassemble(SOURCE, AssemblyLevel.FULL);
-                StringJoiner joiner = new StringJoiner("<br/>", "<pre>", "</pre>");
-                for (String s : SOURCE) {
-                    joiner.add(s);
+    fun open(path: Path, parse: Boolean) {
+        when {
+            validateSavegame(path) -> {
+                if (scanner != null) {
+                    setScanning(false)
+                    scanner!!.cancel(true)
+                    scanner = null
                 }
-                final TextDialog TEXT = new TextDialog(joiner.toString());
-                JOptionPane.showMessageDialog(this, TEXT, path.getFileName().toString(), JOptionPane.INFORMATION_MESSAGE);
-            } catch ( IOException | RuntimeException ex) {
-                LOG.log(Level.WARNING, "Error while decompiling drag-and-drop script.", ex);
-                JOptionPane.showMessageDialog(this, ex.getMessage(), "Decompile Error", JOptionPane.ERROR_MESSAGE);
+                val doAfter = if (parse) Runnable { scanESPs(false) } else null
+                val OPENER = Opener(this, path, WORRIER, doAfter)
+                OPENER.execute()
             }
-
-        } else if (Configurator.GLOB_INI.matches(path)) {
-            Configurator.storeMO2Ini(path);
+            Mod.GLOB_SCRIPT.matches(path) -> {
+                try {
+                    val SCRIPT = readScript(path)
+                    val SOURCE: MutableList<String?> = mutableListOf()
+                    SCRIPT.disassemble(SOURCE, AssemblyLevel.FULL)
+                    val joiner = StringJoiner("<br/>", "<pre>", "</pre>")
+                    for (s in SOURCE) {
+                        joiner.add(s)
+                    }
+                    val TEXT = TextDialog(joiner.toString())
+                    JOptionPane.showMessageDialog(this, TEXT, path.fileName.toString(), JOptionPane.INFORMATION_MESSAGE)
+                } catch (ex: IOException) {
+                    LOG.log(Level.WARNING, "Error while decompiling drag-and-drop script.", ex)
+                    JOptionPane.showMessageDialog(this, ex.message, "Decompile Error", JOptionPane.ERROR_MESSAGE)
+                } catch (ex: RuntimeException) {
+                    LOG.log(Level.WARNING, "Error while decompiling drag-and-drop script.", ex)
+                    JOptionPane.showMessageDialog(this, ex.message, "Decompile Error", JOptionPane.ERROR_MESSAGE)
+                }
+            }
+            Configurator.GLOB_INI.matches(path) -> {
+                storeMO2Ini(path)
+            }
         }
     }
 
@@ -950,152 +818,133 @@ final public class SaveWindow extends JFrame {
      *
      * @param interactive A flag indicating whether to prompt the user.
      */
-    public void scanESPs(boolean interactive) {
-        if (this.save == null) {
-            return;
+    fun scanESPs(interactive: Boolean) {
+        if (save == null) {
+            return
         }
-
-        if (this.scanner != null) {
-            this.setScanning(false);
-            this.scanner.cancel(true);
-            this.scanner = null;
+        if (scanner != null) {
+            setScanning(false)
+            scanner!!.cancel(true)
+            scanner = null
         }
-
-        final Game GAME = this.save.getHeader().GAME;
-
-        final Path GAME_DIR = Configurator.choosePathModal(this,
-                () -> Configurator.getGameDirectory(GAME),
-                () -> Configurator.selectGameDirectory(SaveWindow.this, GAME),
-                path -> Configurator.validateGameDirectory(GAME, path),
-                interactive);
-
-        final Path MO2_INI = this.MI_USEMO2.isSelected()
-                ? Configurator.choosePathModal(this,
-                        () -> Configurator.getMO2Ini(GAME),
-                        () -> Configurator.selectMO2Ini(this, GAME),
-                        path -> Configurator.validateMO2Ini(GAME, path),
-                        interactive)
-                : null;
-
+        val GAME = save!!.header.GAME
+        val GAME_DIR = choosePathModal(
+            this,
+            { getGameDirectory(GAME!!) },
+            { selectGameDirectory(this@SaveWindow, GAME!!) },
+            { path: Path? ->
+                validateGameDirectory(
+                    GAME!!, path!!
+                )
+            },
+            interactive
+        )
+        val MO2_INI = if (MI_USEMO2.isSelected) choosePathModal(
+            this,
+            { getMO2Ini(GAME!!) },
+            { selectMO2Ini(this, GAME!!) },
+            { path: Path? -> validateMO2Ini(GAME, path!!) },
+            interactive
+        ) else null
         if (GAME_DIR != null) {
-            this.scanner = new Scanner(this, this.save, GAME_DIR, MO2_INI, () -> setScanning(false), this::updateScan);
-            this.scanner.execute();
-            this.setScanning(true);
+            scanner = Scanner(this, save, GAME_DIR, MO2_INI, { setScanning(false) }) { msg: String -> updateScan(msg) }
+            scanner!!.execute()
+            setScanning(true)
         }
     }
 
     /**
      * Display the settings dialogbox.
      */
-    private void showSettings() {
-        Game currentGame = (null == this.save ? null : this.save.getHeader().GAME);
-        ReSaverSettings settings = new ReSaverSettings(this, currentGame);
-        settings.pack();
-        settings.setVisible(true);
+    private fun showSettings() {
+        val currentGame = if (null == save) null else save!!.header.GAME
+        val settings = ReSaverSettings(this, currentGame)
+        settings.pack()
+        settings.isVisible = true
     }
 
     /**
      * Exports a list of plugins.
      */
-    private void exportPlugins() {
-        final Path EXPORT = Configurator.choosePathModal(this,
-                null,
-                () -> Configurator.selectPluginsExport(this, this.save.getOriginalFile()),
-                Configurator::validWrite,
-                true);
-
-        if (null == EXPORT) {
-            return;
-        }
-
-        try (BufferedWriter out = Files.newBufferedWriter(EXPORT)) {
-            for (Plugin plugin : this.save.getPluginInfo().getFullPlugins()) {
-                out.write(plugin.NAME);
-                out.write('\n');
+    private fun exportPlugins() {
+        val EXPORT = choosePathModal(this,
+            null,
+            Supplier { selectPluginsExport(this, save!!.originalFile) }, Predicate { obj: Path? -> validWrite(obj) },
+            true
+        ) ?: return
+        try {
+            Files.newBufferedWriter(EXPORT).use { out ->
+                for (plugin in save!!.pluginInfo.fullPlugins) {
+                    out.write(plugin.NAME)
+                    out.write('\n'.code)
+                }
+                val MSG = "Plugins list exported."
+                JOptionPane.showMessageDialog(this@SaveWindow, MSG, "Success", JOptionPane.INFORMATION_MESSAGE)
             }
-
-            final String MSG = "Plugins list exported.";
-            JOptionPane.showMessageDialog(SaveWindow.this, MSG, "Success", JOptionPane.INFORMATION_MESSAGE);
-
-        } catch (IOException ex) {
-            final String MSG = String.format("Error while writing file \"%s\".\n%s", EXPORT.getFileName(), ex.getMessage());
-            LOG.log(Level.SEVERE, "Error while exporting plugin list.", ex);
-            JOptionPane.showMessageDialog(SaveWindow.this, MSG, "Write Error", JOptionPane.ERROR_MESSAGE);
+        } catch (ex: IOException) {
+            val MSG = "Error while writing file \"${EXPORT.fileName}\".\n${ex.message}"
+            LOG.log(Level.SEVERE, "Error while exporting plugin list.", ex)
+            JOptionPane.showMessageDialog(this@SaveWindow, MSG, "Write Error", JOptionPane.ERROR_MESSAGE)
         }
     }
 
     /**
      * Prompts the user for a name, and finds the corresponding ID.
      */
-    private void lookupID() {
-        final String MSG = "Enter the name of the object or NPC:";
-        final String TITLE = "Enter Name";
-
-        String searchTerm = JOptionPane.showInputDialog(this, MSG, TITLE, JOptionPane.QUESTION_MESSAGE);
-        if (null == searchTerm || searchTerm.trim().isEmpty()) {
-            return;
+    private fun lookupID() {
+        val MSG = "Enter the name of the object or NPC:"
+        val TITLE = "Enter Name"
+        val searchTerm = JOptionPane.showInputDialog(this, MSG, TITLE, JOptionPane.QUESTION_MESSAGE)
+        if (null == searchTerm || searchTerm.trim { it <= ' ' }.isEmpty()) {
+            return
         }
-
-        Set<Integer> matches = this.analysis.find(searchTerm);
+        val matches = analysis!!.find(searchTerm)
         if (matches.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "No matches were found.", "No matches", JOptionPane.ERROR_MESSAGE);
-            return;
+            JOptionPane.showMessageDialog(this, "No matches were found.", "No matches", JOptionPane.ERROR_MESSAGE)
+            return
         }
-
-        final StringBuilder BUF = new StringBuilder();
-        BUF.append("The following matches were found:\n\n");
-
-        for (Integer id : matches) {
-            BUF.append(String.format("%08x", id));
-
-            int pluginIndex = id >>> 24;
-            final List<Plugin> PLUGINS = this.save.getPluginInfo().getFullPlugins();
-
-            if (pluginIndex < PLUGINS.size()) {
-                final Plugin PLUGIN = PLUGINS.get(pluginIndex);
-                BUF.append(" (").append(PLUGIN).append(")");
+        val BUF = StringBuilder()
+        BUF.append("The following matches were found:\n\n")
+        for (id in matches) {
+            BUF.append(String.format("%08x", id))
+            val pluginIndex = id ushr 24
+            val PLUGINS = save!!.pluginInfo.fullPlugins
+            if (pluginIndex < PLUGINS.size) {
+                val PLUGIN = PLUGINS[pluginIndex]
+                BUF.append(" (").append(PLUGIN).append(")")
             }
-            BUF.append('\n');
+            BUF.append('\n')
         }
-
-        JOptionPane.showMessageDialog(this, BUF.toString(), "Matches", JOptionPane.INFORMATION_MESSAGE);
-        System.out.println(matches);
+        JOptionPane.showMessageDialog(this, BUF.toString(), "Matches", JOptionPane.INFORMATION_MESSAGE)
+        println(matches)
     }
 
     /**
      * Prompts the user for the name or ID of a reference, and finds the id/name
      * of the base object.
      */
-    private void lookupBase() {
-
+    private fun lookupBase() {}
+    private fun showDataAnalyzer(data: ByteBuffer) {
+        showDataAnalyzer(this, data, save!!)
     }
 
-    private void showDataAnalyzer(@NotNull ByteBuffer data) {
-        DataAnalyzer.showDataAnalyzer(this, data, this.save);
-    }
-
-    private void compareTo() {
-        if (this.save == null) {
-            return;
+    private fun compareTo() {
+        if (save == null) {
+            return
         }
-
-        final Path otherPath = Configurator.choosePathModal(this,
-                null,
-                () -> Configurator.selectSaveFile(this),
-                Configurator::validateSavegame,
-                true);
-
-        if (null == otherPath) {
-            return;
-        }
-
+        val otherPath = choosePathModal(this,
+            null,
+            Supplier { selectSaveFile(this) }, Predicate { obj: Path? -> validateSavegame(obj) },
+            true
+        ) ?: return
         try {
-            final ESS.Result RESULT = ESS.readESS(otherPath, new ModelBuilder(new ProgressModel(1)));
-            ESS.verifyIdentical(this.save, RESULT.ESS);
-            JOptionPane.showMessageDialog(this, "No mismatches detected.", "Match", JOptionPane.INFORMATION_MESSAGE);
-
-        } catch ( RuntimeException | IOException ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "MisMatch", JOptionPane.ERROR_MESSAGE);
+            val RESULT = readESS(otherPath, ModelBuilder(ProgressModel(1)))
+            verifyIdentical(save!!, RESULT.ESS)
+            JOptionPane.showMessageDialog(this, "No mismatches detected.", "Match", JOptionPane.INFORMATION_MESSAGE)
+        } catch (ex: RuntimeException) {
+            JOptionPane.showMessageDialog(this, ex.message, "MisMatch", JOptionPane.ERROR_MESSAGE)
+        } catch (ex: IOException) {
+            JOptionPane.showMessageDialog(this, ex.message, "MisMatch", JOptionPane.ERROR_MESSAGE)
         }
     }
 
@@ -1103,116 +952,102 @@ final public class SaveWindow extends JFrame {
      * Removes unattached script instances (instances with no valid Ref).
      *
      */
-    private void cleanUnattached() {
+    private fun cleanUnattached() {
         try {
-            if (null == this.save) {
-                return;
+            if (null == save) {
+                return
             }
-
-            LOG.info("Cleaning unattached instances.");
-
-            Papyrus papyrus = this.save.getPapyrus();
-            final Set<PapyrusElement> REMOVED = papyrus.removeUnattachedInstances();
-
-            String msg = String.format("Removed %d orphaned script instances.", REMOVED.size());
-            LOG.info(msg);
-            JOptionPane.showMessageDialog(this, msg, "Cleaned", JOptionPane.INFORMATION_MESSAGE);
-
-            if (REMOVED.size() > 0) {
-                this.deleteNodesFor(REMOVED);
-                this.setModified();
+            LOG.info("Cleaning unattached instances.")
+            val papyrus = save!!.papyrus
+            val REMOVED = papyrus!!.removeUnattachedInstances()
+            val msg = String.format("Removed %d orphaned script instances.", REMOVED.size)
+            LOG.info(msg)
+            JOptionPane.showMessageDialog(this, msg, "Cleaned", JOptionPane.INFORMATION_MESSAGE)
+            if (REMOVED.size > 0) {
+                deleteNodesFor(REMOVED)
+                setModified()
             }
-
-        } catch (HeadlessException ex) {
-            final String MSG = "Error cleaning unattached scripts.";
-            final String TITLE = "Cleaning Error";
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(SaveWindow.this, MSG, TITLE, JOptionPane.ERROR_MESSAGE);
+        } catch (ex: HeadlessException) {
+            val MSG = "Error cleaning unattached scripts."
+            val TITLE = "Cleaning Error"
+            LOG.log(Level.SEVERE, MSG, ex)
+            JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
 
     /**
      * Remove undefined script instances (instances with no Script).
      */
-    private void cleanUndefined() {
+    private fun cleanUndefined() {
         try {
-            if (null == this.save) {
-                return;
+            if (null == save) {
+                return
             }
-
-            LOG.info("Cleaning undefined elements.");
-            Papyrus papyrus = this.save.getPapyrus();
-            Set<PapyrusElement> REMOVED = papyrus.removeUndefinedElements();
-            Set<ActiveScript> TERMINATED = papyrus.terminateUndefinedThreads();
-
-            final StringBuilder BUF = new StringBuilder();
-            if (!REMOVED.isEmpty()) {
-                BUF.append("Removed ").append(REMOVED.size()).append(" undefined elements.");
+            LOG.info("Cleaning undefined elements.")
+            val papyrus = save!!.papyrus
+            val REMOVED = papyrus!!.removeUndefinedElements()
+            val TERMINATED = papyrus.terminateUndefinedThreads()
+            val BUF = StringBuilder()
+            if (REMOVED.isNotEmpty()) {
+                BUF.append("Removed ").append(REMOVED.size).append(" undefined elements.")
             }
-            if (!TERMINATED.isEmpty()) {
-                BUF.append("Terminated ").append(TERMINATED).append(" undefined threads.");
+            if (TERMINATED.isNotEmpty()) {
+                BUF.append("Terminated ").append(TERMINATED).append(" undefined threads.")
             }
-            final String MSG = BUF.toString();
-            LOG.info(MSG);
-            JOptionPane.showMessageDialog(this, MSG, "Cleaned", JOptionPane.INFORMATION_MESSAGE);
-
-            if (!REMOVED.isEmpty()) {
-                this.deleteNodesFor(REMOVED);
-                this.setModified();
+            val MSG = BUF.toString()
+            LOG.info(MSG)
+            JOptionPane.showMessageDialog(this, MSG, "Cleaned", JOptionPane.INFORMATION_MESSAGE)
+            if (REMOVED.isNotEmpty()) {
+                deleteNodesFor(REMOVED)
+                setModified()
             }
-
-        } catch (HeadlessException ex) {
-            final String MSG = "Error cleaning undefined elements.";
-            final String TITLE = "Cleaning Error";
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(SaveWindow.this, MSG, TITLE, JOptionPane.ERROR_MESSAGE);
+        } catch (ex: HeadlessException) {
+            val MSG = "Error cleaning undefined elements."
+            val TITLE = "Cleaning Error"
+            LOG.log(Level.SEVERE, MSG, ex)
+            JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
 
     /**
      *
      */
-    private void resetHavok() {
-        if (null != this.save) {
-            this.save.resetHavok();
-            JOptionPane.showMessageDialog(this, "Not implemented yet.");
-            this.setModified();
+    private fun resetHavok() {
+        if (null != save) {
+            save!!.resetHavok()
+            JOptionPane.showMessageDialog(this, "Not implemented yet.")
+            setModified()
         }
     }
 
     /**
      *
      */
-    private void cleanseFormLists() {
+    private fun cleanseFormLists() {
         try {
-            if (null == this.save) {
-                return;
+            if (null == save) {
+                return
             }
-
-            LOG.info("Cleansing formlists.");
-            int[] results = this.save.cleanseFormLists();
-
+            LOG.info("Cleansing formlists.")
+            val results = save!!.cleanseFormLists()
             if (results[0] == 0) {
-                final String MSG = "No nullrefs were found in any formlists.";
-                final String TITLE = "No nullrefs found.";
-                LOG.info(MSG);
-                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
-
+                val MSG = "No nullrefs were found in any formlists."
+                val TITLE = "No nullrefs found."
+                LOG.info(MSG)
+                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             } else {
-                this.setModified();
-                final String MSG = String.format("%d nullrefs were cleansed from %d formlists.", results[0], results[1]);
-                final String TITLE = "Nullrefs cleansed.";
-                LOG.info(MSG);
-                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
+                setModified()
+                val MSG = String.format("%d nullrefs were cleansed from %d formlists.", results[0], results[1])
+                val TITLE = "Nullrefs cleansed."
+                LOG.info(MSG)
+                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             }
-
-            this.refreshTree();
-
-        } catch (HeadlessException ex) {
-            final String MSG = "Error cleansing formlists.";
-            final String TITLE = "Cleansing Error";
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(SaveWindow.this, MSG, TITLE, JOptionPane.ERROR_MESSAGE);
+            refreshTree()
+        } catch (ex: HeadlessException) {
+            val MSG = "Error cleansing formlists."
+            val TITLE = "Cleansing Error"
+            LOG.log(Level.SEVERE, MSG, ex)
+            JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
 
@@ -1220,160 +1055,137 @@ final public class SaveWindow extends JFrame {
      *
      * @param flst
      */
-    private void cleanseFormList(@NotNull ChangeFormFLST flst) {
+    private fun cleanseFormList(flst: ChangeFormFLST) {
         try {
-            if (null == this.save) {
-                return;
+            if (null == save) {
+                return
             }
-
-            LOG.info(String.format("Cleansing formlist %s.", flst));
-            int result = flst.cleanse();
-
+            LOG.info("Cleansing formlist $flst.")
+            val result = flst.cleanse()
             if (result == 0) {
-                final String MSG = "No nullrefs were found.";
-                final String TITLE = "No nullrefs found.";
-                LOG.info(MSG);
-                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
+                val MSG = "No nullrefs were found."
+                val TITLE = "No nullrefs found."
+                LOG.info(MSG)
+                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             } else {
-                this.setModified();
-                final String MSG = String.format("%d nullrefs were cleansed.", result);
-                final String TITLE = "Nullrefs cleansed.";
-                LOG.info(MSG);
-                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
+                setModified()
+                val MSG = String.format("%d nullrefs were cleansed.", result)
+                val TITLE = "Nullrefs cleansed."
+                LOG.info(MSG)
+                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             }
-
-            this.refreshTree();
-
-        } catch (HeadlessException ex) {
-            final String MSG = "Error cleansing formlists.";
-            final String TITLE = "Cleansing Error";
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(SaveWindow.this, MSG, TITLE, JOptionPane.ERROR_MESSAGE);
+            refreshTree()
+        } catch (ex: HeadlessException) {
+            val MSG = "Error cleansing formlists."
+            val TITLE = "Cleansing Error"
+            LOG.log(Level.SEVERE, MSG, ex)
+            JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
 
     /**
      * Removes script instances attached to nonexistent created forms.
      */
-    private void cleanNonexistent() {
+    private fun cleanNonexistent() {
         // Check with the user first. This operation can mess up mods.
-        final String WARN = "This cleaning operation can cause some mods to stop working. Are you sure you want to do this?";
-        final String WARN_TITLE = "Warning";
-        int confirm = JOptionPane.showConfirmDialog(this, WARN, WARN_TITLE, JOptionPane.YES_NO_OPTION);
+        val WARN = "This cleaning operation can cause some mods to stop working. Are you sure you want to do this?"
+        val WARN_TITLE = "Warning"
+        val confirm = JOptionPane.showConfirmDialog(this, WARN, WARN_TITLE, JOptionPane.YES_NO_OPTION)
         if (confirm != JOptionPane.YES_OPTION) {
-            return;
+            return
         }
-
         try {
-            if (null == this.save) {
-                return;
+            if (null == save) {
+                return
             }
-
-            LOG.info("Removing nonexistent created forms.");
-            final Set<PapyrusElement> REMOVED = this.save.removeNonexistentCreated();
-
-            if (!REMOVED.isEmpty()) {
-                final String MSG = "No scripts attached to non-existent created forms were found.";
-                final String TITLE = "No non-existent created";
-                LOG.info(MSG);
-                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
+            LOG.info("Removing nonexistent created forms.")
+            val REMOVED: Set<PapyrusElement?> = save!!.removeNonexistentCreated()
+            if (REMOVED.isNotEmpty()) {
+                val MSG = "No scripts attached to non-existent created forms were found."
+                val TITLE = "No non-existent created"
+                LOG.info(MSG)
+                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             } else {
-                this.setModified();
-                final String MSG = String.format("%d instances were removed.", REMOVED.size());
-                final String TITLE = "Instances removed.";
-                LOG.info(MSG);
-                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
+                setModified()
+                val MSG = String.format("%d instances were removed.", REMOVED.size)
+                val TITLE = "Instances removed."
+                LOG.info(MSG)
+                JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             }
-
-            this.deleteNodesFor(REMOVED);
-
-        } catch (HeadlessException ex) {
-            final String MSG = "Error cleansing non-existent created.";
-            final String TITLE = "Cleansing Error";
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(SaveWindow.this, MSG, TITLE, JOptionPane.ERROR_MESSAGE);
+            deleteNodesFor(REMOVED)
+        } catch (ex: HeadlessException) {
+            val MSG = "Error cleansing non-existent created."
+            val TITLE = "Cleansing Error"
+            LOG.log(Level.SEVERE, MSG, ex)
+            JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
-
     }
 
     /**
      * Save minor settings like window position, size, and state.
      */
-    private void saveWindowPosition() {
-        PREFS.putInt("settings.extendedState", this.getExtendedState());
-
-        if (this.getExtendedState() == JFrame.NORMAL) {
-            PREFS.putInt("settings.windowWidth", this.getSize().width);
-            PREFS.putInt("settings.windowHeight", this.getSize().height);
-            PREFS.putInt("settings.windowX", this.getLocation().x);
-            PREFS.putInt("settings.windowY", this.getLocation().y);
-            PREFS.putInt("settings.mainDivider", this.MAINSPLITTER.getDividerLocation());
-            PREFS.putInt("settings.rightDivider", this.RIGHTSPLITTER.getDividerLocation());
-            System.out.printf("Pos = %s\n", this.getLocation());
-            System.out.printf("Size = %s\n", this.getSize());
-            System.out.printf("Dividers = %d,%d\n", this.MAINSPLITTER.getDividerLocation(), this.RIGHTSPLITTER.getDividerLocation());
+    private fun saveWindowPosition() {
+        PREFS.putInt("settings.extendedState", this.extendedState)
+        if (this.extendedState == NORMAL) {
+            PREFS.putInt("settings.windowWidth", this.size.width)
+            PREFS.putInt("settings.windowHeight", this.size.height)
+            PREFS.putInt("settings.windowX", this.location.x)
+            PREFS.putInt("settings.windowY", this.location.y)
+            PREFS.putInt("settings.mainDivider", MAINSPLITTER.dividerLocation)
+            PREFS.putInt("settings.rightDivider", RIGHTSPLITTER!!.dividerLocation)
+            System.out.printf("Pos = %s\n", this.location)
+            System.out.printf("Size = %s\n", this.size)
+            System.out.printf("Dividers = %d,%d\n", MAINSPLITTER.dividerLocation, RIGHTSPLITTER.dividerLocation)
         } else {
-            PREFS.putInt("settings.mainDividerMax", this.MAINSPLITTER.getDividerLocation());
-            PREFS.putInt("settings.rightDividerMax", this.RIGHTSPLITTER.getDividerLocation());
+            PREFS.putInt("settings.mainDividerMax", MAINSPLITTER.dividerLocation)
+            PREFS.putInt("settings.rightDividerMax", RIGHTSPLITTER!!.dividerLocation)
         }
     }
 
     /**
      * Loads minor settings like window position, size, and state.
      */
-    private void restoreWindowPosition() {
-        if (this.getExtendedState() == JFrame.NORMAL) {
-            java.awt.Point pos = this.getLocation();
-            java.awt.Dimension size = this.getSize();
-            int x = PREFS.getInt("settings.windowX", pos.x);
-            int y = PREFS.getInt("settings.windowY", pos.y);
-            int width = PREFS.getInt("settings.windowWidth", size.width);
-            int height = PREFS.getInt("settings.windowHeight", size.height);
-            this.setLocation(x, y);
-            this.setSize(width, height);
-
-            float mainDividerLocation = this.MAINSPLITTER.getDividerLocation();
-            mainDividerLocation = PREFS.getFloat("settings.mainDivider", mainDividerLocation);
-            float rightDividerLocation = this.RIGHTSPLITTER.getDividerLocation();
-            rightDividerLocation = PREFS.getFloat("settings.rightDivider", rightDividerLocation);
-            this.MAINSPLITTER.setDividerLocation(Math.max(0.1, Math.min(0.9, mainDividerLocation)));
-            this.RIGHTSPLITTER.setDividerLocation(Math.max(0.1, Math.min(0.9, rightDividerLocation)));
-
+    private fun restoreWindowPosition() {
+        if (this.extendedState == NORMAL) {
+            val pos = this.location
+            val size = this.size
+            val x = PREFS.getInt("settings.windowX", pos.x)
+            val y = PREFS.getInt("settings.windowY", pos.y)
+            val width = PREFS.getInt("settings.windowWidth", size.width)
+            val height = PREFS.getInt("settings.windowHeight", size.height)
+            this.setLocation(x, y)
+            this.setSize(width, height)
+            var mainDividerLocation = MAINSPLITTER.dividerLocation.toFloat()
+            mainDividerLocation = PREFS.getFloat("settings.mainDivider", mainDividerLocation)
+            var rightDividerLocation = RIGHTSPLITTER!!.dividerLocation.toFloat()
+            rightDividerLocation = PREFS.getFloat("settings.rightDivider", rightDividerLocation)
+            MAINSPLITTER.setDividerLocation(0.1.coerceAtLeast(0.9.coerceAtMost(mainDividerLocation.toDouble())))
+            RIGHTSPLITTER.setDividerLocation(0.1.coerceAtLeast(0.9.coerceAtMost(rightDividerLocation.toDouble())))
         } else {
-            float mainDividerLocation = this.MAINSPLITTER.getDividerLocation();
-            mainDividerLocation = PREFS.getFloat("settings.mainDividerMax", mainDividerLocation);
-            float rightDividerLocation = this.RIGHTSPLITTER.getDividerLocation();
-            rightDividerLocation = PREFS.getFloat("settings.rightDividerMax", rightDividerLocation);
-            this.MAINSPLITTER.setDividerLocation(Math.max(0.1, Math.min(0.9, mainDividerLocation)));
-            this.RIGHTSPLITTER.setDividerLocation(Math.max(0.1, Math.min(0.9, rightDividerLocation)));
+            var mainDividerLocation = MAINSPLITTER.dividerLocation.toFloat()
+            mainDividerLocation = PREFS.getFloat("settings.mainDividerMax", mainDividerLocation)
+            var rightDividerLocation = RIGHTSPLITTER!!.dividerLocation.toFloat()
+            rightDividerLocation = PREFS.getFloat("settings.rightDividerMax", rightDividerLocation)
+            MAINSPLITTER.setDividerLocation(0.1.coerceAtLeast(0.9.coerceAtMost(mainDividerLocation.toDouble())))
+            RIGHTSPLITTER.setDividerLocation(0.1.coerceAtLeast(0.9.coerceAtMost(rightDividerLocation.toDouble())))
         }
     }
 
     /**
      *
      */
-    private void kill() {
+    private fun kill() {
         try {
-            final java.util.List<Element> ELEMENTS = this.TREE.getModel().getElements();
-            this.setModified();
-
-            final Set<Element> REMOVED = this.save.removeElements(ELEMENTS);
-            this.deleteNodesFor(REMOVED);
-
-        } catch (Exception ex) {
-            final String MSG = "Error cleansing formlists.";
-            final String TITLE = "Cleansing Error";
-            LOG.log(Level.SEVERE, MSG, ex);
-            JOptionPane.showMessageDialog(SaveWindow.this, MSG, TITLE, JOptionPane.ERROR_MESSAGE);
+            val ELEMENTS = TREE.model!!.elements
+            setModified()
+            val REMOVED = save!!.removeElements(ELEMENTS)
+            deleteNodesFor(REMOVED)
+        } catch (ex: Exception) {
+            val MSG = "Error cleansing formlists."
+            val TITLE = "Cleansing Error"
+            LOG.log(Level.SEVERE, MSG, ex)
+            JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
-    }
-
-    /**
-     *
-     */
-    @NotNull
-    Watcher getWatcher() {
-        return this.WATCHER;
     }
 
     /**
@@ -1381,174 +1193,165 @@ final public class SaveWindow extends JFrame {
      *
      * @param enabled Indicates whether to start or terminate the watcher.
      */
-    public void setWatching(boolean enabled) {
-        if (enabled && !this.WATCHER.isRunning()) {
-            this.LBL_WATCHING.setVisible(true);
-            this.WATCHER.start(null);
-
-            if (!this.MI_WATCHSAVES.isSelected()) {
-                this.MI_WATCHSAVES.setSelected(true);
+    fun setWatching(enabled: Boolean) {
+        if (enabled && !watcher.isRunning) {
+            LBL_WATCHING.isVisible = true
+            watcher.start(null)
+            if (!MI_WATCHSAVES.isSelected) {
+                MI_WATCHSAVES.isSelected = true
             }
-        } else if (!enabled && this.WATCHER.isRunning()) {
-            this.LBL_WATCHING.setVisible(false);
-            this.WATCHER.stop();
-            if (this.MI_WATCHSAVES.isSelected()) {
-                this.MI_WATCHSAVES.setSelected(false);
+        } else if (!enabled && watcher.isRunning) {
+            LBL_WATCHING.isVisible = false
+            watcher.stop()
+            if (MI_WATCHSAVES.isSelected) {
+                MI_WATCHSAVES.isSelected = false
             }
         }
     }
 
-    private void updateScan(String msg) {
-        this.LBL_SCANNING.setText(msg);
+    private fun updateScan(msg: String) {
+        LBL_SCANNING.text = msg
     }
 
     /**
      * Begin the watcher service.
      */
-    void setScanning(boolean enabled) {
-        if (enabled && this.scanner != null && !this.scanner.isDone()) {
-            this.LBL_SCANNING.setVisible(true);
-            this.MI_LOADESPS.setEnabled(false);
+    fun setScanning(enabled: Boolean) {
+        if (enabled && scanner != null && !scanner!!.isDone) {
+            LBL_SCANNING.isVisible = true
+            MI_LOADESPS.isEnabled = false
         } else {
-            this.LBL_SCANNING.setVisible(false);
-            this.MI_LOADESPS.setEnabled(this.save != null && this.analysis == null);
+            LBL_SCANNING.isVisible = false
+            MI_LOADESPS.isEnabled = save != null && analysis == null
         }
     }
 
     /**
      *
      */
-    private void showLog() {
-        JDialog dialog = new JDialog(this, "Log");
-        dialog.setContentPane(this.LOGWINDOW);
-        dialog.setModalityType(JDialog.ModalityType.MODELESS);
-        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        dialog.setPreferredSize(new Dimension(600, 400));
-        dialog.setLocationRelativeTo(null);
-        dialog.pack();
-        dialog.setVisible(true);
+    private fun showLog() {
+        val dialog = JDialog(this, "Log")
+        dialog.contentPane = LOGWINDOW
+        dialog.modalityType = Dialog.ModalityType.MODELESS
+        dialog.defaultCloseOperation = DISPOSE_ON_CLOSE
+        dialog.preferredSize = Dimension(600, 400)
+        dialog.setLocationRelativeTo(null)
+        dialog.pack()
+        dialog.isVisible = true
     }
 
     /**
      *
      */
-    private void setChangeFlagFilter() {
-        Duad<Integer> pair = this.MI_CHANGEFILTER.getValue();
+    private fun setChangeFlagFilter() {
+        var pair = MI_CHANGEFILTER.getValue()
         if (null == pair) {
-            pair = Duad.make(0, 0);
+            pair = make(0, 0)
         }
-
-        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.getA(), pair.getB(), (m, f) -> {
-            Duad<Integer> newPair = Duad.make(m, f);
-            this.MI_CHANGEFILTER.setValue(newPair);
-            this.updateFilters(false);
-        });
-
-        dlg.pack();
-        dlg.setLocationRelativeTo(this);
-        dlg.setVisible(true);
+        val dlg = ChangeFlagDialog(this, pair.A, pair.B) { m: Int, f: Int ->
+            val newPair = make(m, f)
+            MI_CHANGEFILTER.setValue(newPair)
+            updateFilters(false)
+        }
+        dlg.pack()
+        dlg.setLocationRelativeTo(this)
+        dlg.isVisible = true
     }
 
     /**
      *
      */
-    private void setChangeFormFlagFilter() {
-        Duad<Integer> pair = this.MI_CHANGEFORMFILTER.getValue();
+    private fun setChangeFormFlagFilter() {
+        var pair = MI_CHANGEFORMFILTER!!.getValue()
         if (null == pair) {
-            pair = Duad.make(0, 0);
+            pair = make(0, 0)
         }
-
-        ChangeFlagDialog dlg = new ChangeFlagDialog(this, pair.getA(), pair.getB(), (m, f) -> {
-            Duad<Integer> newPair = Duad.make(m, f);
-            this.MI_CHANGEFORMFILTER.setValue(newPair);
-            this.updateFilters(false);
-        });
-
-        dlg.pack();
-        dlg.setLocationRelativeTo(this);
-        dlg.setVisible(true);
+        val dlg = ChangeFlagDialog(this, pair.A, pair.B) { m: Int, f: Int ->
+            val newPair = make(m, f)
+            MI_CHANGEFORMFILTER.setValue(newPair)
+            updateFilters(false)
+        }
+        dlg.pack()
+        dlg.setLocationRelativeTo(this)
+        dlg.isVisible = true
     }
 
     /**
-     * Selects an <code>Element</code> in the <code>FilterTree</code>.
+     * Selects an `Element` in the `FilterTree`.
      *
-     * @param element The <code>Element</code> to find.
-     * @param index The index of the data table for <code>Element</code> to
+     * @param element The `Element` to find.
+     * @param index The index of the data table for `Element` to
      * select.
      */
-    void findElement(Element element, int index) {
-        Objects.requireNonNull(element);
-        this.findElement(element);
-        this.TABLE.scrollSelectionToVisible(index);
+    fun findElement(element: Element?, index: Int) {
+        Objects.requireNonNull(element)
+        this.findElement(element)
+        TABLE.scrollSelectionToVisible(index)
     }
 
     /**
-     * Selects an <code>Element</code> in the <code>FilterTree</code>.
+     * Selects an `Element` in the `FilterTree`.
      *
-     * @param element The <code>Element</code> to select.
-     *
+     * @param element The `Element` to select.
      */
-    @Nullable
-    void findElement(@Nullable Element element) {
-
+    fun findElement(element: Element?) {
         if (null == element) {
-            return;
+            return
         }
-
-        TreePath path = this.TREE.findPath(element);
-
+        val path = TREE.findPath(element)
         if (null == path) {
-            JOptionPane.showMessageDialog(this, "The element was not found.", "Not Found", JOptionPane.ERROR_MESSAGE);
-            return;
+            JOptionPane.showMessageDialog(this, "The element was not found.", "Not Found", JOptionPane.ERROR_MESSAGE)
+            return
         }
-
-        this.TREE.updateUI();
-        this.TREE.scrollPathToVisible(path);
-        this.TREE.setSelectionPath(path);
+        TREE.updateUI()
+        TREE.scrollPathToVisible(path)
+        TREE.selectionPath = path
     }
 
     /**
      * Selects the element stored in a reference variable or array variable.
      *
-     * @param var The <code>Variable</code> whose contents should be found.
+     * @param var The `Variable` whose contents should be found.
      */
-    @Nullable
-    private void findElement(@Nullable Variable var) {
-
-
-        if (var == null) {
-
-        } else if (var instanceof VarArray) {
-            VarArray arrayVar = (VarArray) var;
-            final EID ID = arrayVar.getArrayID();
-            if (ID.isZero()) {
-                return;
+    private fun findElement(`var`: Variable?) {
+        when {
+            `var` == null -> {
             }
-
-            ArrayInfo array = this.save.getPapyrus().getArrays().get(ID);
-            assert array == arrayVar.getArray();
-
-            if (null == array) {
-                JOptionPane.showMessageDialog(this, "The array with that ID was not found.", "Not Found", JOptionPane.ERROR_MESSAGE);
-                return;
+            `var` is VarArray -> {
+                val ID = `var`.arrayID
+                if (ID.isZero) {
+                    return
+                }
+                val array = save!!.papyrus!!.arrays[ID]
+                assert(array == `var`.array)
+                if (null == array) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "The array with that ID was not found.",
+                        "Not Found",
+                        JOptionPane.ERROR_MESSAGE
+                    )
+                    return
+                }
+                this.findElement(array)
             }
-
-            this.findElement(array);
-
-        } else if (var.hasRef()) {
-            final EID ID = var.getRef();
-            if (ID.isZero()) {
-                return;
+            `var`.hasRef() -> {
+                val ID = `var`.ref
+                if (ID!!.isZero) {
+                    return
+                }
+                if (null == `var`.referent) {
+                    JOptionPane.showMessageDialog(
+                        this,
+                        "The element with that ID was not found.",
+                        "Not Found",
+                        JOptionPane.ERROR_MESSAGE
+                    )
+                    return
+                }
+                this.findElement(`var`.referent)
             }
-
-            if (null == var.getReferent()) {
-                JOptionPane.showMessageDialog(this, "The element with that ID was not found.", "Not Found", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-
-            this.findElement(var.getReferent());
         }
-
     }
 
     /**
@@ -1559,103 +1362,101 @@ final public class SaveWindow extends JFrame {
      * @param purgeScripts A flag indicating to purge script instances.
      * @return The count of instances and changeforms removed.
      */
-    private void purgePlugins(@NotNull Collection<Plugin> plugins, boolean purgeScripts, boolean purgeForms) {
-        Objects.requireNonNull(plugins);
-        final int NUM_FORMS, NUM_INSTANCES;
-
+    private fun purgePlugins(plugins: MutableList<Plugin?>, purgeScripts: Boolean, purgeForms: Boolean) {
+        Objects.requireNonNull(plugins)
+        val NUM_FORMS: Int
+        val NUM_INSTANCES: Int
         if (purgeScripts) {
-            final Set<ScriptInstance> INSTANCES = new HashSet<>();
-            for (Plugin p : plugins) {
-                for (ScriptInstance scriptInstance : p.getInstances(this.save)) {
-                    INSTANCES.add(scriptInstance);
+            val INSTANCES: MutableSet<ScriptInstance> = HashSet()
+            for (p in plugins) {
+                if (p != null) {
+                    for (scriptInstance in p.getInstances(save)) {
+                        INSTANCES.add(scriptInstance)
+                    }
                 }
             }
-            NUM_INSTANCES = INSTANCES.size();
-            Set<PapyrusElement> REMOVED = this.save.getPapyrus().removeElements(INSTANCES);
-            assert REMOVED.size() == NUM_INSTANCES : String.format("Deleted %d/%d instances.", REMOVED.size(), NUM_INSTANCES);
-
-            if (!REMOVED.isEmpty()) {
-                this.deleteNodesFor(REMOVED);
-                this.setModified();
+            NUM_INSTANCES = INSTANCES.size
+            val REMOVED = save!!.papyrus!!.removeElements(INSTANCES)
+            assert(REMOVED.size == NUM_INSTANCES) {
+                String.format(
+                    "Deleted %d/%d instances.",
+                    REMOVED.size,
+                    NUM_INSTANCES
+                )
+            }
+            if (REMOVED.isNotEmpty()) {
+                deleteNodesFor(REMOVED)
+                setModified()
             }
         } else {
-            NUM_INSTANCES = 0;
+            NUM_INSTANCES = 0
         }
-
         if (purgeForms) {
-            final Set<ChangeForm> FORMS = new HashSet<>();
-            for (Plugin p : plugins) {
-                for (ChangeForm changeForm : p.getChangeForms(this.save)) {
-                    FORMS.add(changeForm);
+            val FORMS: MutableSet<ChangeForm> = HashSet()
+            for (p in plugins) {
+                if (p != null) {
+                    for (changeForm in p.getChangeForms(save)) {
+                        FORMS.add(changeForm)
+                    }
                 }
             }
-            NUM_FORMS = FORMS.size();
-            final Set<ChangeForm> REMOVED = this.save.removeChangeForms(FORMS);
-            assert REMOVED.size() == NUM_INSTANCES : String.format("Deleted %d/%d forms.", REMOVED.size(), NUM_FORMS);
-
-            if (!REMOVED.isEmpty()) {
-                this.deleteNodesFor(REMOVED);
-                this.setModified();
+            NUM_FORMS = FORMS.size
+            val REMOVED = save!!.removeChangeForms(FORMS)
+            assert(REMOVED.size == NUM_INSTANCES) { String.format("Deleted %d/%d forms.", REMOVED.size, NUM_FORMS) }
+            if (REMOVED.isNotEmpty()) {
+                deleteNodesFor(REMOVED)
+                setModified()
             }
         } else {
-            NUM_FORMS = 0;
+            NUM_FORMS = 0
         }
-
-        final String TITLE = "Plugin Purge";
-
+        val TITLE = "Plugin Purge"
         if (NUM_INSTANCES > 0 && NUM_FORMS == 0) {
-            final String FORMAT = "Deleted %d script instances from %d plugins.";
-            final String MSG = String.format(FORMAT, NUM_INSTANCES, plugins.size());
-            JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
-
+            val FORMAT = "Deleted %d script instances from %d plugins."
+            val MSG = String.format(FORMAT, NUM_INSTANCES, plugins.size)
+            JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
         } else if (NUM_INSTANCES == 0 && NUM_FORMS > 0) {
-            final String FORMAT = "Deleted %d changeforms from %d plugins.";
-            final String MSG = String.format(FORMAT, NUM_FORMS, plugins.size());
-            JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
-
+            val FORMAT = "Deleted %d changeforms from %d plugins."
+            val MSG = String.format(FORMAT, NUM_FORMS, plugins.size)
+            JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
         } else if (NUM_INSTANCES > 0 && NUM_FORMS > 0) {
-            final String FORMAT = "Deleted %d script instances and %d changeforms from %d plugins.";
-            final String MSG = String.format(FORMAT, NUM_INSTANCES, NUM_FORMS, plugins.size());
-            JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
-
+            val FORMAT = "Deleted %d script instances and %d changeforms from %d plugins."
+            val MSG = String.format(FORMAT, NUM_INSTANCES, NUM_FORMS, plugins.size)
+            JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
         } else {
-            final String MSG = "There was nothing to delete.";
-            JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE);
+            val MSG = "There was nothing to delete."
+            JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
         }
     }
 
     /**
      * Zero a thread, terminating it.
      *
-     * @param threads An <code>Element</code> <code>List</code> that will be
+     * @param threads An `Element` `List` that will be
      * terminated.
      */
-    private void zeroThreads(@NotNull java.util.List<ActiveScript> threads) {
-        Objects.requireNonNull(threads);
+    private fun zeroThreads(threads: List<ActiveScript>) {
+        Objects.requireNonNull(threads)
         if (threads.isEmpty()) {
-            return;
+            return
         }
-
-        final String QUESTION = threads.size() > 1
-                ? String.format("Are you sure you want to terminate these %d threads?", threads.size())
-                : "Are you sure you want to terminate this thread?";
-        final String TITLE = "Thread Termination";
-        int result = JOptionPane.showConfirmDialog(this, QUESTION, TITLE, JOptionPane.YES_NO_OPTION);
+        val QUESTION = if (threads.size > 1) String.format(
+            "Are you sure you want to terminate these %d threads?",
+            threads.size
+        ) else "Are you sure you want to terminate this thread?"
+        val TITLE = "Thread Termination"
+        val result = JOptionPane.showConfirmDialog(this, QUESTION, TITLE, JOptionPane.YES_NO_OPTION)
         if (result == JOptionPane.NO_OPTION) {
-            return;
+            return
         }
-
-        this.setModified();
-        for (ActiveScript thread : threads) {
-            thread.zero();
+        setModified()
+        for (thread in threads) {
+            thread.zero()
         }
-        this.refreshTree();
-
-        final String MSG = threads.size() > 1
-                ? "Thread terminated and zeroed."
-                : "Threads terminated and zeroed.";
-        LOG.info(MSG);
-        JOptionPane.showMessageDialog(this, MSG, "Thread Termination", JOptionPane.INFORMATION_MESSAGE);
+        refreshTree()
+        val MSG = if (threads.size > 1) "Thread terminated and zeroed." else "Threads terminated and zeroed."
+        LOG.info(MSG)
+        JOptionPane.showMessageDialog(this, MSG, "Thread Termination", JOptionPane.INFORMATION_MESSAGE)
     }
 
     /**
@@ -1663,8 +1464,8 @@ final public class SaveWindow extends JFrame {
      *
      * @param elements The selections to delete.
      */
-    public void deletePaths(@NotNull Map<Element, Node> elements) {
-        this.deleteElements(elements.keySet());
+    fun deletePaths(elements: Map<Element?, FilterTreeModel.Node?>) {
+        deleteElements(elements.keys)
     }
 
     /**
@@ -1672,164 +1473,156 @@ final public class SaveWindow extends JFrame {
      *
      * @param elements The selections to delete.
      */
-    public void deleteElements(@Nullable Set<Element> elements) {
-        if (null == this.save || null == elements || elements.isEmpty()) {
-            return;
+    fun deleteElements(elements: Set<Element?>?) {
+        if (null == save || null == elements || elements.isEmpty()) {
+            return
         }
 
         // Save the selected row so that we can select it again after this is done.
-        final int ROW = this.TREE.getSelectionModel().getMaxSelectionRow();
-
-        if (elements.size() == 1) {
-            final Element ELEMENT = elements.iterator().next();
-            final String WARNING;
-
-            if (ESS.THREAD.test(ELEMENT)) {
-                WARNING = String.format("Element \"%s\" is a Papyrus thread. Deleting it could make your savefile impossible to load. Are you sure you want to proceed?", ELEMENT.toString());
-            } else if (ESS.DELETABLE.test(ELEMENT)) {
-                WARNING = String.format("Are you sure you want to delete this element?\n%s", ELEMENT);
-            } else if (ELEMENT instanceof SuspendedStack) {
-                WARNING = String.format("Element \"%s\" is a Suspended Stack. Deleting it could make your savefile impossible to load. Are you sure you want to proceed?", ELEMENT);
-            } else {
-                return;
+        val ROW = TREE.selectionModel.maxSelectionRow
+        if (elements.size == 1) {
+            val ELEMENT = elements.iterator().next()
+            val WARNING: String = when {
+                ESS.THREAD.test(ELEMENT) -> {
+                    "Element \"${ELEMENT.toString()}\" is a Papyrus thread. Deleting it could make your savefile impossible to load. Are you sure you want to proceed?"
+                }
+                ESS.DELETABLE.test(ELEMENT) -> {
+                    "Are you sure you want to delete this element?\n$ELEMENT"
+                }
+                ELEMENT is SuspendedStack -> {
+                    "Element \"$ELEMENT\" is a Suspended Stack. Deleting it could make your savefile impossible to load. Are you sure you want to proceed?"
+                }
+                else -> {
+                    return
+                }
             }
-
-            final String TITLE = "Warning";
-            int result = JOptionPane.showConfirmDialog(this, WARNING, TITLE, JOptionPane.OK_CANCEL_OPTION);
+            val TITLE = "Warning"
+            val result = JOptionPane.showConfirmDialog(this, WARNING, TITLE, JOptionPane.OK_CANCEL_OPTION)
             if (result == JOptionPane.CANCEL_OPTION) {
-                return;
+                return
             }
-
-            final Set<Element> REMOVED = this.save.removeElements(elements);
-            this.deleteNodesFor(REMOVED);
-
+            val REMOVED = save!!.removeElements(elements)
+            deleteNodesFor(REMOVED)
             if (REMOVED.containsAll(elements)) {
-                final String MSG = String.format("Element Deleted:\n%s", ELEMENT);
-                JOptionPane.showMessageDialog(this, MSG, "Element Deleted", JOptionPane.INFORMATION_MESSAGE);
-                LOG.info(MSG);
+                val MSG = "Element Deleted:\n$ELEMENT"
+                JOptionPane.showMessageDialog(this, MSG, "Element Deleted", JOptionPane.INFORMATION_MESSAGE)
+                LOG.info(MSG)
             } else {
-                final String MSG = String.format("Couldn't delete element:\n%s", ELEMENT);
-                JOptionPane.showMessageDialog(this, MSG, "Error", JOptionPane.ERROR_MESSAGE);
-                LOG.warning(MSG);
+                val MSG = "Couldn't delete element:\n$ELEMENT"
+                JOptionPane.showMessageDialog(this, MSG, "Error", JOptionPane.ERROR_MESSAGE)
+                LOG.warning(MSG)
             }
-
         } else {
-
-            final Set<Element> DELETABLE = new HashSet<>();
-            for (Element v1 : elements) {
+            val DELETABLE: MutableSet<Element?> = HashSet()
+            for (v1 in elements) {
                 if (ESS.DELETABLE.test(v1)) {
-                    if (!(v1 instanceof ActiveScript)) {
-                        if (!(v1 instanceof SuspendedStack)) {
-                            DELETABLE.add(v1);
+                    if (v1 !is ActiveScript) {
+                        if (v1 !is SuspendedStack) {
+                            DELETABLE.add(v1)
                         }
                     }
                 }
             }
-
-            final Set<SuspendedStack> STACKS = new HashSet<>();
-            for (Element element : elements) {
-                if (element instanceof SuspendedStack) {
-                    SuspendedStack suspendedStack = (SuspendedStack) element;
-                    STACKS.add(suspendedStack);
+            val STACKS: MutableSet<SuspendedStack> = HashSet()
+            for (element in elements) {
+                if (element is SuspendedStack) {
+                    STACKS.add(element)
                 }
             }
-
-            final Set<ActiveScript> THREADS = new HashSet<>();
-            for (Element v : elements) {
-                if (v instanceof ActiveScript) {
-                    ActiveScript activeScript = (ActiveScript) v;
-                    THREADS.add(activeScript);
+            val THREADS: MutableSet<ActiveScript> = HashSet()
+            for (v in elements) {
+                if (v is ActiveScript) {
+                    THREADS.add(v)
                 }
             }
-
-            boolean deleteStacks = false;
-            if (!STACKS.isEmpty()) {
-                final String WARN = "Deleting Suspended Stacks could make your savefile impossible to load.\nAre you sure you want to delete the Suspended Stacks?\nIf you select \"No\" then they will be skipped instead of deleted.";
-                final String TITLE = "Warning";
-                int result = JOptionPane.showConfirmDialog(this, WARN, TITLE, JOptionPane.YES_NO_CANCEL_OPTION);
+            var deleteStacks = false
+            if (STACKS.isNotEmpty()) {
+                val WARN =
+                    "Deleting Suspended Stacks could make your savefile impossible to load.\nAre you sure you want to delete the Suspended Stacks?\nIf you select \"No\" then they will be skipped instead of deleted."
+                val TITLE = "Warning"
+                val result = JOptionPane.showConfirmDialog(this, WARN, TITLE, JOptionPane.YES_NO_CANCEL_OPTION)
                 if (result == JOptionPane.CANCEL_OPTION) {
-                    return;
+                    return
                 }
-                deleteStacks = (result == JOptionPane.YES_OPTION);
+                deleteStacks = result == JOptionPane.YES_OPTION
             }
-
-            boolean deleteThreads = false;
-            if (!THREADS.isEmpty()) {
-                final String WARN = "Deleting Active Scripts could make your savefile impossible to load.\nAre you sure you want to delete the Active Scripts?\nIf you select \"No\" then they will be terminated instead of deleted.";
-                final String TITLE = "Warning";
-                int result = JOptionPane.showConfirmDialog(this, WARN, TITLE, JOptionPane.YES_NO_CANCEL_OPTION);
+            var deleteThreads = false
+            if (THREADS.isNotEmpty()) {
+                val WARN =
+                    "Deleting Active Scripts could make your savefile impossible to load.\nAre you sure you want to delete the Active Scripts?\nIf you select \"No\" then they will be terminated instead of deleted."
+                val TITLE = "Warning"
+                val result = JOptionPane.showConfirmDialog(this, WARN, TITLE, JOptionPane.YES_NO_CANCEL_OPTION)
                 if (result == JOptionPane.CANCEL_OPTION) {
-                    return;
+                    return
                 }
-                deleteThreads = (result == JOptionPane.YES_OPTION);
+                deleteThreads = result == JOptionPane.YES_OPTION
             }
-
-            int count = DELETABLE.size();
-            count += (deleteStacks ? STACKS.size() : 0);
-            count += (deleteThreads ? THREADS.size() : 0);
-
+            var count = DELETABLE.size
+            count += if (deleteStacks) STACKS.size else 0
+            count += if (deleteThreads) THREADS.size else 0
             if (DELETABLE.isEmpty() && STACKS.isEmpty() && THREADS.isEmpty()) {
-                return;
+                return
             }
-
-            final String QUESTION;
-            if (DELETABLE.isEmpty() && THREADS.isEmpty()) {
-                return;
-            } else if (count == 0 && !THREADS.isEmpty()) {
-                QUESTION = String.format("Are you sure you want to terminate these %d Active Scripts?", THREADS.size());
-            } else if (deleteThreads || (count > 0 && THREADS.isEmpty())) {
-                QUESTION = String.format("Are you sure you want to delete these %d elements and their dependents?", count);
+            val QUESTION: String = if (DELETABLE.isEmpty() && THREADS.isEmpty()) {
+                return
+            } else if (count == 0 && THREADS.isNotEmpty()) {
+                String.format("Are you sure you want to terminate these %d Active Scripts?", THREADS.size)
+            } else if (deleteThreads || count > 0 && THREADS.isEmpty()) {
+                String.format("Are you sure you want to delete these %d elements and their dependents?", count)
             } else {
-                QUESTION = String.format("Are you sure you want to terminate these %d Active Scripts and delete these %d elements and their dependents?", THREADS.size(), count);
+                String.format(
+                    "Are you sure you want to terminate these %d Active Scripts and delete these %d elements and their dependents?",
+                    THREADS.size,
+                    count
+                )
             }
-
-            int result = JOptionPane.showConfirmDialog(this, QUESTION, "Delete Elements", JOptionPane.YES_NO_OPTION);
+            val result = JOptionPane.showConfirmDialog(this, QUESTION, "Delete Elements", JOptionPane.YES_NO_OPTION)
             if (result == JOptionPane.NO_OPTION) {
-                return;
+                return
             }
-
-            final Set<Element> REMOVED = this.save.removeElements(DELETABLE);
-            for (ActiveScript THREAD : THREADS) {
-                THREAD.zero();
+            val REMOVED = save!!.removeElements(DELETABLE)
+            for (THREAD in THREADS) {
+                THREAD.zero()
             }
             if (deleteThreads) {
-                REMOVED.addAll(this.save.getPapyrus().removeElements(THREADS));
+                REMOVED.addAll(save!!.papyrus!!.removeElements(THREADS))
             }
-
             if (deleteStacks) {
-                REMOVED.addAll(this.save.getPapyrus().removeElements(STACKS));
+                REMOVED.addAll(save!!.papyrus!!.removeElements(STACKS))
             }
-
-            this.deleteNodesFor(REMOVED);
-
-            final StringBuilder BUF = new StringBuilder();
-            BUF.append(REMOVED.size()).append(" elements deleted.");
-
-            if (THREADS.size() > 0) {
-                BUF.append("\n").append(THREADS.size());
-                BUF.append(deleteThreads ? " threads terminated and deleted." : " threads terminated.");
+            deleteNodesFor(REMOVED)
+            val BUF = StringBuilder()
+            BUF.append(REMOVED.size).append(" elements deleted.")
+            if (THREADS.size > 0) {
+                BUF.append("\n").append(THREADS.size)
+                BUF.append(if (deleteThreads) " threads terminated and deleted." else " threads terminated.")
             }
-
-            final String MSG = BUF.toString();
-            LOG.info(MSG);
-            JOptionPane.showMessageDialog(this, MSG, "Elements Deleted", JOptionPane.INFORMATION_MESSAGE);
+            val MSG = BUF.toString()
+            LOG.info(MSG)
+            JOptionPane.showMessageDialog(this, MSG, "Elements Deleted", JOptionPane.INFORMATION_MESSAGE)
         }
 
         // Select the next row.
-        this.TREE.setSelectionRow(ROW);
-        this.setModified();
+        TREE.setSelectionRow(ROW)
+        setModified()
     }
 
     /**
      *
      * @param newCompressionType
      */
-    void setCompressionType(@Nullable CompressionType newCompressionType) {
-        if (this.save != null && this.save.supportsCompression() && newCompressionType != null) {
-            int result = JOptionPane.showConfirmDialog(this, "Are you sure you want to change the compression type?", "Confirm", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+    fun setCompressionType(newCompressionType: CompressionType?) {
+        if (save != null && save!!.supportsCompression() && newCompressionType != null) {
+            val result = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to change the compression type?",
+                "Confirm",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            )
             if (result == JOptionPane.YES_OPTION) {
-                this.save.getHeader().setCompression(newCompressionType);
-                this.setModified();
+                save!!.header.setCompression(newCompressionType)
+                setModified()
             }
         }
     }
@@ -1839,9 +1632,9 @@ final public class SaveWindow extends JFrame {
      *
      * @param removed
      */
-    public void deleteNodesFor(Set<? extends Element> removed) {
-        this.TREE.getModel().deleteElements(removed);
-        this.refreshTree();
+    fun deleteNodesFor(removed: Set<Element?>) {
+        TREE.model!!.deleteElements(removed)
+        refreshTree()
     }
 
     /**
@@ -1849,18 +1642,16 @@ final public class SaveWindow extends JFrame {
      *
      * @param element
      */
-    private void editElement(Element element) {
-        if (element instanceof GlobalVariable) {
-            final GlobalVariable VAR = (GlobalVariable) element;
-            String response = JOptionPane.showInputDialog(this, "Input new value:", VAR.getValue());
+    private fun editElement(element: Element) {
+        if (element is GlobalVariable) {
+            val response = JOptionPane.showInputDialog(this, "Input new value:", element.value)
             if (null != response) {
                 try {
-                    float newVal = Float.parseFloat(response);
-                    VAR.setValue(newVal);
-                    JOptionPane.showMessageDialog(this, "GlobalVariable updated.", "Success", JOptionPane.PLAIN_MESSAGE);
-
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(this, "Invalid number.", "Error", JOptionPane.ERROR_MESSAGE);
+                    val newVal = response.toFloat()
+                    element.value = newVal
+                    JOptionPane.showMessageDialog(this, "GlobalVariable updated.", "Success", JOptionPane.PLAIN_MESSAGE)
+                } catch (ex: NumberFormatException) {
+                    JOptionPane.showMessageDialog(this, "Invalid number.", "Error", JOptionPane.ERROR_MESSAGE)
                 }
             }
         }
@@ -1870,25 +1661,21 @@ final public class SaveWindow extends JFrame {
      * Updates infopane data.
      *
      */
-    private void updateContextInformation() {
-        final TreePath PATH = this.TREE.getSelectionPath();
+    private fun updateContextInformation() {
+        val PATH = TREE.selectionPath
         if (null == PATH) {
-            this.clearContextInformation();
-            return;
+            clearContextInformation()
+            return
         }
-
-        final Object OBJ = PATH.getLastPathComponent();
-        if (!(OBJ instanceof Node)) {
-            this.clearContextInformation();
-            return;
+        val OBJ = PATH.lastPathComponent
+        if (OBJ !is FilterTreeModel.Node) {
+            clearContextInformation()
+            return
         }
-
-        final Node NODE = (Node) OBJ;
-
-        if (NODE.hasElement()) {
-            this.showContextInformation(NODE.getElement());
+        if (OBJ.hasElement()) {
+            showContextInformation(OBJ.element)
         } else {
-            this.clearContextInformation();
+            clearContextInformation()
         }
     }
 
@@ -1896,260 +1683,233 @@ final public class SaveWindow extends JFrame {
      * Clears infopane data.
      *
      */
-    private void clearContextInformation() {
-        this.INFOPANE.setText("");
-        this.TABLE.clearTable();
+    private fun clearContextInformation() {
+        INFOPANE.text = ""
+        TABLE.clearTable()
     }
 
     /**
      *
      * @param element
      */
-    private void showContextInformation(Element element) {
-        this.clearContextInformation();
-
-        if (element instanceof ESS) {
-            this.RIGHTSPLITTER.setResizeWeight(1.0);
-            this.RIGHTSPLITTER.setDividerLocation(1.0);
-            this.INFOPANE.setText(this.save.getInfo(analysis) + this.WORRIER.getMessage());
-
+    private fun showContextInformation(element: Element?) {
+        clearContextInformation()
+        if (element is ESS) {
+            RIGHTSPLITTER!!.resizeWeight = 1.0
+            RIGHTSPLITTER.setDividerLocation(1.0)
+            INFOPANE.text = save!!.getInfo(analysis) + WORRIER.message
             try {
-                final Document DOC = this.INFOPANE.getDocument();
-                final int ICONWIDTH = this.INFOPANE.getWidth() * 95 / 100;
-                final ImageIcon IMAGE = this.save.getHeader().getImage(ICONWIDTH);
+                val DOC = INFOPANE.document
+                val ICONWIDTH = INFOPANE.width * 95 / 100
+                val IMAGE = save!!.header.getImage(ICONWIDTH)
                 if (null != IMAGE) {
-                    final Style STYLE = new StyleContext().getStyle(StyleContext.DEFAULT_STYLE);
-                    StyleConstants.setComponent(STYLE, new JLabel(this.save.getHeader().getImage(ICONWIDTH)));
-                    DOC.insertString(DOC.getLength(), "Ignored", STYLE);
+                    val STYLE = StyleContext().getStyle(StyleContext.DEFAULT_STYLE)
+                    StyleConstants.setComponent(STYLE, JLabel(save!!.header.getImage(ICONWIDTH)))
+                    DOC.insertString(DOC.length, "Ignored", STYLE)
                 }
-            } catch (javax.swing.text.BadLocationException ex) {
-                LOG.log(Level.WARNING, "Error displaying ESS context information.", ex);
+            } catch (ex: BadLocationException) {
+                LOG.log(Level.WARNING, "Error displaying ESS context information.", ex)
             }
-
-        } else if (element instanceof AnalyzableElement) {
-            AnalyzableElement analyte = (AnalyzableElement) element;
-            this.INFOPANE.setText(analyte.getInfo(analysis, save));
-
-            if (this.TABLE.isSupported(analyte)) {
-                this.RIGHTSPLITTER.setResizeWeight(0.66);
-                this.RIGHTSPLITTER.setDividerLocation(0.66);
-                this.TABLE.displayElement(analyte, this.save.getPapyrus().getContext());
+        } else if (element is AnalyzableElement) {
+            INFOPANE.text = element.getInfo(analysis, save)!!
+            if (TABLE.isSupported(element)) {
+                RIGHTSPLITTER!!.resizeWeight = 0.66
+                RIGHTSPLITTER.setDividerLocation(0.66)
+                TABLE.displayElement(element, save!!.papyrus!!.context)
             } else {
-                this.RIGHTSPLITTER.setResizeWeight(1.0);
-                this.RIGHTSPLITTER.setDividerLocation(1.0);
-                this.TABLE.clearTable();
+                RIGHTSPLITTER!!.resizeWeight = 1.0
+                RIGHTSPLITTER.setDividerLocation(1.0)
+                TABLE.clearTable()
             }
-
-        } else if (element instanceof GeneralElement) {
-            this.INFOPANE.setText(((GeneralElement) element).getInfo(analysis, save));
+        } else if (element is GeneralElement) {
+            INFOPANE.text = element.getInfo(analysis, save)
         }
     }
 
     /**
      * Resolves a URL.
      *
-     * @param event The <code>HyperLinkEvent</code> to handle.
-     * @see HyperlinkListener#hyperlinkUpdate(javax.swing.event.HyperlinkEvent)
+     * @param event The `HyperLinkEvent` to handle.
+     * @see HyperlinkListener.hyperlinkUpdate
      */
-    public void hyperlinkUpdate(@NotNull HyperlinkEvent event) {
-        if (event.getEventType() == HyperlinkEvent.EventType.ENTERED) {
-            if (event.getSource() == this.INFOPANE) {
-                JComponent component = (JComponent) event.getSource();
-                component.setToolTipText(event.getDescription());
+    fun hyperlinkUpdate(event: HyperlinkEvent) {
+        if (event.eventType == HyperlinkEvent.EventType.ENTERED) {
+            if (event.source === INFOPANE) {
+                val component = event.source as JComponent
+                component.toolTipText = event.description
             }
-            return;
-        } else if (event.getEventType() == HyperlinkEvent.EventType.EXITED) {
-            if (event.getSource() == this.INFOPANE) {
-                JComponent component = (JComponent) event.getSource();
-                component.setToolTipText(null);
+            return
+        } else if (event.eventType == HyperlinkEvent.EventType.EXITED) {
+            if (event.source === INFOPANE) {
+                val component = event.source as JComponent
+                component.toolTipText = null
             }
-            return;
+            return
         }
-
-        final String URL = event.getDescription();
-
-        LOG.info(String.format("Resolving URL: %s", URL));
-        final java.util.regex.Matcher MATCHER = URLPATTERN.matcher(URL);
+        val URL = event.description
+        LOG.info("Resolving URL: $URL")
+        val MATCHER = URLPATTERN.matcher(URL)
         if (!MATCHER.find()) {
-            LOG.warning(String.format("URL could not be resolved: %s", URL));
-            return;
+            LOG.warning("URL could not be resolved: $URL")
+            return
         }
-
-        final String TYPE = MATCHER.group("type");
-        final String ADDRESS = MATCHER.group("address");
-
-        Integer index1 = null;
+        val TYPE = MATCHER.group("type")
+        val ADDRESS = MATCHER.group("address")
+        var index1: Int? = null
         try {
-            index1 = Integer.parseInt(MATCHER.group("target1"));
-        } catch (NumberFormatException | NullPointerException ex) {
+            index1 = MATCHER.group("target1").toInt()
+        } catch (ex: NumberFormatException) {
+        } catch (ex: NullPointerException) {
         }
-
-        Integer index2 = null;
+        var index2: Int? = null
         try {
-            index2 = Integer.parseInt(MATCHER.group("target2"));
-        } catch ( NumberFormatException | NullPointerException ex) {
+            index2 = MATCHER.group("target2").toInt()
+        } catch (ex: NumberFormatException) {
+        } catch (ex: NullPointerException) {
         }
-
-        final PapyrusContext CONTEXT = this.save.getPapyrus().getContext();
-
+        val CONTEXT = save!!.papyrus!!.context
         try {
-            switch (TYPE) {
-                case "string":
-                    int stringIndex = Integer.parseInt(ADDRESS);
-                    this.findElement(CONTEXT.getTString(stringIndex));
-                    break;
-
-                case "plugin":
-                    this.save.getPluginInfo().stream()
-                            .filter(v -> v.NAME.equalsIgnoreCase(ADDRESS))
-                            .findAny()
-                            .ifPresent(this::findElement);
-                    break;
-
-                case "refid":
-                    final RefID REFID = CONTEXT.makeRefID(Integer.parseInt(ADDRESS, 16));
-                    this.findElement(CONTEXT.getChangeForm(REFID));
-                    break;
-
-                case "script": {
-                    final TString NAME = this.save.getPapyrus().getStringTable().resolve(ADDRESS);
-                    if (index1 != null) {
-                        this.findElement(CONTEXT.findScript(NAME), index1);
-                    } else {
-                        this.findElement(CONTEXT.findScript(NAME));
-                    }
-                    break;
+            when (TYPE) {
+                "string" -> {
+                    val stringIndex = ADDRESS.toInt()
+                    this.findElement(CONTEXT.getTString(stringIndex))
                 }
-                case "struct": {
-                    final TString NAME = this.save.getPapyrus().getStringTable().resolve(ADDRESS);
-                    if (index1 != null) {
-                        this.findElement(CONTEXT.findStruct(NAME), index1);
-                    } else {
-                        this.findElement(CONTEXT.findStruct(NAME));
-                    }
-                    break;
+                "plugin" -> save!!.pluginInfo.stream()
+                    .filter { v: Plugin -> v.NAME.equals(ADDRESS, ignoreCase = true) }
+                    .findAny()
+                    .ifPresent { element: Plugin? -> this.findElement(element) }
+                "refid" -> {
+                    val REFID = CONTEXT.makeRefID(ADDRESS.toInt(16))
+                    this.findElement(CONTEXT.getChangeForm(REFID))
                 }
-                case "scriptinstance": {
-                    final EID ID = CONTEXT.makeEID(Long.parseUnsignedLong(ADDRESS, 16));
+                "script" -> {
+                    val NAME = save!!.papyrus!!.stringTable.resolve(ADDRESS)
                     if (index1 != null) {
-                        this.findElement(CONTEXT.findScriptInstance(ID), index1);
+                        this.findElement(CONTEXT.findScript(NAME), index1)
                     } else {
-                        this.findElement(CONTEXT.findScriptInstance(ID));
+                        this.findElement(CONTEXT.findScript(NAME))
                     }
-                    break;
                 }
-                case "structinstance": {
-                    final EID ID = CONTEXT.makeEID(Long.parseUnsignedLong(ADDRESS, 16));
+                "struct" -> {
+                    val NAME = save!!.papyrus!!.stringTable.resolve(ADDRESS)
                     if (index1 != null) {
-                        this.findElement(CONTEXT.findStructInstance(ID), index1);
+                        this.findElement(CONTEXT.findStruct(NAME), index1)
                     } else {
-                        this.findElement(CONTEXT.findStructInstance(ID));
+                        this.findElement(CONTEXT.findStruct(NAME))
                     }
-                    break;
                 }
-                case "reference": {
-                    final EID ID = CONTEXT.makeEID(Long.parseUnsignedLong(ADDRESS, 16));
+                "scriptinstance" -> {
+                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
                     if (index1 != null) {
-                        this.findElement(CONTEXT.findReference(ID), index1);
+                        this.findElement(CONTEXT.findScriptInstance(ID), index1)
                     } else {
-                        this.findElement(CONTEXT.findReference(ID));
+                        this.findElement(CONTEXT.findScriptInstance(ID))
                     }
-                    break;
                 }
-                case "array": {
-                    final EID ID = CONTEXT.makeEID(Long.parseUnsignedLong(ADDRESS, 16));
+                "structinstance" -> {
+                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
                     if (index1 != null) {
-                        this.findElement(CONTEXT.findArray(ID), index1);
+                        this.findElement(CONTEXT.findStructInstance(ID), index1)
                     } else {
-                        this.findElement(CONTEXT.findArray(ID));
+                        this.findElement(CONTEXT.findStructInstance(ID))
                     }
-                    break;
                 }
-                case "thread": {
-                    final EID ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16));
+                "reference" -> {
+                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
                     if (index1 != null) {
-                        this.findElement(CONTEXT.findActiveScript(ID), index1);
+                        this.findElement(CONTEXT.findReference(ID), index1)
                     } else {
-                        this.findElement(CONTEXT.findActiveScript(ID));
+                        this.findElement(CONTEXT.findReference(ID))
                     }
-                    break;
                 }
-                case "suspended": {
-                    final EID ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16));
-                    final SuspendedStack STACK = this.save.getPapyrus().getSuspendedStacks().get(ID);
+                "array" -> {
+                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
                     if (index1 != null) {
-                        this.findElement(STACK, index1);
+                        this.findElement(CONTEXT.findArray(ID), index1)
                     } else {
-                        this.findElement(STACK);
+                        this.findElement(CONTEXT.findArray(ID))
                     }
-                    break;
                 }
-                case "unbind": {
-                    final EID ID = CONTEXT.makeEID(Long.parseUnsignedLong(ADDRESS, 16));
-                    final QueuedUnbind UNBIND = this.save.getPapyrus().getUnbinds().get(ID);
+                "thread" -> {
+                    val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
                     if (index1 != null) {
-                        this.findElement(UNBIND, index1);
+                        this.findElement(CONTEXT.findActiveScript(ID), index1)
                     } else {
-                        this.findElement(UNBIND);
+                        this.findElement(CONTEXT.findActiveScript(ID))
                     }
-                    break;
                 }
-                case "message": {
-                    final EID ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16));
-                    FunctionMessage MESSAGE = null;
-                    for (FunctionMessage v : this.save.getPapyrus().getFunctionMessages()) {
-                        if (v.getID().equals(ID)) {
-                            MESSAGE = v;
-                            break;
+                "suspended" -> {
+                    val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
+                    val STACK = save!!.papyrus!!.suspendedStacks[ID]
+                    if (index1 != null) {
+                        this.findElement(STACK, index1)
+                    } else {
+                        this.findElement(STACK)
+                    }
+                }
+                "unbind" -> {
+                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
+                    val UNBIND = save!!.papyrus!!.unbinds[ID]
+                    if (index1 != null) {
+                        this.findElement(UNBIND, index1)
+                    } else {
+                        this.findElement(UNBIND)
+                    }
+                }
+                "message" -> {
+                    val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
+                    var MESSAGE: FunctionMessage? = null
+                    for (v in save!!.papyrus!!.functionMessages) {
+                        if (v.iD!! == ID) {
+                            MESSAGE = v
+                            break
                         }
                     }
                     if (index1 != null) {
-                        this.findElement(MESSAGE, index1);
+                        this.findElement(MESSAGE, index1)
                     } else {
-                        this.findElement(MESSAGE);
+                        this.findElement(MESSAGE)
                     }
-                    break;
                 }
-                case "frame": {
-                    final EID ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16));
-                    final ActiveScript THREAD = CONTEXT.findActiveScript(ID);
+                "frame" -> {
+                    val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
+                    val THREAD = CONTEXT.findActiveScript(ID)
                     if (THREAD != null && index1 != null) {
-                        final StackFrame FRAME = THREAD.getStackFrames().get(index1);
+                        val FRAME = THREAD.stackFrames[index1]
                         if (index2 != null) {
-                            this.findElement(FRAME, index2);
+                            this.findElement(FRAME, index2)
                         } else {
-                            this.findElement(FRAME);
+                            this.findElement(FRAME)
                         }
                     }
-                    break;
                 }
             }
-        } catch ( NumberFormatException | IndexOutOfBoundsException ex) {
-            LOG.warning(String.format("Invalid address: %s", URL));
+        } catch (ex: NumberFormatException) {
+            LOG.warning("Invalid address: $URL")
+        } catch (ex: IndexOutOfBoundsException) {
+            LOG.warning("Invalid address: $URL")
         }
     }
 
     /**
      * Try to initialize JavaFX.
      *
-     * @return An uncast <code>JFXPanel</code> object, or null if JavaFX could
+     * @return An uncast `JFXPanel` object, or null if JavaFX could
      * not be found.
-     *
      */
-    @Nullable
-    Object initializeJavaFX() {
-        try {
-            final Class<?> CLASS_JFXPANEL = Class.forName("javafx.embed.swing.JFXPanel");
-            java.lang.reflect.Constructor<?>[] CONSTRUCTORS = CLASS_JFXPANEL.getConstructors();
-            for (java.lang.reflect.Constructor<?> constructor : CONSTRUCTORS) {
-                if (constructor.getParameterCount() == 0) {
-                    return constructor.newInstance();
+    fun initializeJavaFX(): Any? {
+        return try {
+            val CLASS_JFXPANEL = Class.forName("javafx.embed.swing.JFXPanel")
+            val CONSTRUCTORS = CLASS_JFXPANEL.constructors
+            for (constructor in CONSTRUCTORS) {
+                if (constructor.parameterCount == 0) {
+                    return constructor.newInstance()
                 }
             }
-            return null;
-        } catch (ReflectiveOperationException ex) {
-            LOG.log(Level.WARNING, "Error initializing JavaFX.", ex);
-            return null;
+            null
+        } catch (ex: ReflectiveOperationException) {
+            LOG.log(Level.WARNING, "Error initializing JavaFX.", ex)
+            null
         }
     }
 
@@ -2157,210 +1917,252 @@ final public class SaveWindow extends JFrame {
      * Try to termiante JavaFX.
      *
      */
-    void terminateJavaFX() {
+    fun terminateJavaFX() {
         try {
-            if (this.JFXPANEL != null) {
-                final Class<?> CLASS_PLATFORM = Class.forName("javafx.application.Platform");
-                final java.lang.reflect.Method METHOD_EXIT = CLASS_PLATFORM.getMethod("exit");
-                METHOD_EXIT.invoke(null);
+            if (JFXPANEL != null) {
+                val CLASS_PLATFORM = Class.forName("javafx.application.Platform")
+                val METHOD_EXIT = CLASS_PLATFORM.getMethod("exit")
+                METHOD_EXIT.invoke(null)
             }
-        } catch (ReflectiveOperationException | NullPointerException ex) {
-            LOG.log(Level.WARNING, "Error terminating JavaFX.", ex);
+        } catch (ex: ReflectiveOperationException) {
+            LOG.log(Level.WARNING, "Error terminating JavaFX.", ex)
+        } catch (ex: NullPointerException) {
+            LOG.log(Level.WARNING, "Error terminating JavaFX.", ex)
         }
     }
 
     /**
      * @return Indicates whether JavaFX was found or not.
      */
-    public boolean isJavaFXAvailable() {
-        return this.JFXPANEL != null && PREFS.getBoolean("settings.javafx", false);
+    val isJavaFXAvailable: Boolean
+        get() = JFXPANEL != null && PREFS.getBoolean("settings.javafx", false)
+
+    /**
+     * Used to render cells.
+     */
+    private inner class ModListCellRenderer : ListCellRenderer<Mod?> {
+        override fun getListCellRendererComponent(
+            list: JList<out Mod>?,
+            value: Mod?,
+            index: Int,
+            isSelected: Boolean,
+            cellHasFocus: Boolean
+        ): Component {
+            return if (null == value) {
+                RENDERER.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus)
+            } else RENDERER.getListCellRendererComponent(
+                list,
+                value.getName(),
+                index,
+                isSelected,
+                cellHasFocus
+            )
+        }
+
+        private val RENDERER = BasicComboBoxRenderer()
     }
 
     /**
      * Used to render cells.
      */
-    final private class ModListCellRenderer implements ListCellRenderer<Mod> {
-
-        @Override
-        public Component getListCellRendererComponent(JList list, @Nullable Mod value, int index, boolean isSelected, boolean cellHasFocus) {
-            if (null == value) {
-                return RENDERER.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus);
-            }
-            return RENDERER.getListCellRendererComponent(list, value.getName(), index, isSelected, cellHasFocus);
+    private inner class PluginListCellRenderer : ListCellRenderer<Plugin?> {
+        override fun getListCellRendererComponent(
+            list: JList<out Plugin>?,
+            value: Plugin?,
+            index: Int,
+            isSelected: Boolean,
+            cellHasFocus: Boolean
+        ): Component {
+            return if (null == value) {
+                RENDERER.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus)
+            } else RENDERER.getListCellRendererComponent(list, value.NAME, index, isSelected, cellHasFocus)
         }
 
-        final private BasicComboBoxRenderer RENDERER = new BasicComboBoxRenderer();
-    }
-
-    /**
-     * Used to render cells.
-     */
-    final private class PluginListCellRenderer implements ListCellRenderer<Plugin> {
-
-        @Override
-        public Component getListCellRendererComponent(JList list, @Nullable Plugin value, int index, boolean isSelected, boolean cellHasFocus) {
-            if (null == value) {
-                return RENDERER.getListCellRendererComponent(list, null, index, isSelected, cellHasFocus);
-            }
-            return RENDERER.getListCellRendererComponent(list, value.NAME, index, isSelected, cellHasFocus);
-        }
-        final private BasicComboBoxRenderer RENDERER = new BasicComboBoxRenderer();
+        private val RENDERER = BasicComboBoxRenderer()
     }
 
     /**
      * Listener for tree selection events.
      */
-    @Nullable
-    private ESS save;
-    @Nullable
-    private Analysis analysis;
-    private boolean modified;
-    @Nullable
-    private Predicate<Node> filter;
-    @Nullable
-    private Scanner scanner;
+    private var save: ESS?
+    private var analysis: Analysis?
+    private var modified = false
+    private var filter: Predicate<FilterTreeModel.Node>?
+    private var scanner: Scanner?
+    private val LBL_MEMORY: MemoryLabel
+    private val LBL_WATCHING: JLabel
+    private val LBL_SCANNING: JLabel
+    private val TREE: FilterTree
+    private val TABLE: VariableTable
+    private val INFOPANE: InfoPane
+    private val BTN_CLEAR_FILTER: JButton
+    private val TREESCROLLER: JScrollPane
+    private val DATASCROLLER: JScrollPane
+    private val INFOSCROLLER: JScrollPane
+    private val MAINSPLITTER: JSplitPane
+    private val RIGHTSPLITTER: JSplitPane?
+    private val MAINPANEL: JPanel
+    private val MODPANEL: JPanel
+    private val MODCOMBO: JComboBox<Mod?>
+    private val PLUGINCOMBO: JComboBox<Plugin>
+    private val MODLABEL: JLabel
+    private val FILTERPANEL: JPanel
+    private val FILTERFIELD: JTreeFilterField
+    private val TOPPANEL: JPanel
+    private val STATUSPANEL: JPanel
+    private val TREEHISTORY: JTreeHistory
+    private val PROGRESSPANEL: JPanel
 
-    @NotNull
-    final private MemoryLabel LBL_MEMORY;
-    @NotNull
-    final private JLabel LBL_WATCHING;
-    @NotNull
-    final private JLabel LBL_SCANNING;
-    @NotNull
-    final private FilterTree TREE;
-    @NotNull
-    final private VariableTable TABLE;
-    @NotNull
-    final private InfoPane INFOPANE;
-    @NotNull
-    final private JButton BTN_CLEAR_FILTER;
-    @NotNull
-    final private JScrollPane TREESCROLLER;
-    @NotNull
-    final private JScrollPane DATASCROLLER;
-    @NotNull
-    final private JScrollPane INFOSCROLLER;
-    @NotNull
-    final private JSplitPane MAINSPLITTER;
-    @Nullable
-    final private JSplitPane RIGHTSPLITTER;
-    @NotNull
-    final private JPanel MAINPANEL;
-    @NotNull
-    final private JPanel MODPANEL;
-    @NotNull
-    final private JComboBox<Mod> MODCOMBO;
-    @NotNull
-    final private JComboBox<Plugin> PLUGINCOMBO;
-    @NotNull
-    final private JLabel MODLABEL;
-    @NotNull
-    final private JPanel FILTERPANEL;
-    @NotNull
-    final private JTreeFilterField FILTERFIELD;
-    @NotNull
-    final private JPanel TOPPANEL;
-    @NotNull
-    final private JPanel STATUSPANEL;
-    @NotNull
-    final private JTreeHistory TREEHISTORY;
-    @NotNull
-    final private JPanel PROGRESSPANEL;
-    @NotNull
-    final private ProgressIndicator PROGRESS;
-    @NotNull
-    final private JMenuBar MENUBAR;
-    @NotNull
-    final private JMenu FILEMENU;
-    @NotNull
-    final private JMenu DATAMENU;
-    @NotNull
-    final private JMenu CLEANMENU;
-    @NotNull
-    final private JMenu OPTIONSMENU;
-    @NotNull
-    final private JMenu HELPMENU;
-    @NotNull
-    final private JMenuItem MI_LOAD;
-    @NotNull
-    final private JMenuItem MI_SAVE;
-    @NotNull
-    final private JMenuItem MI_SAVEAS;
-    @NotNull
-    final private JMenuItem MI_EXIT;
-    @NotNull
-    final private JMenuItem MI_LOADESPS;
-    @NotNull
-    final private JMenuItem MI_LOOKUPID;
-    @NotNull
-    final private JMenuItem MI_LOOKUPBASE;
-    @NotNull
-    final private JMenuItem MI_REMOVEUNATTACHED;
-    @NotNull
-    final private JMenuItem MI_REMOVEUNDEFINED;
-    @NotNull
-    final private JMenuItem MI_RESETHAVOK;
-    @NotNull
-    final private JMenuItem MI_CLEANSEFORMLISTS;
-    @NotNull
-    final private JMenuItem MI_REMOVENONEXISTENT;
-    @NotNull
-    final private JMenuItem MI_BATCHCLEAN;
-    @NotNull
-    final private JMenuItem MI_KILL;
-    @NotNull
-    final private JMenuItem MI_SHOWLONGSTRINGS;
-    @NotNull
-    final private JMenuItem MI_ANALYZE_ARRAYS;
-    @NotNull
-    final private JMenuItem MI_COMPARETO;
-    @NotNull
-    final private JCheckBoxMenuItem MI_USEMO2;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWMODS;
-    @NotNull
-    final private JCheckBoxMenuItem MI_WATCHSAVES;
-    @NotNull
-    final private JMenuItem MI_SHOWLOG;
-    @NotNull
-    final private JMenuItem MI_ABOUT;
-    @NotNull
-    final private JMenuItem MI_EXPORTPLUGINS;
-    @NotNull
-    final private JMenuItem MI_SETTINGS;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWUNATTACHED;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWUNDEFINED;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWMEMBERLESS;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWCANARIES;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWNULLREFS;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWNONEXISTENTCREATED;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWDELETED;
-    @NotNull
-    final private JCheckBoxMenuItem MI_SHOWEMPTY;
-    @NotNull
-    final private JValueMenuItem<Duad<Integer>> MI_CHANGEFILTER;
-    @Nullable
-    final private JValueMenuItem<Duad<Integer>> MI_CHANGEFORMFILTER;
-    @NotNull
-    final private LogWindow LOGWINDOW;
-    @NotNull
-    final private Watcher WATCHER;
-    @NotNull
-    final private Worrier WORRIER;
-    @NotNull
-    final private mf.Timer TIMER;
-    @Nullable
-    final private Object JFXPANEL;
+    /**
+     * Makes the `ProgressIndicator` component available to subtasks.
+     *
+     * @return
+     */
+    val progressIndicator: ProgressIndicator
+    private val MENUBAR: JMenuBar
+    private val FILEMENU: JMenu
+    private val DATAMENU: JMenu
+    private val CLEANMENU: JMenu
+    private val OPTIONSMENU: JMenu
+    private val HELPMENU: JMenu
+    private val MI_LOAD: JMenuItem
+    private val MI_SAVE: JMenuItem
+    private val MI_SAVEAS: JMenuItem
+    private val MI_EXIT: JMenuItem
+    private val MI_LOADESPS: JMenuItem
+    private val MI_LOOKUPID: JMenuItem
+    private val MI_LOOKUPBASE: JMenuItem
+    private val MI_REMOVEUNATTACHED: JMenuItem
+    private val MI_REMOVEUNDEFINED: JMenuItem
+    private val MI_RESETHAVOK: JMenuItem
+    private val MI_CLEANSEFORMLISTS: JMenuItem
+    private val MI_REMOVENONEXISTENT: JMenuItem
+    private val MI_BATCHCLEAN: JMenuItem
+    private val MI_KILL: JMenuItem
+    private val MI_SHOWLONGSTRINGS: JMenuItem
+    private val MI_ANALYZE_ARRAYS: JMenuItem
+    private val MI_COMPARETO: JMenuItem
+    private val MI_USEMO2: JCheckBoxMenuItem
+    private val MI_SHOWMODS: JCheckBoxMenuItem
+    private val MI_WATCHSAVES: JCheckBoxMenuItem
+    private val MI_SHOWLOG: JMenuItem
+    private val MI_ABOUT: JMenuItem
+    private val MI_EXPORTPLUGINS: JMenuItem
+    private val MI_SETTINGS: JMenuItem
+    private val MI_SHOWUNATTACHED: JCheckBoxMenuItem
+    private val MI_SHOWUNDEFINED: JCheckBoxMenuItem
+    private val MI_SHOWMEMBERLESS: JCheckBoxMenuItem
+    private val MI_SHOWCANARIES: JCheckBoxMenuItem
+    private val MI_SHOWNULLREFS: JCheckBoxMenuItem
+    private val MI_SHOWNONEXISTENTCREATED: JCheckBoxMenuItem
+    private val MI_SHOWDELETED: JCheckBoxMenuItem
+    private val MI_SHOWEMPTY: JCheckBoxMenuItem
+    private val MI_CHANGEFILTER: JValueMenuItem<Duad<Int>?>
+    private val MI_CHANGEFORMFILTER: JValueMenuItem<Duad<Int>?>?
+    private val LOGWINDOW: LogWindow
 
-    static final private java.util.prefs.Preferences PREFS = java.util.prefs.Preferences.userNodeForPackage(resaver.ReSaver.class);
-    static final private Logger LOG = Logger.getLogger(SaveWindow.class.getCanonicalName());
-    static final private Pattern URLPATTERN = Pattern.compile("(?<type>[a-z]+)://(?<address>[^\\[\\]]+)(?:\\[(?<target1>\\d+)])?(?:\\[(?<target2>\\d+)])?$");
+    /**
+     *
+     */
+    val watcher: Watcher
+    private val WORRIER: Worrier
+    private val TIMER: Timer
+    private val JFXPANEL: Any?
 
+    companion object {
+        private val PREFS = Preferences.userNodeForPackage(ReSaver::class.java)
+        private val LOG = Logger.getLogger(SaveWindow::class.java.canonicalName)
+        private val URLPATTERN =
+            Pattern.compile("(?<type>[a-z]+)://(?<address>[^\\[\\]]+)(?:\\[(?<target1>\\d+)])?(?:\\[(?<target2>\\d+)])?$")
+    }
+
+    /**
+     * Create a new `SaveWindow` with a `Path`. If the
+     * `Path` is a savefile, it will be opened.
+     *
+     * @param path The `Path` to open.
+     * @param autoParse Automatically parse the specified savefile.
+     */
+    init {
+        super.setExtendedState(PREFS.getInt("settings.extendedState", MAXIMIZED_BOTH))
+        JFXPANEL = if (PREFS.getBoolean("settings.javafx", false)) initializeJavaFX() else null
+        TIMER = Timer("SaveWindow timer")
+        TIMER.start()
+        LOG.info("Created timer.")
+        save = null
+        analysis = null
+        filter = Predicate { x: FilterTreeModel.Node? -> true }
+        scanner = null
+        TREE = FilterTree()
+        TREESCROLLER = JScrollPane(TREE)
+        TOPPANEL = JPanel()
+        MODPANEL = JPanel(FlowLayout(FlowLayout.LEADING))
+        MODLABEL = JLabel("Mod Filter:")
+        MODCOMBO = JComboBox()
+        PLUGINCOMBO = JComboBox()
+        FILTERFIELD = JTreeFilterField({ updateFilters(false) }, PREFS["settings.regex", ""])
+        FILTERPANEL = JPanel(FlowLayout(FlowLayout.LEADING))
+        MAINPANEL = JPanel(BorderLayout())
+        PROGRESSPANEL = JPanel()
+        progressIndicator = ProgressIndicator()
+        STATUSPANEL = JPanel(BorderLayout())
+        TREEHISTORY = JTreeHistory(TREE)
+        TABLE = VariableTable(this)
+        INFOPANE = InfoPane(null) { event: HyperlinkEvent -> hyperlinkUpdate(event) }
+        DATASCROLLER = JScrollPane(TABLE)
+        INFOSCROLLER = JScrollPane(INFOPANE)
+        RIGHTSPLITTER = JSplitPane(JSplitPane.VERTICAL_SPLIT, INFOSCROLLER, DATASCROLLER)
+        MAINSPLITTER = JSplitPane(JSplitPane.HORIZONTAL_SPLIT, MAINPANEL, RIGHTSPLITTER)
+        MENUBAR = JMenuBar()
+        FILEMENU = JMenu("File")
+        CLEANMENU = JMenu("Clean")
+        OPTIONSMENU = JMenu("Options")
+        DATAMENU = JMenu("Data")
+        HELPMENU = JMenu("Help")
+        MI_EXIT = JMenuItem("Exit", KeyEvent.VK_E)
+        MI_LOAD = JMenuItem("Open", KeyEvent.VK_O)
+        MI_LOADESPS = JMenuItem("Parse ESP/ESMs.", KeyEvent.VK_P)
+        MI_SAVE = JMenuItem("Save", KeyEvent.VK_S)
+        MI_SAVEAS = JMenuItem("Save As", KeyEvent.VK_A)
+        MI_EXPORTPLUGINS = JMenuItem("Export plugin list", KeyEvent.VK_X)
+        MI_SETTINGS = JMenuItem("Settings")
+        MI_WATCHSAVES = JCheckBoxMenuItem("Watch Savefile Directory", PREFS.getBoolean("settings.watch", false))
+        MI_USEMO2 = JCheckBoxMenuItem("Mod Organizer 2 integration", PREFS.getBoolean("settings.useMO2", false))
+        MI_SHOWUNATTACHED = JCheckBoxMenuItem("Show unattached instances", false)
+        MI_SHOWUNDEFINED = JCheckBoxMenuItem("Show undefined elements", false)
+        MI_SHOWMEMBERLESS = JCheckBoxMenuItem("Show memberless instances", false)
+        MI_SHOWCANARIES = JCheckBoxMenuItem("Show zeroed canaries", false)
+        MI_SHOWNULLREFS = JCheckBoxMenuItem("Show Formlists containg nullrefs", false)
+        MI_SHOWNONEXISTENTCREATED = JCheckBoxMenuItem("Show non-existent-form instances", false)
+        MI_SHOWLONGSTRINGS = JCheckBoxMenuItem("Show long strings (512ch or more)", false)
+        MI_SHOWDELETED = JCheckBoxMenuItem("Show cell(-1) changeforms", false)
+        MI_SHOWEMPTY = JCheckBoxMenuItem("Show empty REFR", false)
+        MI_CHANGEFILTER = JValueMenuItem("ChangeFlag filter (%s)", null)
+        MI_CHANGEFORMFILTER = JValueMenuItem("ChangeFormFlag filter (%s)", null)
+        MI_REMOVEUNATTACHED = JMenuItem("Remove unattached instances", KeyEvent.VK_1)
+        MI_REMOVEUNDEFINED = JMenuItem("Remove undefined elements", KeyEvent.VK_2)
+        MI_RESETHAVOK = JMenuItem("Reset Havok", KeyEvent.VK_3)
+        MI_CLEANSEFORMLISTS = JMenuItem("Purify FormLists", KeyEvent.VK_4)
+        MI_REMOVENONEXISTENT = JMenuItem("Remove non-existent form instances", KeyEvent.VK_5)
+        MI_BATCHCLEAN = JMenuItem("Batch Clean", KeyEvent.VK_6)
+        MI_KILL = JMenuItem("Kill Listed")
+        MI_SHOWMODS = JCheckBoxMenuItem("Show Mod Filter box", PREFS.getBoolean("settings.showMods", false))
+        MI_LOOKUPID = JMenuItem("Lookup ID by name")
+        MI_LOOKUPBASE = JMenuItem("Lookup base object/npc")
+        MI_ANALYZE_ARRAYS = JMenuItem("Analyze Arrays Block")
+        MI_COMPARETO = JMenuItem("Compare To")
+        MI_SHOWLOG = JMenuItem("Show Log", KeyEvent.VK_S)
+        MI_ABOUT = JMenuItem("About", KeyEvent.VK_A)
+        BTN_CLEAR_FILTER = JButton("Clear Filters")
+        LOGWINDOW = LogWindow()
+        LBL_MEMORY = MemoryLabel()
+        LBL_WATCHING = JLabel("WATCHING")
+        LBL_SCANNING = JLabel("SCANNING")
+        WORRIER = Worrier()
+        watcher = Watcher(this, WORRIER)
+        initComponents(path, autoParse)
+        TIMER.stop()
+        LOG.info("Version: $version")
+        LOG.info("SaveWindow constructed; took ${TIMER.formattedTime}.")
+    }
 }

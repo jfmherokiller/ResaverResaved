@@ -39,7 +39,7 @@ class FilterTreeModel : TreeModel {
      *
      * @param elements
      */
-    fun deleteElements(elements: Set<Element>) {
+    fun deleteElements(elements: Set<Element?>) {
         this.deleteElements(this.root!!, elements)
     }
 
@@ -48,7 +48,7 @@ class FilterTreeModel : TreeModel {
      * @param node
      * @param elements
      */
-    private fun deleteElements(node: Node, elements: Set<Element>) {
+    private fun deleteElements(node: Node, elements: Set<Element?>) {
         assert(!node.isLeaf)
         if (!node.isLeaf) {
             val iterator:MutableIterator<Node?> = node.children!!.iterator()

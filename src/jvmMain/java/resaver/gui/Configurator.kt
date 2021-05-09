@@ -1018,7 +1018,7 @@ object Configurator {
      * @param items
      * @return
      */
-    fun getFirst(vararg items: String): String? {
+    fun getFirst(vararg items: String?): String? {
         return Arrays.stream(items).filter { obj: String? -> Objects.nonNull(obj) }.findFirst().orElse(null)
     }
 

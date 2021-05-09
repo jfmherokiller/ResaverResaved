@@ -319,7 +319,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
      * @param elements The elements to remove.
      * @return The elements that were removed.
      */
-    fun removeElements(elements: Collection<Element?>): Set<Element?> {
+    fun removeElements(elements: Collection<Element?>): MutableSet<Element?> {
         val ELEM1: MutableSet<ChangeForm> = HashSet()
         for (element in elements) {
             if (element is ChangeForm) {

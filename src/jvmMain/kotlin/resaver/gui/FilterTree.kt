@@ -71,7 +71,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
         MI_PURGE.addActionListener { e: ActionEvent? ->
             val plugin = (selectionPath?.lastPathComponent as resaver.gui.FilterTreeModel.Node).element as Plugin
             if (null != purgeHandler) {
-                purgeHandler!!.accept(setOf(plugin))
+                purgeHandler!!.accept(mutableListOf(plugin))
             }
         }
         MI_PURGES.addActionListener { e: ActionEvent? ->
@@ -300,7 +300,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
      *
      * @param newHandler The new delete handler.
      */
-    fun setPurgeHandler(newHandler: Consumer<Collection<Plugin>>?) {
+    fun setPurgeHandler(newHandler: Consumer<MutableList<Plugin>>?) {
         purgeHandler = newHandler
     }
 
@@ -404,7 +404,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
     private var pluginFilterHandler: Consumer<Plugin>? = null
     private var deleteFormsHandler: Consumer<Plugin>? = null
     private var deleteInstancesHandler: Consumer<Plugin>? = null
-    private var purgeHandler: Consumer<Collection<Plugin>>? = null
+    private var purgeHandler: Consumer<MutableList<Plugin>>? = null
     private var findHandler: Consumer<Element>? = null
     private var cleanFLSTHandler: Consumer<ChangeFormFLST>? = null
     private var compressionHandler: Consumer<CompressionType>? = null
