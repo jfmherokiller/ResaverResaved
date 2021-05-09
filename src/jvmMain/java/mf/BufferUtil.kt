@@ -13,249 +13,224 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mf;
+package mf
 
-import java.nio.Buffer;
-import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import net.jpountz.lz4.LZ4Compressor;
-import net.jpountz.lz4.LZ4Factory;
-import net.jpountz.lz4.LZ4FastDecompressor;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.mozilla.universalchardet.UniversalDetector;
+import net.jpountz.lz4.LZ4Factory
+import org.jetbrains.annotations.Contract
+import org.mozilla.universalchardet.UniversalDetector
+import java.nio.Buffer
+import java.nio.BufferUnderflowException
+import java.nio.ByteBuffer
+import java.nio.charset.Charset
+import java.nio.charset.StandardCharsets
+import java.util.*
+import java.util.zip.DataFormatException
+import java.util.zip.Deflater
+import java.util.zip.Inflater
 
 /**
  *
  * @author Mark
  */
-public class BufferUtil {
-
+object BufferUtil {
     /**
      * Reads an LString (4-byte length-prefixed).
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
-     * @return The <code>String</code>.
+     * @param buffer The `ByteBuffer` to read.
+     * @return The `String`.
      */
-    @Nullable
-    static public String getLString(@NotNull ByteBuffer buffer) {
-        int length = buffer.getInt();
-        return readSizedString(buffer, length, false);
+    fun getLString(buffer: ByteBuffer): String? {
+        val length = buffer.int
+        return readSizedString(buffer, length, false)
     }
 
     /**
      * Reads a raw WString (4-byte length-prefixed).
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
+     * @param buffer The `ByteBuffer` to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    @Nullable
-    static public byte[] getLStringRaw(@NotNull ByteBuffer buffer) {
-        int length = buffer.getInt();
-        return readSizedStringRaw(buffer, length, false);
+    fun getLStringRaw(buffer: ByteBuffer): ByteArray? {
+        val length = buffer.int
+        return readSizedStringRaw(buffer, length, false)
     }
 
     /**
      * Reads a WString (2-byte length-prefixed).
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
-     * @return The <code>String</code>.
+     * @param buffer The `ByteBuffer` to read.
+     * @return The `String`.
      */
-    @Nullable
-    static public String getWString(@NotNull ByteBuffer buffer) {
-        int length = Short.toUnsignedInt(buffer.getShort());
-        return readSizedString(buffer, length, false);
+    fun getWString(buffer: ByteBuffer): String? {
+        val length = UtilityFunctions.toUnsignedInt(buffer.short)
+        return readSizedString(buffer, length, false)
     }
 
     /**
      * Reads a raw WString (2-byte length-prefixed).
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
+     * @param buffer The `ByteBuffer` to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    @Nullable
-    static public byte[] getWStringRaw(@NotNull ByteBuffer buffer) {
-        int length = Short.toUnsignedInt(buffer.getShort());
-        return readSizedStringRaw(buffer, length, false);
+    fun getWStringRaw(buffer: ByteBuffer): ByteArray? {
+        val length = UtilityFunctions.toUnsignedInt(buffer.short)
+        return readSizedStringRaw(buffer, length, false)
     }
 
     /**
      * Reads a BString (1-byte length-prefixed).
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
-     * @return The <code>String</code>.
+     * @param buffer The `ByteBuffer` to read.
+     * @return The `String`.
      */
-    @Nullable
-    static public String getBString(@NotNull ByteBuffer buffer) {
-        int length = Byte.toUnsignedInt(buffer.get());
-        return readSizedString(buffer, length, false);
+    fun getBString(buffer: ByteBuffer): String? {
+        val length = UtilityFunctions.toUnsignedInt(buffer.get())
+        return readSizedString(buffer, length, false)
     }
 
     /**
      * Reads an LString (4-byte length-prefixed).
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
-     * @return The <code>String</code>.
+     * @param buffer The `ByteBuffer` to read.
+     * @return The `String`.
      */
-    @Nullable
-    static public String getLZString(@NotNull ByteBuffer buffer) {
-        int length = buffer.getInt();
-        return readSizedString(buffer, length, true);
+    fun getLZString(buffer: ByteBuffer): String? {
+        val length = buffer.int
+        return readSizedString(buffer, length, true)
     }
 
     /**
      * Reads a WString (2-byte length-prefixed).
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
-     * @return The <code>String</code>.
+     * @param buffer The `ByteBuffer` to read.
+     * @return The `String`.
      */
-    @Nullable
-    static public String getWZString(@NotNull ByteBuffer buffer) {
-        int length = Short.toUnsignedInt(buffer.getShort());
-        return readSizedString(buffer, length, true);
+    fun getWZString(buffer: ByteBuffer): String? {
+        val length = UtilityFunctions.toUnsignedInt(buffer.short)
+        return readSizedString(buffer, length, true)
     }
 
     /**
      * Reads a BString (1-byte length-prefixed).
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
-     * @return The <code>String</code>.
+     * @param buffer The `ByteBuffer` to read.
+     * @return The `String`.
      */
-    @Nullable
-    static public String getBZString(@NotNull ByteBuffer buffer) {
-        int length = Byte.toUnsignedInt(buffer.get());
-        return readSizedString(buffer, length, true);
+    fun getBZString(buffer: ByteBuffer): String? {
+        val length = java.lang.Byte.toUnsignedInt(buffer.get())
+        return readSizedString(buffer, length, true)
     }
 
     /**
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
-     * @return The <code>String</code>.
+     * @param buffer The `ByteBuffer` to read.
+     * @return The `String`.
      */
-    @Nullable
-    static public String getZString(@NotNull ByteBuffer buffer) {
-        final byte[] BYTES = getZStringRaw(buffer);
-        return BYTES == null ? null : new String(BYTES, UTF_8);
+    fun getZString(buffer: ByteBuffer): String? {
+        val BYTES = getZStringRaw(buffer)
+        return if (BYTES == null) null else String(BYTES, StandardCharsets.UTF_8)
     }
 
     /**
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
+     * @param buffer The `ByteBuffer` to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    @Nullable
-    static public byte[] getZStringRaw(@NotNull ByteBuffer buffer) {
-        final int start = buffer.position();
+    fun getZStringRaw(buffer: ByteBuffer): ByteArray? {
+        val start = buffer.position()
 
         //while (buffer.get() != 0);
-        byte b = buffer.get();
-        while (b != 0) {
-            b = buffer.get();
+        var b = buffer.get()
+        while (b.toInt() != 0) {
+            b = buffer.get()
         }
-
-        final int LENGTH = buffer.position() - start;
-        ((Buffer) buffer).position(start);
-        
-        if (LENGTH <= 0) {
-            throw new IllegalArgumentException("Found invalid ZString length of " + LENGTH);
-        }
-        
-        return readSizedStringRaw(buffer, LENGTH, true);
+        val LENGTH = buffer.position() - start
+        (buffer as Buffer).position(start)
+        require(LENGTH > 0) { "Found invalid ZString length of $LENGTH" }
+        return readSizedStringRaw(buffer, LENGTH, true)
     }
 
     /**
      * Reads a string with a known size.
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
+     * @param buffer The `ByteBuffer` to read.
      * @param zterminated A flag indicating whether the string is 0-terminated.
      * @param size The size of the string, including the terminus (if any).
-     * @return The <code>String</code>.
+     * @return The `String`.
      */
-    @Nullable
-    static public String readSizedString(@NotNull ByteBuffer buffer, int size, boolean zterminated) {
-        final byte[] BYTES = readSizedStringRaw(buffer, size, zterminated);
-        return BYTES == null ? null : new String(BYTES, UTF_8);
+    fun readSizedString(buffer: ByteBuffer, size: Int, zterminated: Boolean): String? {
+        val BYTES = readSizedStringRaw(buffer, size, zterminated)
+        return if (BYTES == null) null else String(BYTES, StandardCharsets.UTF_8)
     }
 
     /**
      * Reads a string with a known size.
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
+     * @param buffer The `ByteBuffer` to read.
      * @param zterminated A flag indicating whether the string is 0-terminated.
      * @param size The size of the string, including the terminus (if any).
      * @return The raw byte data, excluding the terminus (if any).
      */
-    @Nullable
-    static public byte[] readSizedStringRaw(@NotNull ByteBuffer buffer, int size, boolean zterminated) {
-        try {
-            int length = zterminated ? size - 1 : size;
-            if (length < 0) {
-                return null;
-                
-            } else if (length == 0) {                
-                return new byte[0];
-                
-            } else {
-                byte[] bytes = new byte[length];
-                buffer.get(bytes);
-                int terminus = zterminated ? buffer.get() : 0;
-                if (terminus != 0) {
-                    throw new IllegalArgumentException("Missing terminus");
+    fun readSizedStringRaw(buffer: ByteBuffer, size: Int, zterminated: Boolean): ByteArray? {
+        return try {
+            val length = if (zterminated) size - 1 else size
+            when {
+                length < 0 -> {
+                    null
                 }
-                return bytes;
+                length == 0 -> {
+                    ByteArray(0)
+                }
+                else -> {
+                    val bytes = ByteArray(length)
+                    buffer[bytes]
+                    val terminus = if (zterminated) buffer.get().toInt() else 0
+                    require(terminus == 0) { "Missing terminus" }
+                    bytes
+                }
             }
-            
-        } catch (BufferUnderflowException ex) {
-            throw ex;
+        } catch (ex: BufferUnderflowException) {
+            throw ex
         }
     }
 
     /**
      * Reads a UTF8 string.
      *
-     * @param buffer The <code>ByteBuffer</code> to read.
-     * @return The <code>String</code>.
-     *
+     * @param buffer The `ByteBuffer` to read.
+     * @return The `String`.
      */
-    @Nullable
-    static public String getUTF(@NotNull ByteBuffer buffer) {
-        int length = Short.toUnsignedInt(buffer.getShort());
-        if (length < 0 || length >= 32768) {
-            throw new IllegalArgumentException("Invalid string length: " + length);
-        }
-
-        if (length == 0) {
-            return "";
+    fun getUTF(buffer: ByteBuffer): String {
+        val length = UtilityFunctions.toUnsignedInt(buffer.short)
+        require((length < 0 || length >= 32768).not()) { "Invalid string length: $length" }
+        return if (length == 0) {
+            ""
         } else {
-            byte[] bytes = new byte[length];
-            buffer.get(bytes);
-            String str = new String(bytes, UTF_8);
-            return str;
+            val bytes = ByteArray(length)
+            buffer[bytes]
+            String(bytes, StandardCharsets.UTF_8)
         }
     }
 
     /**
      *
-     * @param buffer The <code>ByteBuffer</code> to write.
-     * @param string The <code>String</code>.
-     * @return The <code>ByteBuffer</code> (allows chaining).
+     * @param buffer The `ByteBuffer` to write.
+     * @param string The `String`.
+     * @return The `ByteBuffer` (allows chaining).
      */
-    static public ByteBuffer putZString(@NotNull ByteBuffer buffer, @NotNull String string) {
-        return buffer.put(string.getBytes(UTF_8)).put((byte) 0);
+    fun putZString(buffer: ByteBuffer, string: String): ByteBuffer {
+        return buffer.put(string.toByteArray(StandardCharsets.UTF_8)).put(0.toByte())
     }
 
     /**
      *
-     * @param buffer The <code>ByteBuffer</code> to write.
-     * @param string The <code>String</code>.
-     * @return The <code>ByteBuffer</code> (allows chaining).
+     * @param buffer The `ByteBuffer` to write.
+     * @param string The `String`.
+     * @return The `ByteBuffer` (allows chaining).
      */
-    static public ByteBuffer putWString(@NotNull ByteBuffer buffer, @NotNull String string) {
-        byte[] bytes = string.getBytes(UTF_8);
-        return buffer.putShort((short) bytes.length).put(bytes);
+    fun putWString(buffer: ByteBuffer, string: String): ByteBuffer {
+        val bytes = string.toByteArray(StandardCharsets.UTF_8)
+        return buffer.putShort(bytes.size.toShort()).put(bytes)
     }
 
     /**
@@ -265,38 +240,33 @@ public class BufferUtil {
      * @param bytes
      * @return
      */
-    @NotNull
-    static public String mozillaString(@NotNull byte[] bytes) {
-        DETECTOR.handleData(bytes, 0, bytes.length);
-        DETECTOR.dataEnd();
-        final String ENCODING = DETECTOR.getDetectedCharset();
-        DETECTOR.reset();
-
-        final Charset CHARSET = (null == ENCODING ? UTF_8 : Charset.forName(ENCODING));
-        if (CHARSET == null) {
-            throw new IllegalStateException("Missing character set.");
-        }
-
-        final String STR = new String(bytes, CHARSET);
-        return STR;
+    fun mozillaString(bytes: ByteArray): String {
+        DETECTOR.handleData(bytes, 0, bytes.size)
+        DETECTOR.dataEnd()
+        val ENCODING = DETECTOR.detectedCharset
+        DETECTOR.reset()
+        val CHARSET =
+            (if (null == ENCODING) StandardCharsets.UTF_8 else Charset.forName(ENCODING))
+                ?: throw IllegalStateException("Missing character set.")
+        return String(bytes, CHARSET)
     }
 
     /**
-     * Simple wrapper for inflating a small <code>ByteBuffer</code> using ZLIB.
+     * Simple wrapper for inflating a small `ByteBuffer` using ZLIB.
      *
      * @param compressed
      * @param uncompressedSize
      * @return
      * @throws java.util.zip.DataFormatException
      */
-    @NotNull
-    static public ByteBuffer inflateZLIB(@NotNull ByteBuffer compressed, int uncompressedSize) throws java.util.zip.DataFormatException {
-        int compressedSize = compressed.limit() - compressed.position();
-        return inflateZLIB(compressed, uncompressedSize, compressedSize);
+    @Throws(DataFormatException::class)
+    fun inflateZLIB(compressed: ByteBuffer, uncompressedSize: Int): ByteBuffer {
+        val compressedSize = compressed.limit() - compressed.position()
+        return inflateZLIB(compressed, uncompressedSize, compressedSize)
     }
 
     /**
-     * Simple wrapper for inflating a small <code>ByteBuffer</code> using ZLIB.
+     * Simple wrapper for inflating a small `ByteBuffer` using ZLIB.
      *
      * @param compressed
      * @param uncompressedSize
@@ -304,104 +274,99 @@ public class BufferUtil {
      * @return
      * @throws java.util.zip.DataFormatException
      */
-    @NotNull
-    static public ByteBuffer inflateZLIB(@NotNull ByteBuffer compressed, int uncompressedSize, int compressedSize) throws java.util.zip.DataFormatException {
-        final byte[] UNCOMPRESSED_BYTES = new byte[uncompressedSize];
-        final byte[] COMPRESSED_BYTES = new byte[compressedSize];
-        compressed.get(COMPRESSED_BYTES);
-
-        final java.util.zip.Inflater INFLATER = new java.util.zip.Inflater();
-
-        try {
-            INFLATER.setInput(COMPRESSED_BYTES);
-            int bytesInflated = INFLATER.inflate(UNCOMPRESSED_BYTES);
-            if (bytesInflated != uncompressedSize) {
-                throw new IllegalStateException(String.format("Inflated %d bytes but expecting %d bytes.", bytesInflated, uncompressedSize));
+    @Throws(DataFormatException::class)
+    fun inflateZLIB(compressed: ByteBuffer, uncompressedSize: Int, compressedSize: Int): ByteBuffer {
+        val UNCOMPRESSED_BYTES = ByteArray(uncompressedSize)
+        val COMPRESSED_BYTES = ByteArray(compressedSize)
+        compressed[COMPRESSED_BYTES]
+        val INFLATER = Inflater()
+        return try {
+            INFLATER.setInput(COMPRESSED_BYTES)
+            val bytesInflated = INFLATER.inflate(UNCOMPRESSED_BYTES)
+            check(bytesInflated == uncompressedSize) {
+                String.format(
+                    "Inflated %d bytes but expecting %d bytes.",
+                    bytesInflated,
+                    uncompressedSize
+                )
             }
-            return ByteBuffer.wrap(UNCOMPRESSED_BYTES);
+            ByteBuffer.wrap(UNCOMPRESSED_BYTES)
         } finally {
-            INFLATER.end();
+            INFLATER.end()
         }
     }
 
     /**
-     * Simple wrapper for inflating a small <code>ByteBuffer</code> using LZ4.
+     * Simple wrapper for inflating a small `ByteBuffer` using LZ4.
      *
      * @param compressed
      * @param uncompressedSize
      * @return
      */
-    @NotNull
-    static public ByteBuffer inflateLZ4(@NotNull ByteBuffer compressed, int uncompressedSize) {
-        ByteBuffer uncompressed = ByteBuffer.allocate(uncompressedSize);
-        final LZ4Factory LZ4FACTORY = LZ4Factory.fastestInstance();
-        final LZ4FastDecompressor LZ4DECOMP = LZ4FACTORY.fastDecompressor();
-        LZ4DECOMP.decompress(compressed, uncompressed);
-        ((java.nio.Buffer) uncompressed).flip();
-        return uncompressed;
+    fun inflateLZ4(compressed: ByteBuffer, uncompressedSize: Int): ByteBuffer {
+        val uncompressed = ByteBuffer.allocate(uncompressedSize)
+        val LZ4FACTORY = LZ4Factory.fastestInstance()
+        val LZ4DECOMP = LZ4FACTORY.fastDecompressor()
+        LZ4DECOMP.decompress(compressed, uncompressed)
+        (uncompressed as Buffer).flip()
+        return uncompressed
     }
 
     /**
-     * Simple wrapper for deflating a small <code>ByteBuffer</code> using ZLIB.
+     * Simple wrapper for deflating a small `ByteBuffer` using ZLIB.
      *
      * @param uncompressed
      * @param uncompressedSize
      * @return
      */
-    @NotNull
-    static public ByteBuffer deflateZLIB(@NotNull ByteBuffer uncompressed, int uncompressedSize) {
-        final int SIZE = Math.min(uncompressedSize, uncompressed.limit());
-        final byte[] UNCOMPRESSED_BYTES = new byte[SIZE];
-        final byte[] COMPRESSED_BYTES = new byte[11 * SIZE / 10];
-        uncompressed.get(UNCOMPRESSED_BYTES);
-
-        final java.util.zip.Deflater DEFLATER = new java.util.zip.Deflater(java.util.zip.Deflater.BEST_COMPRESSION);
-
-        try {
-            DEFLATER.setInput(UNCOMPRESSED_BYTES);
-            DEFLATER.deflate(COMPRESSED_BYTES);
-            if (DEFLATER.getBytesRead() != SIZE) {
-                throw new IllegalStateException(String.format("Inflated %d bytes but expecting %d bytes.", DEFLATER.getBytesRead(), SIZE));
+    fun deflateZLIB(uncompressed: ByteBuffer, uncompressedSize: Int): ByteBuffer {
+        val SIZE = uncompressedSize.coerceAtMost(uncompressed.limit())
+        val UNCOMPRESSED_BYTES = ByteArray(SIZE)
+        val COMPRESSED_BYTES = ByteArray(11 * SIZE / 10)
+        uncompressed[UNCOMPRESSED_BYTES]
+        val DEFLATER = Deflater(Deflater.BEST_COMPRESSION)
+        return try {
+            DEFLATER.setInput(UNCOMPRESSED_BYTES)
+            DEFLATER.deflate(COMPRESSED_BYTES)
+            check(DEFLATER.bytesRead == SIZE.toLong()) {
+                String.format(
+                    "Inflated %d bytes but expecting %d bytes.",
+                    DEFLATER.bytesRead,
+                    SIZE
+                )
             }
-            return ByteBuffer.wrap(COMPRESSED_BYTES, 0, (int) DEFLATER.getBytesWritten());
+            ByteBuffer.wrap(COMPRESSED_BYTES, 0, DEFLATER.bytesWritten.toInt())
         } finally {
-            DEFLATER.end();
+            DEFLATER.end()
         }
-
     }
 
     /**
-     * Simple wrapper for deflating a small <code>ByteBuffer</code> using LZ4.
+     * Simple wrapper for deflating a small `ByteBuffer` using LZ4.
      *
      * @param uncompressed
      * @param uncompressedSize
      * @return
      */
-    @NotNull
-    static public ByteBuffer deflateLZ4(@NotNull ByteBuffer uncompressed, int uncompressedSize) {
-        final LZ4Factory LZ4FACTORY = LZ4Factory.fastestInstance();
-        final LZ4Compressor LZ4COMP = LZ4FACTORY.fastCompressor();
-        final ByteBuffer COMPRESSED = ByteBuffer.allocate(LZ4COMP.maxCompressedLength(uncompressedSize));
-        LZ4COMP.compress(uncompressed, COMPRESSED);
-        ((java.nio.Buffer) COMPRESSED).flip();
-        return COMPRESSED;
+    fun deflateLZ4(uncompressed: ByteBuffer, uncompressedSize: Int): ByteBuffer {
+        val LZ4FACTORY = LZ4Factory.fastestInstance()
+        val LZ4COMP = LZ4FACTORY.fastCompressor()
+        val COMPRESSED = ByteBuffer.allocate(LZ4COMP.maxCompressedLength(uncompressedSize))
+        LZ4COMP.compress(uncompressed, COMPRESSED)
+        (COMPRESSED as Buffer).flip()
+        return COMPRESSED
     }
 
     /**
      * Used to decode strings intelligently.
      */
-    @Nullable
-    static final private UniversalDetector DETECTOR = new UniversalDetector(null);
+    private val DETECTOR: UniversalDetector = UniversalDetector(null)
 
     /**
      * @return A log of all character sets that have been detected.
      */
-    @NotNull
-    @Contract(pure = true)
-    static public java.util.Set<Charset> getCharsetLog() {
-        return java.util.Collections.unmodifiableSet(CHARSET_LOG);
-    }
-
-    static final private java.util.Set<Charset> CHARSET_LOG = new java.util.HashSet<>();
-
+    @get:Contract(pure = true)
+    val charsetLog: Set<Charset>
+        get() = Collections.unmodifiableSet(CHARSET_LOG)
+    private val CHARSET_LOG: Set<Charset> = Charset.availableCharsets().values.toSet()
 }
