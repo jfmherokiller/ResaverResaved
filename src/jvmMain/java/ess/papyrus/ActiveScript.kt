@@ -22,7 +22,6 @@ import resaver.Analysis
 import resaver.ListException
 import java.nio.ByteBuffer
 import java.util.*
-import java.util.function.Consumer
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.experimental.and
@@ -76,7 +75,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
      * Replaces the opcodes of each `StackFrame` with NOPs.
      */
     fun zero() {
-        stackFrames.forEach(Consumer { obj: StackFrame -> obj.zero() })
+        stackFrames.forEach { obj: StackFrame -> obj.zero() }
     }
 
     /**
@@ -239,15 +238,19 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
                 BUILDER.append("<p>This thread is attach to instance that was created in-game.</p>")
             }
         }
-        if (null == instance) {
-            BUILDER.append("<p>No owner was identified.</p>")
-        } else if (instance is Linkable) {
-            val l = instance as Linkable?
-            val type = instance!!.javaClass.simpleName
-            BUILDER.append(String.format("<p>%s: %s</p>", type, l!!.toHTML(this)))
-        } else {
-            val type = instance!!.javaClass.simpleName
-            BUILDER.append(String.format("<p>%s: %s</p>", type, instance))
+        when (instance) {
+            null -> {
+                BUILDER.append("<p>No owner was identified.</p>")
+            }
+            is Linkable -> {
+                val l = instance as Linkable?
+                val type = instance!!.javaClass.simpleName
+                BUILDER.append(String.format("<p>%s: %s</p>", type, l!!.toHTML(this)))
+            }
+            else -> {
+                val type = instance!!.javaClass.simpleName
+                BUILDER.append(String.format("<p>%s: %s</p>", type, instance))
+            }
         }
         BUILDER.append("<p>")
         BUILDER.append(String.format("ID: %s<br/>", iD))
@@ -342,8 +345,8 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
     /**
      * @return The minor version field.
      */
-    val minorVersion: Int?
-        get() = data!!.MINORVERSION?.toInt()
+    val minorVersion: Int
+        get() = data!!.MINORVERSION.toInt()
 
     /**
      * @return The flag field.
@@ -439,15 +442,15 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
          */
         override fun write(output: ByteBuffer?) {
             iD.write(output)
-            majorVersion?.let { output?.put(it) }
-            MINORVERSION?.let { output?.put(it) }
+            majorVersion.let { output?.put(it) }
+            MINORVERSION.let { output?.put(it) }
             unknownVar?.write(output)
             output?.put(FLAG)
-            unknownByte?.let { output?.put(it) }
+            unknownByte.let { output?.put(it) }
             if ((FLAG and 0x01.toByte()) == 0x01.toByte()) {
-                unknown2?.let { output?.putInt(it) }
+                unknown2.let { output?.putInt(it) }
             }
-            unknown3?.let { output?.put(it) }
+            unknown3.let { output?.put(it) }
             if (null != unknown4) {
                 unknown4!!.write(output)
             }
@@ -455,7 +458,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
                 ATTACHED?.write(output)
             }
             output?.putInt(STACKFRAMES.size)
-            STACKFRAMES.forEach(Consumer { frame: StackFrame -> frame.write(output) })
+            STACKFRAMES.forEach { frame: StackFrame -> frame.write(output) }
             if (null != unknown5) {
                 output?.put(unknown5!!)
             }
@@ -532,18 +535,16 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
          * @throws PapyrusFormatException
          */
         init {
-            Objects.requireNonNull(input)
-            Objects.requireNonNull(context)
             majorVersion = input.get()
             MINORVERSION = input.get()
-            require((MINORVERSION < 1 || MINORVERSION > 2)?.not()) { "Wrong minor version = $MINORVERSION" }
+            require((MINORVERSION < 1 || MINORVERSION > 2).not()) { "Wrong minor version = $MINORVERSION" }
             unknownVar = read(input, context)
             FLAG = input.get()
             unknownByte = input.get()
             unknown2 = if ((FLAG and 0x01.toByte()) == 0x01.toByte()) input.int else 0
             unknown3 = input.get()
-            unknown4 = when (unknown3!!.toInt()) {
-                1, 2, 3 -> FragmentTask(input, unknown3!!, context)
+            unknown4 = when (unknown3.toInt()) {
+                1, 2, 3 -> FragmentTask(input, unknown3, context)
                 else -> null
             }
             ATTACHED = if (context.game!!.isFO4) {
