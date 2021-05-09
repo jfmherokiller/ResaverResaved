@@ -13,558 +13,463 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.ListException;
-import ess.AnalyzableElement;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.SortedSet;
-import java.util.logging.Logger;
-import java.nio.ByteBuffer;
-import java.util.Objects;
-import ess.Element;
-import ess.ESS;
-import ess.Linkable;
-import ess.Plugin;
-import ess.RefID;
+import ess.ESS
+import ess.Element
+import ess.Linkable.Companion.makeLink
+import ess.RefID
+import ess.papyrus.Variable.Companion.readList
+import resaver.Analysis
+import resaver.ListException
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.function.Consumer
+import java.util.function.Predicate
+import java.util.logging.Logger
+import kotlin.experimental.and
 
 /**
  * Describes a script instance in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class ScriptInstance extends GameElement implements SeparateData, HasVariables {
-
+class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusContext) :
+    GameElement(input, scripts, context), SeparateData, HasVariables {
     /**
-     * Creates a new <code>ScriptInstances</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param scripts The <code>ScriptMap</code> containing the definitions.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     */
-    ScriptInstance(@NotNull ByteBuffer input, @NotNull ScriptMap scripts, @NotNull PapyrusContext context) throws PapyrusFormatException {
-        super(input, scripts, context);
-        this.UNKNOWN2BITS = input.getShort();
-        this.UNKNOWN = input.getShort();
-        this.REFID = context.readRefID(input);
-        this.UNKNOWN_BYTE = input.get();
-        if (context.getGame().isFO4()) {
-            if ((this.UNKNOWN2BITS & 0x3) == 0x3) {
-                this.UNKNOWN_FO_BYTE = input.get();
-            } else {
-                this.UNKNOWN_FO_BYTE = null;
-            }
-        } else {
-            this.UNKNOWN_FO_BYTE = null;
-        }
-    }
-
-    /**
-     * @see ess.Element#write(resaver.ByteBuffer)
+     * @see ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        super.write(output);
-        output.putShort(this.UNKNOWN2BITS);
-        output.putShort(this.UNKNOWN);
-        this.REFID.write(output);
-        output.put(this.UNKNOWN_BYTE);
-        if (null != this.UNKNOWN_FO_BYTE) {
-            output.put(this.UNKNOWN_FO_BYTE);
+    override fun write(output: ByteBuffer?) {
+        super.write(output)
+        output?.putShort(UNKNOWN2BITS)
+        output?.putShort(unknown)
+        refID.write(output)
+        output?.put(UNKNOWN_BYTE)
+        if (null != UNKNOWN_FO_BYTE) {
+            output?.put(UNKNOWN_FO_BYTE!!)
         }
     }
 
     /**
-     * @see SeparateData#readData(java.nio.ByteBuffer,
-     * ess.papyrus.PapyrusContext)
+     * @see SeparateData.readData
      * @param input
      * @param context
      * @throws PapyrusElementException
      * @throws PapyrusFormatException
      */
-    @Override
-    public void readData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
-        this.data = new ScriptData(input, context);
+    @Throws(PapyrusElementException::class, PapyrusFormatException::class)
+    override fun readData(input: ByteBuffer?, context: PapyrusContext?) {
+        data = ScriptData(input!!, context!!)
     }
 
     /**
-     * @see SeparateData#writeData(java.nio.ByteBuffer)
-     * @param output
+     * @see SeparateData.writeData
+     * @param input
      */
-    @Override
-    public void writeData(@NotNull ByteBuffer output) {
-        this.data.write(output);
+    override fun writeData(input: ByteBuffer?) {
+        data!!.write(input)
     }
 
     /**
-     * @see ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = super.calculateSize();
-        sum += 5;
-        sum += this.REFID.calculateSize();
-        if (null != this.UNKNOWN_FO_BYTE) {
-            sum++;
+    override fun calculateSize(): Int {
+        var sum = super.calculateSize()
+        sum += 5
+        sum += refID.calculateSize()
+        if (null != UNKNOWN_FO_BYTE) {
+            sum++
         }
-
-        sum += this.data == null ? 0 : this.data.calculateSize();
-        return sum;
+        sum += if (data == null) 0 else data!!.calculateSize()
+        return sum
     }
 
     /**
-     * @return The RefID of the papyrus element.
+     * @return The mystery flag; equivalent to `this.getUnknown==-1`.
      */
-    public RefID getRefID() {
-        return this.REFID;
-    }
+    val isMysteryFlag: Boolean
+        get() = unknown.toInt() == -1
 
     /**
-     * @return The unknown short field; if it's -1, the RefID field may not be
-     * valid.
+     * @return The corresponding `Script`.
      */
-    public short getUnknown() {
-        return this.UNKNOWN;
-    }
-
-    /**
-     * @return The mystery flag; equivalent to <code>this.getUnknown==-1</code>.
-     */
-    public boolean isMysteryFlag() {
-        return this.UNKNOWN == -1;
-    }
-
-    /**
-     * @return The <code>ScriptData</code> for the instance.
-     */
-    public ScriptData getData() {
-        return this.data;
-    }
-
-    /**
-     * Sets the data field.
-     *
-     * @param newData The new value for the data field.
-     */
-    public void setData(ScriptData newData) {
-        this.data = newData;
-    }
-
-    /**
-     * @return The name of the corresponding <code>Script</code>.
-     */
-    @NotNull
-    public TString getScriptName() {
-        return super.getDefinitionName();
-    }
-
-    /**
-     * @return The corresponding <code>Script</code>.
-     */
-    @Nullable
-    public Script getScript() {
-        assert super.getDefinition() instanceof Script;
-        return (Script) super.getDefinition();
-    }
+    val script: Script?
+        get() {
+            assert(super.definition is Script)
+            return super.definition as Script?
+        }
 
     /**
      * Shortcut for getData().getType().
      *
      * @return The type of the script.
      */
-    @Nullable
-    public TString getType() {
-        return null != this.data ? this.data.getType() : null;
-    }
+    val type: TString?
+        get() = if (null != data) data!!.type else null
 
     /**
      * @return Checks for a memberless error.
      */
-    public boolean hasMemberlessError() {
-        final List<MemberDesc> DESCS = null != this.getScript()
-                ? this.getScript().getExtendedMembers()
-                : Collections.emptyList();
-
-        final List<Variable> VARS = this.getVariables();
-        return VARS.isEmpty() && !DESCS.isEmpty();
+    fun hasMemberlessError(): Boolean {
+        val DESCS = if (null != script) script!!.extendedMembers else emptyList()
+        val VARS = variables
+        return VARS.isEmpty() && !DESCS.isEmpty()
     }
 
     /**
      * @return Checks for a definition error.
      */
-    public boolean hasDefinitionError() {
-        final List<MemberDesc> DESCS = null != this.getScript()
-                ? this.getScript().getExtendedMembers()
-                : Collections.emptyList();
-
-        final List<Variable> VARS = this.getVariables();
-        return DESCS.size() != VARS.size() && VARS.size() > 0;
+    fun hasDefinitionError(): Boolean {
+        val DESCS = if (null != script) script!!.extendedMembers else emptyList()
+        val VARS = variables
+        return DESCS.size != VARS.size && VARS.isNotEmpty()
     }
 
     /**
-     * @see HasVariables#getVariables()
+     * @see HasVariables.getVariables
      * @return
      */
-    @Override
-    public List<Variable> getVariables() {
-        return this.data == null 
-                ? Collections.emptyList() 
-                : Collections.unmodifiableList(this.data.VARIABLES);
-    }
+    override val variables: List<Variable>
+        get() = if (data == null) emptyList() else data!!.VARIABLES.filterNotNull()
 
     /**
-     * @see HasVariables#getDescriptors() 
-     * @return 
+     * @see HasVariables.getDescriptors
+     * @return
      */
-    @NotNull
-    @Override
-    public List<MemberDesc> getDescriptors() {
-        return this.getScript().getExtendedMembers();
-    }
+    override val descriptors: List<MemberDesc>
+        get() = script!!.extendedMembers
 
     /**
-     * @see HasVariables#setVariable(int, ess.papyrus.Variable)
+     * @see HasVariables.setVariable
      * @param index
-     * @param newVar 
+     * @param newVar
      */
-    @Override
-    public void setVariable(int index, Variable newVar) {
-        if (this.data == null || this.data.VARIABLES == null) {
-            throw new NullPointerException("The variable list is missing.");
+    override fun setVariable(index: Int, newVar: Variable?) {
+        if (data == null || data!!.VARIABLES == null) {
+            throw NullPointerException("The variable list is missing.")
         }
-        if (index < 0 || index >= this.data.VARIABLES.size()) {
-            throw new IllegalArgumentException("Invalid variable index: " + index);
-        }
-        
-        this.data.VARIABLES.set(index, newVar);
+        require(!(index < 0 || index >= data!!.VARIABLES.size)) { "Invalid variable index: $index" }
+        data!!.VARIABLES[index] = newVar
     }
 
     /**
-     * @see ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @Override
-    public String toHTML(@Nullable Element target) {
-        if (null == target || null == this.data) {
-            return Linkable.makeLink("scriptinstance", this.getID(), this.toString());
-
-        } else if (target instanceof Variable) {
-            int index = this.getVariables().indexOf(target);
+    override fun toHTML(target: Element?): String? {
+        return if (null == target || null == data) {
+            makeLink("scriptinstance", iD, this.toString())
+        } else if (target is Variable) {
+            val index = variables.indexOf(target)
             if (index >= 0) {
-                return Linkable.makeLink("scriptinstance", this.getID(), index, this.toString());
+                makeLink("scriptinstance", iD, index, this.toString())
             } else {
-                return Linkable.makeLink("scriptinstance", this.getID(), this.toString());
+                makeLink("scriptinstance", iD, this.toString())
             }
-
         } else {
-            for (Variable var : this.getVariables()) {
-                if (var.hasRef()) {
-                    if (var.getReferent() == target) {
-                        int indexOf = this.getVariables().indexOf(var);
+            for (`var` in variables) {
+                if (`var`.hasRef()) {
+                    if (`var`.referent === target) {
+                        val indexOf = variables.indexOf(`var`)
                         if (indexOf >= 0) {
                             return Optional.of(indexOf)
-                                    .map(index -> Linkable.makeLink("scriptinstance", this.getID(), index, this.toString()))
-                                    .orElse(Linkable.makeLink("scriptinstance", this.getID(), this.toString()));
+                                .map { index: Int? -> makeLink("scriptinstance", iD, index!!, this.toString()) }
+                                .orElse(makeLink("scriptinstance", iD, this.toString()))
                         }
                     }
                 }
             }
-            return Optional.<Integer>empty()
-                    .map(index -> Linkable.makeLink("scriptinstance", this.getID(), index, this.toString()))
-                    .orElse(Linkable.makeLink("scriptinstance", this.getID(), this.toString()));
+            Optional.empty<Int>()
+                .map { index: Int? -> makeLink("scriptinstance", iD, index!!, this.toString()) }
+                .orElse(makeLink("scriptinstance", iD, this.toString()))
         }
     }
 
     /**
      * @return String representation.
      */
-    @NotNull
-    @Override
-    public String toString() {
-        final StringBuilder BUF = new StringBuilder();
-
-        if (this.isUndefined()) {
-            BUF.append("#").append(this.getScriptName()).append("#: ");
+    override fun toString(): String {
+        val BUF = StringBuilder()
+        if (isUndefined) {
+            BUF.append("#").append(this.scriptName).append("#: ")
         } else {
-            BUF.append(this.getScriptName()).append(": ");
+            BUF.append(this.scriptName).append(": ")
         }
-
-        if (this.isMysteryFlag()) {
-            BUF.append("*");
+        if (isMysteryFlag) {
+            BUF.append("*")
         }
-
-        BUF.append(this.REFID.toString());
-        BUF.append(" (").append(this.getID()).append(")");
-        return BUF.toString();
+        BUF.append(refID.toString())
+        BUF.append(" (").append(iD).append(")")
+        return BUF.toString()
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @NotNull
-    @Override
-    public String getInfo(@Nullable resaver.Analysis analysis, @NotNull ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
-        if (null != this.getScript()) {
-            BUILDER.append(String.format("<html><h3>INSTANCE of %s</h3>", this.getScript().toHTML(this)));
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
+        val BUILDER = StringBuilder()
+        if (null != script) {
+            BUILDER.append(String.format("<html><h3>INSTANCE of %s</h3>", script!!.toHTML(this)))
         } else {
-            BUILDER.append(String.format("<html><h3>INSTANCE of %s</h3>", this.getScriptName()));
+            BUILDER.append(String.format("<html><h3>INSTANCE of %s</h3>", this.scriptName))
         }
-
-        final Plugin PLUGIN = this.REFID.PLUGIN;
+        val PLUGIN = refID.PLUGIN
         if (PLUGIN != null) {
-            BUILDER.append(String.format("<p>This instance is attached to an object from %s.</p>", PLUGIN.toHTML(this)));
-        } else if (this.REFID.getType() == RefID.Type.CREATED) {
-            BUILDER.append("<p>This instance was created in-game.</p>");
+            BUILDER.append(String.format("<p>This instance is attached to an object from %s.</p>", PLUGIN.toHTML(this)))
+        } else if (refID.type === RefID.Type.CREATED) {
+            BUILDER.append("<p>This instance was created in-game.</p>")
         }
-
-        if (this.isUndefined()) {
-            BUILDER.append("<p><em>WARNING: SCRIPT MISSING!</em><br/>Remove Undefined Instances\" will delete this.</p>");
+        if (isUndefined) {
+            BUILDER.append("<p><em>WARNING: SCRIPT MISSING!</em><br/>Remove Undefined Instances\" will delete this.</p>")
         }
-
-        if (this.isUnattached()) {
-            BUILDER.append("<p><em>WARNING: OBJECT MISSING!</em><br/>Selecting \"Remove Unattached Instances\" will delete this.</p>");
+        if (this.isUnattached) {
+            BUILDER.append("<p><em>WARNING: OBJECT MISSING!</em><br/>Selecting \"Remove Unattached Instances\" will delete this.</p>")
         }
-
-        if (this.REFID.getType() == RefID.Type.CREATED && !save.getChangeForms().containsKey(this.REFID)) {
-            BUILDER.append("<p><em>REFID POINTS TO NONEXISTENT CREATED FORM.</em><br/>Remove non-existent form instances\" will delete this. However, some mods create these instances deliberately. </p>");
+        if (refID.type === RefID.Type.CREATED && save?.changeForms?.containsKey(refID)?.not() == true) {
+            BUILDER.append("<p><em>REFID POINTS TO NONEXISTENT CREATED FORM.</em><br/>Remove non-existent form instances\" will delete this. However, some mods create these instances deliberately. </p>")
         }
-
         if (null != analysis) {
-            final SortedSet<String> PROVIDERS = analysis.SCRIPT_ORIGINS.get(this.getScriptName().toIString());
+            val PROVIDERS = analysis.SCRIPT_ORIGINS[this.scriptName.toIString()]
             if (null != PROVIDERS) {
-                String probableProvider = PROVIDERS.last();
-                BUILDER.append(String.format("<p>The script probably came from mod \"%s\".</p>", probableProvider));
-
-                if (PROVIDERS.size() > 1) {
-                    BUILDER.append("<p>Full list of providers:</p><ul>");
-                    PROVIDERS.forEach(mod -> BUILDER.append(String.format("<li>%s", mod)));
-                    BUILDER.append("</ul>");
+                val probableProvider = PROVIDERS.last()
+                BUILDER.append(String.format("<p>The script probably came from mod \"%s\".</p>", probableProvider))
+                if (PROVIDERS.size > 1) {
+                    BUILDER.append("<p>Full list of providers:</p><ul>")
+                    PROVIDERS.forEach(Consumer { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) })
+                    BUILDER.append("</ul>")
                 }
             }
         }
-
-        BUILDER.append("<p>");
-        BUILDER.append(String.format("ID: %s<br/>", this.getID()));
-        BUILDER.append(String.format("Type: %s<br/>", this.getType()));
-
-        boolean mysteryFlag = this.UNKNOWN == -1;
-
-        if (save.getChangeForms().containsKey(this.REFID)) {
-            BUILDER.append(String.format("RefID%s: %s<br/>", (mysteryFlag ? "@" : ""), this.REFID.toHTML(null)));
+        BUILDER.append("<p>")
+        BUILDER.append(String.format("ID: %s<br/>", iD))
+        BUILDER.append(String.format("Type: %s<br/>", type))
+        val mysteryFlag = unknown.toInt() == -1
+        if (save?.changeForms?.containsKey(refID) == true) {
+            BUILDER.append(String.format("RefID%s: %s<br/>", if (mysteryFlag) "@" else "", refID.toHTML(null)))
         } else {
-            BUILDER.append(String.format("RefID%s: %s<br/>", (mysteryFlag ? "@" : ""), this.REFID));
+            BUILDER.append(String.format("RefID%s: %s<br/>", if (mysteryFlag) "@" else "", refID))
         }
-
-        BUILDER.append(String.format("Unknown2bits: %01X<br/>", this.UNKNOWN2BITS));
-        BUILDER.append(String.format("UnknownShort: %04X<br/>", this.UNKNOWN));
-        BUILDER.append(String.format("UnknownByte: %02x<br/>", this.UNKNOWN_BYTE));
-        BUILDER.append("</p>");
-
-        save.getPapyrus().printReferrents(this, BUILDER, "script instance");
-
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        BUILDER.append(String.format("Unknown2bits: %01X<br/>", UNKNOWN2BITS))
+        BUILDER.append(String.format("UnknownShort: %04X<br/>", unknown))
+        BUILDER.append(String.format("UnknownByte: %02x<br/>", UNKNOWN_BYTE))
+        BUILDER.append("</p>")
+        save?.papyrus!!.printReferrents(this, BUILDER, "script instance")
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @return A flag indicating if the <code>ScriptInstance</code> is
+     * @return A flag indicating if the `ScriptInstance` is
      * unattached.
-     *
      */
-    public boolean isUnattached() {
-        return this.REFID.isZero();
-    }
-
+    val isUnattached: Boolean
+        get() = this.refID.isZero
     /**
-     * @return A flag indicating that the <code>ScriptInstance</code> has a
+     * @return A flag indicating that the `ScriptInstance` has a
      * canary variable.
      */
-    public boolean hasCanary() {
-        if (null == this.getScript()) {
-            return false;
+    fun hasCanary(): Boolean {
+        if (null == script) {
+            return false
         }
-
-        final List<MemberDesc> DESCS = this.getScript().getExtendedMembers();
-        for (MemberDesc DESC : DESCS) {
+        val DESCS: List<MemberDesc> = script!!.extendedMembers
+        for (DESC in DESCS) {
             if (isCanary.test(DESC)) {
-                return true;
+                return true
             }
         }
-        return false;
+        return false
     }
 
     /**
-     * @return A flag indicating that the <code>ScriptInstance</code> has a
+     * @return A flag indicating that the `ScriptInstance` has a
      * canary variable.
      */
-    public int getCanary() {
-        final List<Variable> MEMBERS = this.getVariables();
-        if (null == this.getScript() || MEMBERS.isEmpty()) {
-            return 0;
-        }
-
-        final List<MemberDesc> NAMES = this.getScript().getExtendedMembers();
-        Optional<MemberDesc> canary = Optional.empty();
-        for (MemberDesc NAME : NAMES) {
-            if (isCanary.test(NAME)) {
-                canary = Optional.of(NAME);
-                break;
+    val canary: Int
+        get() {
+            val MEMBERS = variables
+            if (null == script || MEMBERS.isEmpty()) {
+                return 0
             }
-        }
-
-        if (canary.isPresent()) {
-            Variable var = MEMBERS.get(NAMES.indexOf(canary.get()));
-            if (var instanceof VarInt) {
-                return ((VarInt) var).getValue();
+            val NAMES: List<MemberDesc> = script!!.extendedMembers
+            var canary: MemberDesc? = null
+            for (NAME in NAMES) {
+                if (isCanary.test(NAME)) {
+                    canary = NAME
+                    break
+                }
+            }
+            return if (canary != null) {
+                val `var` = MEMBERS[NAMES.indexOf(canary)]
+                if (`var` is VarInt) {
+                    `var`.value
+                } else {
+                    0
+                }
             } else {
-                return 0;
+                0
             }
-        } else {
-            return 0;
         }
-    }
 
     /**
-     * @return A flag indicating if the <code>ScriptInstance</code> is
+     * @return A flag indicating if the `ScriptInstance` is
      * undefined.
-     *
      */
-    @Override
-    public boolean isUndefined() {
-        if (null != this.getScript()) {
-            return this.getScript().isUndefined();
+    override val isUndefined: Boolean
+        get() = if (null != script) {
+            script!!.isUndefined
         } else {
-            return !Script.NATIVE_SCRIPTS.contains(this.getScriptName().toIString());
+            !Script.NATIVE_SCRIPTS.contains(this.scriptName.toIString())
         }
-    }
+    private val UNKNOWN2BITS: Short
 
-    final private short UNKNOWN2BITS;
-    final private short UNKNOWN;
-    final private RefID REFID;
-    final private byte UNKNOWN_BYTE;
-    @Nullable
-    final private Byte UNKNOWN_FO_BYTE;
-    private ScriptData data;
+    /**
+     * @return The unknown short field; if it's -1, the RefID field may not be
+     * valid.
+     */
+    val unknown: Short
 
-    static final private java.util.function.Predicate<MemberDesc> isCanary = (desc -> desc.getName().equals("::iPapyrusDataVerification_var"));
-
-    static final private Logger LOG = Logger.getLogger(ScriptInstance.class.getCanonicalName());
+    /**
+     * @return The RefID of the papyrus element.
+     */
+    val refID: RefID
+    private val UNKNOWN_BYTE: Byte
+    private var UNKNOWN_FO_BYTE: Byte? = null
+    /**
+     * @return The `ScriptData` for the instance.
+     */
+    /**
+     * Sets the data field.
+     *
+     * @param newData The new value for the data field.
+     */
+    var data: ScriptData? = null
 
     /**
      * Describes a script instance's data in a Skyrim savegame.
      *
      * @author Mark Fairchild
      */
-    final public class ScriptData implements PapyrusDataFor<ScriptInstance> {
-
+    inner class ScriptData(input: ByteBuffer, context: PapyrusContext) : PapyrusDataFor<ScriptInstance?> {
         /**
-         * Creates a new <code>ScriptData</code> by reading from a
-         * <code>ByteBuffer</code>. No error handling is performed.
-         *
-         * @param input The input stream.
-         * @param context The <code>PapyrusContext</code> info.
-         * @throws PapyrusElementException
-         * @throws PapyrusFormatException
-         */
-        public ScriptData(@NotNull ByteBuffer input, @NotNull PapyrusContext context) throws PapyrusElementException, PapyrusFormatException {
-            Objects.requireNonNull(input);
-            Objects.requireNonNull(context);
-            this.FLAG = input.get();
-            this.TYPE = context.readTString(input);
-            this.UNKNOWN1 = input.getInt();
-            this.UNKNOWN2 = ((this.FLAG & 0x04) != 0 ? input.getInt() : 0);
-
-            try {
-                int count = input.getInt();
-                this.VARIABLES = Variable.readList(input, count, context);
-            } catch (ListException ex) {
-                throw new PapyrusElementException("Couldn't read struct variables.", ex, this);
-            }
-        }
-
-        /**
-         * @see ess.Element#write(resaver.ByteBuffer)
+         * @see ess.Element.write
          * @param output The output stream.
          */
-        @Override
-        public void write(@NotNull ByteBuffer output) {
-            getID().write(output);
-            output.put(this.FLAG);
-            this.TYPE.write(output);
-            output.putInt(this.UNKNOWN1);
-
-            if ((this.FLAG & 0x04) != 0) {
-                output.putInt(this.UNKNOWN2);
+        override fun write(output: ByteBuffer?) {
+            iD.write(output)
+            output?.put(FLAG)
+            this.type.write(output)
+            output?.putInt(UNKNOWN1)
+            if ((FLAG and 0x04.toByte()).toInt() != 0) {
+                output?.putInt(UNKNOWN2)
             }
-
-            output.putInt(this.VARIABLES.size());
-            this.VARIABLES.forEach(var -> var.write(output));
+            output?.putInt(VARIABLES.size)
+            VARIABLES.forEach(Consumer { `var`: Variable? -> `var`!!.write(output) })
         }
 
         /**
-         * @see ess.Element#calculateSize()
-         * @return The size of the <code>Element</code> in bytes.
+         * @see ess.Element.calculateSize
+         * @return The size of the `Element` in bytes.
          */
-        @Override
-        public int calculateSize() {
-            int sum = 9;
-            sum += getID().calculateSize();
-            sum += ((this.FLAG & 0x04) != 0 ? 4 : 0);
-            sum += this.TYPE.calculateSize();
-            int result = 0;
-            for (Variable var : this.VARIABLES) {
-                int i = var.calculateSize();
-                result += i;
+        override fun calculateSize(): Int {
+            var sum = 9
+            sum += iD.calculateSize()
+            sum += if ((FLAG and 0x04.toByte()).toInt() != 0) 4 else 0
+            sum += this.type.calculateSize()
+            var result = 0
+            for (`var` in VARIABLES) {
+                val i = `var`!!.calculateSize()
+                result += i
             }
-            sum += result;
-            return sum;
+            sum += result
+            return sum
         }
+
+        /**
+         * @see Object.toString
+         * @return
+         */
+        override fun toString(): String {
+            val BUILDER = StringBuilder()
+            BUILDER.append("SCRIPTDATA\n")
+            BUILDER.append(String.format("ID = %s\n", iD))
+            BUILDER.append(String.format("flag= %d\n", FLAG))
+            BUILDER.append(String.format("type = %s\n", this.type))
+            BUILDER.append(String.format("unknown1 = %d\n", UNKNOWN1))
+            BUILDER.append(String.format("unknown2 = %d\n\n", UNKNOWN2))
+            VARIABLES.forEach(Consumer { `var`: Variable? -> BUILDER.append(String.format("%s\n", `var`)) })
+            return BUILDER.toString()
+        }
+
+        //final private EID ID;
+        private val FLAG: Byte
 
         /**
          * @return The type of the script.
          */
-        public TString getType() {
-            return this.TYPE;
-        }
+        val type: TString
+        private val UNKNOWN1: Int
+        private val UNKNOWN2: Int
+        var VARIABLES: MutableList<Variable?> = mutableListOf()
 
         /**
-         * @see Object#toString()
-         * @return
+         * Creates a new `ScriptData` by reading from a
+         * `ByteBuffer`. No error handling is performed.
+         *
+         * @param input The input stream.
+         * @param context The `PapyrusContext` info.
+         * @throws PapyrusElementException
+         * @throws PapyrusFormatException
          */
-        @NotNull
-        @Override
-        public String toString() {
-            final StringBuilder BUILDER = new StringBuilder();
-            BUILDER.append("SCRIPTDATA\n");
-            BUILDER.append(String.format("ID = %s\n", getID()));
-            BUILDER.append(String.format("flag= %d\n", this.FLAG));
-            BUILDER.append(String.format("type = %s\n", this.TYPE));
-            BUILDER.append(String.format("unknown1 = %d\n", this.UNKNOWN1));
-            BUILDER.append(String.format("unknown2 = %d\n\n", this.UNKNOWN2));
-            this.VARIABLES.forEach(var -> BUILDER.append(String.format("%s\n", var)));
-            return BUILDER.toString();
+        init {
+            Objects.requireNonNull(input)
+            Objects.requireNonNull(context)
+            FLAG = input.get()
+            this.type = context.readTString(input)
+            UNKNOWN1 = input.int
+            UNKNOWN2 = if ((FLAG and 0x04.toByte()).toInt() != 0) input.int else 0
+            try {
+                val count = input.int
+                VARIABLES = readList(input, count, context).toMutableList()
+            } catch (ex: ListException) {
+                throw PapyrusElementException("Couldn't read struct variables.", ex, this)
+            }
         }
+    }
 
-        //final private EID ID;
-        final private byte FLAG;
-        final private TString TYPE;
-        final private int UNKNOWN1;
-        final private int UNKNOWN2;
-        @NotNull
-        final private List<Variable> VARIABLES;
+    companion object {
+        private val isCanary = Predicate { desc: MemberDesc -> desc.name.equals("::iPapyrusDataVerification_var") }
+        private val LOG = Logger.getLogger(ScriptInstance::class.java.canonicalName)
+    }
 
+    /**
+     * Creates a new `ScriptInstances` by reading from a
+     * `ByteBuffer`. No error handling is performed.
+     *
+     * @param input The input stream.
+     * @param scripts The `ScriptMap` containing the definitions.
+     * @param context The `PapyrusContext` info.
+     * @throws PapyrusFormatException
+     */
+    init {
+        UNKNOWN2BITS = input.short
+        unknown = input.short
+        refID = context.readRefID(input)
+        UNKNOWN_BYTE = input.get()
+        UNKNOWN_FO_BYTE = if (context.game!!.isFO4) {
+            if ((UNKNOWN2BITS and 0x3.toShort()) == 0x3.toShort()) {
+                input.get()
+            } else {
+                null
+            }
+        } else {
+            null
+        }
     }
 }
