@@ -22,7 +22,7 @@ import ess.papyrus.EID.Companion.make8Byte
 import ess.papyrus.EID.Companion.read4byte
 import ess.papyrus.EID.Companion.read8byte
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  *
@@ -37,7 +37,7 @@ class PapyrusContext : ESSContext {
      * @param papyrus
      */
     constructor(context: ESSContext?, papyrus: Papyrus?) : super(context) {
-        this.papyrus = Objects.requireNonNull(papyrus)!!
+        this.papyrus = papyrus!!
     }
 
     /**
@@ -47,7 +47,7 @@ class PapyrusContext : ESSContext {
      * @param context
      */
     constructor(context: PapyrusContext) : super(context) {
-        papyrus = Objects.requireNonNull(context.papyrus)
+        papyrus = context.papyrus
     }
 
     /**

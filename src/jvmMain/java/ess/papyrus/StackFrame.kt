@@ -29,8 +29,6 @@ import resaver.pex.Opcode
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.regex.Pattern
-import java.util.stream.Collectors
-import java.util.stream.Stream
 
 /**
  * Describes a stack frame in a Skyrim savegame.
@@ -92,34 +90,18 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         sum += docString.calculateSize()
         sum += 5
         sum += 2
-        var sum1 = 0
-        for (FN_PARAM in FN_PARAMS) {
-            val calculateSize = FN_PARAM.calculateSize()
-            sum1 += calculateSize
-        }
+        val sum1 = FN_PARAMS.sumOf { it.calculateSize() }
         sum += sum1
         sum += 2
-        var result1 = 0
-        for (FN_LOCAL in FN_LOCALS) {
-            val calculateSize = FN_LOCAL.calculateSize()
-            result1 += calculateSize
-        }
+        val result1 = FN_LOCALS.sumOf { it.calculateSize() }
         sum += result1
         sum += 2
-        var sum2 = 0
-        for (opcodeData in CODE) {
-            val calculateSize = opcodeData.calculateSize()
-            sum2 += calculateSize
-        }
+        val sum2 = CODE.sumOf { it.calculateSize() }
         sum += sum2
         sum += 4
         sum += owner.calculateSize()
         sum += 4
-        var result = 0
-        for (`var` in VARIABLES) {
-            val i = `var`!!.calculateSize()
-            result += i
-        }
+        val result = VARIABLES.sumOf { it!!.calculateSize() }
         sum += result
         return sum
     }
@@ -149,33 +131,35 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @return The function parameter list.
      */
     val functionParams: List<FunctionParam>
-        get() = Collections.unmodifiableList(FN_PARAMS)
+        get() = FN_PARAMS
 
     /**
      * @return The function locals list.
      */
     val functionLocals: List<FunctionLocal>
-        get() = Collections.unmodifiableList(FN_LOCALS)
+        get() = FN_LOCALS
 
     /**
      * @return The function opcode data list.
      */
     val opcodeData: List<OpcodeData>
-        get() = Collections.unmodifiableList(CODE)
+        get() = CODE
 
     /**
      * @see HasVariables.getVariables
      * @return
      */
     override val variables: List<Variable>
-        get() = if (VARIABLES == null) emptyList() else VARIABLES.filterNotNull()
+        get() = VARIABLES.filterNotNull()
 
     /**
      * @see HasVariables.getDescriptors
      * @return
      */
     override val descriptors: List<MemberDesc>
-        get() = Stream.concat(functionParams.stream(), functionLocals.stream()).collect(Collectors.toList())
+        get() {
+            return functionParams + functionLocals
+        }
 
     /**
      * @see HasVariables.setVariable
@@ -183,11 +167,8 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @param newVar
      */
     override fun setVariable(index: Int, newVar: Variable?) {
-        if (VARIABLES == null) {
-            throw NullPointerException("The variable list is missing.")
-        }
         require(!(index < 0 || index >= VARIABLES.size)) { "Invalid variable index: $index" }
-        VARIABLES.set(index, newVar)
+        VARIABLES[index] = newVar
     }
 
     /**
@@ -310,7 +291,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         if (isUndefined) {
             BUILDER.append("#")
         }
-        BUILDER.append(String.format("%s.%s()", scriptName, event))
+        BUILDER.append("$scriptName.$event()")
         if (isStatic) {
             BUILDER.append(" static")
         }
@@ -341,24 +322,24 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                 BUILDER.append("<p>Owner: <em>UNOWNED</em></p>")
             }
             null != OWNER -> {
-                BUILDER.append(String.format("<p>Owner: %s</p>", OWNER?.toHTML(this)))
+                BUILDER.append("<p>Owner: ${OWNER?.toHTML(this)}</p>")
             }
             isStatic -> {
                 BUILDER.append("<p>Static method, no owner.</p>")
             }
             else -> {
-                BUILDER.append(String.format("<p>Owner: %s</p>", owner.toHTML(this)))
+                BUILDER.append("<p>Owner: ${owner.toHTML(this)}</p>")
             }
         }
         BUILDER.append("<p>")
-        BUILDER.append(String.format("Script: %s<br/>", script?.toHTML(this) ?: scriptName))
-        BUILDER.append(String.format("Base: %s<br/>", BASENAME))
-        BUILDER.append(String.format("Event: %s<br/>", event))
-        BUILDER.append(String.format("Status: %s<br/>", STATUS))
-        BUILDER.append(String.format("Flag: %s<br/>", FLAG))
-        BUILDER.append(String.format("Function type: %s<br/>", FN_Var_TYPE))
-        BUILDER.append(String.format("Function return type: %s<br/>", RETURNTYPE))
-        BUILDER.append(String.format("Function docstring: %s<br/>", docString))
+        BUILDER.append("Script: ${script?.toHTML(this) ?: scriptName}<br/>")
+        BUILDER.append("Base: $BASENAME<br/>")
+        BUILDER.append("Event: $event<br/>")
+        BUILDER.append("Status: $STATUS<br/>")
+        BUILDER.append("Flag: $FLAG<br/>")
+        BUILDER.append("Function type: $FN_Var_TYPE<br/>")
+        BUILDER.append("Function return type: $RETURNTYPE<br/>")
+        BUILDER.append("Function docstring: $docString<br/>")
         BUILDER.append(
             String.format(
                 "%d parameters, %d locals, %d values.<br/>",
@@ -367,9 +348,9 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                 VARIABLES.size
             )
         )
-        BUILDER.append(String.format("Status: %s<br/>", STATUS))
-        BUILDER.append(String.format("Function flags: %s<br/>", FN_FLAGS))
-        BUILDER.append(String.format("Function user flags:<br/>%s", FN_USERFLAGS.toHTML()))
+        BUILDER.append("Status: $STATUS<br/>")
+        BUILDER.append("Function flags: $FN_FLAGS<br/>")
+        BUILDER.append("Function user flags:<br/>${FN_USERFLAGS.toHTML()}")
         BUILDER.append(String.format("Opcode version: %d.%d<br/>", OPCODE_MAJORVERSION, OPCODE_MINORVERSION))
         BUILDER.append("</p>")
         if (CODE.size > 0) {
@@ -377,11 +358,11 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
             BUILDER.append("<code><pre>")
             val OPS: List<OpcodeData> = ArrayList(CODE)
             for (opcodeData in OPS.subList(0, PTR)) {
-                BUILDER.append(String.format("   %s\n", opcodeData))
+                BUILDER.append("   $opcodeData\n")
             }
-            BUILDER.append(String.format("==><b>%s</b>\n", OPS[PTR]))
+            BUILDER.append("==><b>${OPS[PTR]}</b>\n")
             for (v in OPS.subList(PTR + 1, CODE.size)) {
-                BUILDER.append(String.format("   %s\n", v))
+                BUILDER.append("   $v\n")
             }
             BUILDER.append("</pre></code>")
         } else {
@@ -516,28 +497,28 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s + %s", operand1, operand2)
+                    term = "$operand1 + $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.ISUB, Opcode.FSUB -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s - %s", operand1, operand2)
+                    term = "$operand1 - $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.IMUL, Opcode.FMUL -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s * %s", operand1, operand2)
+                    term = "$operand1 * $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.IDIV, Opcode.FDIV -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s / %s", operand1, operand2)
+                    term = "$operand1 / $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.IMOD -> {
@@ -562,7 +543,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                         result1.add(paren1)
                     }
                     subArgs = result1
-                    term = String.format("%s.%s%s", obj, method, paramList(subArgs))
+                    term = "$obj.$method${paramList(subArgs)}"
                     processTerm(args, terms, 2, term)
                 }
                 Opcode.CALLPARENT -> {
@@ -575,7 +556,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                         list1.add(s)
                     }
                     subArgs = list1
-                    term = String.format("parent.%s%s", method, paramList(subArgs))
+                    term = "parent.$method${paramList(subArgs)}"
                     processTerm(args, terms, 1, term)
                 }
                 Opcode.CALLSTATIC -> {
@@ -589,22 +570,22 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                         list.add(paren)
                     }
                     subArgs = list
-                    term = String.format("%s.%s%s", obj, method, paramList(subArgs))
+                    term = "$obj.$method${paramList(subArgs)}"
                     processTerm(args, terms, 2, term)
                 }
                 Opcode.NOT -> {
                     replaceVariables(args, terms, 0)
-                    term = String.format("!%s", args[1]!!.paren())
+                    term = "!${args[1]!!.paren()}"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.INEG, Opcode.FNEG -> {
                     replaceVariables(args, terms, 0)
-                    term = String.format("-%s", args[1]!!.paren())
+                    term = "-${args[1]!!.paren()}"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.ASSIGN -> {
                     replaceVariables(args, terms, 0)
-                    term = String.format("%s", args[1])
+                    term = "${args[1]}"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CAST -> {
@@ -622,7 +603,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     term = if (type.equals("bool")) {
                         arg
                     } else {
-                        String.format("(%s)%s", type, arg)
+                        "($type)$arg"
                     }
                     processTerm(args, terms, 0, term)
                 }
@@ -630,7 +611,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 2)
                     obj = args[1]!!.toValueString()
                     prop = args[0]!!.toValueString()
-                    term = String.format("%s.%s", obj, prop)
+                    term = "$obj.$prop"
                     processTerm(args, terms, 2, term)
                 }
                 Opcode.PROPSET -> {
@@ -641,35 +622,35 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s == %s", operand1, operand2)
+                    term = "$operand1 == $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CMP_LT -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s < %s", operand1, operand2)
+                    term = "$operand1 < $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CMP_LE -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s <= %s", operand1, operand2)
+                    term = "$operand1 <= $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CMP_GT -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s > %s", operand1, operand2)
+                    term = "$operand1 > $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.CMP_GE -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[1]!!.paren()
                     operand2 = args[2]!!.paren()
-                    term = String.format("%s >= %s", operand1, operand2)
+                    term = "$operand1 >= $operand2"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.ARR_CREATE -> {
@@ -684,19 +665,19 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     }
                     type = found.get().type.toWString()
                     val subtype = type.toString().substring(0, type.length - 2)
-                    term = String.format("new %s[%s]", subtype, size)
+                    term = "new $subtype[$size]"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.ARR_LENGTH -> {
                     replaceVariables(args, terms, 0)
-                    term = String.format("%s.length", args[1])
+                    term = "${args[1]}.length"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.ARR_GET -> {
                     replaceVariables(args, terms, 0)
                     operand1 = args[2]!!.toValueString()
                     operand2 = args[1]!!.toValueString()
-                    term = String.format("%s[%s]", operand2, operand1)
+                    term = "$operand2[$operand1]"
                     processTerm(args, terms, 0, term)
                 }
                 Opcode.ARR_SET -> {
