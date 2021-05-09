@@ -13,44 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.util.*;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
-import javax.swing.tree.TreeModel;
-import ess.Element;
-import ess.ESS;
-import ess.papyrus.*;
-
-import java.util.function.Predicate;
-import java.util.logging.Logger;
-import javax.swing.tree.TreePath;
-import ess.Plugin;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import ess.ESS
+import ess.Element
+import ess.Plugin
+import ess.papyrus.ActiveScript
+import ess.papyrus.FunctionMessage
+import ess.papyrus.HasID
+import ess.papyrus.SuspendedStack
+import java.util.function.Predicate
+import java.util.logging.Logger
+import javax.swing.event.TreeModelEvent
+import javax.swing.event.TreeModelListener
+import javax.swing.tree.TreeModel
+import javax.swing.tree.TreePath
 
 /**
- * A <code>TreeModel</code> that supports filtering.
+ * A `TreeModel` that supports filtering.
  *
  * @author Mark Fairchild
  */
-final public class FilterTreeModel implements TreeModel {
-
-    /**
-     *
-     */
-    public FilterTreeModel() {
-        this.LISTENERS = new java.util.LinkedList<>();
-        this.root = null;
-    }
-
+class FilterTreeModel : TreeModel {
     /**
      *
      * @param elements
      */
-    public void deleteElements(@NotNull Set<? extends Element> elements) {
-        this.deleteElements(this.root, elements);
+    fun deleteElements(elements: Set<Element>) {
+        this.deleteElements(this.root!!, elements)
     }
 
     /**
@@ -58,173 +48,155 @@ final public class FilterTreeModel implements TreeModel {
      * @param node
      * @param elements
      */
-    private void deleteElements(@NotNull Node node, @NotNull Set<? extends Element> elements) {
-        assert !node.isLeaf();
-
-        if (!node.isLeaf()) {
-            Iterator<Node> iterator = node.getChildren().iterator();
+    private fun deleteElements(node: Node, elements: Set<Element>) {
+        assert(!node.isLeaf)
+        if (!node.isLeaf) {
+            val iterator:MutableIterator<Node?> = node.children!!.iterator()
             while (iterator.hasNext()) {
-                Node child = iterator.next();
-                if (child.hasElement() && elements.contains(child.getElement())) {
-                    TreePath path = this.getPath(child);
-                    iterator.remove();
-                    node.countLeaves();
-                    this.fireTreeNodesRemoved(new TreeModelEvent(this, path));
-                    LOG.info(String.format("Deleting treepath: %s", path));
-                } else if (!child.isLeaf()) {
-                    this.deleteElements(child, elements);
+                val child = iterator.next()!!
+                if (child.hasElement() && elements.contains(child.element)) {
+                    val path = getPath(child)
+                    iterator.remove()
+                    node.countLeaves()
+                    fireTreeNodesRemoved(TreeModelEvent(this, path))
+                    LOG.info(String.format("Deleting treepath: %s", path))
+                } else if (!child.isLeaf) {
+                    this.deleteElements(child, elements)
                 }
             }
         }
     }
 
     /**
-     * Transforms a <code>TreePath</code> array into a map of elements and their
+     * Transforms a `TreePath` array into a map of elements and their
      * corresponding nodes.
      *
      * @param paths
      * @return
      */
-    @NotNull
-    public Map<Element, Node> parsePaths(@NotNull TreePath[] paths) {
-        Objects.requireNonNull(paths);
-        final Map<Element, Node> ELEMENTS = new LinkedHashMap<>(paths.length);
-
-        for (TreePath path : paths) {
-            if (null == path) {
-                continue;
-            }
-
-            final Node NODE = (Node) path.getLastPathComponent();
-
+    fun parsePaths(paths: Array<TreePath>): Map<Element, Node> {
+        val ELEMENTS: MutableMap<Element, Node> = mutableMapOf()
+        for (path in paths) {
+            val NODE = path.lastPathComponent as Node
             if (NODE.hasElement()) {
-                ELEMENTS.put(NODE.getElement(), NODE);
+                if(NODE.element != null) {
+                    ELEMENTS[NODE.element!!] = NODE
+                }
             } else {
-                ELEMENTS.putAll(this.parsePath(NODE));
+                ELEMENTS.putAll(parsePath(NODE))
             }
         }
-
-        return ELEMENTS;
+        return ELEMENTS
     }
 
     /**
-     * Searches for the <code>Node</code> that represents a specified
-     * <code>Element</code> and returns it.
+     * Searches for the `Node` that represents a specified
+     * `Element` and returns it.
      *
-     * @param element The <code>Element</code> to find.
-     * @return The corresponding <code>Node</code> or null if the
-     * <code>Element</code> was not found.
+     * @param element The `Element` to find.
+     * @return The corresponding `Node` or null if the
+     * `Element` was not found.
      */
-    @Nullable
-    public TreePath findPath(Element element) {
+    fun findPath(element: Element?): TreePath? {
         if (null == this.root) {
-            return null;
-        } else if (this.root.hasElement(element)) {
-            return getPath(this.root);
+            return null
+        } else if (this.root!!.hasElement(element)) {
+            return getPath(this.root!!)
         }
-
-        TreePath path = this.findPath(this.root, element);
+        var path = this.findPath(this.root!!, element)
         if (null != path) {
-            return path;
+            return path
         }
-
-        path = this.findPathUnfiltered(this.root, element);
+        path = findPathUnfiltered(this.root!!, element)
         if (null != path) {
             //this.root.defilter(path, 0);
-            this.defilter(path);
-            return path;
+            defilter(path)
+            return path
         }
-
-        return null;
+        return null
     }
 
     /**
-     * Finds a path from a <code>Node</code> down to an <code>Element</code>.
+     * Finds a path from a `Node` down to an `Element`.
      *
-     * @param node The <code>Node</code> to search from.
-     * @param element The <code>Element</code> for which to search.
-     * @return A <code>TreePath</code> to the <code>Element</code>, or
-     * <code>null</code> if it is not a leaf of this node.
+     * @param node The `Node` to search from.
+     * @param element The `Element` for which to search.
+     * @return A `TreePath` to the `Element`, or
+     * `null` if it is not a leaf of this node.
      */
-    @Nullable
-    private TreePath findPath(@NotNull Node node, Element element) {
-        if (node == this.root) {
-            for (Node c : node.getChildren()) {
-                if (c.isVisible()) {
-                    TreePath path = findPath(c, element);
+    private fun findPath(node: Node, element: Element?): TreePath? {
+        if (node === this.root) {
+            for (c in node.children!!) {
+                if (c?.isVisible == true) {
+                    val path = findPath(c, element)
                     if (path != null) {
-                        return path;
+                        return path
                     }
                 }
             }
-            return null;
-
-        } else if (!node.isLeaf()) {
-            for (Node child : node.getChildren()) {
-                if (child.isVisible()) {
+            return null
+        } else if (!node.isLeaf) {
+            for (child in node.children!!) {
+                if (child?.isVisible == true) {
                     if (child.hasElement(element)) {
-                        return getPath(child);
+                        return getPath(child)
                     }
-                    TreePath path = this.findPath(child, element);
+                    val path = this.findPath(child, element)
                     if (path != null) {
-                        return path;
+                        return path
                     }
                 }
             }
-            return null;
+            return null
         }
-
-        return null;
+        return null
     }
 
     /**
-     * Finds a path from a <code>Node</code> to an <code>Element</code>,
+     * Finds a path from a `Node` to an `Element`,
      * ignoring filtering.
      *
-     * @param node The <code>Node</code> to search from.
-     * @param element The <code>Element</code> for which to search.
-     * @return A <code>TreePath</code> to the <code>Element</code>, or
-     * <code>null</code> if it is not a leaf of this node.
+     * @param node The `Node` to search from.
+     * @param element The `Element` for which to search.
+     * @return A `TreePath` to the `Element`, or
+     * `null` if it is not a leaf of this node.
      */
-    @Nullable
-    private TreePath findPathUnfiltered(@NotNull Node node, Element element) {
-        if (node == this.root) {
-            for (Node v : node.getChildren()) {
-                TreePath pathUnfiltered = findPathUnfiltered(v, element);
+    private fun findPathUnfiltered(node: Node, element: Element?): TreePath? {
+        if (node === this.root) {
+            for (v in node.children!!) {
+                val pathUnfiltered = v?.let { findPathUnfiltered(it, element) }
                 if (pathUnfiltered != null) {
-                    return pathUnfiltered;
+                    return pathUnfiltered
                 }
             }
-            return null;
-
-        } else if (!node.isLeaf()) {
-            for (Node child : node.getChildren()) {
-                if (child.hasElement(element)) {
-                    return getPath(child);
+            return null
+        } else if (!node.isLeaf) {
+            for (child in node.children!!) {
+                if (child?.hasElement(element) == true) {
+                    return getPath(child)
                 }
-                TreePath path = this.findPathUnfiltered(child, element);
+                val path = child?.let { findPathUnfiltered(it, element) }
                 if (path != null) {
-                    return path;
+                    return path
                 }
             }
-            return null;
+            return null
         }
-
-        return null;
+        return null
     }
 
     /**
-     * Generates a <code>TreePath</code> from the root to a specified
-     * <code>Node</code>.
+     * Generates a `TreePath` from the root to a specified
+     * `Node`.
      *
-     * @param node The <code>Node</code> to search from.
+     * @param node The `Node` to search from.
      * @return
      */
-    public TreePath getPath(@NotNull Node node) {
-        if (node.getParent() == null) {
-            return new TreePath(node);
+    fun getPath(node: Node): TreePath {
+        return if (node.parent == null) {
+            TreePath(node)
         } else {
-            return this.getPath(node.getParent()).pathByAddingChild(node);
+            getPath(node.parent!!).pathByAddingChild(node)
         }
     }
 
@@ -233,66 +205,59 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @return
      */
-    @NotNull
-    public List<Element> getElements() {
-        if (null == this.root) {
-            return new LinkedList<>();
+    val elements: List<Element?>
+        get() = if (null == this.root) {
+            listOf()
         } else {
-            return this.getElements(this.root);
+            getElements(this.root!!)
         }
-    }
 
     /**
      * Retrieves the node's element and all the elements of its children.
      *
      * @return
      */
-    @NotNull
-    private List<Element> getElements(@NotNull Node node) {
-        List<Element> collected = new LinkedList<>();
-
-        if (node.hasElement() && node.isVisible()) {
-            collected.add(node.getElement());
+    private fun getElements(node: Node): List<Element?> {
+        val collected: MutableList<Element?> = mutableListOf()
+        if (node.hasElement() && node.isVisible) {
+            collected.add(node.element)
         }
-
-        if (!node.isLeaf()) {
-            for (Node n : node.getChildren()) {
-                if (n.isVisible()) {
-                    if (n.hasElement() && n.isLeaf()) {
-                        collected.add(n.getElement());
+        if (!node.isLeaf) {
+            for (n in node.children!!) {
+                if (n?.isVisible == true) {
+                    if (n.hasElement() && n.isLeaf) {
+                        collected.add(n.element)
                     } else {
-                        collected.addAll(this.getElements(n));
+                        collected.addAll(getElements(n))
                     }
                 }
             }
         }
-
-        return collected;
+        return collected
     }
 
     /**
      * Refreshes names.
      *
      */
-    public void refresh() {
+    fun refresh() {
         if (null == this.root) {
-            return;
+            return
         }
-        this.root.countLeaves();
-        this.fireTreeNodesChanged(new TreeModelEvent(this.root, this.getPath(this.root)));
+        this.root!!.countLeaves()
+        fireTreeNodesChanged(TreeModelEvent(this.root, getPath(this.root!!)))
     }
 
     /**
      * Removes all filtering.
      *
      */
-    public void removeFilter() {
+    fun removeFilter() {
         if (null == this.root) {
-            return;
+            return
         }
-
-        this.removeFilter(this.root);
-        this.fireTreeNodesChanged(new TreeModelEvent(this.root, this.getPath(this.root)));
+        this.removeFilter(this.root!!)
+        fireTreeNodesChanged(TreeModelEvent(this.root, getPath(this.root!!)))
     }
 
     /**
@@ -300,11 +265,15 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @param
      */
-    private void removeFilter(@NotNull Node node) {
-        node.setVisible(true);
-        if (!node.isLeaf()) {
-            node.getChildren().forEach(this::removeFilter);
-            node.countLeaves();
+    private fun removeFilter(node: Node) {
+        node.isVisible = true
+        if (!node.isLeaf) {
+            node.children!!.forEach { node: Node? ->
+                if (node != null) {
+                    this.removeFilter(node)
+                }
+            }
+            node.countLeaves()
         }
     }
 
@@ -313,58 +282,62 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @param filter The setFilter that determines which nodes to keep.
      */
-    public void setFilter(@NotNull Predicate<Node> filter) {
-        Objects.requireNonNull(filter);
-
+    fun setFilter(filter: Predicate<Node>) {
         if (null == this.root) {
-            return;
+            return
         }
-
-        for (Node node : this.root.getChildren()) {
-            this.setFilter(node, filter);
+        for (node in this.root!!.children!!) {
+            if (node != null) {
+                this.setFilter(node, filter)
+            }
         }
-        this.root.countLeaves();
-
-        this.LISTENERS.forEach(l -> l.treeStructureChanged(new TreeModelEvent(this.root, this.getPath(this.root))));
+        this.root!!.countLeaves()
+        LISTENERS.forEach { l: TreeModelListener ->
+            l.treeStructureChanged(
+                TreeModelEvent(
+                    this.root, getPath(
+                        this.root!!
+                    )
+                )
+            )
+        }
     }
 
     /**
      * Filters the node and its contents. NEVER CALL THIS ON THE ROOT DIRECTLY.
      *
-     * @param node The <code>Node</code> to search.
+     * @param node The `Node` to search.
      * @param filter The setFilter that determines which nodes to keep.
      * @return True if the node is still visible.
      */
-    private void setFilter(@NotNull Node node, @NotNull Predicate<Node> filter) {
-        Objects.requireNonNull(filter);
+    private fun setFilter(node: Node, filter: Predicate<Node>) {
 
         // Determine if the node itself would be filtered out.
         // Never setFilter the root!
-        boolean nodeVisible = filter.test(node);
-
-        if (node.isLeaf()) {
+        val nodeVisible = filter.test(node)
+        if (node.isLeaf) {
             // If there are no children, finish up.
-            node.setVisible(nodeVisible);
-
+            node.isVisible = nodeVisible
         } else if (node.hasElement() && nodeVisible) {
             // For Elements that contain other elements, don't setFilter
             // children at all unless the Element itself is filtered.
             // Don't apply this to the root!
-            node.setVisible(true);
-
+            node.isVisible = true
         } else {
             // For folders, determine which children to setFilter.
-            for (Node child : node.getChildren()) {
-                this.setFilter(child, filter);
-            }
-            boolean hasVisibleChildren = false;
-            for (Node node1 : node.getChildren()) {
-                if (node1.isVisible()) {
-                    hasVisibleChildren = true;
-                    break;
+            for (child in node.children!!) {
+                if (child != null) {
+                    this.setFilter(child, filter)
                 }
             }
-            node.setVisible(nodeVisible || hasVisibleChildren);
+            var hasVisibleChildren = false
+            for (node1 in node.children!!) {
+                if (node1!!.isVisible) {
+                    hasVisibleChildren = true
+                    break
+                }
+            }
+            node.isVisible = nodeVisible || hasVisibleChildren
         }
     }
 
@@ -374,51 +347,43 @@ final public class FilterTreeModel implements TreeModel {
      * @param path
      * @return
      */
-    @Nullable
-    public TreePath rebuildPath(@NotNull TreePath path) {
-        Objects.requireNonNull(path);
-        if (path.getPathCount() < 1) {
-            return null;
+    fun rebuildPath(path: TreePath): TreePath? {
+        if (path.pathCount < 1) {
+            return null
         }
-
-        TreePath newPath = new TreePath(this.root);
-        Node newNode = this.root;
-
-        for (int i = 1; i < path.getPathCount(); i++) {
-            Node originalNode = (Node) path.getPathComponent(i);
-            Optional<Node> child = Optional.empty();
-            for (Node node : newNode.getChildren()) {
-                if (node.getName().equals(originalNode.getName()) || (node.hasElement(originalNode.getElement()))) {
-                    child = Optional.of(node);
-                    break;
+        var newPath = TreePath(this.root!!)
+        var newNode = this.root
+        for (i in 1 until path.pathCount) {
+            val originalNode = path.getPathComponent(i) as Node
+            var child: Node? = null
+            for (node in newNode!!.children!!) {
+                if (node!!.name == originalNode.name || node.hasElement(originalNode.element)) {
+                    child = node
+                    break
                 }
             }
-
-            if (!child.isPresent()) {
-                if (originalNode.hasElement() && originalNode.getElement() instanceof HasID) {
-                    HasID original = (HasID) originalNode.getElement();
-                    Optional<Node> found = Optional.empty();
-                    for (Node n : newNode.getChildren()) {
-                        if (n.hasElement() && n.getElement() instanceof HasID) {
-                            if (((HasID) n.getElement()).getID() == original.getID()) {
-                                found = Optional.of(n);
-                                break;
+            if (child == null) {
+                if (originalNode.hasElement() && originalNode.element is HasID) {
+                    val original = originalNode.element as HasID?
+                    var found: Node? = null
+                    for (n in newNode.children!!) {
+                        if (n!!.hasElement() && n.element is HasID) {
+                            if ((n.element as HasID?)!!.iD === original!!.iD) {
+                                found = n
+                                break
                             }
                         }
                     }
-                    child = found;
+                    child = found
                 }
             }
-
-            if (!child.isPresent()) {
-                return newPath;
+            if (child == null) {
+                return newPath
             }
-
-            newNode = child.get();
-            newPath = newPath.pathByAddingChild(newNode);
+            newNode = child
+            newPath = newPath.pathByAddingChild(newNode)
         }
-
-        return newPath;
+        return newPath
     }
 
     /**
@@ -426,643 +391,506 @@ final public class FilterTreeModel implements TreeModel {
      *
      * @param path
      */
-    public void defilter(@NotNull TreePath path) {
-        final TreePath PARENT = path.getParentPath();
-        if (PARENT != null) {
-            defilter(PARENT);
-        }
-
-        final Node NODE = (Node) path.getLastPathComponent();
-        if (!NODE.isVisible()) {
-            NODE.setVisible(true);
-            fireTreeNodesInserted(new TreeModelEvent(this, path));
+    fun defilter(path: TreePath) {
+        val PARENT = path.parentPath
+        PARENT?.let { defilter(it) }
+        val NODE = path.lastPathComponent as Node
+        if (!NODE.isVisible) {
+            NODE.isVisible = true
+            fireTreeNodesInserted(TreeModelEvent(this, path))
         }
     }
 
     /**
-     * @param node The <code>Node</code> to search.
-     * @return A <code>List</code> of every <code>Element</code> contained by
-     * the descendents of the <code>Node</code> (not including the node itself).
+     * @param node The `Node` to search.
+     * @return A `List` of every `Element` contained by
+     * the descendents of the `Node` (not including the node itself).
      */
-    @NotNull
-    private Map<Element, Node> parsePath(@NotNull Node node) {
-        final Map<Element, Node> ELEMENTS = new LinkedHashMap<>();
-
-        if (!node.isLeaf()) {
-            for (Node child : node.getChildren()) {
-                if (child.isVisible()) {
+    private fun parsePath(node: Node): Map<Element, Node> {
+        val ELEMENTS: MutableMap<Element, Node> = mutableMapOf()
+        if (!node.isLeaf) {
+            for (child in node.children!!) {
+                if (child?.isVisible == true) {
                     if (child.hasElement()) {
-                        ELEMENTS.put(child.getElement(), child);
+                        if(child.element != null) {
+                            ELEMENTS[child.element!!] = child
+                        }
                     }
-
-                    ELEMENTS.putAll(this.parsePath(child));
+                    ELEMENTS.putAll(parsePath(child))
                 }
             }
         }
-
-        return ELEMENTS;
+        return ELEMENTS
     }
 
-    @Nullable
-    @Override
-    public Node getRoot() {
-        return this.root;
+    override fun getRoot(): Node? {
+        return this.root
     }
 
-    public void setRoot(Node newRoot) {
-        this.root = Objects.requireNonNull(newRoot);
+    fun setRoot(newRoot: Node?) {
+        this.root = newRoot
     }
 
     /**
      * Retrieves the child at the specified index.
      *
-     * @param parent The parent <code>Node</code>.
+     * @param parent The parent `Node`.
      * @param index The index of the child to retrieve.
-     * @return The child at the specified index, or <code>null</code> if the
+     * @return The child at the specified index, or `null` if the
      * node is a leaf or the index is invalid.
      */
-    @Nullable
-    @Override
-    public Object getChild(Object parent, int index) {
-        assert parent instanceof Node;
-        final Node NODE = (Node) parent;
-
-        if (NODE.isLeaf()) {
-            throw new IllegalStateException("Leaves don't have children!!");
-        }
-
-        int i = 0;
-        for (Node child : NODE.getChildren()) {
-            if (child.isVisible()) {
+    override fun getChild(parent: Any, index: Int): Any? {
+        assert(parent is Node)
+        val NODE = parent as Node
+        check(!NODE.isLeaf) { "Leaves don't have children!!" }
+        var i = 0
+        for (child in NODE.children!!) {
+            if (child!!.isVisible) {
                 if (i == index) {
-                    return child;
+                    return child
                 }
-                i++;
+                i++
             }
         }
-        return null;
+        return null
     }
 
-    @Override
-    public int getChildCount(Object parent) {
-        assert parent instanceof Node;
-        final Node NODE = (Node) parent;
-
-        if (NODE.isLeaf()) {
-            return 0;
+    override fun getChildCount(parent: Any): Int {
+        assert(parent is Node)
+        val NODE = parent as Node
+        return if (NODE.isLeaf) {
+            0
         } else {
-            int count = 0;
-            for (Node child : NODE.getChildren()) {
-                if (child.isVisible()) {
-                    count++;
+            var count = 0
+            for (child in NODE.children!!) {
+                if (child!!.isVisible) {
+                    count++
                 }
             }
-            return count;
+            count
         }
     }
 
-    @Override
-    public int getIndexOfChild(Object parent, Object target) {
-        final Node PARENT = (Node) parent;
-
-        if (!PARENT.isLeaf()) {
-            int i = 0;
-            for (Node child : PARENT.getChildren()) {
-                if (child.isVisible()) {
-                    if (child == target) {
-                        return i;
+    override fun getIndexOfChild(parent: Any, target: Any): Int {
+        val PARENT = parent as Node
+        if (!PARENT.isLeaf) {
+            var i = 0
+            for (child in PARENT.children!!) {
+                if (child!!.isVisible) {
+                    if (child === target) {
+                        return i
                     }
-                    i++;
+                    i++
                 }
             }
         }
-        return -1;
+        return -1
     }
 
-    @Override
-    public boolean isLeaf(Object node) {
-        assert node instanceof Node;
-        final Node NODE = (Node) node;
-        return NODE.isLeaf();
+    override fun isLeaf(node: Any): Boolean {
+        assert(node is Node)
+        val NODE = node as Node
+        return NODE.isLeaf
     }
 
-    @Override
-    public void valueForPathChanged(javax.swing.tree.TreePath path, Object newValue) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    override fun valueForPathChanged(path: TreePath, newValue: Any) {
+        throw UnsupportedOperationException("Not supported yet.")
     }
 
-    @Override
-    public void addTreeModelListener(TreeModelListener l) {
-        this.LISTENERS.add(l);
+    override fun addTreeModelListener(l: TreeModelListener) {
+        LISTENERS.add(l)
     }
 
-    @Override
-    public void removeTreeModelListener(TreeModelListener l) {
-        this.LISTENERS.remove(l);
+    override fun removeTreeModelListener(l: TreeModelListener) {
+        LISTENERS.remove(l)
     }
 
     /**
-     * @see TreeModelListener#treeNodesChanged(javax.swing.event.TreeModelEvent)
+     * @see TreeModelListener.treeNodesChanged
      * @param event
      */
-    private void fireTreeNodesChanged(TreeModelEvent event) {
-        this.LISTENERS.forEach(listener -> listener.treeNodesChanged(event));
+    private fun fireTreeNodesChanged(event: TreeModelEvent) {
+        LISTENERS.forEach { listener: TreeModelListener -> listener.treeNodesChanged(event) }
     }
 
     /**
-     * @see
-     * TreeModelListener#treeNodesInserted(javax.swing.event.TreeModelEvent)
+     * @see  TreeModelListener.treeNodesInserted
      * @param event
      */
-    private void fireTreeNodesInserted(TreeModelEvent event) {
-        this.LISTENERS.forEach(listener -> listener.treeNodesInserted(event));
+    private fun fireTreeNodesInserted(event: TreeModelEvent) {
+        LISTENERS.forEach { listener: TreeModelListener -> listener.treeNodesInserted(event) }
     }
 
     /**
-     * @see TreeModelListener#treeNodesRemoved(javax.swing.event.TreeModelEvent)
+     * @see TreeModelListener.treeNodesRemoved
      * @param event
      */
-    private void fireTreeNodesRemoved(TreeModelEvent event) {
-        this.LISTENERS.forEach(listener -> listener.treeNodesRemoved(event));
+    private fun fireTreeNodesRemoved(event: TreeModelEvent) {
+        LISTENERS.forEach { listener: TreeModelListener -> listener.treeNodesRemoved(event) }
     }
 
-    @Nullable
-    private Node root;
-    @NotNull
-    final List<TreeModelListener> LISTENERS;
+    private var root: Node?
+    val LISTENERS: MutableList<TreeModelListener> = mutableListOf()
 
     /**
-     * A node class that wraps an <code>Element</code> or string provides
+     * A node class that wraps an `Element` or string provides
      * filtering.
      *
      */
-    abstract static public class Node implements Comparable<Node> {
+    abstract class Node : Comparable<Node> {
+        /**
+         * @return The `Collection` of children, or null if the
+         * `Node` is a leaf.
+         */
+        abstract val children: MutableCollection<Node?>?
 
         /**
-         * @return The <code>Collection</code> of children, or null if the
-         * <code>Node</code> is a leaf.
+         * @return A flag indicating if the `Node` has an element.
          */
-        @Nullable
-        abstract public Collection<Node> getChildren();
-
-        /**
-         * @return A flag indicating if the <code>Node</code> has an element.
-         */
-        abstract public boolean hasElement();
+        abstract fun hasElement(): Boolean
 
         /**
          * @return The element, if any.
          */
-        @Nullable
-        abstract public Element getElement();
+        abstract val element: Element?
 
         /**
          * @param <T>
          * @param cls
          * @return The element.
-         */
-        @Nullable
-        public <T> T getAs(@NotNull Class<T> cls) {
-            if (this.hasElement(cls)) {
-                return cls.cast(this.getElement());
+        </T> */
+        fun <T> getAs(cls: Class<T>): T? {
+            return if (this.hasElement(cls)) {
+                cls.cast(element)
             } else {
-                return null;
+                null
             }
         }
 
         /**
-         * @param check The <code>Element</code> to check for.
+         * @param check The `Element` to check for.
          * @return The element.
          */
-        public boolean hasElement(Element check) {
-            return this.hasElement() && this.getElement() == check;
+        fun hasElement(check: Element?): Boolean {
+            return this.hasElement() && element === check
         }
 
         /**
-         * @param check The <code>Element</code> to check for.
+         * @param check The `Element` to check for.
          * @return The element.
          */
-        public boolean hasElement(@NotNull Class<?> check) {
-            return this.hasElement() && check.isInstance(this.getElement());
+        fun hasElement(check: Class<*>): Boolean {
+            return this.hasElement() && check.isInstance(element)
         }
 
         /**
-         * @return A flag indicating if the <code>Node</code> is a leaf.
+         * @return A flag indicating if the `Node` is a leaf.
          */
-        abstract public boolean isLeaf();
+        abstract val isLeaf: Boolean
 
         /**
-         * @return The name of the <code>Node</code>.
+         * @return The name of the `Node`.
          */
-        abstract public String getName();
+        abstract val name: String
 
         /**
          * Keeps the leaf and labels up to date.
          *
-         * @return The leaf count for the <code>Node</code>.
+         * @return The leaf count for the `Node`.
          */
-        abstract public int countLeaves();
-
-        /**
-         * @return The parent of the <code>Node</code>.
-         */
-        @Nullable
-        final public Node getParent() {
-            return this.parent;
+        abstract fun countLeaves(): Int
+        override fun compareTo(other: Node): Int {
+            return this.toString().compareTo(other.toString())
         }
-
         /**
-         * @param newParent The new parent <code>Node</code>.
+         * @return The parent of the `Node`.
          */
-        final public void setParent(Node newParent) {
-            this.parent = Objects.requireNonNull(newParent);
-        }
-
+        /**
+         * @param newParent The new parent `Node`.
+         */
+        var parent: Node? = null
         /**
          * @return True if the node will be visible, false if it is filtered.
          */
-        final public boolean isVisible() {
-            return this.isVisible;
-        }
-
         /**
-         * Sets the <code>Node</code> to be visible or filtered.
+         * Sets the `Node` to be visible or filtered.
          *
-         * @param visible The visibility status of the <code>Node</code>.
+         * @param visible The visibility status of the `Node`.
          */
-        final public void setVisible(boolean visible) {
-            this.isVisible = visible;
-        }
-
-        @Override
-        final public int compareTo(@NotNull Node o) {
-            return this.toString().compareTo(o.toString());
-        }
-
-        @Nullable
-        private Node parent = null;
-        private boolean isVisible = true;
+        var isVisible = true
     }
 
     /**
-     * A node class that wraps an <code>Element</code> or string provides
+     * A node class that wraps an `Element` or string provides
      * filtering.
      *
      */
-    static public class ContainerNode extends Node {
-
+    open class ContainerNode : Node {
         /**
-         * Creates a new container <code>Node</code>.
+         * Creates a new container `Node`.
          *
          * @param name The name of the container.
          */
-        public ContainerNode(CharSequence name) {
-            this.NAME = Objects.requireNonNull(name).toString();
-            this.CHILDREN = new ArrayList<>();
-            this.countLeaves();
+        constructor(name: CharSequence) {
+            this.name = name.toString()
+            CHILDREN = ArrayList()
+            countLeaves()
         }
 
         /**
-         * Creates a new container <code>Node</code>.
+         * Creates a new container `Node`.
          *
          * @param name The name of the container.
          * @param elements A list of elements with which to populate the
-         * <code>Node</code>.
+         * `Node`.
          */
-        public ContainerNode(CharSequence name, @NotNull Collection<? extends Element> elements) {
-            this.NAME = Objects.requireNonNull(name).toString();
-            List<Node> list = new ArrayList<>();
-            for (Element element : elements) {
-                ElementNode<? extends Element> elementNode = new ElementNode(element);
-                list.add(elementNode);
+        constructor(name: CharSequence, elements: Collection<Element?>) {
+            this.name = name.toString()
+            val list: MutableList<Node?> = mutableListOf()
+            for (element in elements) {
+                val elementNode: ElementNode<out Element?> = ElementNode(element)
+                list.add(elementNode)
             }
-            this.CHILDREN = list;
-            this.CHILDREN.forEach(child -> child.setParent(this));
-            this.countLeaves();
+            CHILDREN = list
+            CHILDREN.forEach { child: Node? -> child!!.parent = this }
+            countLeaves()
         }
 
         /**
-         * Adds a <code>Collection</code> of children.
+         * Adds a `Collection` of children.
          *
          * @param children The children to add.
-         * @return The <code>Node</code> itself, to allow for chaining.
+         * @return The `Node` itself, to allow for chaining.
          */
-        @NotNull
-        public ContainerNode addAll(@NotNull Collection<Node> children) {
-            Objects.requireNonNull(children);
+        fun addAll(children: Collection<Node?>): ContainerNode {
             if (children.contains(null)) {
-                throw new NullPointerException();
+                throw NullPointerException()
             }
-
-            for (Node child : children) {
-                child.setParent(this);
+            for (child in children) {
+                child!!.parent = this
             }
-            this.CHILDREN.addAll(children);
-            this.countLeaves();
-            return this;
+            CHILDREN.addAll(children)
+            countLeaves()
+            return this
         }
 
         /**
          * Sorts the children of the node.
          *
-         * @return The <code>Node</code> itself, to allow for chaining.
-         *
+         * @return The `Node` itself, to allow for chaining.
          */
-        @NotNull
-        public ContainerNode sort() {
-            this.CHILDREN.sort((n1, n2) -> n1.toString().compareToIgnoreCase(n2.toString()));
-            return this;
+        fun sort(): ContainerNode {
+            CHILDREN.sortWith { n1: Node?, n2: Node? ->
+                n1.toString().compareTo(n2.toString(), ignoreCase = true)
+            }
+            return this
         }
 
-        @NotNull
-        @Override
-        public String getName() {
-            return this.NAME;
+        override val children: MutableCollection<Node?>?
+            get() = CHILDREN
+
+        override fun hasElement(): Boolean {
+            return false
         }
 
-        @NotNull
-        @Override
-        public Collection<Node> getChildren() {
-            return this.CHILDREN;
-        }
+        override val element: Element?
+            get() = null
+        override val isLeaf: Boolean
+            get() = false
 
-        @Override
-        public boolean hasElement() {
-            return false;
-        }
-
-        @Nullable
-        @Override
-        public Element getElement() {
-            return null;
-        }
-
-        @Override
-        public boolean isLeaf() {
-            return false;
-        }
-
-        @Override
-        final public int countLeaves() {
-            int leafCount = 0;
-            for (Node node : this.getChildren()) {
-                if (node.isVisible()) {
-                    int countLeaves = node.countLeaves();
-                    leafCount += countLeaves;
+        final override fun countLeaves(): Int {
+            var leafCount = 0
+            for (node in children!!) {
+                if (node!!.isVisible) {
+                    val countLeaves = node.countLeaves()
+                    leafCount += countLeaves
                 }
             }
-
-            this.label = this.isLeaf()
-                    ? this.getName()
-                    : this.getName() + " (" + leafCount + ")";
-
-            return leafCount;
+            label = if (isLeaf) name else "$name ($leafCount)"
+            return leafCount
         }
 
-        @Override
-        public String toString() {
-            return this.label;
+        override fun toString(): String {
+            return label!!
         }
 
-        @NotNull
-        final private String NAME;
-        @NotNull
-        final private List<Node> CHILDREN;
-        private String label;
-
+        final override val name: String
+        private val CHILDREN: MutableList<Node?>
+        private var label: String? = null
     }
 
     /**
-     * A node class that wraps an <code>Element</code> or string provides
+     * A node class that wraps an `Element` or string provides
      * filtering.
      *
      * @param <T>
-     */
-    static public class ElementNode<T extends Element> extends Node {
+    </T> */
+    open class ElementNode<T : Element?>(element: T) : Node() {
+        override val element: Element?
+            get() = ELEMENT
+        override val children: MutableCollection<Node?>?
+            get() = null
+
+        override fun hasElement(): Boolean {
+            return true
+        }
+
+        override val isLeaf: Boolean
+            get() = true
+
+        override fun toString(): String {
+            if (null == label) {
+                label = name
+            }
+            return label!!
+        }
+
+        override val name: String
+            get() = ELEMENT.toString()
+
+        override fun countLeaves(): Int {
+            label = name
+            return 1
+        }
+
+        private val ELEMENT: T = element
+        protected var label: String?
 
         /**
-         * Creates a new <code>Node</code> to wrap the specified element.
+         * Creates a new `Node` to wrap the specified element.
          *
          * @param element The element that the node will contain.
-         *
          */
-        private ElementNode(T element) {
-            this.ELEMENT = Objects.requireNonNull(element);
-            this.label = null;
+        init {
+            label = null
         }
-
-        @Override
-        public T getElement() {
-            return this.ELEMENT;
-        }
-
-        @Nullable
-        @Override
-        public Collection<Node> getChildren() {
-            return null;
-        }
-
-        @Override
-        public boolean hasElement() {
-            return true;
-        }
-
-        @Override
-        public boolean isLeaf() {
-            return true;
-        }
-
-        @Nullable
-        @Override
-        public String toString() {
-            if (null == this.label) {
-                this.label = this.getName();
-            }
-            return this.label;
-        }
-
-        @Override
-        public String getName() {
-            return this.ELEMENT.toString();
-        }
-
-        @Override
-        public int countLeaves() {
-            this.label = this.getName();
-            return 1;
-        }
-
-        final private T ELEMENT;
-        @Nullable
-        protected String label;
-
     }
 
     /**
-     * A node class that wraps a <code>Plugin</code>.
+     * A node class that wraps a `Plugin`.
      *
      */
-    static public class PluginNode extends ElementNode<Plugin> {
-
-        /**
-         * Creates a new <code>Node</code> to wrap the specified element.
-         *
-         * @param element The element that the node will contain.
-         *
-         */
-        public PluginNode(Plugin element) {
-            super(element);
-        }
-
-        @NotNull
-        @Override
-        public String getName() {
-            return this.getElement().indexName();
-        }
-
+    class PluginNode
+    /**
+     * Creates a new `Node` to wrap the specified element.
+     *
+     * @param element The element that the node will contain.
+     */
+        (element: Plugin) : ElementNode<Plugin?>(element) {
+        override val name: String
+            get() = (element as Plugin).indexName()
     }
 
     /**
-     * A node class that wraps an <code>Element</code> or string provides
+     * A node class that wraps an `Element` or string provides
      * filtering.
      *
      */
-    static public class RootNode extends ContainerNode {
+    class RootNode(root: ESS, children: Collection<Node?>) : ContainerNode(root.toString()) {
+        override val element: Element
+            get() = ROOT
 
-        public RootNode(@NotNull ESS root, @NotNull Collection<Node> children) {
-            super(root.toString());
-            this.ROOT = Objects.requireNonNull(root);
-            super.addAll(children);
+        override fun hasElement(): Boolean {
+            return true
         }
 
-        @Override
-        public ESS getElement() {
-            return this.ROOT;
-        }
+        private val ROOT: ESS = root
 
-        @Override
-        public boolean hasElement() {
-            return true;
+        init {
+            super.addAll(children)
         }
-
-        final private ESS ROOT;
     }
 
     /**
-     * A node class that wraps an <code>ActiveScript</code>.
+     * A node class that wraps an `ActiveScript`.
      *
      */
-    static public class ActiveScriptNode extends ElementNode<ActiveScript> {
+    class ActiveScriptNode(element: ActiveScript) : ElementNode<ActiveScript?>(element) {
+        override fun countLeaves(): Int {
+            return 1
+        }
 
-        public ActiveScriptNode(@NotNull ActiveScript element) {
-            super(element);
+        override val isLeaf: Boolean
+            get() = CHILDREN == null
+        override val children: MutableCollection<Node?>?
+            get() = CHILDREN?.toMutableList()
+        private var CHILDREN: List<Node?>? = null
+
+        init {
             if (element.hasStack()) {
-                List<Node> list = new ArrayList<>();
-                for (StackFrame stackFrame : element.getStackFrames()) {
-                    ElementNode<StackFrame> stackFrameElementNode = new ElementNode<>(stackFrame);
-                    list.add(stackFrameElementNode);
+                val list: MutableList<Node?> = mutableListOf()
+                for (stackFrame in element.stackFrames) {
+                    val stackFrameElementNode = ElementNode(stackFrame)
+                    list.add(stackFrameElementNode)
                 }
-                this.CHILDREN = list;
-               this.CHILDREN.forEach(child -> child.setParent(this));
+                CHILDREN = list
+                CHILDREN?.forEach { child: Node? -> child!!.parent = this }
             } else {
-                this.CHILDREN = null;
+                CHILDREN = null
             }
         }
-
-        @Override
-        public int countLeaves() {
-            return 1;
-        }
-
-        @Override
-        public boolean isLeaf() {
-            return this.CHILDREN == null;
-        }
-
-        @Nullable
-        @Override
-        public Collection<Node> getChildren() {
-            return this.CHILDREN;
-        }
-
-        @Nullable
-        final private List<Node> CHILDREN;
     }
 
     /**
-     * A node class that wraps an <code>SuspendedStack</code>.
+     * A node class that wraps an `SuspendedStack`.
      *
      */
-    static public class SuspendedStackNode extends ElementNode<SuspendedStack> {
+    class SuspendedStackNode(element: SuspendedStack) : ElementNode<SuspendedStack?>(element) {
+        override fun countLeaves(): Int {
+            return 1
+        }
 
-        public SuspendedStackNode(@NotNull SuspendedStack element) {
-            super(element);
+        override val isLeaf: Boolean
+            get() = CHILDREN == null
+        override val children: MutableCollection<Node?>?
+            get() = CHILDREN?.toMutableList()
+        private var CHILDREN: List<Node?>? = null
+
+        init {
             if (element.hasMessage()) {
-                final ElementNode<FunctionMessageData> CHILD = new ElementNode<>(element.getMessage());
-                CHILD.setParent(this);
-                this.CHILDREN = Collections.singletonList(CHILD);
+                val CHILD = ElementNode(element.message)
+                CHILD.parent = this
+                CHILDREN = listOf(CHILD)
             } else {
-                this.CHILDREN = null;
+                CHILDREN = null
             }
         }
-
-        @Override
-        public int countLeaves() {
-            return 1;
-        }
-
-        @Override
-        public boolean isLeaf() {
-            return this.CHILDREN == null;
-        }
-
-        @Nullable
-        @Override
-        public Collection<Node> getChildren() {
-            return this.CHILDREN;
-        }
-
-        @Nullable
-        final private List<Node> CHILDREN;
     }
 
     /**
-     * A node class that wraps an <code>FunctionMessage</code>.
+     * A node class that wraps an `FunctionMessage`.
      *
      */
-    static public class FunctionMessageNode extends ElementNode<FunctionMessage> {
+    class FunctionMessageNode(element: FunctionMessage) : ElementNode<FunctionMessage?>(element) {
+        override fun countLeaves(): Int {
+            return 1
+        }
 
-        public FunctionMessageNode(@NotNull FunctionMessage element) {
-            super(element);
+        override val isLeaf: Boolean
+            get() = CHILDREN == null
+        override val children: MutableCollection<Node?>?
+            get() = CHILDREN?.toMutableList()
+        private var CHILDREN: List<Node?>? = null
+
+        init {
             if (element.hasMessage()) {
-                final ElementNode<FunctionMessageData> CHILD = new ElementNode<>(element.getMessage());
-                CHILD.setParent(this);
-                this.CHILDREN = Collections.singletonList(CHILD);
+                val CHILD = ElementNode(element.message)
+                CHILD.parent = this
+                CHILDREN = listOf(CHILD)
             } else {
-                this.CHILDREN = null;
+                CHILDREN = null
             }
         }
-
-        @Override
-        public int countLeaves() {
-            return 1;
-        }
-
-        @Override
-        public boolean isLeaf() {
-            return this.CHILDREN == null;
-        }
-
-        @Nullable
-        @Override
-        public Collection<Node> getChildren() {
-            return this.CHILDREN;
-        }
-
-        @Nullable
-        final private List<Node> CHILDREN;
     }
 
-    static final private Logger LOG = Logger.getLogger(FilterTreeModel.class.getCanonicalName());
+    companion object {
+        private val LOG = Logger.getLogger(FilterTreeModel::class.java.canonicalName)
+    }
 
+    /**
+     *
+     */
+    init {
+        this.root = null
+    }
 }

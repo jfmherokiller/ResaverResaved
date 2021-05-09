@@ -43,13 +43,13 @@ class ModelBuilder(progress: ProgressModel) {
     fun addPluginInfo(plugins: PluginInfo) {
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Plugins (full)")
-            NODE.addAll(plugins.fullPlugins.map { element: Plugin? -> PluginNode(element) }.toList())
+            NODE.addAll(plugins.fullPlugins.map { element: Plugin? -> element?.let { PluginNode(it) } }.toList())
             PROGRESS.modifyValue(1)
             NODE
         }))
         TASKS.add(EXECUTOR.submit(Callable {
             val NODE = ContainerNode("Plugins (lite)")
-            NODE.addAll(plugins.litePlugins.map { element: Plugin? -> PluginNode(element) }.toList())
+            NODE.addAll(plugins.litePlugins.map { element: Plugin? -> element?.let { PluginNode(it) } }.toList())
             PROGRESS.modifyValue(1)
             NODE
         }))
