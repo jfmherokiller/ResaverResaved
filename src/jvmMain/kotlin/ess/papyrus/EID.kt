@@ -185,7 +185,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          */
         @JvmStatic
         fun make4byte(`val`: Int, pap: Papyrus): EID {
-            return pap.EIDS.computeIfAbsent(`val`) { v: Number? -> EID32(`val`) }
+            return pap.EIDS.getOrElse(`val`) { EID32(`val`) }
         }
 
         /**
@@ -198,7 +198,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          */
         @JvmStatic
         fun make8Byte(`val`: Long, pap: Papyrus): EID {
-            return pap.EIDS.computeIfAbsent(`val`) { v: Number? -> EID64(`val`) }
+            return pap.EIDS.getOrElse(`val`) { EID64(`val`) }
         }
 
         /**

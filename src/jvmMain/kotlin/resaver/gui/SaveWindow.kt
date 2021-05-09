@@ -1852,13 +1852,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 }
                 "message" -> {
                     val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
-                    var MESSAGE: FunctionMessage? = null
-                    for (v in save!!.papyrus!!.functionMessages) {
-                        if (v.iD!! == ID) {
-                            MESSAGE = v
-                            break
-                        }
-                    }
+                    val MESSAGE: FunctionMessage? = save!!.papyrus!!.functionMessages.firstOrNull { it?.iD!! == ID }
                     if (index1 != null) {
                         this.findElement(MESSAGE, index1)
                     } else {
