@@ -13,59 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import resaver.ListException;
+import resaver.ListException
+import java.nio.ByteBuffer
 
-import java.nio.ByteBuffer;
 
 /**
  *
  * @author Mark
  * @param <T>
- */
-public class PapyrusDefinitionMap<T extends Definition> extends java.util.LinkedHashMap<TString, T> implements PapyrusElement {
-
-    PapyrusDefinitionMap(int count, ByteBuffer input, @NotNull PapyrusElementReader<T> reader) throws PapyrusElementException {
+</T> */
+open class PapyrusDefinitionMap<T : Definition?> : LinkedHashMap<TString?, T>, PapyrusElement {
+    internal constructor(count: Int, input: ByteBuffer?, reader: PapyrusElementReader<T>) {
         try {
-            for (int i = 0; i < count; i++) {
+            for (i in 0 until count) {
                 try {
-                    T element = reader.read(input);
-                    this.put(element.getName(), element);
-                } catch (PapyrusFormatException ex) {
-                    throw new ListException(i, count, ex);
+                    val element = reader.read(input)
+                    this[element!!.name] = element
+                } catch (ex: PapyrusFormatException) {
+                    throw ListException(i, count, ex)
                 }
             }
-        } catch (ListException ex) {
-            throw new PapyrusElementException("Failed to read definitions.", ex, this);
+        } catch (ex: ListException) {
+            throw PapyrusElementException("Failed to read definitions.", ex, this)
         }
     }
 
-    PapyrusDefinitionMap() {
-    }
+    internal constructor() {}
 
-    @Override
-    public int calculateSize() {
-        int sum = 0;
-        for (T t : this.values()) {
-            int calculateSize = t.calculateSize();
-            sum += calculateSize;
+    override fun calculateSize(): Int {
+        var sum = 0
+        for (t in this.values) {
+            val calculateSize = t!!.calculateSize()
+            sum += calculateSize
         }
-        return 4 + sum;
+        return 4 + sum
     }
 
-    @Override
-    public void write(ByteBuffer output) {
-        this.values().forEach(v -> v.write(output));
+    override fun write(output: ByteBuffer?) {
+        this.values.forEach { v: T -> v!!.write(output) }
     }
 
-    private static final long serialVersionUID = 1L;
+    internal fun interface PapyrusElementReader<T> {
+        @Throws(PapyrusFormatException::class, PapyrusElementException::class)
+        fun read(input: ByteBuffer?): T
+    }
 
-    @FunctionalInterface
-    interface PapyrusElementReader<T> {
-
-        @NotNull
-        public T read(ByteBuffer input) throws PapyrusFormatException, PapyrusElementException;
+    companion object {
+        private const val serialVersionUID = 1L
     }
 }

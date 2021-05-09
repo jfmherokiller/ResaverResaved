@@ -15,10 +15,7 @@
  */
 package ess.papyrus
 
-import ess.papyrus.PapyrusElementMap
-import ess.papyrus.StructInstance
-import ess.papyrus.StructMap
-import ess.papyrus.PapyrusContext
+import ess.papyrus.PapyrusElementMap.PapyrusElementReader
 import java.nio.ByteBuffer
 
 /**
@@ -28,12 +25,11 @@ import java.nio.ByteBuffer
 class StructInstanceMap : PapyrusElementMap<StructInstance> {
     internal constructor(input: ByteBuffer, structs: StructMap, context: PapyrusContext) : super(
         input,
-        PapyrusElementReader<StructInstance> { b: ByteBuffer ->
+        PapyrusElementReader<StructInstance> { b: ByteBuffer? ->
             StructInstance(
-                b, structs, context,null
+                b!!, structs, context,null
             )
-        }) {
-    }
+        })
 
-    internal constructor() {}
+    internal constructor()
 }
