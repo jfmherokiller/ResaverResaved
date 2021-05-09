@@ -15,14 +15,11 @@
  */
 package resaver
 
-import java.nio.file.Paths
-import javax.swing.filechooser.FileNameExtensionFilter
-import java.nio.file.PathMatcher
-import resaver.Game
-import java.util.Collections
-import java.util.Arrays
 import java.nio.file.FileSystems
 import java.nio.file.Path
+import java.nio.file.PathMatcher
+import java.nio.file.Paths
+import javax.swing.filechooser.FileNameExtensionFilter
 
 /**
  *
@@ -116,17 +113,17 @@ enum class Game(
      * An FX_FILTER, for dialog boxes that choose a savefile.
      */
     @JvmField
-    val FILTER: FileNameExtensionFilter
+    val FILTER: FileNameExtensionFilter = FileNameExtensionFilter(saveName, SAVE_EXT)
 
     /**
      * Names of unofficial patches.
      */
-    val PATCH_NAMES: List<String>
+    val PATCH_NAMES: List<String> = listOf(*patchNames)
 
     /**
      * A `PathMatcher` that matches savefile names.
      */
-    private val SAVE_MATCHER: PathMatcher
+    private val SAVE_MATCHER: PathMatcher = FileSystems.getDefault().getPathMatcher("glob:*.$SAVE_EXT")
 
     /**
      * Test if a savefile matches.
@@ -179,22 +176,7 @@ enum class Game(
          * Cached list version of the values.
          */
         @JvmField
-        var VALUES = Collections.unmodifiableList(Arrays.asList(*values()))
+        var VALUES = listOf(*values())
     }
 
-    /**
-     * Creates a new `Game` for the specified extension.
-     *
-     * @param gameName The game's name.
-     * @param saveName The name for savefiles.
-     * @param saveExt The file extension for savefiles.
-     * @param cosaveExt The file extension for co-saves.
-     * @param gameDir The default name of the game's directory.
-     * @param exe The filename of the game's executable.
-     */
-    init {
-        FILTER = FileNameExtensionFilter(saveName, SAVE_EXT)
-        PATCH_NAMES = Collections.unmodifiableList(Arrays.asList(*patchNames))
-        SAVE_MATCHER = FileSystems.getDefault().getPathMatcher("glob:*." + SAVE_EXT)
-    }
 }
