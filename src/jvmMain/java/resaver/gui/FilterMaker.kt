@@ -13,28 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package resaver.gui;
+package resaver.gui
 
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.Mod;
-import resaver.Analysis;
-import ess.*;
-import ess.papyrus.*;
-import resaver.gui.FilterTreeModel.Node;
+import ess.*
+import ess.ESS.ESSContext
+import ess.papyrus.*
+import mf.Duad
+import resaver.Analysis
+import resaver.Mod
+import java.nio.BufferUnderflowException
+import java.util.*
+import java.util.function.Predicate
+import java.util.logging.Logger
+import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 
 /**
  *
  * @author Mark
  */
-public class FilterMaker {
-
+object FilterMaker {
     /**
      * Setup a Mod analysis setFilter.
      *
@@ -43,30 +43,25 @@ public class FilterMaker {
      * @param analysis
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createModFilter(@NotNull Mod mod, @NotNull PluginInfo plugins, Analysis analysis) {
-        Objects.requireNonNull(mod);
-        Objects.requireNonNull(analysis);
-        LOG.info(String.format("Filtering: mod = \"%s\"", mod));
-
-        final String MODNAME = mod.getName();
-
-        final Set<Plugin> PLUGINS = new HashSet<>();
-        mod.getESPNames().forEach(espName -> {
-            for (Plugin p : plugins.getFullPlugins()) {
-                if (p.NAME.equalsIgnoreCase(espName)) {
-                    PLUGINS.add(p);
-                    break;
+    fun createModFilter(mod: Mod, plugins: PluginInfo, analysis: Analysis?): Predicate<FilterTreeModel.Node> {
+        LOG.info(String.format("Filtering: mod = \"%s\"", mod))
+        val MODNAME = mod.getName()
+        val PLUGINS: MutableSet<Plugin?> = HashSet()
+        mod.getESPNames().forEach { espName: String? ->
+            for (p in plugins.fullPlugins) {
+                if (p.NAME.equals(espName, ignoreCase = true)) {
+                    PLUGINS.add(p)
+                    break
                 }
             }
-        });
-
-        Predicate<Node> modFilter = node -> node.hasElement()
-                && node.getElement() instanceof AnalyzableElement
-                && ((AnalyzableElement) node.getElement()).matches(analysis, MODNAME);
-
-        Predicate<Node> pluginFilter = createPluginFilter(PLUGINS);
-        return modFilter.or(pluginFilter);
+        }
+        val modFilter = Predicate { node: FilterTreeModel.Node ->
+            (node.hasElement()
+                    && node.element is AnalyzableElement
+                    && (node.element as AnalyzableElement?)!!.matches(analysis, MODNAME))
+        }
+        val pluginFilter = createPluginFilter(PLUGINS)
+        return modFilter.or(pluginFilter)
     }
 
     /**
@@ -75,35 +70,28 @@ public class FilterMaker {
      * @param plugins
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createPluginFilter(@NotNull Set<Plugin> plugins) {
-        Objects.requireNonNull(plugins);
-        LOG.info(String.format("Filtering: plugins = \"%s\"", plugins));
-
-        return node -> {
+    fun createPluginFilter(plugins: Set<Plugin?>): Predicate<FilterTreeModel.Node> {
+        LOG.info(String.format("Filtering: plugins = \"%s\"", plugins))
+        return Predicate { node: FilterTreeModel.Node ->
             // If the node doesn't contain an element, it automatically fails.
             if (!node.hasElement()) {
-                return false;
-
+                return@Predicate false
             } // Check if the element is the plugin itself.
-            else if (node.getElement() instanceof Plugin) {
-                return plugins.contains((Plugin) node.getElement());
-
+            else if (node.element is Plugin) {
+                return@Predicate plugins.contains(node.element as Plugin?)
             } // Check if the element is an instance with a matching refid.
-            else if (node.getElement() instanceof ScriptInstance) {
-                ScriptInstance instance = (ScriptInstance) node.getElement();
-                RefID refID = instance.getRefID();
-                return null != refID && refID.PLUGIN != null && plugins.contains(refID.PLUGIN);
-
+            else if (node.element is ScriptInstance) {
+                val instance = node.element as ScriptInstance?
+                val refID = instance!!.refID
+                return@Predicate refID.PLUGIN != null && plugins.contains(refID.PLUGIN)
             } // Check if the element is a ChangeForm with a matching refid.
-            else if (node.getElement() instanceof ChangeForm) {
-                ChangeForm form = (ChangeForm) node.getElement();
-                RefID refID = form.getRefID();
-                return null != refID && refID.PLUGIN != null && plugins.contains(refID.PLUGIN);
-
+            else if (node.element is ChangeForm) {
+                val form = node.element as ChangeForm?
+                val refID = form!!.refID
+                return@Predicate refID?.PLUGIN != null && plugins.contains(refID.PLUGIN)
             } // If the element is not an instance, it automatically fails.
-            return false;
-        };
+            false
+        }
     }
 
     /**
@@ -112,21 +100,17 @@ public class FilterMaker {
      * @param regex
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createRegexFilter(@NotNull String regex) {
-        Objects.requireNonNull(regex);
-        LOG.info(String.format("Filtering: regex = \"%s\"", regex));
-
-        if (!regex.isEmpty()) {
+    fun createRegexFilter(regex: String): Predicate<FilterTreeModel.Node> {
+        LOG.info(String.format("Filtering: regex = \"%s\"", regex))
+        if (regex.isNotEmpty()) {
             try {
-                LOG.info(String.format("Filtering: regex = \"%s\"", regex));
-                Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
-                return node -> pattern.matcher(node.getName()).find();
-            } catch (PatternSyntaxException ex) {
+                LOG.info(String.format("Filtering: regex = \"%s\"", regex))
+                val pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
+                return Predicate { node: FilterTreeModel.Node -> pattern.matcher(node.name).find() }
+            } catch (ex: PatternSyntaxException) {
             }
         }
-
-        return node -> true;
+        return Predicate { node: FilterTreeModel.Node? -> true }
     }
 
     /**
@@ -134,33 +118,41 @@ public class FilterMaker {
      *
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createUndefinedFilter() {
-        return node -> {
+    fun createUndefinedFilter(): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
             if (node.hasElement()) {
-                Element e = node.getElement();
-                if (e instanceof Script) {
-                    return ((Script) e).isUndefined();
-                } else if (e instanceof ScriptInstance) {
-                    return ((ScriptInstance) e).isUndefined();
-                } else if (e instanceof Reference) {
-                    return ((Reference) e).isUndefined();
-                } else if (e instanceof Struct) {
-                    return ((Struct) e).isUndefined();
-                } else if (e instanceof StructInstance) {
-                    return ((StructInstance) e).isUndefined();
-                } else if (e instanceof ActiveScript) {
-                    return ((ActiveScript) e).isUndefined();
-                } else if (e instanceof FunctionMessage) {
-                    return ((FunctionMessage) e).isUndefined();
-                } else if (e instanceof StackFrame) {
-                    return ((StackFrame) e).isUndefined();
-                } else if (e instanceof SuspendedStack) {
-                    return ((SuspendedStack) e).isUndefined();
+                when (val e = node.element) {
+                    is Script -> {
+                        return@Predicate e.isUndefined
+                    }
+                    is ScriptInstance -> {
+                        return@Predicate e.isUndefined
+                    }
+                    is Reference -> {
+                        return@Predicate e.isUndefined
+                    }
+                    is Struct -> {
+                        return@Predicate e.isUndefined
+                    }
+                    is StructInstance -> {
+                        return@Predicate e.isUndefined
+                    }
+                    is ActiveScript -> {
+                        return@Predicate e.isUndefined
+                    }
+                    is FunctionMessage -> {
+                        return@Predicate e.isUndefined
+                    }
+                    is StackFrame -> {
+                        return@Predicate e.isUndefined
+                    }
+                    is SuspendedStack -> {
+                        return@Predicate e.isUndefined
+                    }
                 }
             }
-            return false;
-        };
+            false
+        }
     }
 
     /**
@@ -168,14 +160,13 @@ public class FilterMaker {
      *
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createUnattachedFilter() {
-        return node -> {
-            if (node.hasElement() && node.getElement() instanceof ScriptInstance) {
-                return ((ScriptInstance) node.getElement()).isUnattached();
+    fun createUnattachedFilter(): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
+            if (node.hasElement() && node.element is ScriptInstance) {
+                return@Predicate (node.element as ScriptInstance?)!!.isUnattached
             }
-            return false;
-        };
+            false
+        }
     }
 
     /**
@@ -183,14 +174,13 @@ public class FilterMaker {
      *
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createMemberlessFilter() {
-        return node -> {
-            if (node.hasElement() && node.getElement() instanceof ScriptInstance) {
-                return ((ScriptInstance) node.getElement()).hasMemberlessError();
+    fun createMemberlessFilter(): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
+            if (node.hasElement() && node.element is ScriptInstance) {
+                return@Predicate (node.element as ScriptInstance?)!!.hasMemberlessError()
             }
-            return false;
-        };
+            false
+        }
     }
 
     /**
@@ -198,15 +188,14 @@ public class FilterMaker {
      *
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createCanaryFilter() {
-        return node -> {
-            if (node.hasElement() && node.getElement() instanceof ScriptInstance) {
-                ScriptInstance instance = (ScriptInstance) node.getElement();
-                return instance.hasCanary() && instance.getCanary() == 0;
+    fun createCanaryFilter(): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
+            if (node.hasElement() && node.element is ScriptInstance) {
+                val instance = node.element as ScriptInstance?
+                return@Predicate instance!!.hasCanary() && instance.canary == 0
             }
-            return false;
-        };
+            false
+        }
     }
 
     /**
@@ -214,22 +203,13 @@ public class FilterMaker {
      *
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createNullRefFilter() {
-        return node -> {
-            if (!node.hasElement() || !(node.getElement() instanceof ChangeForm)) {
-                return false;
+    fun createNullRefFilter(): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
+            if (!node.hasElement() || node.element !is ChangeForm) {
+                return@Predicate false
             }
-            return false;
-            /*
-            final ChangeForm FORM = (ChangeForm) node.getElement();
-            final ChangeFormData DATA = FORM.getData();
-            if (!(DATA instanceof ChangeFormFLST)) {
-                return false;
-            }
-
-            return ((ChangeFormFLST) DATA).containsNullrefs();*/
-        };
+            false
+        }
     }
 
     /**
@@ -238,16 +218,15 @@ public class FilterMaker {
      * @param ess The save file.
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createNonExistentFilter(@NotNull ESS ess) {
-        return node -> {
-            if (node.hasElement() && node.getElement() instanceof ScriptInstance) {
-                ScriptInstance instance = (ScriptInstance) node.getElement();
-                RefID refID = instance.getRefID();
-                return refID.getType() == RefID.Type.CREATED && !ess.getChangeForms().containsKey(refID);
+    fun createNonExistentFilter(ess: ESS): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
+            if (node.hasElement() && node.element is ScriptInstance) {
+                val instance = node.element as ScriptInstance?
+                val refID = instance!!.refID
+                return@Predicate refID.type === RefID.Type.CREATED && !ess.changeForms.containsKey(refID)
             }
-            return false;
-        };
+            false
+        }
     }
 
     /**
@@ -255,15 +234,14 @@ public class FilterMaker {
      *
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createLongStringFilter() {
-        return node -> {
-            if (node.hasElement() && node.getElement() instanceof TString) {
-                TString str = (TString) node.getElement();
-                return str.length() >= 512;
+    fun createLongStringFilter(): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
+            if (node.hasElement() && node.element is TString) {
+                val str = node.element as TString?
+                return@Predicate str!!.length() >= 512
             }
-            return false;
-        };
+            false
+        }
     }
 
     /**
@@ -273,50 +251,30 @@ public class FilterMaker {
      * @param analysis
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createDeletedFilter(ESS.ESSContext context, Analysis analysis) {
-        return node -> {
+    fun createDeletedFilter(context: ESSContext?, analysis: Analysis?): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
             if (!node.hasElement()) {
-                return false;
+                return@Predicate false
             }
-            if (!(node.getElement() instanceof ChangeForm)) {
-                return false;
+            if (node.element !is ChangeForm) {
+                return@Predicate false
             }
-
-            final ChangeForm FORM = (ChangeForm) node.getElement();
-
-            if (!(FORM.getType() == ChangeFormType.ACHR || FORM.getType() == ChangeFormType.REFR)) {
-                return false;
+            val FORM = node.element as ChangeForm?
+            if (!(FORM!!.type === ChangeFormType.ACHR || FORM!!.type === ChangeFormType.REFR)) {
+                return@Predicate false
             }
-
-            if (!FORM.getChangeFlags().getFlag(1) && !FORM.getChangeFlags().getFlag(3)) {
-                return false;
+            if (!FORM!!.changeFlags!!.getFlag(1) && !FORM.changeFlags!!.getFlag(3)) {
+                return@Predicate false
             }
-
-            final ChangeFormData DATA = FORM.getData(analysis, context, true);
-
-            if (DATA == null) {
-                return false;
+            val DATA = FORM.getData(analysis, context, true) ?: return@Predicate false
+            if (DATA !is GeneralElement) {
+                return@Predicate false
             }
-            if (!(DATA instanceof GeneralElement)) {
-                return false;
-            }
-
-            final GeneralElement ROOT = (GeneralElement) DATA;
-            final Element MOVECELL = ROOT.getElement("MOVE_CELL");
-
-            if (MOVECELL == null) {
-                return false;
-            }
-
-            if (!(MOVECELL instanceof RefID)) {
-                throw new IllegalStateException("MOVE_CELL was not a RefID: " + MOVECELL);
-            }
-
-            final RefID REF = (RefID) MOVECELL;
-            return REF.FORMID == 0xFFFFFFFF;
-
-        };
+            val ROOT = DATA as GeneralElement
+            val MOVECELL = ROOT.getElement("MOVE_CELL") ?: return@Predicate false
+            check(MOVECELL is RefID) { "MOVE_CELL was not a RefID: $MOVECELL" }
+            MOVECELL.FORMID == -0x1
+        }
     }
 
     /**
@@ -326,61 +284,49 @@ public class FilterMaker {
      * @param analysis
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createVoidFilter(ESS.ESSContext context, Analysis analysis) {
-        return node -> {
+    fun createVoidFilter(context: ESSContext?, analysis: Analysis?): Predicate<FilterTreeModel.Node> {
+        return Predicate { node: FilterTreeModel.Node ->
             if (!node.hasElement()) {
-                return false;
+                return@Predicate false
             }
-            if (!(node.getElement() instanceof ChangeForm)) {
-                return false;
+            if (node.element !is ChangeForm) {
+                return@Predicate false
             }
-
-            final ChangeForm FORM = (ChangeForm) node.getElement();
-
-            if (!(FORM.getType() == ChangeFormType.ACHR || FORM.getType() == ChangeFormType.REFR)) {
-                return false;
+            val FORM = node.element as ChangeForm?
+            if (!(FORM!!.type === ChangeFormType.ACHR || FORM!!.type === ChangeFormType.REFR)) {
+                return@Predicate false
             }
-
-            final Flags FLAGS = FORM.getChangeFlags();
-            for (int i = 0; i <= 7; i++) {
-                if (FLAGS.getFlag(i)) {
-                    return false;
+            val FLAGS: Flags? = FORM!!.changeFlags
+            var i = 0
+            while (i <= 7) {
+                if (FLAGS!!.getFlag(i)) {
+                    return@Predicate false
                 }
+                i++
             }
-
-            final ChangeFormData DATA = FORM.getData(analysis, context, true);
-
-            if (DATA == null) {
-                return false;
+            val DATA = FORM.getData(analysis, context, true) ?: return@Predicate false
+            if (DATA !is GeneralElement) {
+                return@Predicate false
             }
-            if (!(DATA instanceof GeneralElement)) {
-                return false;
+            val ROOT = DATA as GeneralElement
+            if (ROOT.values.isEmpty()) {
+                return@Predicate true
             }
-
-            final GeneralElement ROOT = (GeneralElement) DATA;
-
-            if (ROOT.getValues().isEmpty()) {
-                return true;
-            }
-
             if (ROOT.hasVal("INITIAL") && ROOT.count() <= 2) {
-                GeneralElement initial = ROOT.getGeneralElement("INITIAL");
-                if (initial.getValues().isEmpty()) {
+                val initial = ROOT.getGeneralElement("INITIAL")
+                if (initial!!.values.isEmpty()) {
                     if (ROOT.count() == 1) {
-                        return true;
+                        return@Predicate true
                     }
-
                     if (ROOT.hasVal("EXTRADATA")) {
-                        final GeneralElement EXTRA = ROOT.getGeneralElement("EXTRADATA");
-                        VSVal count = (VSVal) EXTRA.getVal("DATA_COUNT");
-                        return count.getValue() == 0;
+                        val EXTRA = ROOT.getGeneralElement("EXTRADATA")
+                        val count = EXTRA!!.getVal("DATA_COUNT") as VSVal?
+                        return@Predicate count!!.value == 0
                     }
                 }
             }
-
-            return false;
-        };
+            false
+        }
     }
 
     /**
@@ -390,27 +336,24 @@ public class FilterMaker {
      * @param filter
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createChangeFlagFilter(int mask, int filter) {
-        if (mask == 0) {
-            return node -> true;
+    fun createChangeFlagFilter(mask: Int, filter: Int): Predicate<FilterTreeModel.Node> {
+        return if (mask == 0) {
+            Predicate { node: FilterTreeModel.Node? -> true }
         } else {
-            return node -> {
+            Predicate { node: FilterTreeModel.Node ->
                 if (!node.hasElement()) {
-                    return false;
+                    return@Predicate false
                 }
-                if (!(node.getElement() instanceof ChangeForm)) {
-                    return false;
+                if (node.element !is ChangeForm) {
+                    return@Predicate false
                 }
-
-                final ChangeForm FORM = (ChangeForm) node.getElement();
-
-                final Flags.Int FLAGS = FORM.getChangeFlags();
-                int flags = FLAGS.FLAGS;
-                int filtered = (~filter) ^ flags;
-                int masked = filtered | (~mask);
-                return masked == -1;
-            };
+                val FORM = node.element as ChangeForm?
+                val FLAGS = FORM!!.changeFlags
+                val flags = FLAGS!!.FLAGS
+                val filtered = filter.inv() xor flags
+                val masked = filtered or mask.inv()
+                masked == -1
+            }
         }
     }
 
@@ -422,47 +365,40 @@ public class FilterMaker {
      * @param filter
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createChangeFormFlagFilter(ESS.ESSContext context, int mask, int filter) {
-        if (mask == 0) {
-            return node -> true;
+    fun createChangeFormFlagFilter(context: ESSContext?, mask: Int, filter: Int): Predicate<FilterTreeModel.Node> {
+        return if (mask == 0) {
+            Predicate { node: FilterTreeModel.Node? -> true }
         } else {
-            return node -> {
+            Predicate { node: FilterTreeModel.Node ->
                 if (!node.hasElement()) {
-                    return false;
+                    return@Predicate false
                 }
-                if (!(node.getElement() instanceof ChangeForm)) {
-                    return false;
+                if (node.element !is ChangeForm) {
+                    return@Predicate false
                 }
-
-                final ChangeForm FORM = (ChangeForm) node.getElement();
-
-                final Flags.Int FLAGS = FORM.getChangeFlags();
-                if (!FLAGS.getFlag(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS)) {
-                    return false;
+                val FORM = node.element as ChangeForm?
+                val FLAGS = FORM!!.changeFlags
+                if (!FLAGS!!.getFlag(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS)) {
+                    return@Predicate false
                 }
-
                 try {
-                    ChangeFormData data = FORM.getData(null, context, true);
-                    if (!(data instanceof GeneralElement)) {
-                        return false;
+                    val data = FORM.getData(null, context, true)
+                    if (data !is GeneralElement) {
+                        return@Predicate false
                     }
-                    final GeneralElement DATA = (GeneralElement) data;
-
+                    val DATA = data as GeneralElement
                     if (!DATA.hasVal(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS)) {
-                        return false;
+                        return@Predicate false
                     }
-
-                    final ChangeFormFlags CFF = (ChangeFormFlags) DATA.getElement(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS);
-                    int flags = CFF.getFlags();
-                    int filtered = (~filter) ^ flags;
-                    int masked = filtered | (~mask);
-                    return masked == -1;
-                    
-                } catch (java.nio.BufferUnderflowException ex) {
-                    return false;
+                    val CFF = DATA.getElement(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS) as ChangeFormFlags?
+                    val flags = CFF!!.flags
+                    val filtered = filter.inv() xor flags
+                    val masked = filtered or mask.inv()
+                    return@Predicate masked == -1
+                } catch (ex: BufferUnderflowException) {
+                    return@Predicate false
                 }
-            };
+            }
         }
     }
 
@@ -475,63 +411,59 @@ public class FilterMaker {
      * @param filter
      * @return
      */
-    @NotNull
-    static public Predicate<Node> createChangeFormflagFilter(ESS.ESSContext context, Analysis analysis, int mask, int filter) {
-        if (mask == 0) {
-            return node -> true;
-
+    fun createChangeFormflagFilter(
+        context: ESSContext?,
+        analysis: Analysis?,
+        mask: Int,
+        filter: Int
+    ): Predicate<FilterTreeModel.Node> {
+        return if (mask == 0) {
+            Predicate { node: FilterTreeModel.Node? -> true }
         } else {
-            return node -> {
+            Predicate { node: FilterTreeModel.Node ->
                 if (!node.hasElement()) {
-                    return false;
+                    return@Predicate false
                 }
-                if (!(node.getElement() instanceof ChangeForm)) {
-                    return false;
+                if (node.element !is ChangeForm) {
+                    return@Predicate false
                 }
-
-                final ChangeForm FORM = (ChangeForm) node.getElement();
-
-                if (Arrays.asList(ChangeFormType.ACHR, ChangeFormType.CELL,
-                        ChangeFormType.NPC_, ChangeFormType.REFR).contains(FORM.getType())) {
-                    return false;
+                val FORM = node.element as ChangeForm?
+                if (listOf(
+                        ChangeFormType.ACHR, ChangeFormType.CELL,
+                        ChangeFormType.NPC_, ChangeFormType.REFR
+                    ).contains(FORM!!.type)
+                ) {
+                    return@Predicate false
                 }
-
-                if (!FORM.getChangeFlags().getFlag(0)) {
-                    return false;
+                if (!FORM.changeFlags!!.getFlag(0)) {
+                    return@Predicate false
                 }
-
-                final ChangeFormData DATA = FORM.getData(analysis, context, true);
-
+                val DATA = FORM.getData(analysis, context, true)
                 if (DATA == null) {
-                    return false;
-
-                } else if (DATA instanceof GeneralElement) {
-                    final GeneralElement GEN = (GeneralElement) DATA;
-                    final String KEY = "ChangeFormFlags";
-
+                    return@Predicate false
+                } else if (DATA is GeneralElement) {
+                    val GEN = DATA as GeneralElement
+                    val KEY = "ChangeFormFlags"
                     if (!GEN.hasVal(KEY)) {
-                        return false;
-                    } else if (!(GEN.getElement(KEY) instanceof ChangeFormFlags)) {
-                        return false;
+                        return@Predicate false
+                    } else if (GEN.getElement(KEY) !is ChangeFormFlags) {
+                        return@Predicate false
                     } else {
-                        final ChangeFormFlags CFF = (ChangeFormFlags) GEN.getElement(KEY);
-                        int flags = CFF.getFlags();
-                        int filtered = (~filter) ^ flags;
-                        int masked = filtered | (~mask);
-                        return masked == -1;
+                        val CFF = GEN.getElement(KEY) as ChangeFormFlags?
+                        val flags = CFF!!.flags
+                        val filtered = filter.inv() xor flags
+                        val masked = filtered or mask.inv()
+                        return@Predicate masked == -1
                     }
-
-                } else if (DATA instanceof ChangeFormNPC) {
-                    final ChangeFormNPC NPC = (ChangeFormNPC) DATA;
-                    int flags = NPC.getChangeFormFlags().getFlags();
-                    int filtered = (~filter) ^ flags;
-                    int masked = filtered | (~mask);
-                    return masked == -1;
-
+                } else if (DATA is ChangeFormNPC) {
+                    val flags = DATA.changeFormFlags!!.flags
+                    val filtered = filter.inv() xor flags
+                    val masked = filtered or mask.inv()
+                    return@Predicate masked == -1
                 } else {
-                    return false;
+                    return@Predicate false
                 }
-            };
+            }
         }
     }
 
@@ -539,9 +471,8 @@ public class FilterMaker {
      * Create an empty filter.
      *
      */
-    @NotNull
-    static public Predicate<Node> createFilter() {
-        return x -> true;
+    fun createFilter(): Predicate<FilterTreeModel.Node> {
+        return Predicate { x: FilterTreeModel.Node? -> true }
     }
 
     /**
@@ -565,123 +496,121 @@ public class FilterMaker {
      * @param changeFormFlags
      * @return
      */
-    @Nullable
-    static public Predicate<Node> createFilter(@NotNull ESS savefile,
-                                               @Nullable Mod mod,
-                                               @Nullable Plugin plugin,
-                                               @NotNull String regex, @Nullable Analysis analysis,
-                                               boolean undefined, boolean unattached, boolean memberless,
-                                               boolean canaries, boolean nullrefs, boolean nonexistent,
-                                               boolean longStrings, boolean deleted, boolean empty,
-                                               @Nullable mf.Duad<Integer> changeFlags, @Nullable mf.Duad<Integer> changeFormFlags) {
-        Objects.requireNonNull(savefile);
-
-        LOG.info("Updating filter.");
-        ArrayList<Predicate<Node>> FILTERS = new ArrayList<>(4);
-        ArrayList<Predicate<Node>> SUBFILTERS = new ArrayList<>(4);
-        ESS.ESSContext context = savefile.getContext();
+    @JvmStatic
+    fun createFilter(
+        savefile: ESS,
+        mod: Mod?,
+        plugin: Plugin?,
+        regex: String, analysis: Analysis?,
+        undefined: Boolean, unattached: Boolean, memberless: Boolean,
+        canaries: Boolean, nullrefs: Boolean, nonexistent: Boolean,
+        longStrings: Boolean, deleted: Boolean, empty: Boolean,
+        changeFlags: Duad<Int>?, changeFormFlags: Duad<Int>?
+    ): Predicate<FilterTreeModel.Node>? {
+        LOG.info("Updating filter.")
+        val FILTERS = ArrayList<Predicate<FilterTreeModel.Node>>(4)
+        val SUBFILTERS = ArrayList<Predicate<FilterTreeModel.Node>>(4)
+        val context = savefile.context
 
         // Setup a Mod analysis setFilter.
         if (null != mod && null != analysis) {
-            FILTERS.add(createModFilter(mod, savefile.getPluginInfo(), analysis));
+            FILTERS.add(createModFilter(mod, savefile.pluginInfo, analysis))
         }
 
         // Setup a plugin setFilter.
         if (null != plugin) {
-            FILTERS.add(createPluginFilter(Collections.singleton(plugin)));
+            FILTERS.add(createPluginFilter(setOf(plugin)))
         }
 
         // Setup a regex setFilter.
-        if (!regex.isEmpty()) {
-            FILTERS.add(createRegexFilter(regex));
+        if (regex.isNotEmpty()) {
+            FILTERS.add(createRegexFilter(regex))
         }
 
         // Setup a changeflag setFilter.
         if (null != changeFlags) {
-            FILTERS.add(createChangeFlagFilter(changeFlags.getA(), changeFlags.getB()));
+            FILTERS.add(createChangeFlagFilter(changeFlags.A, changeFlags.B))
         }
 
         // Setup a changeformflag setFilter.
         if (null != changeFormFlags) {
-            FILTERS.add(createChangeFormFlagFilter(context, changeFormFlags.getA(), changeFormFlags.getB()));
+            FILTERS.add(createChangeFormFlagFilter(context, changeFormFlags.A, changeFormFlags.B))
         }
         // Filter undefined.
         if (undefined) {
-            SUBFILTERS.add(createUndefinedFilter());
+            SUBFILTERS.add(createUndefinedFilter())
         }
 
         // Filter unattached.
         if (unattached) {
-            SUBFILTERS.add(createUnattachedFilter());
+            SUBFILTERS.add(createUnattachedFilter())
         }
 
         // Filter memberless.
         if (memberless) {
-            SUBFILTERS.add(createMemberlessFilter());
+            SUBFILTERS.add(createMemberlessFilter())
         }
 
         // Filter canaries.
         if (canaries) {
-            SUBFILTERS.add(createCanaryFilter());
+            SUBFILTERS.add(createCanaryFilter())
         }
 
         // Filter formlists containing nullrefs.
         if (nullrefs) {
-            SUBFILTERS.add(createNullRefFilter());
+            SUBFILTERS.add(createNullRefFilter())
         }
 
         // Filter instances attached to nonexistent created forms.
         if (nonexistent) {
-            SUBFILTERS.add(createNonExistentFilter(savefile));
+            SUBFILTERS.add(createNonExistentFilter(savefile))
         }
 
         // Filter long strings.
         if (longStrings) {
-            SUBFILTERS.add(createLongStringFilter());
+            SUBFILTERS.add(createLongStringFilter())
         }
 
         // Filter deleted changeforms.
         if (deleted) {
-            SUBFILTERS.add(createDeletedFilter(context, analysis));
+            SUBFILTERS.add(createDeletedFilter(context, analysis))
         }
 
         // Filter empty changeforms.
         if (empty) {
-            SUBFILTERS.add(createVoidFilter(context, analysis));
+            SUBFILTERS.add(createVoidFilter(context, analysis))
         }
 
         // Combine the filters.
         // OR the subfilters together.
-        boolean seen = false;
-        Predicate<Node> acc = null;
-        for (Predicate<Node> SUBFILTER : SUBFILTERS) {
+        var seen = false
+        var acc: Predicate<FilterTreeModel.Node>? = null
+        for (SUBFILTER in SUBFILTERS) {
             if (!seen) {
-                seen = true;
-                acc = SUBFILTER;
+                seen = true
+                acc = SUBFILTER
             } else {
-                acc = acc.or(SUBFILTER);
+                acc = acc!!.or(SUBFILTER)
             }
         }
-        (seen ? Optional.of(acc) : Optional.<Predicate<Node>>empty())
-                .ifPresent(FILTERS::add);
+        (if (seen) Optional.of(acc!!) else Optional.empty()).ifPresent { e: Predicate<FilterTreeModel.Node> -> FILTERS.add(e) }
 
         // AND the main filters together.
-        boolean seen1 = false;
-        Predicate<Node> result = null;
-        for (Predicate<Node> FILTER : FILTERS) {
+        var seen1 = false
+        var result: Predicate<FilterTreeModel.Node>? = null
+        for (FILTER in FILTERS) {
             if (!seen1) {
-                seen1 = true;
-                result = FILTER;
+                seen1 = true
+                result = FILTER
             } else {
-                result = result.and(FILTER);
+                result = result!!.and(FILTER)
             }
         }
-        return seen1 ? result : null;
+        return if (seen1) result else null
     }
 
     /**
      *
      */
-    static final private Logger LOG = Logger.getLogger(FilterMaker.class.getCanonicalName());
-
+    private val LOG = Logger.getLogger(FilterMaker::class.java.canonicalName)
 }
