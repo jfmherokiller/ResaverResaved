@@ -534,8 +534,8 @@ object Configurator {
      * @return True if the file is probably a savefile.
      */
     @JvmStatic
-    fun validateSavegame(path: Path): Boolean {
-        return validFile(path) && Game.FILTER_ALL.accept(path.toFile())
+    fun validateSavegame(path: Path?): Boolean {
+        return validFile(path) && Game.FILTER_ALL.accept(path?.toFile())
     }
 
     /**
