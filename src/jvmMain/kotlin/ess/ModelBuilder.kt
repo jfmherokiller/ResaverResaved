@@ -185,9 +185,8 @@ class ModelBuilder(progress: ProgressModel) {
         TASKS.add(EXECUTOR.submit(Callable {
             val DICTIONARY = instances.values.stream()
                 .collect(Collectors.groupingBy(ALPHABETICAL))
-            val NODES: List<Node> = DICTIONARY.entries.stream()
-                .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
-                .collect(Collectors.toList())
+            val NODES: List<Node> = DICTIONARY.entries
+                .map { (key, value) -> ContainerNode(key.toString(), value).sort() }.toList()
             val NODE = ContainerNode("Script Instances").addAll(NODES).sort()
             PROGRESS.modifyValue(1)
             NODE

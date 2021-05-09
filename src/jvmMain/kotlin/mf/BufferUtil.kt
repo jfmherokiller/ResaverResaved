@@ -23,7 +23,7 @@ import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
-import java.util.*
+
 import java.util.zip.DataFormatException
 import java.util.zip.Deflater
 import java.util.zip.Inflater
@@ -367,6 +367,6 @@ object BufferUtil {
      */
     @get:Contract(pure = true)
     val charsetLog: Set<Charset>
-        get() = Collections.unmodifiableSet(CHARSET_LOG)
+        get() = CHARSET_LOG
     private val CHARSET_LOG: Set<Charset> = Charset.availableCharsets().values.toSet()
 }
