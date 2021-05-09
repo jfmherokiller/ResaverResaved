@@ -53,45 +53,45 @@ public class ReSaverSettings extends JDialog {
         final JTabbedPane PANE = new JTabbedPane();
         super.setContentPane(PANE);
 
-        {
-            final JPanel TAB = new JPanel();
-            TAB.setLayout(new BoxLayout(TAB, BoxLayout.PAGE_AXIS));
-            PANE.add("General", TAB);
 
-            {
+            final JPanel TABGenal = new JPanel();
+            TABGenal.setLayout(new BoxLayout(TABGenal, BoxLayout.PAGE_AXIS));
+            PANE.add("General", TABGenal);
+
+
                 final JCheckBox ALWAYSPARSE = new JCheckBox("Always parse", PREFS.getBoolean("settings.alwaysParse", false));
-                final JPanel PANEL = new JPanel(new FlowLayout(FlowLayout.LEADING));
-                PANEL.add(ALWAYSPARSE);
-                TAB.add(PANEL);
+                final JPanel PANELAParse = new JPanel(new FlowLayout(FlowLayout.LEADING));
+                PANELAParse.add(ALWAYSPARSE);
+                TABGenal.add(PANELAParse);
                 ALWAYSPARSE.addActionListener(e -> PREFS.putBoolean("settings.alwaysParse", ALWAYSPARSE.isSelected()));
-            }
 
-            {
+
+
                 final JCheckBox DARKTHEME = new JCheckBox("Use Dark Nimbus theme", PREFS.getBoolean("settings.darktheme", false));
-                final JPanel PANEL = new JPanel(new FlowLayout(FlowLayout.LEADING));
-                PANEL.add(DARKTHEME);
-                TAB.add(PANEL);
+                final JPanel PANELDark = new JPanel(new FlowLayout(FlowLayout.LEADING));
+                PANELDark.add(DARKTHEME);
+                TABGenal.add(PANELDark);
                 DARKTHEME.addActionListener(e -> PREFS.putBoolean("settings.darktheme", DARKTHEME.isSelected()));
-            }
 
-            {
+
+
                 final JCheckBox JAVAFX = new JCheckBox("Use JavaFX native fileChooser", PREFS.getBoolean("settings.javafx", false));
-                final JPanel PANEL = new JPanel(new FlowLayout(FlowLayout.LEADING));
-                PANEL.add(JAVAFX);
-                TAB.add(PANEL);
+                final JPanel PANELJavafx = new JPanel(new FlowLayout(FlowLayout.LEADING));
+                PANELJavafx.add(JAVAFX);
+                TABGenal.add(PANELJavafx);
                 JAVAFX.addActionListener(e -> PREFS.putBoolean("settings.javafx", JAVAFX.isSelected()));
-            }
+
 
             {
-                final JLabel LABEL = new JLabel("Font scaling:");
+                final JLabel LABELscaling = new JLabel("Font scaling:");
                 final JFormattedTextField SCALEFIELD = new JFormattedTextField(PREFS.getFloat("settings.fontScale", 1.0f));
-                final JPanel PANEL = new JPanel(new FlowLayout(FlowLayout.LEADING));
+                final JPanel PANELscaling = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
-                LABEL.setLabelFor(SCALEFIELD);
-                PANEL.add(LABEL);
-                PANEL.add(SCALEFIELD);
+                LABELscaling.setLabelFor(SCALEFIELD);
+                PANELscaling.add(LABELscaling);
+                PANELscaling.add(SCALEFIELD);
                 SCALEFIELD.setColumns(5);
-                TAB.add(PANEL);
+                TABGenal.add(PANELscaling);
 
                 SCALEFIELD.addActionListener(e -> {
                     Number n = (Number) SCALEFIELD.getValue();
@@ -109,67 +109,67 @@ public class ReSaverSettings extends JDialog {
                 });
             }
 
-        }
 
-        Game.VALUES.forEach((game) -> {
+
+        for (Game game : Game.VALUES) {
             JPanel TAB = new JPanel();
             TAB.setLayout(new BoxLayout(TAB, BoxLayout.PAGE_AXIS));
             PANE.add(game.getNAME(), TAB);
 
-            {
-                final JLabel LABEL = new JLabel("Game directory:");
-                final JTextField GAMEDIR = new JTextField(getFirst(Configurator.getGameDirectory(game), HOME).toString(), 50);
-                final JPanel PANEL = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-                final JButton BUTTON = new JButton("Select");
-                LABEL.setLabelFor(GAMEDIR);
-                GAMEDIR.setEditable(false);
-                PANEL.add(LABEL);
-                PANEL.add(GAMEDIR);
-                PANEL.add(BUTTON);
-                TAB.add(PANEL);
 
-                BUTTON.addActionListener(e -> {
+                final JLabel LABELgameDir = new JLabel("Game directory:");
+                final JTextField GAMEDIR = new JTextField(getFirst(Configurator.getGameDirectory(game), HOME).toString(), 50);
+                final JPanel PANELgameDir = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+                final JButton BUTTONgameDir= new JButton("Select");
+                LABELgameDir.setLabelFor(GAMEDIR);
+                GAMEDIR.setEditable(false);
+                PANELgameDir.add(LABELgameDir);
+                PANELgameDir.add(GAMEDIR);
+                PANELgameDir.add(BUTTONgameDir);
+                TAB.add(PANELgameDir);
+
+                BUTTONgameDir.addActionListener(e -> {
                     Path newPath = getFirst(Configurator.selectGameDirectory(parent, game), Configurator.getGameDirectory(game), HOME);
                     GAMEDIR.setText(newPath.toString());
                 });
-            }
 
-            {
-                final JLabel LABEL = new JLabel("ModOrganizer2 ini file:");
+
+
+                final JLabel LABELModOrg = new JLabel("ModOrganizer2 ini file:");
                 final JTextField MO2INI = new JTextField(getFirst(Configurator.getMO2Ini(game), HOME).toString(), 50);
-                final JPanel PANEL = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-                final JButton BUTTON = new JButton("Select");
-                LABEL.setLabelFor(MO2INI);
+                final JPanel PANELModorg = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+                final JButton BUTTONModOrg = new JButton("Select");
+                LABELModOrg.setLabelFor(MO2INI);
                 MO2INI.setEditable(false);
-                PANEL.add(LABEL);
-                PANEL.add(MO2INI);
-                PANEL.add(BUTTON);
-                TAB.add(PANEL);
+                PANELModorg.add(LABELModOrg);
+                PANELModorg.add(MO2INI);
+                PANELModorg.add(BUTTONModOrg);
+                TAB.add(PANELModorg);
 
-                BUTTON.addActionListener(e -> {
+                BUTTONModOrg.addActionListener(e -> {
                     Path newPath = getFirst(Configurator.selectMO2Ini(parent, game), Configurator.getMO2Ini(game), HOME);
                     MO2INI.setText(newPath.toString());
                 });
-            }
 
-            {
-                final JLabel LABEL = new JLabel("Savefile directory:");
+
+
+                final JLabel LABELSavefileDir = new JLabel("Savefile directory:");
                 final JTextField SAVEDIR = new JTextField(getFirst(Configurator.getSaveDirectory(game), HOME).toString(), 50);
-                final JPanel PANEL = new JPanel(new FlowLayout(FlowLayout.TRAILING));
-                final JButton BUTTON = new JButton("Select");
-                LABEL.setLabelFor(SAVEDIR);
+                final JPanel PANELSavefileDir = new JPanel(new FlowLayout(FlowLayout.TRAILING));
+                final JButton BUTTONSavefileDir = new JButton("Select");
+                LABELSavefileDir.setLabelFor(SAVEDIR);
                 SAVEDIR.setEditable(false);
-                PANEL.add(LABEL);
-                PANEL.add(SAVEDIR);
-                PANEL.add(BUTTON);
-                TAB.add(PANEL);
+                PANELSavefileDir.add(LABELSavefileDir);
+                PANELSavefileDir.add(SAVEDIR);
+                PANELSavefileDir.add(BUTTONSavefileDir);
+                TAB.add(PANELSavefileDir);
 
-                BUTTON.addActionListener(e -> {
+                BUTTONSavefileDir.addActionListener(e -> {
                     Path newPath = getFirst(Configurator.selectSavefileDirectory(parent, game), Configurator.getSaveDirectory(game), HOME);
                     SAVEDIR.setText(newPath.toString());
                 });
-            }
-        });
+
+        }
 
         if (currentGame != null) {
             PANE.setSelectedIndex(Game.VALUES.indexOf(currentGame));
