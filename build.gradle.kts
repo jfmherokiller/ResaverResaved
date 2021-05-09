@@ -33,6 +33,7 @@ dependencies {
     implementation("org.jetbrains:annotations:20.1.0")
     implementation("io.ktor:ktor-server-core:1.5.4")
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.0")
+    implementation ("no.tornado:tornadofx:1.7.20")
 }
 javafx {
     version = "15"
