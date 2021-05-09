@@ -31,23 +31,28 @@ class VSVal : Element {
      */
     constructor(`val`: Int) {
         var `val` = `val`
-        if (`val` <= 0x40) {
-            `val` = `val` shl 2
-            DATA = ByteArray(1)
-            DATA[0] = `val`.toByte()
-        } else if (`val` <= 0x4000) {
-            `val` = `val` shl 2
-            DATA = ByteArray(2)
-            DATA[0] = (`val` or 0x1).toByte()
-            DATA[1] = (`val` shr 8).toByte()
-        } else if (`val` <= 0x40000000) {
-            `val` = `val` shl 2
-            DATA = ByteArray(3)
-            DATA[0] = (`val` or 0x2).toByte()
-            DATA[1] = (`val` shr 8).toByte()
-            DATA[2] = (`val` shr 16).toByte()
-        } else {
-            throw IllegalArgumentException("VSVal cannot stores values greater than 0x40000000: $`val`")
+        when {
+            `val` <= 0x40 -> {
+                `val` = `val` shl 2
+                DATA = ByteArray(1)
+                DATA[0] = `val`.toByte()
+            }
+            `val` <= 0x4000 -> {
+                `val` = `val` shl 2
+                DATA = ByteArray(2)
+                DATA[0] = (`val` or 0x1).toByte()
+                DATA[1] = (`val` shr 8).toByte()
+            }
+            `val` <= 0x40000000 -> {
+                `val` = `val` shl 2
+                DATA = ByteArray(3)
+                DATA[0] = (`val` or 0x2).toByte()
+                DATA[1] = (`val` shr 8).toByte()
+                DATA[2] = (`val` shr 16).toByte()
+            }
+            else -> {
+                throw IllegalArgumentException("VSVal cannot stores values greater than 0x40000000: $`val`")
+            }
         }
     }
 

@@ -38,7 +38,7 @@ import java.nio.ByteBuffer
  * @param context The `PapyrusContext` info.
  * @throws PapyrusElementException
  */
-class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : AnalyzableElement, Linkable, HasID, SeparateData,
+class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement, Linkable, HasID, SeparateData,
     HasVariables {
     /**
      * @see resaver.ess.Element.write
@@ -59,7 +59,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
      * @throws PapyrusFormatException
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
-    override fun readData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) {
+    override fun readData(input: ByteBuffer?, context: PapyrusContext?) {
         data = input?.let { ArrayData(it, context) }
     }
 
@@ -90,7 +90,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
      */
     fun toValueString(): String {
         return if (varType.isRefType) {
-            refType.toString() + "[" + length + "]"
+            "${refType.toString()}[$length]"
         } else if (varType === VarType.NULL && variables.isNotEmpty()) {
             val t = variables[0]?.type
             "$t[$length]"
@@ -148,21 +148,17 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
             HOLDERS.forEach { owner: PapyrusElement? ->
                 if (owner is Linkable) {
                     BUILDER.append(
-                        String.format(
-                            "<li>%s %s",
-                            owner.javaClass.simpleName,
-                            (owner as Linkable).toHTML(this)
-                        )
+                        "<li>${owner.javaClass.simpleName} ${(owner as Linkable).toHTML(this)}"
                     )
                 } else if (owner != null) {
-                    BUILDER.append(String.format("<li>%s %s", owner.javaClass.simpleName, owner))
+                    BUILDER.append("<li>${owner.javaClass.simpleName} $owner")
                 }
             }
             BUILDER.append("</ul>")
         }
         if (null != analysis) {
             HOLDERS.forEach { owner: PapyrusElement? ->
-                if (owner is ess.papyrus.ScriptInstance) {
+                if (owner is ScriptInstance) {
                     val mods = analysis.SCRIPT_ORIGINS[owner.scriptName.toIString()]
                     if (null != mods) {
                         val mod = mods.last()
@@ -175,14 +171,14 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
             }
         }
         BUILDER.append("<p/>")
-        BUILDER.append(String.format("<p>ID: %s</p>", iD))
-        BUILDER.append(String.format("<p>Content type: %s</p>", varType))
+        BUILDER.append("<p>ID: $iD</p>")
+        BUILDER.append("<p>Content type: $varType</p>")
         if (varType.isRefType) {
             val SCRIPT = save!!.papyrus?.scripts?.get(refType)
             if (null != SCRIPT) {
-                BUILDER.append(String.format("<p>Reference type: %s</p>", SCRIPT.toHTML(this)))
+                BUILDER.append("<p>Reference type: ${SCRIPT.toHTML(this)}</p>")
             } else {
-                BUILDER.append(String.format("<p>Reference type: %s</p>", refType))
+                BUILDER.append("<p>Reference type: $refType</p>")
             }
         }
         BUILDER.append(String.format("<p>Length: %d</p>", length))
@@ -274,7 +270,7 @@ class ArrayInfo(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Analyz
      *
      * @author Mark Fairchild
      */
-    private inner class ArrayData(input: ByteBuffer, context: ess.papyrus.PapyrusContext?) : PapyrusDataFor<ArrayInfo?> {
+    private inner class ArrayData(input: ByteBuffer, context: PapyrusContext?) : PapyrusDataFor<ArrayInfo?> {
         /**
          * @see resaver.ess.Element.write
          * @param output The output stream.

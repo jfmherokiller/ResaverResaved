@@ -21,6 +21,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.*
 
+
 /**
  * Abstraction for plugins.
  *
@@ -29,7 +30,7 @@ import java.util.*
 class Plugin private constructor(name: String, index: Int, lightweight: Boolean) : Element, AnalyzableElement, Linkable,
     Comparable<Plugin?> {
     /**
-     * @see resaver.ess.Element.write
+     * @see Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -39,7 +40,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
@@ -47,7 +48,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
     }
 
     /**
-     * @see resaver.ess.Linkable.toHTML
+     * @see Linkable.toHTML
      * @param target A target within the `Linkable`.
      * @return
      */
@@ -75,7 +76,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @param save The savefile to search.
      * @return A set of changeforms.
      */
-    fun getChangeForms(save: ess.ESS?): Set<ChangeForm> {
+    fun getChangeForms(save: ESS?): Set<ChangeForm> {
         return save!!.changeForms.values
             .filter { form: ChangeForm? -> form?.refID?.PLUGIN === this }.toList().filterNotNull().toSet()
     }
@@ -86,7 +87,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @param save The savefile to search.
      * @return A set of scriptinstances.
      */
-    fun getInstances(save: ess.ESS?): Set<ess.papyrus.ScriptInstance> {
+    fun getInstances(save: ESS?): Set<ess.papyrus.ScriptInstance> {
         val INSTANCES: Set<ess.papyrus.ScriptInstance> = save!!.papyrus?.scriptInstances?.values
             ?.filter { instance: ess.papyrus.ScriptInstance -> instance.refID != null }
             ?.filter { instance: ess.papyrus.ScriptInstance -> instance.refID.PLUGIN === this }?.toList()!!.toSet()
@@ -99,7 +100,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @param save
      * @return
      */
-    override fun getInfo(analysis: Analysis?, save: ess.ESS?): String {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER: StringBuilder = StringBuilder()
         if (LIGHTWEIGHT) {
             BUILDER.append("<html><h3>LITE PLUGIN</h3>")
@@ -191,11 +192,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
         if (null == other) {
             return 1
         }
-        return java.util.Objects.compare(NAME, other.NAME) { obj: String, str: String? ->
-            obj.compareTo(
-                (str)!!, ignoreCase = true
-            )
-        }
+        return NAME.compareTo(other.NAME, ignoreCase = true)
     }
 
     /**

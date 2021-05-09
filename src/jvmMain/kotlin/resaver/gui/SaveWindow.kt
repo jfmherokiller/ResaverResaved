@@ -51,11 +51,11 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import java.util.function.Predicate
+
 import java.util.function.Supplier
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -455,8 +455,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
      * @param disableSaving A flag indicating that saving should be disabled.
      */
     fun setESS(savefile: Path, newSave: ESS, model: FilterTreeModel, disableSaving: Boolean) {
-        Objects.requireNonNull(savefile)
-        Objects.requireNonNull(newSave)
+
         LOG.info("================")
         LOG.info("setESS")
         TIMER.restart()
@@ -761,9 +760,9 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
      */
     fun open() {
         val SAVEFILE = choosePathModal(this,
-            null,
-            Supplier { selectSaveFile(this) }, Predicate { obj: Path? -> validateSavegame(obj) },
-            true
+            defval = null,
+            request = { selectSaveFile(this) }, check = { obj: Path? -> validateSavegame(obj) },
+            interactive = true
         )
         if (SAVEFILE != null) {
             open(SAVEFILE, PREFS.getBoolean("settings.alwaysParse", false))
@@ -793,11 +792,8 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     val SCRIPT = readScript(path)
                     val SOURCE: MutableList<String?> = mutableListOf()
                     SCRIPT.disassemble(SOURCE, AssemblyLevel.FULL)
-                    val joiner = StringJoiner("<br/>", "<pre>", "</pre>")
-                    for (s in SOURCE) {
-                        joiner.add(s)
-                    }
-                    val TEXT = TextDialog(joiner.toString())
+                    val joinbe = SOURCE.joinToString(separator = "<br/>", prefix = "<pre>", postfix = "</pre>")
+                    val TEXT = TextDialog(joinbe)
                     JOptionPane.showMessageDialog(this, TEXT, path.fileName.toString(), JOptionPane.INFORMATION_MESSAGE)
                 } catch (ex: IOException) {
                     LOG.log(Level.WARNING, "Error while decompiling drag-and-drop script.", ex)
@@ -869,7 +865,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
     private fun exportPlugins() {
         val EXPORT = choosePathModal(this,
             null,
-            Supplier { selectPluginsExport(this, save!!.originalFile) }, Predicate { obj: Path? -> validWrite(obj) },
+            Supplier { selectPluginsExport(this, save!!.originalFile) }, { obj: Path? -> validWrite(obj) },
             true
         ) ?: return
         try {
@@ -934,7 +930,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         }
         val otherPath = choosePathModal(this,
             null,
-            Supplier { selectSaveFile(this) }, Predicate { obj: Path? -> validateSavegame(obj) },
+            Supplier { selectSaveFile(this) }, { obj: Path? -> validateSavegame(obj) },
             true
         ) ?: return
         try {
@@ -1284,7 +1280,6 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
      * select.
      */
     fun findElement(element: Element?, index: Int) {
-        Objects.requireNonNull(element)
         this.findElement(element)
         TABLE.scrollSelectionToVisible(index)
     }
@@ -1363,7 +1358,6 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
      * @return The count of instances and changeforms removed.
      */
     private fun purgePlugins(plugins: MutableList<Plugin?>, purgeScripts: Boolean, purgeForms: Boolean) {
-        Objects.requireNonNull(plugins)
         val NUM_FORMS: Int
         val NUM_INSTANCES: Int
         if (purgeScripts) {
@@ -1436,7 +1430,6 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
      * terminated.
      */
     private fun zeroThreads(threads: List<ActiveScript>) {
-        Objects.requireNonNull(threads)
         if (threads.isEmpty()) {
             return
         }

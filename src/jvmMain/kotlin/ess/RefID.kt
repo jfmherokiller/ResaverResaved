@@ -111,7 +111,7 @@ class RefID internal constructor(private val DATA: Int, ess: ess.ESS) : Element,
     }
 
     override fun hashCode(): Int {
-        return Integer.hashCode(DATA)
+        return DATA.hashCode()
     }
 
     override fun equals(other: Any?): Boolean {
