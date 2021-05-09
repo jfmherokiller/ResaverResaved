@@ -229,32 +229,32 @@ class PapyrusContext : ESSContext {
         return null
     }
 
-    fun findScript(name: TString?): Script {
-        return papyrus.scripts.getOrDefault(name, null)!!
+    fun findScript(name: TString?): Script? {
+        return papyrus.scripts.getOrDefault(name, null)
     }
 
-    fun findStruct(name: TString?): Struct {
-        return papyrus.structs.getOrDefault(name, null)!!
+    fun findStruct(name: TString?): Struct? {
+        return papyrus.structs.getOrDefault(name, null)
     }
 
-    fun findScriptInstance(id: EID?): ScriptInstance {
-        return papyrus.scriptInstances.getOrDefault(id, null)!!
+    fun findScriptInstance(id: EID?): ScriptInstance? {
+        return papyrus.scriptInstances.getOrDefault(id, null)
     }
 
-    fun findStructInstance(id: EID?): StructInstance {
-        return papyrus.structInstances.getOrDefault(id, null)!!
+    fun findStructInstance(id: EID?): StructInstance? {
+        return papyrus.structInstances.getOrDefault(id, null)
     }
 
-    fun findReference(id: EID?): Reference {
-        return papyrus.references.getOrDefault(id, null)!!
+    fun findReference(id: EID?): Reference? {
+        return papyrus.references.getOrDefault(id, null)
     }
 
-    fun findArray(id: EID?): ArrayInfo {
-        return papyrus.arrays.getOrDefault(id, null)!!
+    fun findArray(id: EID?): ArrayInfo? {
+        return papyrus.arrays.getOrDefault(id, null)
     }
 
-    fun findActiveScript(id: EID?): ActiveScript {
-        return papyrus.activeScripts.getOrDefault(id, null)!!
+    fun findActiveScript(id: EID?): ActiveScript? {
+        return papyrus.activeScripts.getOrDefault(id, null)
     }
 
     fun findReferrent(id: EID): GameElement? {
