@@ -28,7 +28,7 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-class FunctionMessage(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable {
+class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
@@ -71,17 +71,17 @@ class FunctionMessage(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : 
      */
     override fun toHTML(target: Element?): String {
         if (null != target && null != message) {
-            var result: Optional<ess.papyrus.Variable> = Optional.empty()
-            for (v in message!!.variables!!) {
-                if (v?.hasRef() == true) {
+            var result: Variable? = null
+            for (v in message!!.variables) {
+                if (v.hasRef()) {
                     if (v.referent === target) {
-                        result = Optional.of(v)
+                        result = v
                         break
                     }
                 }
             }
-            if (result.isPresent) {
-                val i: Int = message!!.variables?.indexOf(result.get()) ?: 0
+            if (result != null) {
+                val i: Int = message!!.variables.indexOf(result)
                 if (i >= 0) {
                     return Linkable.makeLink("message", iD, i, this.toString())
                 }
@@ -108,9 +108,9 @@ class FunctionMessage(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : 
                 "MSG $scriptName"
             }
         } else if (iD != null) {
-            "MSG " + FLAG + "," + pad8(UNKNOWN.toInt()) + " (" + iD + ")"
+            "MSG $FLAG,${pad8(UNKNOWN.toInt())} ($iD)"
         } else {
-            "MSG " + FLAG + "," + pad8(UNKNOWN.toInt())
+            "MSG $FLAG,${pad8(UNKNOWN.toInt())}"
         }
     }
 
@@ -181,8 +181,8 @@ class FunctionMessage(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : 
     /**
      * @return The message field.
      */
-    var message: ess.papyrus.FunctionMessageData? = null
-    private val THREAD: ess.papyrus.ActiveScript?
+    var message: FunctionMessageData? = null
+    private val THREAD: ActiveScript?
     //, HasID {
     /**
      * Creates a new `FunctionMessage` by reading from a
@@ -193,8 +193,6 @@ class FunctionMessage(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : 
      * @throws PapyrusElementException
      */
     init {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(context)
         UNKNOWN = input.get()
         iD = if (UNKNOWN <= 2) context.readEID32(input) else null
         FLAG = input.get()
@@ -203,11 +201,11 @@ class FunctionMessage(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : 
         if (FLAG.toInt() == 0) {
             message = null
         } else {
-            var message: ess.papyrus.FunctionMessageData? = null
+            var message: FunctionMessageData? = null
             try {
-                message = ess.papyrus.FunctionMessageData(input, this, context)
+                message = FunctionMessageData(input, this, context)
             } catch (ex: PapyrusElementException) {
-                message = ex.partial as ess.papyrus.FunctionMessageData
+                message = ex.partial as FunctionMessageData
                 throw PapyrusElementException("Failed to read message for FunctionMessage.", ex, this)
             } catch (ex: PapyrusFormatException) {
                 throw PapyrusElementException("Failed to read message for FunctionMessage.", ex, this)

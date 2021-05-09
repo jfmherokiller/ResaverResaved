@@ -26,7 +26,7 @@ import java.util.logging.Logger
  *
  * @author Mark Fairchild
  */
-class ChangeFormRefr(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis: resaver.Analysis?, context: ESSContext?) :
+class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, analysis: resaver.Analysis?, context: ESSContext?) :
     ess.GeneralElement(), ChangeFormData {
     /**
      * @see AnalyzableElement.getInfo
@@ -68,10 +68,10 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.Int, refid: RefID, analysis
     }
 
     // The change flags.
-    private val FLAGS: Flags.Int
+    private val FLAGS: Flags.FlagsInt
 
     companion object {
-        val LOG = Logger.getLogger(ChangeFormRefr::class.java.canonicalName)
+        val LOG: Logger = Logger.getLogger(ChangeFormRefr::class.java.canonicalName)
     }
 
     /**

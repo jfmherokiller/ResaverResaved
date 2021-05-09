@@ -25,7 +25,7 @@ import java.util.logging.Logger
  *
  * @author Mark Fairchild
  */
-class ChangeFormNPC(input: ByteBuffer, flags: Flags.Int, context: ESSContext) : ess.GeneralElement(), ChangeFormData {
+class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContext) : ess.GeneralElement(), ChangeFormData {
     /**
      * @return String representation.
      */

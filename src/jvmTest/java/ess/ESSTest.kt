@@ -83,7 +83,7 @@ class ESSTest {
                     return
                 }
             }
-            val EXT = "." + (ORIGINAL?.header?.GAME?.SAVE_EXT ?: "ess")
+            val EXT = "." + (ORIGINAL.header?.GAME?.SAVE_EXT ?: "ess")
             val F2 = Files.createTempFile("ess_test", EXT)
             if (ORIGINAL != null) {
                 ESS.writeESS(ORIGINAL, F2)

@@ -361,35 +361,35 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
      * @return The elements that were removed.
      */
     fun removeUndefinedElements(): Set<PapyrusElement?> {
-        val set: MutableSet<Script> = HashSet()
+        val set: MutableSet<Script> = mutableSetOf()
         for (script in scripts.values) {
             if (script.isUndefined) {
                 set.add(script)
             }
         }
         val REMOVED: MutableSet<PapyrusElement?> = HashSet(removeElements(set))
-        val result: MutableSet<Struct> = HashSet()
+        val result: MutableSet<Struct> = mutableSetOf()
         for (struct in structs.values) {
             if (struct.isUndefined) {
                 result.add(struct)
             }
         }
         REMOVED.addAll(removeElements(result))
-        val set1: MutableSet<ScriptInstance> = HashSet()
+        val set1: MutableSet<ScriptInstance> = mutableSetOf()
         for (scriptInstance in scriptInstances.values) {
             if (scriptInstance.isUndefined) {
                 set1.add(scriptInstance)
             }
         }
         REMOVED.addAll(removeElements(set1))
-        val result1: MutableSet<Reference> = HashSet()
+        val result1: MutableSet<Reference> = mutableSetOf()
         for (reference in references.values) {
             if (reference.isUndefined) {
                 result1.add(reference)
             }
         }
         REMOVED.addAll(removeElements(result1))
-        val set2: MutableSet<StructInstance> = HashSet()
+        val set2: MutableSet<StructInstance> = mutableSetOf()
         for (structInstance in structInstances.values) {
             if (structInstance.isUndefined) {
                 set2.add(structInstance)
@@ -397,7 +397,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
         }
         REMOVED.addAll(removeElements(set2))
         for (v in activeScripts.values) {
-            if (v.isUndefined && !v.isTerminated) {
+            if (v.isUndefined && v.isTerminated.not()) {
                 v.zero()
                 REMOVED.add(v)
             }

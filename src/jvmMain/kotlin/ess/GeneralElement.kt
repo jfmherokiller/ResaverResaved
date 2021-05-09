@@ -855,7 +855,7 @@ open class GeneralElement protected constructor() : Element {
     public val DATA: MutableMap<IString, Any?> = mutableMapOf()
 
     companion object {
-        public val LOG = Logger.getLogger(ChangeForm::class.java.canonicalName)
+        public val LOG: Logger = Logger.getLogger(ChangeForm::class.java.canonicalName)
         /**
          * Appends `n` indents to a `StringBuilder`.
          *

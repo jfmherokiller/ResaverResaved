@@ -72,7 +72,7 @@ abstract class Flags : Element {
      * @param index The index of the flag.
      * @return A boolean value representing the flag.
      */
-    abstract fun getFlag(index: kotlin.Int): Boolean
+    abstract fun getFlag(index: Int): Boolean
 
     /**
      * Accesses the flag corresponding to a ChangeFlagConstants.
@@ -87,7 +87,7 @@ abstract class Flags : Element {
     /**
      * 8-bit array of flags.
      */
-    class Byte : Flags {
+    class FlagsByte : Flags {
         constructor(input: ByteBuffer) {
             FLAGS = input.get()
         }
@@ -100,11 +100,11 @@ abstract class Flags : Element {
             output!!.put(FLAGS)
         }
 
-        override fun calculateSize(): kotlin.Int {
+        override fun calculateSize(): Int {
             return 1
         }
 
-        override fun getFlag(index: kotlin.Int): Boolean {
+        override fun getFlag(index: Int): Boolean {
             require(!(index < 0 || index >= 8)) { "Invalid index: $index" }
             return 0x1 and (FLAGS.toInt() ushr index) != 0
         }
@@ -123,12 +123,12 @@ abstract class Flags : Element {
             return ZEROS[BITS - len].toString() + binary
         }
 
-        override fun hashCode(): kotlin.Int {
+        override fun hashCode(): Int {
             return Integer.hashCode(FLAGS.toInt())
         }
 
         override fun equals(other: Any?): Boolean {
-            return other is Byte && other.FLAGS == FLAGS
+            return other is FlagsByte && other.FLAGS == FLAGS
         }
 
         val FLAGS: kotlin.Byte
@@ -137,7 +137,7 @@ abstract class Flags : Element {
     /**
      * 16-bit array of flags.
      */
-    class Short : Flags {
+    class FlagsShort : Flags {
         constructor(input: ByteBuffer) {
             Objects.requireNonNull(input)
             FLAGS = input.short
@@ -148,7 +148,7 @@ abstract class Flags : Element {
         }
 
         fun checkMask(mask: kotlin.Short): Boolean {
-            val result: kotlin.Int = (FLAGS and mask).toInt()
+            val result: Int = (FLAGS and mask).toInt()
             return result != 0
         }
 
@@ -156,29 +156,29 @@ abstract class Flags : Element {
             output!!.putShort(FLAGS)
         }
 
-        override fun calculateSize(): kotlin.Int {
+        override fun calculateSize(): Int {
             return 2
         }
 
-        override fun getFlag(index: kotlin.Int): Boolean {
+        override fun getFlag(index: Int): Boolean {
             require(!(index < 0 || index >= 16)) { "Invalid index: $index" }
             return 0x1 and (FLAGS.toInt() ushr index) != 0
         }
 
         override fun toString(): String {
             val BITS = 16
-            val VAL: kotlin.Int = (FLAGS.toInt() and 0xFFFF)
+            val VAL: Int = (FLAGS.toInt() and 0xFFFF)
             val binary = Integer.toBinaryString(VAL)
             val len = binary.length
             return ZEROS[BITS - len].toString() + binary
         }
 
-        override fun hashCode(): kotlin.Int {
+        override fun hashCode(): Int {
             return Integer.hashCode(FLAGS.toInt())
         }
 
         override fun equals(other: Any?): Boolean {
-            return other is Short && other.FLAGS == FLAGS
+            return other is FlagsShort && other.FLAGS == FLAGS
         }
 
         val FLAGS: kotlin.Short
@@ -187,13 +187,13 @@ abstract class Flags : Element {
     /**
      * 32-bit array of flags.
      */
-    class Int : Flags {
+    class FlagsInt : Flags {
         constructor(input: ByteBuffer) {
             Objects.requireNonNull(input)
             FLAGS = input.int
         }
 
-        constructor(`val`: kotlin.Int) {
+        constructor(`val`: Int) {
             FLAGS = `val`
         }
 
@@ -206,11 +206,11 @@ abstract class Flags : Element {
             output!!.putInt(FLAGS)
         }
 
-        override fun calculateSize(): kotlin.Int {
+        override fun calculateSize(): Int {
             return 4
         }
 
-        override fun getFlag(index: kotlin.Int): Boolean {
+        override fun getFlag(index: Int): Boolean {
             require(!(index < 0 || index >= 32)) { "Invalid index: $index" }
             return 0x1 and (FLAGS ushr index) != 0
         }
@@ -222,16 +222,16 @@ abstract class Flags : Element {
             return ZEROS[BITS - len].toString() + binary
         }
 
-        override fun hashCode(): kotlin.Int {
+        override fun hashCode(): Int {
             return Integer.hashCode(FLAGS)
         }
 
         override fun equals(other: Any?): Boolean {
-            return other is Int && other.FLAGS == FLAGS
+            return other is FlagsInt && other.FLAGS == FLAGS
         }
 
         @JvmField
-        val FLAGS: kotlin.Int
+        val FLAGS: Int
     }
 
     companion object {
@@ -243,8 +243,8 @@ abstract class Flags : Element {
          * @return The `Byte` .
          */
         @JvmStatic
-        fun readByteFlags(input: ByteBuffer): Byte {
-            return Byte(input)
+        fun readByteFlags(input: ByteBuffer): FlagsByte {
+            return FlagsByte(input)
         }
 
         /**
@@ -254,8 +254,8 @@ abstract class Flags : Element {
          * @param input The input stream.
          * @return The `Short` .
          */
-        fun readShortFlags(input: ByteBuffer): Short {
-            return Short(input)
+        fun readShortFlags(input: ByteBuffer): FlagsShort {
+            return FlagsShort(input)
         }
 
         /**
@@ -265,8 +265,8 @@ abstract class Flags : Element {
          * @param input The input stream.
          * @return The `Int` .
          */
-        fun readIntFlags(input: ByteBuffer): Int {
-            return Int(input)
+        fun readIntFlags(input: ByteBuffer): FlagsInt {
+            return FlagsInt(input)
         }
 
         private val ZEROS = makeZeros()

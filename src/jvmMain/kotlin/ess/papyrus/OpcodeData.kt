@@ -87,7 +87,7 @@ class OpcodeData : PapyrusElement {
      */
     override fun write(output: ByteBuffer?) {
         output!!.put(opcode.ordinal.toByte())
-        PARAMETERS.forEach { `var`: ess.papyrus.Parameter -> `var`.write(output) }
+        PARAMETERS.forEach { `var`: Parameter -> `var`.write(output) }
     }
 
     /**
@@ -104,7 +104,7 @@ class OpcodeData : PapyrusElement {
     /**
      * @return The list of instruction parameters.
      */
-    val parameters: List<ess.papyrus.Parameter>
+    val parameters: List<Parameter>
         get() = PARAMETERS
 
     /**
@@ -113,7 +113,7 @@ class OpcodeData : PapyrusElement {
     override fun toString(): String {
         val BUILDER = StringBuilder()
         BUILDER.append(opcode)
-        PARAMETERS.forEach { p: ess.papyrus.Parameter -> BUILDER.append(' ').append(p.toValueString()) }
+        PARAMETERS.forEach { p: Parameter -> BUILDER.append(' ').append(p.toValueString()) }
         return BUILDER.toString()
     }
 
@@ -144,7 +144,7 @@ class OpcodeData : PapyrusElement {
      * @return The opcode.
      */
     val opcode: Opcode
-    private val PARAMETERS: MutableList<ess.papyrus.Parameter>
+    private val PARAMETERS: MutableList<Parameter>
 
     companion object {
         /**

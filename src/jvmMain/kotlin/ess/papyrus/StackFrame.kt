@@ -386,7 +386,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
     }
 
     private val THREAD: ActiveScript?
-    private val FLAG: Flags.Byte
+    private val FLAG: Flags.FlagsByte
     private val FN_Var_TYPE: VarType
 
     /**
@@ -413,8 +413,8 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @return The docstring.
      */
     val docString: TString
-    private val FN_USERFLAGS: Flags.Int
-    private val FN_FLAGS: Flags.Byte
+    private val FN_USERFLAGS: Flags.FlagsInt
+    private val FN_FLAGS: Flags.FlagsByte
     private val FN_PARAMS: MutableList<FunctionParam>
     private val FN_LOCALS: MutableList<FunctionLocal>
     private var CODE: MutableList<OpcodeData> = mutableListOf()
@@ -777,7 +777,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
             throw PapyrusFormatException("Invalid variableCount $variableCount")
         }
         THREAD = thread
-        FLAG = Flags.Byte(input)
+        FLAG = Flags.FlagsByte(input)
         FN_Var_TYPE = read(input)
         scriptName = context.readTString(input)
         script = context.findScript(scriptName)
@@ -789,8 +789,8 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         OPCODE_MINORVERSION = input.get()
         RETURNTYPE = context.readTString(input)
         docString = context.readTString(input)
-        FN_USERFLAGS = Flags.Int(input)
-        FN_FLAGS = Flags.Byte(input)
+        FN_USERFLAGS = Flags.FlagsInt(input)
+        FN_FLAGS = Flags.FlagsByte(input)
         val functionParameterCount = java.lang.Short.toUnsignedInt(input.short)
         assert(functionParameterCount in 0..2047) { "Invalid functionParameterCount $functionParameterCount" }
         FN_PARAMS = ArrayList(functionParameterCount)

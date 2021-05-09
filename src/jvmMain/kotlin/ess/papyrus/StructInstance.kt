@@ -102,7 +102,7 @@ class StructInstance
     /**
      * @return The flag field.
      */
-    val flag: Flags.Byte?
+    val flag: Flags.FlagsByte?
         get() = if (null == data) null else data!!.FLAG
 
     /**
@@ -241,7 +241,7 @@ class StructInstance
         }
 
         //final private EID ID;
-        val FLAG: Flags.Byte
+        val FLAG: Flags.FlagsByte
         var VARIABLES: MutableList<Variable?> = mutableListOf()
 
         /**

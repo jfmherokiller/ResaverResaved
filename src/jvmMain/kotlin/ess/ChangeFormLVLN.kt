@@ -24,7 +24,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class ChangeFormLVLN(input: ByteBuffer, flags: Flags.Int, context: ESSContext?) : ChangeFormData {
+class ChangeFormLVLN(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContext?) : ChangeFormData {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.

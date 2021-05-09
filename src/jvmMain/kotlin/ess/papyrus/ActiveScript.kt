@@ -444,22 +444,22 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
             iD.write(output)
             majorVersion.let { output?.put(it) }
             MINORVERSION.let { output?.put(it) }
-            unknownVar?.write(output)
+            unknownVar.write(output)
             output?.put(FLAG)
             unknownByte.let { output?.put(it) }
             if ((FLAG and 0x01.toByte()) == 0x01.toByte()) {
                 unknown2.let { output?.putInt(it) }
             }
             unknown3.let { output?.put(it) }
-            if (null != unknown4) {
+            if (unknown4 != null) {
                 unknown4!!.write(output)
             }
-            if (null != ATTACHED) {
+            if (ATTACHED != null) {
                 ATTACHED?.write(output)
             }
             output?.putInt(STACKFRAMES.size)
             STACKFRAMES.forEach { frame: StackFrame -> frame.write(output) }
-            if (null != unknown5) {
+            if (unknown5 != null) {
                 output?.put(unknown5!!)
             }
         }
@@ -471,7 +471,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
         override fun calculateSize(): Int {
             var sum = 2
             sum += iD.calculateSize()
-            sum += unknownVar?.calculateSize() ?: 0
+            sum += unknownVar.calculateSize()
             sum += 2
             sum += if ((FLAG and 0x01.toByte()) == 0x01.toByte()) 4 else 0
             sum += 5
@@ -495,7 +495,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
         /**
          * @return The unknown variable field.
          */
-        var unknownVar: Variable?
+        var unknownVar: Variable
         val FLAG: Byte
 
         /**
@@ -569,7 +569,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
             try {
                 val count = input.int
                 require(count >= 0) { "Invalid stackFrame count: $count" }
-                STACKFRAMES = ArrayList(count)
+                STACKFRAMES = mutableListOf()
                 for (i in 0 until count) {
                     val frame = StackFrame(input, this@ActiveScript, context)
                     STACKFRAMES.add(frame)
@@ -593,8 +593,6 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
      * @param context The `PapyrusContext` info.
      */
     init {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(context)
         iD = context.readEID32(input)
         type = input.get()
         instance = null

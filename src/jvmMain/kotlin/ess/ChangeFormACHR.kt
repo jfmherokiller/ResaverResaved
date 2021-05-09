@@ -28,7 +28,7 @@ import java.util.logging.Logger
  */
 class ChangeFormACHR(
     input: ByteBuffer,
-    flags: Flags.Int,
+    flags: Flags.FlagsInt,
     refid: RefID,
     context: ESSContext?
 ) :
@@ -65,10 +65,10 @@ class ChangeFormACHR(
     }
 
     // The change flags.
-    private val FLAGS: Flags.Int = flags
+    private val FLAGS: Flags.FlagsInt = flags
 
     companion object {
-        val LOG = Logger.getLogger(ChangeFormACHR::class.java.canonicalName)
+        val LOG: Logger = Logger.getLogger(ChangeFormACHR::class.java.canonicalName)
     }
 
     init {

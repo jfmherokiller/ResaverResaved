@@ -37,7 +37,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      */
     override fun write(output: ByteBuffer?) {
         refID?.write(output)
-        changeFlags?.write(output)
+        changeFlags.write(output)
         val RAWTYPE = TYPEFIELD and 0x3F
         when (dataLength) {
             LengthSize.INT8 -> {
@@ -70,12 +70,11 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
     override fun calculateSize(): Int {
         var sum = 2
         sum += refID?.calculateSize() ?: 0
-        sum += changeFlags?.calculateSize() ?: 0
+        sum += changeFlags.calculateSize()
         sum += when (dataLength) {
             LengthSize.INT8 -> 2
             LengthSize.INT16 -> 4
             LengthSize.INT32 -> 8
-            else -> return -1
         }
         sum += length1
         return sum
@@ -141,10 +140,14 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * @return The raw form of the `ChangeFormData`.
      */
     val bodyData: ByteBuffer?
-        get() = if (isCompressed) RAWDATA?.let { decompress(it, length2) } else RAWDATA?.let {
-            ByteBuffer.allocate(it.size).put(
-                RAWDATA
-            )
+        get() = if (isCompressed) {
+            decompress(RAWDATA, length2)
+        } else {
+            RAWDATA.let {
+                ByteBuffer.allocate(it.size).put(
+                    RAWDATA
+                )
+            }
         }
 
     /**
@@ -163,7 +166,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * ChangeFormDefault if there was a problem parsing the data.
      * @return The `ChangeFormData`.
      */
-    fun getData(analysis: resaver.Analysis?, context: ESSContext?, bestEffort: Boolean): ChangeFormData? {
+    fun getData(analysis: Analysis?, context: ESSContext?, bestEffort: Boolean): ChangeFormData? {
         if (parsedData != null) {
             return parsedData
         }
@@ -172,17 +175,17 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         (BODYDATA as Buffer).position(0)
         try {
             parsedData = when (type) {
-                ess.ChangeFormType.FLST -> context?.let { changeFlags?.let { it1 -> ChangeFormFLST(BODYDATA, it1, it) } }
-                ess.ChangeFormType.LVLN -> changeFlags?.let { ChangeFormLVLN(BODYDATA, it, context) }
-                ess.ChangeFormType.REFR -> changeFlags?.let { refID?.let { it1 ->
+                ChangeFormType.FLST -> context?.let { ChangeFormFLST(BODYDATA, changeFlags, it) }
+                ChangeFormType.LVLN -> ChangeFormLVLN(BODYDATA, changeFlags, context)
+                ChangeFormType.REFR -> changeFlags.let { refID?.let { it1 ->
                     ChangeFormRefr(BODYDATA, it,
                         it1, analysis, context)
                 } }
-                ess.ChangeFormType.ACHR -> changeFlags?.let { refID?.let { it1 ->
+                ChangeFormType.ACHR -> changeFlags.let { refID?.let { it1 ->
                     ChangeFormACHR(BODYDATA, it,
                         it1, context)
                 } }
-                ess.ChangeFormType.NPC_ -> context?.let { changeFlags?.let { it1 -> ChangeFormNPC(BODYDATA, it1, it) } }
+                ChangeFormType.NPC_ -> context?.let { ChangeFormNPC(BODYDATA, changeFlags, it) }
                 else -> if (bestEffort) {
                     ChangeFormDefault(BODYDATA, length1)
                 } else {
@@ -268,7 +271,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
             ?.toList()?.toSet()
         BUILDER.append("<html><h3>CHANGEFORM</h3>")
         BUILDER.append(String.format("<p>RefID: %s</p>", refID))
-        BUILDER.append(String.format("<p style=\"display:inline-table;\">ChangeFlags: %s</p>", changeFlags?.toHTML() ?: ""))
+        BUILDER.append(String.format("<p style=\"display:inline-table;\">ChangeFlags: %s</p>", changeFlags.toHTML()))
         BUILDER.append("<p>")
         BUILDER.append(String.format("DataLength: %s<br/>", dataLength))
         BUILDER.append(type?.let { String.format("Type: %s (%d : %d)<br/>", type, it.SKYRIMCODE, type!!.FULL) })
@@ -322,7 +325,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * @param mod
      * @return
      */
-    override fun matches(analysis: resaver.Analysis?, mod: String?): Boolean {
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
         return false
     }
     /**
@@ -338,7 +341,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
     /**
      * ChangeFlags describe what parts of the form have changed.
      */
-    var changeFlags: Flags.Int? = null
+    var changeFlags: Flags.FlagsInt
 
     /**
      * The type of Form.
@@ -348,7 +351,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
     /**
      * @return The type field.
      */
-    var type: ess.ChangeFormType? = null
+    var type: ChangeFormType? = null
     private var VERSION: Byte = 0
 
     /**
@@ -367,7 +370,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * @return Whether the data is compressed.
      */
     var isCompressed: Boolean = false
-    private var RAWDATA: ByteArray? = null
+    private var RAWDATA: ByteArray
     private var parsedData: ChangeFormData? = null
 
     /**
@@ -406,8 +409,8 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         @JvmStatic
         @Throws(IllegalStateException::class)
         fun verifyIdentical(cf1: ChangeForm, cf2: ChangeForm) {
-            check(cf1.refID == cf2.refID) { String.format("RefID mismatch: %s vs %s.", cf1.refID, cf2.refID) }
-            check(cf1.type == cf2.type) { String.format("Type mismatch: %s vs %s.", cf1.type, cf2.type) }
+            check(cf1.refID == cf2.refID) { "RefID mismatch: ${cf1.refID} vs ${cf2.refID}." }
+            check(cf1.type == cf2.type) { "Type mismatch: ${cf1.type} vs ${cf2.type}." }
         }
     }
 

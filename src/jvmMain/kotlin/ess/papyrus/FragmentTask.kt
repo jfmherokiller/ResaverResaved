@@ -217,7 +217,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
 
         val QUESTID: RefID
         val STAGE: Short
-        val FLAGS: Flags.Byte
+        val FLAGS: Flags.FlagsByte
         val UNKNOWN_4BYTES: Int?
         val QUEST: ChangeForm?
 

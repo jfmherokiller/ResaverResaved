@@ -25,7 +25,7 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-class ChangeFormFLST(input: ByteBuffer, flags: Flags.Int, context: ESSContext) : ChangeFormData {
+class ChangeFormFLST(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContext) : ChangeFormData {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
