@@ -246,7 +246,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
             if (target is Variable) {
                 val varIndex = VARIABLES.indexOf(target)
                 if (varIndex >= 0) {
-                    return makeLink("frame", THREAD.id, frameIndex, varIndex, this.toString())
+                    return makeLink("frame", THREAD.iD, frameIndex, varIndex, this.toString())
                 }
             } else {
                 var result: Variable? = null
@@ -261,12 +261,12 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                 if (result == null) {
                     val varIndex = VARIABLES.indexOf(result)
                     if (varIndex >= 0) {
-                        return makeLink("frame", THREAD.id, frameIndex, varIndex, this.toString())
+                        return makeLink("frame", THREAD.iD, frameIndex, varIndex, this.toString())
                     }
                 }
             }
         }
-        return makeLink("frame", THREAD.id, frameIndex, this.toString())
+        return makeLink("frame", THREAD.iD, frameIndex, this.toString())
     }
 
     /**
