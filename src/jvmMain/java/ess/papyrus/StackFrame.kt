@@ -13,493 +13,315 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package ess.papyrus;
+package ess.papyrus
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import resaver.ListException;
-import ess.AnalyzableElement;
-
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import resaver.IString;
-import java.nio.ByteBuffer;
-import java.util.stream.Stream;
-import resaver.Analysis;
-import ess.ESS;
-import ess.Element;
-import ess.Flags;
-import ess.Linkable;
-import ess.WStringElement;
-import resaver.pex.Opcode;
+import ess.*
+import ess.Linkable.Companion.makeLink
+import ess.papyrus.Parameter.Companion.createTerm
+import ess.papyrus.VarType.Companion.read
+import ess.papyrus.Variable.Companion.read
+import ess.papyrus.Variable.Companion.readList
+import resaver.Analysis
+import resaver.IString
+import resaver.IString.Companion.format
+import resaver.ListException
+import resaver.pex.Opcode
+import java.nio.ByteBuffer
+import java.util.*
+import java.util.regex.Pattern
+import java.util.stream.Collectors
+import java.util.stream.Stream
 
 /**
  * Describes a stack frame in a Skyrim savegame.
  *
  * @author Mark Fairchild
  */
-final public class StackFrame implements PapyrusElement, AnalyzableElement, Linkable, HasVariables {
-
+class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusContext) : PapyrusElement, AnalyzableElement,
+    Linkable, HasVariables {
     /**
-     * Creates a new <code>StackFrame</code> by reading from a
-     * <code>ByteBuffer</code>. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param thread The <code>ActiveScript</code> parent.
-     * @param context The <code>PapyrusContext</code> info.
-     * @throws PapyrusFormatException
-     * @throws PapyrusElementException
-     */
-    public StackFrame(@NotNull ByteBuffer input, ActiveScript thread, @NotNull PapyrusContext context) throws PapyrusFormatException, PapyrusElementException {
-        Objects.requireNonNull(input);
-        Objects.requireNonNull(thread);
-        Objects.requireNonNull(context);
-
-        int variableCount = input.getInt();
-        if (variableCount < 0 || variableCount > 50000) {
-            throw new PapyrusFormatException("Invalid variableCount " + variableCount);
-        }
-
-        this.THREAD = thread;
-        this.FLAG = new Flags.Byte(input);
-        this.FN_Var_TYPE = VarType.read(input);
-        this.SCRIPTNAME = context.readTString(input);
-        this.SCRIPT = context.findScript(this.SCRIPTNAME);
-
-        this.BASENAME = context.readTString(input);
-        this.EVENT = context.readTString(input);
-
-        this.STATUS = (!this.FLAG.getFlag(0) && this.FN_Var_TYPE == VarType.NULL)
-                ? Optional.of(context.readTString(input))
-                : Optional.empty();
-
-        this.OPCODE_MAJORVERSION = input.get();
-        this.OPCODE_MINORVERSION = input.get();
-        this.RETURNTYPE = context.readTString(input);
-        this.FN_DOCSTRING = context.readTString(input);
-        this.FN_USERFLAGS = new Flags.Int(input);
-        this.FN_FLAGS = new Flags.Byte(input);
-
-        int functionParameterCount = Short.toUnsignedInt(input.getShort());
-        assert 0 <= functionParameterCount && functionParameterCount < 2048 : "Invalid functionParameterCount " + functionParameterCount;
-
-        this.FN_PARAMS = new ArrayList<>(functionParameterCount);
-        for (int i = 0; i < functionParameterCount; i++) {
-            FunctionParam param = new FunctionParam(input, context);
-            this.FN_PARAMS.add(param);
-        }
-
-        int functionLocalCount = Short.toUnsignedInt(input.getShort());
-        assert 0 <= functionLocalCount && functionLocalCount < 2048 : "Invalid functionLocalCount " + functionLocalCount;
-
-        this.FN_LOCALS = new ArrayList<>(functionLocalCount);
-        for (int i = 0; i < functionLocalCount; i++) {
-            FunctionLocal local = new FunctionLocal(input, context);
-            this.FN_LOCALS.add(local);
-        }
-
-        int opcodeCount = Short.toUnsignedInt(input.getShort());
-        assert 0 <= opcodeCount;
-
-        try {
-            this.CODE = new ArrayList<>(opcodeCount);
-            for (int i = 0; i < opcodeCount; i++) {
-                OpcodeData opcode = new OpcodeData(input, context);
-                this.CODE.add(opcode);
-            }
-        } catch (ListException ex) {
-            throw new PapyrusElementException("Failed to read StackFrame OpcodeData.", ex, this);
-        }
-
-        this.PTR = input.getInt();
-        assert 0 <= this.PTR;
-
-        this.OWNERFIELD = Variable.read(input, context);
-
-        try {
-            this.VARIABLES = Variable.readList(input, variableCount, context);
-        } catch (ListException ex) {
-            throw new PapyrusElementException("Faileed to read StackFrame variables.", ex, this);
-        }
-
-        if (this.OWNERFIELD instanceof VarRef) {
-            VarRef ref = (VarRef) this.OWNERFIELD;
-            this.OWNER = ref.getReferent();
-        } else {
-            this.OWNER = null;
-        }
-    }
-
-    /**
-     * @see ess.Element#write(ByteBuffer)
+     * @see ess.Element.write
      * @param output The output stream.
      */
-    @Override
-    public void write(@NotNull ByteBuffer output) {
-        output.putInt(this.VARIABLES.size());
-        this.FLAG.write(output);
-        this.FN_Var_TYPE.write(output);
-        this.SCRIPTNAME.write(output);
-        this.BASENAME.write(output);
-        this.EVENT.write(output);
-        this.STATUS.ifPresent(s -> s.write(output));
-        output.put(this.OPCODE_MAJORVERSION);
-        output.put(this.OPCODE_MINORVERSION);
-        this.RETURNTYPE.write(output);
-        this.FN_DOCSTRING.write(output);
-        this.FN_USERFLAGS.write(output);
-        this.FN_FLAGS.write(output);
-
-        output.putShort((short) this.FN_PARAMS.size());
-        for (FunctionParam param : this.FN_PARAMS) {
-            param.write(output);
+    override fun write(output: ByteBuffer?) {
+        output?.putInt(VARIABLES.size)
+        FLAG.write(output)
+        FN_Var_TYPE.write(output)
+        scriptName.write(output)
+        BASENAME.write(output)
+        event.write(output)
+        STATUS.ifPresent { s: TString? -> s!!.write(output) }
+        output?.put(OPCODE_MAJORVERSION)
+        output?.put(OPCODE_MINORVERSION)
+        RETURNTYPE.write(output)
+        docString.write(output)
+        FN_USERFLAGS.write(output)
+        FN_FLAGS.write(output)
+        output?.putShort(FN_PARAMS.size.toShort())
+        for (param in FN_PARAMS) {
+            param.write(output)
         }
-
-        output.putShort((short) this.FN_LOCALS.size());
-        for (FunctionLocal local : this.FN_LOCALS) {
-            local.write(output);
+        output?.putShort(FN_LOCALS.size.toShort())
+        for (local in FN_LOCALS) {
+            local.write(output)
         }
-
-        output.putShort((short) this.CODE.size());
-        for (OpcodeData opcode : this.CODE) {
-            opcode.write(output);
+        output?.putShort(CODE.size.toShort())
+        for (opcode in CODE) {
+            opcode.write(output)
         }
-
-        output.putInt(this.PTR);
-
-        this.OWNERFIELD.write(output);
-        for (Variable var : this.VARIABLES) {
-            var.write(output);
+        output?.putInt(PTR)
+        owner.write(output)
+        for (`var` in VARIABLES) {
+            `var`!!.write(output)
         }
     }
 
     /**
-     * @see ess.Element#calculateSize()
-     * @return The size of the <code>Element</code> in bytes.
+     * @see ess.Element.calculateSize
+     * @return The size of the `Element` in bytes.
      */
-    @Override
-    public int calculateSize() {
-        int sum = 1;
-        sum += this.FN_Var_TYPE.calculateSize();
-        sum += this.SCRIPTNAME.calculateSize();
-        sum += this.BASENAME.calculateSize();
-        sum += this.EVENT.calculateSize();
-        sum += this.STATUS.map(TString::calculateSize).orElse(0);
-        sum += 2;
-        sum += this.RETURNTYPE.calculateSize();
-        sum += this.FN_DOCSTRING.calculateSize();
-        sum += 5;
-
-        sum += 2;
-        int sum1 = 0;
-        for (FunctionParam FN_PARAM : this.FN_PARAMS) {
-            int calculateSize = FN_PARAM.calculateSize();
-            sum1 += calculateSize;
+    override fun calculateSize(): Int {
+        var sum = 1
+        sum += FN_Var_TYPE.calculateSize()
+        sum += scriptName.calculateSize()
+        sum += BASENAME.calculateSize()
+        sum += event.calculateSize()
+        sum += STATUS.map { obj: TString? -> obj!!.calculateSize() }.orElse(0)
+        sum += 2
+        sum += RETURNTYPE.calculateSize()
+        sum += docString.calculateSize()
+        sum += 5
+        sum += 2
+        var sum1 = 0
+        for (FN_PARAM in FN_PARAMS) {
+            val calculateSize = FN_PARAM.calculateSize()
+            sum1 += calculateSize
         }
-        sum += sum1;
-
-        sum += 2;
-        int result1 = 0;
-        for (FunctionLocal FN_LOCAL : this.FN_LOCALS) {
-            int calculateSize = FN_LOCAL.calculateSize();
-            result1 += calculateSize;
+        sum += sum1
+        sum += 2
+        var result1 = 0
+        for (FN_LOCAL in FN_LOCALS) {
+            val calculateSize = FN_LOCAL.calculateSize()
+            result1 += calculateSize
         }
-        sum += result1;
-
-        sum += 2;
-        int sum2 = 0;
-        for (OpcodeData opcodeData : this.CODE) {
-            int calculateSize = opcodeData.calculateSize();
-            sum2 += calculateSize;
+        sum += result1
+        sum += 2
+        var sum2 = 0
+        for (opcodeData in CODE) {
+            val calculateSize = opcodeData.calculateSize()
+            sum2 += calculateSize
         }
-        sum += sum2;
-
-        sum += 4;
-
-        sum += (null != this.OWNERFIELD ? this.OWNERFIELD.calculateSize() : 0);
-
-        sum += 4;
-        int result = 0;
-        for (Variable var : this.VARIABLES) {
-            int i = var.calculateSize();
-            result += i;
+        sum += sum2
+        sum += 4
+        sum += owner.calculateSize()
+        sum += 4
+        var result = 0
+        for (`var` in VARIABLES) {
+            val i = `var`!!.calculateSize()
+            result += i
         }
-        sum += result;
-
-        return sum;
+        sum += result
+        return sum
     }
 
     /**
-     * Replaces the opcodes of the <code>StackFrame</code> with NOPs.
+     * Replaces the opcodes of the `StackFrame` with NOPs.
      */
-    void zero() {
-        for (int i = 0; i < this.CODE.size(); i++) {
-            this.CODE.set(i, OpcodeData.NOP);
+    fun zero() {
+        for (i in CODE.indices) {
+            CODE[i] = OpcodeData.NOP
         }
-    }
-
-    /**
-     * @return The name of the script being executed.
-     */
-    public TString getScriptName() {
-        return this.SCRIPTNAME;
-    }
-
-    /**
-     * @return The script being executed.
-     */
-    public Script getScript() {
-        return this.SCRIPT;
     }
 
     /**
      * @return The qualified name of the function being executed.
      */
-    @NotNull
-    public IString getFName() {
-        IString fname = IString.format("%s.%s", this.SCRIPTNAME, this.EVENT);
-        return fname;
-    }
-
-    /**
-     * @return The event name.
-     */
-    public TString getEvent() {
-        return this.EVENT;
-    }
-
-    /**
-     * @return The docstring.
-     */
-    public TString getDocString() {
-        return this.FN_DOCSTRING;
-    }
+    val fName: IString
+        get() = format("%s.%s", scriptName, event)
 
     /**
      * @return The status.
      */
-    public TString getStatus() {
-        return this.STATUS.orElse(null);
-    }
+    val status: TString?
+        get() = STATUS.orElse(null)
 
     /**
      * @return The function parameter list.
      */
-    @NotNull
-    public List<FunctionParam> getFunctionParams() {
-        return Collections.unmodifiableList(this.FN_PARAMS);
-    }
+    val functionParams: List<FunctionParam>
+        get() = Collections.unmodifiableList(FN_PARAMS)
 
     /**
      * @return The function locals list.
      */
-    @NotNull
-    public List<FunctionLocal> getFunctionLocals() {
-        return Collections.unmodifiableList(this.FN_LOCALS);
-    }
+    val functionLocals: List<FunctionLocal>
+        get() = Collections.unmodifiableList(FN_LOCALS)
 
     /**
      * @return The function opcode data list.
      */
-    @NotNull
-    public List<OpcodeData> getOpcodeData() {
-        return Collections.unmodifiableList(this.CODE);
-    }
+    val opcodeData: List<OpcodeData>
+        get() = Collections.unmodifiableList(CODE)
 
     /**
-     * @see HasVariables#getVariables()
+     * @see HasVariables.getVariables
      * @return
      */
-    @Override
-    public List<Variable> getVariables() {
-        return this.VARIABLES == null 
-                ? Collections.emptyList() 
-                : Collections.unmodifiableList(this.VARIABLES);
-    }
+    override val variables: List<Variable>
+        get() = if (VARIABLES == null) emptyList() else VARIABLES.filterNotNull()
 
     /**
-     * @see HasVariables#getDescriptors() 
-     * @return 
+     * @see HasVariables.getDescriptors
+     * @return
      */
-    @Override
-    public List<MemberDesc> getDescriptors() {
-        return Stream.concat(this.getFunctionParams().stream(), this.getFunctionLocals().stream()).collect(Collectors.toList());
-    }
+    override val descriptors: List<MemberDesc>
+        get() = Stream.concat(functionParams.stream(), functionLocals.stream()).collect(Collectors.toList())
 
     /**
-     * @see HasVariables#setVariable(int, ess.papyrus.Variable)
+     * @see HasVariables.setVariable
      * @param index
-     * @param newVar 
+     * @param newVar
      */
-    @Override
-    public void setVariable(int index, Variable newVar) {
-        if (this.VARIABLES == null) {
-            throw new NullPointerException("The variable list is missing.");
+    override fun setVariable(index: Int, newVar: Variable?) {
+        if (VARIABLES == null) {
+            throw NullPointerException("The variable list is missing.")
         }
-        if (index < 0 || index >= this.VARIABLES.size()) {
-            throw new IllegalArgumentException("Invalid variable index: " + index);
-        }
-        
-        this.VARIABLES.set(index, newVar);
+        require(!(index < 0 || index >= VARIABLES.size)) { "Invalid variable index: $index" }
+        VARIABLES.set(index, newVar)
     }
 
     /**
-     * @return The owner, which should be a form or an instance.
+     * @return A flag indicating if the `StackFrame` is undefined.
      */
-    @NotNull
-    public Variable getOwner() {
-        return OWNERFIELD;
-    }
-
-    /**
-     * @return A flag indicating if the <code>StackFrame</code> is undefined.
-     *
-     */
-    public boolean isUndefined() {
-        if (this.isNative()) {
-            return false;
-        } else if (this.SCRIPT != null) {
-            return this.SCRIPT.isUndefined();
+    val isUndefined: Boolean
+        get() {
+            if (isNative) {
+                return false
+            } else if (script != null) {
+                return script.isUndefined
+            }
+            return false
         }
-        return false;
-    }
 
     /**
-     * @return A flag indicating if the <code>StackFrame</code> is running a
+     * @return A flag indicating if the `StackFrame` is running a
      * static method.
      */
-    public boolean isStatic() {
-        return (null != this.FN_FLAGS ? this.FN_FLAGS.getFlag(0) : false);
-    }
+    val isStatic: Boolean
+        get() = FN_FLAGS.getFlag(0)
 
     /**
-     * @return A flag indicating if the <code>StackFrame</code> is running a
+     * @return A flag indicating if the `StackFrame` is running a
      * native method.
      */
-    public boolean isNative() {
-        return (null != this.FN_FLAGS ? this.FN_FLAGS.getFlag(1) : false);
-    }
+    val isNative: Boolean
+        get() = FN_FLAGS.getFlag(1)
 
     /**
-     * @return A flag indicating if the <code>StackFrame</code> zeroed.
-     *
+     * @return A flag indicating if the `StackFrame` zeroed.
      */
-    public boolean isZeroed() {
-        if (this.isNative() || null == this.CODE || this.CODE.isEmpty()) return false;
-        for (OpcodeData op : this.CODE) {
-            if (!OpcodeData.NOP.equals(op)) {
-                return false;
+    val isZeroed: Boolean
+        get() {
+            if (isNative || null == CODE || CODE.isEmpty()) return false
+            for (op in CODE) {
+                if (OpcodeData.NOP != op) {
+                    return false
+                }
             }
+            return true
         }
-        return true;
-    }
 
     /**
-     * @see ess.Linkable#toHTML(Element)
-     * @param target A target within the <code>Linkable</code>.
+     * @see ess.Linkable.toHTML
+     * @param target A target within the `Linkable`.
      * @return
      */
-    @NotNull
-    @Override
-    public String toHTML(@Nullable Element target) {
-        assert null != this.THREAD;
-        int frameIndex = this.THREAD.getStackFrames().indexOf(this);
+    override fun toHTML(target: Element?): String {
+        assert(null != THREAD)
+        val frameIndex = THREAD!!.stackFrames.indexOf(this)
         if (frameIndex < 0) {
-            return "invalid";
+            return "invalid"
         }
-
         if (null != target) {
-            if (target instanceof Variable) {
-                int varIndex = this.VARIABLES.indexOf(target);
+            if (target is Variable) {
+                val varIndex = VARIABLES.indexOf(target)
                 if (varIndex >= 0) {
-                    return Linkable.makeLink("frame", this.THREAD.getID(), frameIndex, varIndex, this.toString());
+                    return makeLink("frame", THREAD.id, frameIndex, varIndex, this.toString())
                 }
-
             } else {
-                Optional<Variable> result = Optional.empty();
-                for (Variable v : this.VARIABLES) {
-                    if (v.hasRef()) {
-                        if (v.getReferent() == target) {
-                            result = Optional.of(v);
-                            break;
+                var result: Variable? = null
+                for (v in VARIABLES) {
+                    if (v!!.hasRef()) {
+                        if (v.referent === target) {
+                            result = v
+                            break
                         }
                     }
                 }
-
-                if (result.isPresent()) {
-                    int varIndex = this.VARIABLES.indexOf(result.get());
+                if (result == null) {
+                    val varIndex = VARIABLES.indexOf(result)
                     if (varIndex >= 0) {
-                        return Linkable.makeLink("frame", this.THREAD.getID(), frameIndex, varIndex, this.toString());
+                        return makeLink("frame", THREAD.id, frameIndex, varIndex, this.toString())
                     }
                 }
             }
         }
-
-        return Linkable.makeLink("frame", this.THREAD.getID(), frameIndex, this.toString());
+        return makeLink("frame", THREAD.id, frameIndex, this.toString())
     }
 
     /**
      * @return String representation.
      */
-    @NotNull
-    @Override
-    public String toString() {
-        final StringBuilder BUF = new StringBuilder();
-        BUF.append(this.isZeroed() ? "ZEROED " : "");
-        BUF.append(this.isUndefined() ? "#" : "");
-        BUF.append(this.BASENAME);
-        BUF.append(this.isUndefined() ? "#." : ".");
-        BUF.append(this.EVENT);
-        BUF.append("()");
-
-        if (this.isStatic()) {
-            BUF.append(" ").append("static");
+    override fun toString(): String {
+        val BUF = StringBuilder()
+        BUF.append(if (isZeroed) "ZEROED " else "")
+        BUF.append(if (isUndefined) "#" else "")
+        BUF.append(BASENAME)
+        BUF.append(if (isUndefined) "#." else ".")
+        BUF.append(event)
+        BUF.append("()")
+        if (isStatic) {
+            BUF.append(" ").append("static")
         }
-        if (this.isNative()) {
-            BUF.append(" ").append("native");
+        if (isNative) {
+            BUF.append(" ").append("native")
         }
-
-        return BUF.toString();
+        return BUF.toString()
     }
 
     /**
-     * @see AnalyzableElement#getInfo(resaver.Analysis, ess.ESS)
+     * @see AnalyzableElement.getInfo
      * @param analysis
      * @param save
      * @return
      */
-    @NotNull
-    @Override
-    public String getInfo(resaver.Analysis analysis, ESS save) {
-        final StringBuilder BUILDER = new StringBuilder();
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
+        val BUILDER = StringBuilder()
 
         //BUILDER.append("<html><h3>STACKFRAME</h3>");
-        BUILDER.append("<html><h3>STACKFRAME");
-        if (this.isZeroed()) {
-            BUILDER.append(" (ZEROED)");
+        BUILDER.append("<html><h3>STACKFRAME")
+        if (isZeroed) {
+            BUILDER.append(" (ZEROED)")
         }
-        BUILDER.append("<br/>");
-        if (!this.RETURNTYPE.isEmpty() && !this.RETURNTYPE.equals("None")) {
-            BUILDER.append(this.RETURNTYPE).append(" ");
+        BUILDER.append("<br/>")
+        if (!RETURNTYPE.isEmpty && !RETURNTYPE.equals("None")) {
+            BUILDER.append(RETURNTYPE).append(" ")
         }
-        if (this.isUndefined()) {
-            BUILDER.append("#");
+        if (isUndefined) {
+            BUILDER.append("#")
         }
-        BUILDER.append(String.format("%s.%s()", this.SCRIPTNAME, this.EVENT));
-        if (this.isStatic()) {
-            BUILDER.append(" static");
+        BUILDER.append(String.format("%s.%s()", scriptName, event))
+        if (isStatic) {
+            BUILDER.append(" static")
         }
-        if (this.isNative()) {
-            BUILDER.append(" native");
+        if (isNative) {
+            BUILDER.append(" native")
         }
-        BUILDER.append("</h3>");
-
-        if (this.isZeroed()) {
-            BUILDER.append("<p><em>WARNING: FUNCTION TERMINATED!</em><br/>This function has been terminated and all of its instructions erased.</p>");
-        } else if (this.isUndefined()) {
-            BUILDER.append("<p><em>WARNING: SCRIPT MISSING!</em><br/>Selecting \"Remove Undefined Instances\" will terminate the entire thread containing this frame.</p>");
+        BUILDER.append("</h3>")
+        if (isZeroed) {
+            BUILDER.append("<p><em>WARNING: FUNCTION TERMINATED!</em><br/>This function has been terminated and all of its instructions erased.</p>")
+        } else if (isUndefined) {
+            BUILDER.append("<p><em>WARNING: SCRIPT MISSING!</em><br/>Selecting \"Remove Undefined Instances\" will terminate the entire thread containing this frame.</p>")
         }
 
         /*if (null != analysis) {
@@ -514,429 +336,517 @@ final public class StackFrame implements PapyrusElement, AnalyzableElement, Link
                     BUILDER.append("</ul>");
                 }
             }
-        }*/
-        if (this.OWNERFIELD instanceof VarNull) {
-            BUILDER.append("<p>Owner: <em>UNOWNED</em></p>");
-        } else if (null != this.OWNER) {
-            BUILDER.append(String.format("<p>Owner: %s</p>", this.OWNER.toHTML(this)));
-        } else if (this.isStatic()) {
-            BUILDER.append("<p>Static method, no owner.</p>");
-        } else {
-            BUILDER.append(String.format("<p>Owner: %s</p>", this.OWNERFIELD.toHTML(this)));
-        }
-
-        BUILDER.append("<p>");
-        BUILDER.append(String.format("Script: %s<br/>", (null == this.SCRIPT ? this.SCRIPTNAME : this.SCRIPT.toHTML(this))));
-        BUILDER.append(String.format("Base: %s<br/>", this.BASENAME));
-        BUILDER.append(String.format("Event: %s<br/>", this.EVENT));
-        BUILDER.append(String.format("Status: %s<br/>", this.STATUS));
-        BUILDER.append(String.format("Flag: %s<br/>", this.FLAG));
-        BUILDER.append(String.format("Function type: %s<br/>", this.FN_Var_TYPE));
-        BUILDER.append(String.format("Function return type: %s<br/>", this.RETURNTYPE));
-        BUILDER.append(String.format("Function docstring: %s<br/>", this.FN_DOCSTRING));
-        BUILDER.append(String.format("%d parameters, %d locals, %d values.<br/>", this.FN_PARAMS.size(), this.FN_LOCALS.size(), this.VARIABLES.size()));
-        BUILDER.append(String.format("Status: %s<br/>", this.STATUS));
-        BUILDER.append(String.format("Function flags: %s<br/>", this.FN_FLAGS));
-        BUILDER.append(String.format("Function user flags:<br/>%s", this.FN_USERFLAGS.toHTML()));
-        BUILDER.append(String.format("Opcode version: %d.%d<br/>", this.OPCODE_MAJORVERSION, this.OPCODE_MINORVERSION));
-        BUILDER.append("</p>");
-
-        if (this.CODE.size() > 0) {
-            BUILDER.append("<hr/><p>PAPYRUS BYTECODE:</p>");
-            BUILDER.append("<code><pre>");
-            List<OpcodeData> OPS = new ArrayList<>(this.CODE);
-            for (OpcodeData opcodeData : OPS.subList(0, PTR)) {
-                BUILDER.append(String.format("   %s\n", opcodeData));
+        }*/when {
+            owner is VarNull -> {
+                BUILDER.append("<p>Owner: <em>UNOWNED</em></p>")
             }
-            BUILDER.append(String.format("==><b>%s</b>\n", OPS.get(this.PTR)));
-            for (OpcodeData v : OPS.subList(PTR + 1, this.CODE.size())) {
-                BUILDER.append(String.format("   %s\n", v));
+            null != OWNER -> {
+                BUILDER.append(String.format("<p>Owner: %s</p>", OWNER?.toHTML(this)))
             }
-            BUILDER.append("</pre></code>");
-        } else {
-            BUILDER.append("<p><em>Papyrus bytecode not available.</em></p>");
+            isStatic -> {
+                BUILDER.append("<p>Static method, no owner.</p>")
+            }
+            else -> {
+                BUILDER.append(String.format("<p>Owner: %s</p>", owner.toHTML(this)))
+            }
         }
-
-        BUILDER.append("</html>");
-        return BUILDER.toString();
+        BUILDER.append("<p>")
+        BUILDER.append(String.format("Script: %s<br/>", script?.toHTML(this) ?: scriptName))
+        BUILDER.append(String.format("Base: %s<br/>", BASENAME))
+        BUILDER.append(String.format("Event: %s<br/>", event))
+        BUILDER.append(String.format("Status: %s<br/>", STATUS))
+        BUILDER.append(String.format("Flag: %s<br/>", FLAG))
+        BUILDER.append(String.format("Function type: %s<br/>", FN_Var_TYPE))
+        BUILDER.append(String.format("Function return type: %s<br/>", RETURNTYPE))
+        BUILDER.append(String.format("Function docstring: %s<br/>", docString))
+        BUILDER.append(
+            String.format(
+                "%d parameters, %d locals, %d values.<br/>",
+                FN_PARAMS.size,
+                FN_LOCALS.size,
+                VARIABLES.size
+            )
+        )
+        BUILDER.append(String.format("Status: %s<br/>", STATUS))
+        BUILDER.append(String.format("Function flags: %s<br/>", FN_FLAGS))
+        BUILDER.append(String.format("Function user flags:<br/>%s", FN_USERFLAGS.toHTML()))
+        BUILDER.append(String.format("Opcode version: %d.%d<br/>", OPCODE_MAJORVERSION, OPCODE_MINORVERSION))
+        BUILDER.append("</p>")
+        if (CODE.size > 0) {
+            BUILDER.append("<hr/><p>PAPYRUS BYTECODE:</p>")
+            BUILDER.append("<code><pre>")
+            val OPS: List<OpcodeData> = ArrayList(CODE)
+            for (opcodeData in OPS.subList(0, PTR)) {
+                BUILDER.append(String.format("   %s\n", opcodeData))
+            }
+            BUILDER.append(String.format("==><b>%s</b>\n", OPS[PTR]))
+            for (v in OPS.subList(PTR + 1, CODE.size)) {
+                BUILDER.append(String.format("   %s\n", v))
+            }
+            BUILDER.append("</pre></code>")
+        } else {
+            BUILDER.append("<p><em>Papyrus bytecode not available.</em></p>")
+        }
+        BUILDER.append("</html>")
+        return BUILDER.toString()
     }
 
     /**
-     * @see AnalyzableElement#matches(Analysis, resaver.Mod)
+     * @see AnalyzableElement.matches
      * @param analysis
      * @param mod
      * @return
      */
-    @Override
-    public boolean matches(@NotNull Analysis analysis, String mod) {
-        Objects.requireNonNull(analysis);
-        Objects.requireNonNull(mod);
-
-        final SortedSet<String> OWNERS = analysis.SCRIPT_ORIGINS.get(this.SCRIPTNAME.toIString());
-        if (null == OWNERS) {
-            return false;
-        }
-        return OWNERS.contains(mod);
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
+        Objects.requireNonNull(analysis)
+        Objects.requireNonNull(mod)
+        val OWNERS = analysis?.SCRIPT_ORIGINS?.get(scriptName.toIString()) ?: return false
+        return OWNERS.contains(mod)
     }
 
-    /**
-     * Eliminates ::temp variables from an OpcodeData list.
-     *
-     * @param instructions
-     * @param locals
-     * @param types
-     * @param terms
-     */
-    @NotNull
-    static String preMap(@NotNull List<OpcodeData> instructions, List<MemberDesc> locals, @NotNull List<MemberDesc> types, @NotNull Map<Parameter, Parameter> terms, int ptr) {
-        final StringBuilder BUF = new StringBuilder();
-
-        for (int i = 0; i < instructions.size(); i++) {
-            OpcodeData op = instructions.get(i);
-            if (null == op) {
-                continue;
-            }
-
-            ArrayList<Parameter> params = new ArrayList<>(op.getParameters());
-            boolean del = makeTerm(op.getOpcode(), params, types, terms);
-            if (del) {
-                BUF.append(i == ptr ? "<b>==></b>" : "   ");
-                BUF.append("<em><font color=\"lightgray\">");
-                BUF.append(op.getOpcode());
-                for (Parameter p : params) {
-                    BUF.append(", ").append(p.toValueString());
-                }
-                BUF.append("<font color=\"black\"></em>\n");
-            } else {
-                BUF.append(i == ptr ? "<b>==>" : "   ");
-                BUF.append(op.getOpcode());
-                for (Parameter p : params) {
-                    BUF.append(", ").append(p.toValueString());
-                }
-                BUF.append(i == ptr ? "</b>\n" : "\n");
-            }
-        }
-        return BUF.toString();
-    }
+    private val THREAD: ActiveScript?
+    private val FLAG: Flags.Byte
+    private val FN_Var_TYPE: VarType
 
     /**
-     *
-     * @param op
-     * @param args
-     * @param types
-     * @param terms
-     * @return
+     * @return The name of the script being executed.
      */
-    static boolean makeTerm(@NotNull Opcode op, @NotNull List<Parameter> args, @NotNull List<MemberDesc> types, @NotNull Map<Parameter, Parameter> terms) {
-        String term;
-        String method, obj, dest, arg, prop, operand1, operand2;
-        List<String> subArgs;
-        WStringElement type;
+    val scriptName: TString
 
-        switch (op) {
-            case IADD:
-            case FADD:
-            case STRCAT:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s + %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
+    /**
+     * @return The script being executed.
+     */
+    val script: Script?
+    private val BASENAME: TString
 
-            case ISUB:
-            case FSUB:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s - %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
+    /**
+     * @return The event name.
+     */
+    val event: TString
+    private val STATUS: Optional<TString>
+    private val OPCODE_MAJORVERSION: Byte
+    private val OPCODE_MINORVERSION: Byte
+    private val RETURNTYPE: TString
 
-            case IMUL:
-            case FMUL:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s * %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
+    /**
+     * @return The docstring.
+     */
+    val docString: TString
+    private val FN_USERFLAGS: Flags.Int
+    private val FN_FLAGS: Flags.Byte
+    private val FN_PARAMS: MutableList<FunctionParam>
+    private val FN_LOCALS: MutableList<FunctionLocal>
+    private var CODE: MutableList<OpcodeData> = mutableListOf()
+    private val PTR: Int
 
-            case IDIV:
-            case FDIV:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s / %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
+    /**
+     * @return The owner, which should be a form or an instance.
+     */
+    val owner: Variable
+    private var VARIABLES: MutableList<Variable?> = mutableListOf()
+    private var OWNER: GameElement? = null
 
-            case IMOD:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s %% %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
-
-            case RETURN:
-                replaceVariables(args, terms, -1);
-                return false;
-
-            case CALLMETHOD:
-                replaceVariables(args, terms, 2);
-                method = args.get(0).toValueString();
-                obj = args.get(1).toValueString();
-                List<String> result1 = new ArrayList<>();
-                for (Parameter v1 : args
-                        .subList(3, args.size())) {
-                    String paren1 = v1.paren();
-                    result1.add(paren1);
-                }
-                subArgs = result1;
-                term = String.format("%s.%s%s", obj, method, paramList(subArgs));
-                return processTerm(args, terms, 2, term);
-
-            case CALLPARENT:
-                replaceVariables(args, terms, 1);
-                method = args.get(0).toValueString();
-                List<String> list1 = new ArrayList<>();
-                for (Parameter parameter : args
-                        .subList(3, args.size())) {
-                    String s = parameter.paren();
-                    list1.add(s);
-                }
-                subArgs = list1;
-                term = String.format("parent.%s%s", method, paramList(subArgs));
-                return processTerm(args, terms, 1, term);
-
-            case CALLSTATIC:
-                replaceVariables(args, terms, 2);
-                obj = args.get(0).toValueString();
-                method = args.get(1).toValueString();
-                List<String> list = new ArrayList<>();
-                for (Parameter v : args
-                        .subList(3, args.size())) {
-                    String paren = v.paren();
-                    list.add(paren);
-                }
-                subArgs = list;
-                term = String.format("%s.%s%s", obj, method, paramList(subArgs));
-                return processTerm(args, terms, 2, term);
-
-            case NOT:
-                replaceVariables(args, terms, 0);
-                term = String.format("!%s", args.get(1).paren());
-                return processTerm(args, terms, 0, term);
-
-            case INEG:
-            case FNEG:
-                replaceVariables(args, terms, 0);
-                term = String.format("-%s", args.get(1).paren());
-                return processTerm(args, terms, 0, term);
-
-            case ASSIGN:
-                replaceVariables(args, terms, 0);
-                term = String.format("%s", args.get(1));
-                return processTerm(args, terms, 0, term);
-
-            case CAST:
-                replaceVariables(args, terms, 0);
-                dest = args.get(0).toValueString();
-                arg = args.get(1).paren();
-                Optional<MemberDesc> result = Optional.empty();
-                for (MemberDesc memberDesc : types) {
-                    if (memberDesc.getName().equals(dest)) {
-                        result = Optional.of(memberDesc);
-                        break;
+    companion object {
+        /**
+         * Eliminates ::temp variables from an OpcodeData list.
+         *
+         * @param instructions
+         * @param locals
+         * @param types
+         * @param terms
+         */
+        fun preMap(
+            instructions: List<OpcodeData?>,
+            locals: List<MemberDesc?>?,
+            types: List<MemberDesc>,
+            terms: MutableMap<Parameter?, Parameter?>,
+            ptr: Int
+        ): String {
+            val BUF = StringBuilder()
+            for (i in instructions.indices) {
+                val op = instructions[i] ?: continue
+                val params = ArrayList(op.parameters)
+                val del = makeTerm(op.opcode, params, types, terms)
+                if (del) {
+                    BUF.append(if (i == ptr) "<b>==></b>" else "   ")
+                    BUF.append("<em><font color=\"lightgray\">")
+                    BUF.append(op.opcode)
+                    for (p in params) {
+                        BUF.append(", ").append(p!!.toValueString())
                     }
-                }
-                type = result.get().getType().toWString();
-
-                if (type.equals("bool")) {
-                    term = arg;
+                    BUF.append("<font color=\"black\"></em>\n")
                 } else {
-                    term = String.format("(%s)%s", type, arg);
-                }
-                return processTerm(args, terms, 0, term);
-
-            case PROPGET:
-                replaceVariables(args, terms, 2);
-                obj = args.get(1).toValueString();
-                prop = args.get(0).toValueString();
-                term = String.format("%s.%s", obj, prop);
-                return processTerm(args, terms, 2, term);
-
-            case PROPSET:
-                replaceVariables(args, terms, -1);
-                return false;
-
-            case CMP_EQ:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s == %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
-
-            case CMP_LT:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s < %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
-
-            case CMP_LE:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s <= %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
-
-            case CMP_GT:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s > %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
-
-            case CMP_GE:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(1).paren();
-                operand2 = args.get(2).paren();
-                term = String.format("%s >= %s", operand1, operand2);
-                return processTerm(args, terms, 0, term);
-
-            case ARR_CREATE:
-                int size = args.get(1).getIntValue();
-                dest = args.get(0).toValueString();
-                Optional<MemberDesc> found = Optional.empty();
-                for (MemberDesc t : types) {
-                    if (t.getName().equals(dest)) {
-                        found = Optional.of(t);
-                        break;
+                    BUF.append(if (i == ptr) "<b>==>" else "   ")
+                    BUF.append(op.opcode)
+                    for (p in params) {
+                        BUF.append(", ").append(p!!.toValueString())
                     }
+                    BUF.append(if (i == ptr) "</b>\n" else "\n")
                 }
-                type = found.get().getType().toWString();
-                String subtype = type.toString().substring(0, type.length() - 2);
-                term = String.format("new %s[%s]", subtype, size);
-                return processTerm(args, terms, 0, term);
-
-            case ARR_LENGTH:
-                replaceVariables(args, terms, 0);
-                term = String.format("%s.length", args.get(1));
-                return processTerm(args, terms, 0, term);
-
-            case ARR_GET:
-                replaceVariables(args, terms, 0);
-                operand1 = args.get(2).toValueString();
-                operand2 = args.get(1).toValueString();
-                term = String.format("%s[%s]", operand2, operand1);
-                return processTerm(args, terms, 0, term);
-
-            case ARR_SET:
-                replaceVariables(args, terms, -1);
-                return false;
-
-            case JMPT:
-            case JMPF:
-                replaceVariables(args, terms, -1);
-                return false;
-
-            case JMP:
-            case ARR_FIND:
-            case ARR_RFIND:
-            default:
-                return false;
-        }
-    }
-
-    /**
-     * @param args
-     * @param terms
-     * @param destPos
-     * @param term
-     */
-    static boolean processTerm(@NotNull List<Parameter> args, @NotNull Map<Parameter, Parameter> terms, int destPos, String term) {
-        if (destPos >= args.size() || !(args.get(destPos).getType() == ParamType.IDENTIFIER)) {
-            return false;
-        }
-        Parameter dest = args.get(destPos);
-
-        if (!dest.isTemp()) {
-            return false;
+            }
+            return BUF.toString()
         }
 
-        terms.put(dest, Parameter.createTerm(term));
-        return true;
-    }
-
-    /**
-     * Replaces certain variables with terms. In particular, all temp variables
-     * and autovar names should be replaced.
-     *
-     * @param args
-     * @param terms
-     * @param exclude
-     */
-    static void replaceVariables(@NotNull List<Parameter> args, @NotNull Map<Parameter, Parameter> terms, int exclude) {
-        for (int i = 0; i < args.size(); i++) {
-            Parameter arg = args.get(i);
-            if (terms.containsKey(arg) && i != exclude) {
-                args.set(i, terms.get(arg));
-
-            } else if (arg.isAutovar()) {
-                final Matcher MATCHER = AUTOVAR_REGEX.matcher(arg.toValueString());
-                MATCHER.matches();
-                String prop = MATCHER.group(1);
-                terms.put(arg, Parameter.createTerm(prop));
-                args.set(i, terms.get(arg));
+        /**
+         *
+         * @param op
+         * @param args
+         * @param types
+         * @param terms
+         * @return
+         */
+        fun makeTerm(
+            op: Opcode,
+            args: MutableList<Parameter?>,
+            types: List<MemberDesc>,
+            terms: MutableMap<Parameter?, Parameter?>
+        ): Boolean {
+            val term: String
+            val method: String
+            val obj: String
+            val dest: String
+            val arg: String
+            val prop: String
+            val operand1: String
+            val operand2: String
+            val subArgs: List<String>
+            val type: WStringElement
+            return when (op) {
+                Opcode.IADD, Opcode.FADD, Opcode.STRCAT -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s + %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.ISUB, Opcode.FSUB -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s - %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.IMUL, Opcode.FMUL -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s * %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.IDIV, Opcode.FDIV -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s / %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.IMOD -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s %% %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.RETURN -> {
+                    replaceVariables(args, terms, -1)
+                    false
+                }
+                Opcode.CALLMETHOD -> {
+                    replaceVariables(args, terms, 2)
+                    method = args[0]!!.toValueString()
+                    obj = args[1]!!.toValueString()
+                    val result1: MutableList<String> = ArrayList()
+                    for (v1 in args
+                        .subList(3, args.size)) {
+                        val paren1 = v1!!.paren()
+                        result1.add(paren1)
+                    }
+                    subArgs = result1
+                    term = String.format("%s.%s%s", obj, method, paramList(subArgs))
+                    processTerm(args, terms, 2, term)
+                }
+                Opcode.CALLPARENT -> {
+                    replaceVariables(args, terms, 1)
+                    method = args[0]!!.toValueString()
+                    val list1: MutableList<String> = ArrayList()
+                    for (parameter in args
+                        .subList(3, args.size)) {
+                        val s = parameter!!.paren()
+                        list1.add(s)
+                    }
+                    subArgs = list1
+                    term = String.format("parent.%s%s", method, paramList(subArgs))
+                    processTerm(args, terms, 1, term)
+                }
+                Opcode.CALLSTATIC -> {
+                    replaceVariables(args, terms, 2)
+                    obj = args[0]!!.toValueString()
+                    method = args[1]!!.toValueString()
+                    val list: MutableList<String> = ArrayList()
+                    for (v in args
+                        .subList(3, args.size)) {
+                        val paren = v!!.paren()
+                        list.add(paren)
+                    }
+                    subArgs = list
+                    term = String.format("%s.%s%s", obj, method, paramList(subArgs))
+                    processTerm(args, terms, 2, term)
+                }
+                Opcode.NOT -> {
+                    replaceVariables(args, terms, 0)
+                    term = String.format("!%s", args[1]!!.paren())
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.INEG, Opcode.FNEG -> {
+                    replaceVariables(args, terms, 0)
+                    term = String.format("-%s", args[1]!!.paren())
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.ASSIGN -> {
+                    replaceVariables(args, terms, 0)
+                    term = String.format("%s", args[1])
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.CAST -> {
+                    replaceVariables(args, terms, 0)
+                    dest = args[0]!!.toValueString()
+                    arg = args[1]!!.paren()
+                    var result: Optional<MemberDesc> = Optional.empty()
+                    for (memberDesc in types) {
+                        if (memberDesc.name.equals(dest)) {
+                            result = Optional.of(memberDesc)
+                            break
+                        }
+                    }
+                    type = result.get().type.toWString()
+                    term = if (type.equals("bool")) {
+                        arg
+                    } else {
+                        String.format("(%s)%s", type, arg)
+                    }
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.PROPGET -> {
+                    replaceVariables(args, terms, 2)
+                    obj = args[1]!!.toValueString()
+                    prop = args[0]!!.toValueString()
+                    term = String.format("%s.%s", obj, prop)
+                    processTerm(args, terms, 2, term)
+                }
+                Opcode.PROPSET -> {
+                    replaceVariables(args, terms, -1)
+                    false
+                }
+                Opcode.CMP_EQ -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s == %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.CMP_LT -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s < %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.CMP_LE -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s <= %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.CMP_GT -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s > %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.CMP_GE -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[1]!!.paren()
+                    operand2 = args[2]!!.paren()
+                    term = String.format("%s >= %s", operand1, operand2)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.ARR_CREATE -> {
+                    val size = args[1]!!.intValue
+                    dest = args[0]!!.toValueString()
+                    var found: Optional<MemberDesc> = Optional.empty()
+                    for (t in types) {
+                        if (t.name.equals(dest)) {
+                            found = Optional.of(t)
+                            break
+                        }
+                    }
+                    type = found.get().type.toWString()
+                    val subtype = type.toString().substring(0, type.length - 2)
+                    term = String.format("new %s[%s]", subtype, size)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.ARR_LENGTH -> {
+                    replaceVariables(args, terms, 0)
+                    term = String.format("%s.length", args[1])
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.ARR_GET -> {
+                    replaceVariables(args, terms, 0)
+                    operand1 = args[2]!!.toValueString()
+                    operand2 = args[1]!!.toValueString()
+                    term = String.format("%s[%s]", operand2, operand1)
+                    processTerm(args, terms, 0, term)
+                }
+                Opcode.ARR_SET -> {
+                    replaceVariables(args, terms, -1)
+                    false
+                }
+                Opcode.JMPT, Opcode.JMPF -> {
+                    replaceVariables(args, terms, -1)
+                    false
+                }
+                Opcode.JMP, Opcode.ARR_FIND, Opcode.ARR_RFIND -> false
+                else -> false
             }
         }
+
+        /**
+         * @param args
+         * @param terms
+         * @param destPos
+         * @param term
+         */
+        fun processTerm(
+            args: List<Parameter?>,
+            terms: MutableMap<Parameter?, Parameter?>,
+            destPos: Int,
+            term: String?
+        ): Boolean {
+            if (destPos >= args.size || !(args[destPos]!!.type === ParamType.IDENTIFIER)) {
+                return false
+            }
+            val dest = args[destPos]
+            if (!dest!!.isTemp) {
+                return false
+            }
+            terms[dest] = createTerm(term)
+            return true
+        }
+
+        /**
+         * Replaces certain variables with terms. In particular, all temp variables
+         * and autovar names should be replaced.
+         *
+         * @param args
+         * @param terms
+         * @param exclude
+         */
+        fun replaceVariables(args: MutableList<Parameter?>, terms: MutableMap<Parameter?, Parameter?>, exclude: Int) {
+            for (i in args.indices) {
+                val arg = args[i]
+                if (terms.containsKey(arg) && i != exclude) {
+                    args[i] = terms[arg]
+                } else if (arg!!.isAutovar) {
+                    val MATCHER = AUTOVAR_REGEX.matcher(arg.toValueString())
+                    MATCHER.matches()
+                    val prop = MATCHER.group(1)
+                    terms[arg] = createTerm(prop)
+                    args[i] = terms[arg]
+                }
+            }
+        }
+
+        /**
+         * Creates a function parameter list style string for a `List`.
+         *
+         * @param <T>
+         * @param params
+         * @return
+        </T> */
+        fun <T> paramList(params: List<T>): String {
+            val joiner = StringJoiner(", ", "(", ")")
+            for (p in params) {
+                val s = p.toString()
+                joiner.add(s)
+            }
+            return joiner.toString()
+        }
+
+        val AUTOVAR_REGEX = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE)
     }
 
     /**
-     * Creates a function parameter list style string for a <code>List</code>.
+     * Creates a new `StackFrame` by reading from a
+     * `ByteBuffer`. No error handling is performed.
      *
-     * @param <T>
-     * @param params
-     * @return
+     * @param input The input stream.
+     * @param thread The `ActiveScript` parent.
+     * @param context The `PapyrusContext` info.
+     * @throws PapyrusFormatException
+     * @throws PapyrusElementException
      */
-    static <T> String paramList(@NotNull List<T> params) {
-        StringJoiner joiner = new StringJoiner(", ", "(", ")");
-        for (T p : params) {
-            String s = p.toString();
-            joiner.add(s);
+    init {
+        Objects.requireNonNull(input)
+        Objects.requireNonNull(thread)
+        Objects.requireNonNull(context)
+        val variableCount = input.int
+        if (variableCount < 0 || variableCount > 50000) {
+            throw PapyrusFormatException("Invalid variableCount $variableCount")
         }
-        return joiner.toString();
+        THREAD = thread
+        FLAG = Flags.Byte(input)
+        FN_Var_TYPE = read(input)
+        scriptName = context.readTString(input)
+        script = context.findScript(scriptName)
+        BASENAME = context.readTString(input)
+        event = context.readTString(input)
+        STATUS =
+            if (!FLAG.getFlag(0) && FN_Var_TYPE === VarType.NULL) Optional.of(context.readTString(input)) else Optional.empty()
+        OPCODE_MAJORVERSION = input.get()
+        OPCODE_MINORVERSION = input.get()
+        RETURNTYPE = context.readTString(input)
+        docString = context.readTString(input)
+        FN_USERFLAGS = Flags.Int(input)
+        FN_FLAGS = Flags.Byte(input)
+        val functionParameterCount = java.lang.Short.toUnsignedInt(input.short)
+        assert(functionParameterCount in 0..2047) { "Invalid functionParameterCount $functionParameterCount" }
+        FN_PARAMS = ArrayList(functionParameterCount)
+        for (i in 0 until functionParameterCount) {
+            val param = FunctionParam(input, context)
+            FN_PARAMS.add(param)
+        }
+        val functionLocalCount = java.lang.Short.toUnsignedInt(input.short)
+        assert(functionLocalCount in 0..2047) { "Invalid functionLocalCount $functionLocalCount" }
+        FN_LOCALS = ArrayList(functionLocalCount)
+        for (i in 0 until functionLocalCount) {
+            val local = FunctionLocal(input, context)
+            FN_LOCALS.add(local)
+        }
+        val opcodeCount = java.lang.Short.toUnsignedInt(input.short)
+        assert(0 <= opcodeCount)
+        try {
+            CODE = ArrayList(opcodeCount)
+            for (i in 0 until opcodeCount) {
+                val opcode = OpcodeData(input, context)
+                CODE.add(opcode)
+            }
+        } catch (ex: ListException) {
+            throw PapyrusElementException("Failed to read StackFrame OpcodeData.", ex, this)
+        }
+        PTR = input.int
+        assert(0 <= PTR)
+        owner = read(input, context)
+        try {
+            VARIABLES = readList(input, variableCount, context).toMutableList()
+        } catch (ex: ListException) {
+            throw PapyrusElementException("Faileed to read StackFrame variables.", ex, this)
+        }
+        OWNER = if (owner is VarRef) {
+            owner.referent
+        } else {
+            null
+        }
     }
-
-    final private ActiveScript THREAD;
-    @NotNull
-    final private Flags.Byte FLAG;
-    @NotNull
-    final private VarType FN_Var_TYPE;
-    final private TString SCRIPTNAME;
-    final private Script SCRIPT;
-    final private TString BASENAME;
-    final private TString EVENT;
-    @NotNull
-    final private Optional<TString> STATUS;
-    final private byte OPCODE_MAJORVERSION;
-    final private byte OPCODE_MINORVERSION;
-    final private TString RETURNTYPE;
-    final private TString FN_DOCSTRING;
-    @NotNull
-    final private Flags.Int FN_USERFLAGS;
-    @NotNull
-    final private Flags.Byte FN_FLAGS;
-    @NotNull
-    final private List<FunctionParam> FN_PARAMS;
-    @NotNull
-    final private List<FunctionLocal> FN_LOCALS;
-    @NotNull
-    final private List<OpcodeData> CODE;
-    final private int PTR;
-    @NotNull
-    final private Variable OWNERFIELD;
-    @NotNull
-    final private List<Variable> VARIABLES;
-    @Nullable
-    final private GameElement OWNER;
-    static final Pattern AUTOVAR_REGEX = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE);
-
 }
