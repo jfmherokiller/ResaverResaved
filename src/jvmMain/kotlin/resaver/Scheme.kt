@@ -15,8 +15,6 @@
  */
 package resaver
 
-import java.util.Objects
-
 /**
  * Describe an IString mapping.
  *
@@ -51,7 +49,8 @@ class Scheme : HashMap<IString, IString> {
      * @return
      */
     override fun hashCode(): Int {
-        return Objects.hash(this)
+        val flatMap = super.hashCode() + this.flatMap { keys + values }.sumOf { it.hashCode() }
+        return flatMap
         //return o.hashCode();
     }
 
