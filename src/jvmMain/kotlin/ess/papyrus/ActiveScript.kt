@@ -151,7 +151,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
     override fun toString(): String {
         val BUILDER = StringBuilder()
         if (null == data) {
-            return iD.toString() + "-" + String.format("%02x", type)
+            return "$iD-${String.format("%02x", type)}"
         }
         if (isUndefined) {
             BUILDER.append("#")
@@ -218,7 +218,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
             val mods = analysis.SCRIPT_ORIGINS[topFrame.scriptName.toIString()]
             if (null != mods) {
                 val mod = mods.last()
-                BUILDER.append(String.format("<p>Probably running code from mod %s.</p>", mod))
+                BUILDER.append("<p>Probably running code from mod $mod.</p>")
             }
         }
         if (null == instance) {
@@ -229,10 +229,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
             val PLUGIN = REF.PLUGIN
             if (PLUGIN != null) {
                 BUILDER.append(
-                    String.format(
-                        "<p>This thread is attached to an instance from %s.</p>",
-                        PLUGIN.toHTML(this)
-                    )
+                    "<p>This thread is attached to an instance from ${PLUGIN.toHTML(this)}.</p>"
                 )
             } else if (instance.refID.type === RefID.Type.CREATED) {
                 BUILDER.append("<p>This thread is attach to instance that was created in-game.</p>")
@@ -245,29 +242,29 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
             is Linkable -> {
                 val l = instance as Linkable?
                 val type = instance!!.javaClass.simpleName
-                BUILDER.append(String.format("<p>%s: %s</p>", type, l!!.toHTML(this)))
+                BUILDER.append("<p>$type: ${l!!.toHTML(this)}</p>")
             }
             else -> {
                 val type = instance!!.javaClass.simpleName
-                BUILDER.append(String.format("<p>%s: %s</p>", type, instance))
+                BUILDER.append("<p>$type: $instance</p>")
             }
         }
         BUILDER.append("<p>")
-        BUILDER.append(String.format("ID: %s<br/>", iD))
+        BUILDER.append("ID: $iD<br/>")
         BUILDER.append(String.format("Type: %02x<br/>", type))
         if (null == data) {
             BUILDER.append("<h3>DATA MISSING</h3>")
         } else {
             BUILDER.append(String.format("Version: %d.%d<br/>", this.majorVersion, minorVersion))
-            BUILDER.append(String.format("Unknown (var): %s<br/>", this.unknownVar?.toHTML(this)))
+            BUILDER.append("Unknown (var): ${this.unknownVar?.toHTML(this)}<br/>")
             BUILDER.append(String.format("Flag: %08x<br/>", flag))
             BUILDER.append(String.format("Unknown1 (byte): %02x<br/>", this.unknownByte))
             BUILDER.append(String.format("Unknown2 (int): %08x<br/>", this.unknown2))
             BUILDER.append(String.format("Unknown3 (byte): %02x<br/>", this.unknown3))
             if (null != this.unknown4) {
-                BUILDER.append(String.format("FragmentData (struct): %s<br/>", this.unknown4?.toHTML(this)))
+                BUILDER.append("FragmentData (struct): ${this.unknown4?.toHTML(this)}<br/>")
             } else {
-                BUILDER.append(String.format("FragmentData (struct): %s<br/>", this.unknown4))
+                BUILDER.append("FragmentData (struct): ${this.unknown4}<br/>")
             }
             if (null != this.unknown5) {
                 BUILDER.append(String.format("Unknown5 (byte): %02x<br/>", this.unknown5))
@@ -292,8 +289,6 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
      * @return
      */
     override fun matches(analysis: Analysis?, mod: String?): Boolean {
-        Objects.requireNonNull(analysis)
-        Objects.requireNonNull(mod)
         for (v in stackFrames) {
             if (v.matches(analysis, mod)) {
                 return true
@@ -561,7 +556,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
             if (null != ATTACHED && ATTACHED?.isZero?.not() == true) {
                 ATTACHED_ELEMENT = context.findAny(ATTACHED!!)
                 if (ATTACHED_ELEMENT == null) {
-                    LOG.log(Level.WARNING, String.format("Attachment ID did not match anything: %s\n", ATTACHED))
+                    LOG.log(Level.WARNING, "Attachment ID did not match anything: $ATTACHED\n")
                 }
             } else {
                 ATTACHED_ELEMENT = null

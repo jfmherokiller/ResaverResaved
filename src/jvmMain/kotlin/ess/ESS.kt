@@ -579,24 +579,15 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
      * Stores the results of a load or save operation.
      */
     inner class Result(backup: Path?, timer: Timer, model: FilterTreeModel?) {
-        @JvmField
-        val ESS: ESS
-        @JvmField
-        val GAME: Game?
-        val SAVE_FILE: Path
-        val BACKUP_FILE: Path?
-        @JvmField
-        val TIME_S: Double
-        @JvmField
+        val ESS: ESS = this@ESS
+        val GAME: Game? = header.GAME
+        val SAVE_FILE: Path = originalFile
+        val BACKUP_FILE: Path? = backup
+        val TIME_S: Double = timer.elapsed / 1.0e9
         val SIZE_MB: Double
         val MODEL: FilterTreeModel?
 
         init {
-            ESS = this@ESS
-            GAME = header.GAME
-            SAVE_FILE = originalFile
-            BACKUP_FILE = backup
-            TIME_S = timer.elapsed / 1.0e9
             val size: Double = try {
                 Files.size(SAVE_FILE) / 1048576.0
             } catch (ex: IOException) {
@@ -915,7 +906,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
 
         // Determine the filename of the co-save.
         val filename = saveFile.fileName.toString()
-        val cosaveName = filename.replace(GAME.SAVE_EXT + "$".toRegex(), GAME.COSAVE_EXT)
+        val cosaveName = filename.replace("${GAME.SAVE_EXT}${"$".toRegex()}", GAME.COSAVE_EXT)
         val cosaveFile = saveFile.resolveSibling(cosaveName)
         COSAVE = if (Files.exists(cosaveFile)) Files.readAllBytes(cosaveFile) else null
 

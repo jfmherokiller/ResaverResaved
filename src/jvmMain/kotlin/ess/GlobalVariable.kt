@@ -84,7 +84,7 @@ class GlobalVariable(input: ByteBuffer?, context: ESSContext) : Element {
         return other2.REFID == REFID && other2.value == value
     }
 
-    private val REFID: RefID
+    private val REFID: RefID = context.readRefID(input!!)
     /**
      *
      * @return The value of the `GlobalVariable`.
@@ -93,16 +93,6 @@ class GlobalVariable(input: ByteBuffer?, context: ESSContext) : Element {
      * Sets the value of the `GlobalVariable`.
      * @param newVal The new value of the `GlobalVariable`.
      */
-    var value: Float
+    var value: Float = input?.float ?: 0.0f
 
-    /**
-     * Creates a new `GlobalVariable`.
-     *
-     * @param input The input stream.
-     * @param context The `ESSContext` info.
-     */
-    init {
-        REFID = context.readRefID(input!!)
-        value = input.float
-    }
 }

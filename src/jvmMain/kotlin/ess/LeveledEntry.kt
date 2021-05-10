@@ -30,7 +30,6 @@ class LeveledEntry(input: ByteBuffer, context: ESSContext) : Element, Linkable {
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
-        Objects.requireNonNull(output)
         output!!.put(LEVEL.toByte())
         REFID.write(output)
         output.putShort(COUNT.toShort())
@@ -51,14 +50,14 @@ class LeveledEntry(input: ByteBuffer, context: ESSContext) : Element, Linkable {
      * @return
      */
     override fun toHTML(target: Element?): String {
-        return String.format("%d (%s) = %d", LEVEL, REFID.toHTML(target), COUNT)
+        return String.format("%d (${REFID.toHTML(target)}) = %d", LEVEL, COUNT)
     }
 
     /**
      * @return String representation.
      */
     override fun toString(): String {
-        return String.format("%d (%s) = %d", LEVEL, REFID, COUNT)
+        return String.format("%d ($REFID) = %d", LEVEL, COUNT)
     }
 
     /**
@@ -67,10 +66,10 @@ class LeveledEntry(input: ByteBuffer, context: ESSContext) : Element, Linkable {
      */
     override fun hashCode(): Int {
         var hash = 3
-        hash = 29 * hash + Objects.hashCode(REFID)
-        hash = 29 * hash + Integer.hashCode(LEVEL)
-        hash = 29 * hash + Integer.hashCode(COUNT)
-        hash = 29 * hash + Integer.hashCode(CHANCE)
+        hash = 29 * hash + REFID.hashCode()
+        hash = 29 * hash + LEVEL.hashCode()
+        hash = 29 * hash + COUNT.hashCode()
+        hash = 29 * hash + CHANCE.hashCode()
         return hash
     }
 
@@ -78,35 +77,27 @@ class LeveledEntry(input: ByteBuffer, context: ESSContext) : Element, Linkable {
      * @see Object.equals
      * @return
      */
-    override fun equals(obj: Any?): Boolean {
-        return if (this === obj) {
-            true
-        } else if (obj == null) {
-            false
-        } else if (javaClass != obj.javaClass) {
-            false
-        } else {
-            val other = obj as LeveledEntry
-            LEVEL == other.LEVEL && COUNT == other.COUNT && CHANCE == other.CHANCE && REFID == other.REFID
+    override fun equals(other: Any?): Boolean {
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as LeveledEntry
+                LEVEL == other2.LEVEL && COUNT == other2.COUNT && CHANCE == other2.CHANCE && REFID == other2.REFID
+            }
         }
     }
 
-    val REFID: RefID
-    val LEVEL: Int
-    val COUNT: Int
-    val CHANCE: Int
+    val REFID: RefID = context.readRefID(input)
+    val LEVEL: Int = input.get().toInt()
+    val COUNT: Int = input.short.toInt()
+    val CHANCE: Int = input.get().toInt()
 
-    /**
-     * Creates a new `Plugin` by reading from an input stream.
-     *
-     * @param input The input stream.
-     * @param context The `ESSContext` info.
-     */
-    init {
-        Objects.requireNonNull(input)
-        REFID = context.readRefID(input)
-        LEVEL = input.get().toInt()
-        COUNT = input.short.toInt()
-        CHANCE = input.get().toInt()
-    }
 }

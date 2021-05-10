@@ -33,7 +33,7 @@ class FileLocationTable : Element {
      * @throws IOException
      */
     constructor(input: ByteBuffer, game: resaver.Game?) {
-        GAME = Objects.requireNonNull(game)
+        GAME = game
         formIDArrayCountOffset = input.int
         unknownTable3Offset = input.int
         table1Offset = input.int
@@ -171,7 +171,7 @@ class FileLocationTable : Element {
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
