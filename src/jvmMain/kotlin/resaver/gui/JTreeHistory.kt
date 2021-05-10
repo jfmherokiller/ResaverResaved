@@ -121,7 +121,7 @@ class JTreeHistory(tree: JTree) : JPanel(FlowLayout()) {
     private val LOCK: ReentrantLock
 
     companion object {
-        private val LOG = Logger.getLogger(resaver.gui.SaveWindow::class.java.canonicalName)
+        private val LOG = Logger.getLogger(SaveWindow::class.java.canonicalName)
     }
 
     /**

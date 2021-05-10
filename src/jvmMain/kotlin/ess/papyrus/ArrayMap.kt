@@ -22,8 +22,8 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class ArrayMap : ess.papyrus.PapyrusElementMap<ArrayInfo> {
-    internal constructor(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : super(
+class ArrayMap : PapyrusElementMap<ArrayInfo> {
+    internal constructor(input: ByteBuffer?, context: PapyrusContext?) : super(
         input!!,
         PapyrusElementReader<ArrayInfo> { b: ByteBuffer? -> ArrayInfo(b!!, context!!) }) {
     }

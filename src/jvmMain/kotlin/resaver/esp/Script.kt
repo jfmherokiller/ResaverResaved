@@ -38,7 +38,7 @@ class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
         output!!.put(NAME.uTF8)
         output.put(STATUS)
         output.putShort(PROPERTIES!!.size.toShort())
-        PROPERTIES!!.forEach { prop: resaver.esp.Property -> prop.write(output) }
+        PROPERTIES!!.forEach { prop: Property -> prop.write(output) }
     }
 
     /**
@@ -61,7 +61,7 @@ class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
     @JvmField
     val NAME: IString = IString[mf.BufferUtil.getWString(input)!!]
     private var STATUS: Byte
-    var PROPERTIES: MutableList<resaver.esp.Property>?
+    var PROPERTIES: MutableList<Property>?
 
     /**
      * Creates a new Script by reading it from a LittleEndianInput.
@@ -81,7 +81,7 @@ class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
             PROPERTIES = mutableListOf()
             try {
                 for (i in 0 until propertyCount) {
-                    val prop = resaver.esp.Property(input, ctx)
+                    val prop = Property(input, ctx)
                     PROPERTIES!!.add(prop)
                 }
             } finally {

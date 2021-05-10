@@ -29,7 +29,7 @@ class FunctionParam
  * @param context The `PapyrusContext` info.
  * @throws PapyrusFormatException
  */
-    (input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : MemberDesc(input, context) {
+    (input: ByteBuffer?, context: PapyrusContext?) : MemberDesc(input, context) {
     /**
      * @return String representation.
      */

@@ -42,7 +42,7 @@ import javax.swing.SwingWorker
  * @author Mark Fairchild
  */
 class Scanner(
-    window: resaver.gui.SaveWindow?,
+    window: SaveWindow?,
     save: ess.ESS?,
     gameDir: Path,
     mo2Ini: Path?,
@@ -68,7 +68,7 @@ class Scanner(
             if (null != MO2_INI) {
                 PROGRESS.accept("Analyzing MO2")
                 LOG.info("Checking Mod Organizer 2.")
-                val MOMODS = resaver.gui.Configurator.analyzeModOrganizer2(GAME, MO2_INI)!!
+                val MOMODS = Configurator.analyzeModOrganizer2(GAME, MO2_INI)!!
                 MODS.addAll(MOMODS)
             }
             PROGRESS.accept("Organizing")
@@ -317,7 +317,7 @@ class Scanner(
         }
     }
 
-    private val WINDOW: resaver.gui.SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
+    private val WINDOW: SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
     private val SAVE: ess.ESS = Objects.requireNonNull(save, "The save field must not be null.")!!
     private val GAME_DIR: Path = Objects.requireNonNull(gameDir, "The game directory field must not be null.")
     private val MO2_INI: Path? = mo2Ini

@@ -69,7 +69,7 @@ object Disassembler {
         types: MutableList<VariableType>,
         indent: Int
     ): List<String> {
-        val CODE: MutableList<String> = LinkedList()
+        val CODE: MutableList<String> = mutableListOf()
         var ptr = 0
 
         // Loop through the list of instructions. Conditional instructions
@@ -271,7 +271,7 @@ object Disassembler {
         indent: Int,
         elseif: Boolean
     ): List<String> {
-        val CODE: MutableList<String> = LinkedList()
+        val CODE: MutableList<String> = mutableListOf()
         val IF = detectIF(block, 0)!!
         val offs1 = IF[0]
         val offs2 = IF[1]
@@ -602,7 +602,7 @@ object Disassembler {
                 replaceVariables(args, terms, 0)
                 operand1 = args[1]
                 operand2 = args[2]
-                term = String.format("%s %% %s", operand1!!.paren(), operand2!!.paren())
+                term = "${operand1!!.paren()} %% ${operand2!!.paren()}"
                 processTerm(args, terms, 0, term)
             }
             Opcode.RETURN -> {
@@ -614,7 +614,7 @@ object Disassembler {
                 method = args[0] as VDataID?
                 obj = args[1]
                 //.paren())
-                val list: MutableList<String> = ArrayList()
+                val list: MutableList<String> = mutableListOf()
                 for (vData in args
                     .subList(4, args.size)) {
                     val toString = vData.toString()
@@ -628,7 +628,7 @@ object Disassembler {
                 replaceVariables(args, terms, 1)
                 method = args[0] as VDataID?
                 //.paren())
-                val result: MutableList<String> = ArrayList()
+                val result: MutableList<String> = mutableListOf()
                 for (vData in args
                     .subList(3, args.size)) {
                     val toString = vData.toString()
@@ -642,7 +642,7 @@ object Disassembler {
                 replaceVariables(args, terms, 2)
                 obj = args[0]
                 method = args[1] as VDataID?
-                val list1: MutableList<String> = ArrayList()
+                val list1: MutableList<String> = mutableListOf()
                 for (vData in args
                     .subList(4, args.size)) {
                     val toString = vData.toString()
@@ -680,12 +680,16 @@ object Disassembler {
                     }
                 }
                 val type: IString = found.get().TYPE
-                term = if (type.equals(IString["bool"])) {
-                    arg.toString()
-                } else if (type.equals(IString["string"])) {
-                    arg.toString()
-                } else {
-                    "${arg!!.paren()} as $type"
+                term = when {
+                    type.equals(IString["bool"]) -> {
+                        arg.toString()
+                    }
+                    type.equals(IString["string"]) -> {
+                        arg.toString()
+                    }
+                    else -> {
+                        "${arg!!.paren()} as $type"
+                    }
                 }
                 processTerm(args, terms, 0, term)
             }
@@ -826,7 +830,7 @@ object Disassembler {
                 val method = inst.ARGS[0] as VDataID
                 val obj = inst.ARGS[1]
                 //.paren())
-                val subArgs: MutableList<String> = ArrayList()
+                val subArgs: MutableList<String> = mutableListOf()
                 for (vData in inst.ARGS
                     .subList(4, inst.ARGS.size)) {
                     val toString = vData.toString()
@@ -837,7 +841,7 @@ object Disassembler {
             Opcode.CALLPARENT -> {
                 val method = inst.ARGS[0] as VDataID
                 //.paren())
-                val subArgs: MutableList<String> = ArrayList()
+                val subArgs: MutableList<String> = mutableListOf()
                 for (vData in inst.ARGS
                     .subList(3, inst.ARGS.size)) {
                     val toString = vData.toString()
@@ -994,12 +998,7 @@ object Disassembler {
      * @return
     </T> */
     fun <T> paramList(params: List<T>): String {
-        val joiner = StringJoiner(", ", "(", ")")
-        for (param in params) {
-            val toString = param.toString()
-            joiner.add(toString)
-        }
-        return joiner.toString()
+        return params.joinToString(", ", "(", ")")
     }
 
     /**

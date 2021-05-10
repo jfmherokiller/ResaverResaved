@@ -8,7 +8,7 @@ import java.nio.ByteBuffer
  * TString implementation for 16 bit TStrings.
  */
 internal class TString16 : TString {
-    private val tStrings: ess.papyrus.StringTable
+    private val tStrings: StringTable
 
     /**
      * Creates a new `TString16` from a `WStringElement` and
@@ -17,7 +17,7 @@ internal class TString16 : TString {
      * @param wstr  The `WStringElement`.
      * @param index The index of the `TString`.
      */
-    constructor(tStrings: ess.papyrus.StringTable, wstr: WStringElement?, index: Int) : super(wstr, index) {
+    constructor(tStrings: StringTable, wstr: WStringElement?, index: Int) : super(wstr, index) {
         this.tStrings = tStrings
     }
 
@@ -28,11 +28,11 @@ internal class TString16 : TString {
      * @param cs    The `CharSequence`.
      * @param index The index of the `TString`.
      */
-    private constructor(tStrings: ess.papyrus.StringTable, cs: CharSequence, index: Int) : super(cs, index) {
+    private constructor(tStrings: StringTable, cs: CharSequence, index: Int) : super(cs, index) {
         this.tStrings = tStrings
     }
 
-    constructor(tStrings: ess.papyrus.StringTable, `val`: String?, size: Int) : super(`val`, size) {
+    constructor(tStrings: StringTable, `val`: String?, size: Int) : super(`val`, size) {
         this.tStrings = tStrings
     }
 

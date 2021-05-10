@@ -77,7 +77,7 @@ object AboutDialog {
     @JvmStatic
     val version: CharSequence
         get() = try {
-            val RES = resaver.gui.SaveWindow::class.java.getResource(resaver.gui.SaveWindow::class.java.simpleName + ".class")
+            val RES = SaveWindow::class.java.getResource(SaveWindow::class.java.simpleName + ".class")
             val CONN = RES?.openConnection() as JarURLConnection
             val MANIFEST = CONN.manifest
             val ATTR = MANIFEST.mainAttributes

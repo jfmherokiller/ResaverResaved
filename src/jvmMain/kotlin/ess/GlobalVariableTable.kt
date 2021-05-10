@@ -32,7 +32,7 @@ class GlobalVariableTable : Element, GlobalDataBlock {
      * @param context The `ESSContext` info.
      */
     constructor(input: ByteBuffer?, context: ESSContext?) {
-        COUNT = input?.let { ess.VSVal(it) }!!
+        COUNT = input?.let { VSVal(it) }!!
         val C = COUNT.value
         VARIABLES = ArrayList(C)
         for (i in 0 until C) {
@@ -45,7 +45,7 @@ class GlobalVariableTable : Element, GlobalDataBlock {
      * Creates a new empty `GlobalVariableTable`.
      */
     constructor() {
-        COUNT = ess.VSVal(0)
+        COUNT = VSVal(0)
         VARIABLES = emptyList()
     }
 
@@ -97,6 +97,6 @@ class GlobalVariableTable : Element, GlobalDataBlock {
      */
     val variables: List<GlobalVariable>
         get() = VARIABLES
-    private val COUNT: ess.VSVal
+    private val COUNT: VSVal
     private val VARIABLES: List<GlobalVariable>
 }

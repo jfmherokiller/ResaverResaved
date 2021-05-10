@@ -29,9 +29,9 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class QueuedUnbind(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
+class QueuedUnbind(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
     /**
-     * @see resaver.ess.Element.write
+     * @see Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -40,7 +40,7 @@ class QueuedUnbind(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Pap
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
@@ -55,19 +55,23 @@ class QueuedUnbind(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Pap
      */
     override fun getInfo(analysis: Analysis?, save: ess.ESS?): String {
         val BUILDER = StringBuilder()
-        if (null != scriptInstance && null != scriptInstance.script) {
-            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", scriptInstance.script!!.toHTML(this)))
-        } else if (null != scriptInstance) {
-            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", scriptInstance.scriptName))
-        } else {
-            BUILDER.append(String.format("<html><h3>QUEUED UNBIND of %s</h3>", iD))
+        when {
+            scriptInstance?.script != null -> {
+                BUILDER.append("<html><h3>QUEUED UNBIND of ${scriptInstance.script!!.toHTML(this)}</h3>")
+            }
+            null != scriptInstance -> {
+                BUILDER.append("<html><h3>QUEUED UNBIND of ${scriptInstance.scriptName}</h3>")
+            }
+            else -> {
+                BUILDER.append("<html><h3>QUEUED UNBIND of $iD</h3>")
+            }
         }
         if (null == scriptInstance) {
-            BUILDER.append(String.format("<p>Instance: %s</p>", iD))
+            BUILDER.append("<p>Instance: $iD</p>")
         } else {
-            BUILDER.append(String.format("<p>Instance: %s</p>", scriptInstance.toHTML(this)))
+            BUILDER.append("<p>Instance: ${scriptInstance.toHTML(this)}</p>")
         }
-        BUILDER.append(String.format("<p>Unknown: %s</p>", pad8(unknown)))
+        BUILDER.append("<p>Unknown: ${pad8(unknown)}</p>")
         val UNK = save!!.papyrus?.context?.broadSpectrumSearch(unknown)
         if (null != UNK) {
             BUILDER.append("<p>Potential match for UNKNOWN found using general search:<br/>")
@@ -79,14 +83,11 @@ class QueuedUnbind(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Pap
             if (null != providers) {
                 val probablyProvider = providers.last()
                 BUILDER.append(
-                    String.format(
-                        "The queued unbinding probably came from mod \"%s\".\n\n",
-                        probablyProvider
-                    )
+                    "The queued unbinding probably came from mod \"$probablyProvider\".\n\n"
                 )
                 if (providers.size > 1) {
                     BUILDER.append("<p>Full list of providers:</p><ul>")
-                    providers.forEach { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) }
+                    providers.forEach { mod: String? -> BUILDER.append("<li>$mod") }
                     BUILDER.append("</ul>")
                 }
             }
@@ -113,7 +114,7 @@ class QueuedUnbind(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Pap
         get() = scriptInstance!!.isUndefined
 
     /**
-     * @see resaver.ess.Linkable.toHTML
+     * @see Linkable.toHTML
      * @param target A target within the `Linkable`.
      * @return
      */
@@ -145,7 +146,7 @@ class QueuedUnbind(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Pap
     /**
      * @return The corresponding `ScriptInstance`.
      */
-    val scriptInstance: ess.papyrus.ScriptInstance? = context.findScriptInstance(iD)
+    val scriptInstance: ScriptInstance? = context.findScriptInstance(iD)
 
     /**
      * Creates a new `MemberData` by reading from a

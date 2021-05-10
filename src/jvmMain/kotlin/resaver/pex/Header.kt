@@ -3,11 +3,16 @@ package resaver.pex
 import mf.BufferUtil
 import kotlin.Throws
 import java.io.IOException
-import java.lang.StringBuilder
 import java.nio.ByteBuffer
 
 /**
  * Describes the header of a PexFile file. Useless beyond that.
+ */
+/**
+ * Creates a Header by reading from a DataInput.
+ *
+ * @param input A ByteBuffer for a Skyrim PEX file.
+ * @throws IOException Exceptions aren't handled.
  */
 class Header internal constructor(input: ByteBuffer) {
     /**
@@ -22,9 +27,9 @@ class Header internal constructor(input: ByteBuffer) {
         output.putInt(magic)
         output.putInt(version)
         output.putLong(compilationTime)
-        mf.BufferUtil.putWString(output, soureFilename)
-        mf.BufferUtil.putWString(output, userName)
-        mf.BufferUtil.putWString(output, machineName)
+        BufferUtil.putWString(output, soureFilename)
+        BufferUtil.putWString(output, userName)
+        BufferUtil.putWString(output, machineName)
     }
 
     /**
@@ -40,16 +45,7 @@ class Header internal constructor(input: ByteBuffer) {
      * @return A string representation of the Header.
      */
     override fun toString(): String {
-        return StringBuilder()
-            .append(soureFilename)
-            .append(" compiled at ")
-            .append(compilationTime)
-            .append(" by ")
-            .append(userName)
-            .append(" on ")
-            .append(machineName)
-            .append(".\n")
-            .toString()
+        return "$soureFilename compiled at $compilationTime by $userName on $machineName.\n"
     }
 
     private var magic = 0
@@ -59,18 +55,13 @@ class Header internal constructor(input: ByteBuffer) {
     private var userName = ""
     private var machineName = ""
 
-    /**
-     * Creates a Header by reading from a DataInput.
-     *
-     * @param input A ByteBuffer for a Skyrim PEX file.
-     * @throws IOException Exceptions aren't handled.
-     */
+
     init {
         magic = input.int
         version = input.int
         compilationTime = input.long
-        soureFilename = mf.BufferUtil.getUTF(input).toString()
-        userName = mf.BufferUtil.getUTF(input).toString()
-        machineName = mf.BufferUtil.getUTF(input).toString()
+        soureFilename = BufferUtil.getUTF(input)
+        userName = BufferUtil.getUTF(input)
+        machineName = BufferUtil.getUTF(input)
     }
 }

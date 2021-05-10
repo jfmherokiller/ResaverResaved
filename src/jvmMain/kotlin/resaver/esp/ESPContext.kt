@@ -28,7 +28,7 @@ import ess.Plugin
  *
  * @author Mark Fairchild
  */
-class ESPContext(game: resaver.Game, plugin: Plugin, tes4: resaver.esp.RecordTes4?) {
+class ESPContext(game: resaver.Game, plugin: Plugin, tes4: RecordTes4?) {
     fun pushContext(ctx: CharSequence) {
         CONTEXT.addLast(IString[ctx.toString()])
     }
@@ -69,11 +69,11 @@ class ESPContext(game: resaver.Game, plugin: Plugin, tes4: resaver.esp.RecordTes
     val GAME: resaver.Game = game
 
     @JvmField
-    val TES4: resaver.esp.RecordTes4? = tes4
+    val TES4: RecordTes4? = tes4
     private val CONTEXT: ArrayDeque<IString> = ArrayDeque()
 
     @JvmField
-    val PLUGIN_INFO: resaver.esp.PluginData = resaver.esp.PluginData(plugin)
+    val PLUGIN_INFO: PluginData = PluginData(plugin)
 
     /**
      * Create a new `ESSContext` from an ESS `Header`.

@@ -54,7 +54,7 @@ internal class BA2FileRecord(input: ByteBuffer, header: BA2Header?) {
                     val COMPRESSED = ByteBuffer.allocate(FILESIZE)
                     channel.read(COMPRESSED, OFFSET)
                     (COMPRESSED as Buffer).flip()
-                    val DATA = mf.BufferUtil.inflateZLIB(COMPRESSED, REALSIZE, FILESIZE)
+                    val DATA = BufferUtil.inflateZLIB(COMPRESSED, REALSIZE, FILESIZE)
                     Optional.of(DATA)
                 }
             }

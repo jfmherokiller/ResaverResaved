@@ -36,7 +36,7 @@ class OpcodeData : PapyrusElement {
      * @throws PapyrusFormatException
      * @throws ListException
      */
-    constructor(input: ByteBuffer, context: ess.papyrus.PapyrusContext?) {
+    constructor(input: ByteBuffer, context: PapyrusContext?) {
         val code = input.get().toInt()
         if (code < 0 || code >= OPCODES.size) {
             throw PapyrusFormatException("Invalid opcode: $code")
@@ -150,7 +150,6 @@ class OpcodeData : PapyrusElement {
         /**
          * A reusable instance of the NOP instruction.
          */
-        @JvmField
         val NOP = OpcodeData()
         private val OPCODES = Opcode.values()
     }

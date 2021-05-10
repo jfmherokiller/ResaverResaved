@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets
  *
  * @author Mark Fairchild
  */
-class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.PapyrusContext) : PapyrusElement, Linkable {
+class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) : PapyrusElement, Linkable {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
@@ -97,7 +97,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
     @JvmField
     var TYPE: FragmentType? = null
     var DATA: FragmentData? = null
-    var VARIABLE: ess.papyrus.Variable? = null
+    var VARIABLE: Variable? = null
 
     //final public RefID QUESTID;
     //final public Byte BYTE;
@@ -115,7 +115,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
     /**
      * Stores the data for the other type of fragment.
      */
-    class Type2(input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : FragmentData {
+    class Type2(input: ByteBuffer?, context: PapyrusContext) : FragmentData {
         /**
          * @see resaver.ess.Element.write
          * @param output The output stream.
@@ -161,7 +161,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
         }
 
         var RUNNING_ID: EID? = null
-        private var RUNNING: ess.papyrus.ActiveScript? = null
+        private var RUNNING: ActiveScript? = null
 
         init {
             if (context.game?.isFO4 == true) {
@@ -177,7 +177,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
     /**
      * Stores the data for a QuestStage fragment.
      */
-    class QuestStage(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : FragmentData {
+    class QuestStage(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         override fun write(output: ByteBuffer?) {
             QUESTID.write(output)
             output!!.putShort(STAGE)
@@ -233,7 +233,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
     /**
      * Stores the data for a ScenePhaseResults fragment.
      */
-    class ScenePhaseResults(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : FragmentData {
+    class ScenePhaseResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
          * @see resaver.ess.Element.write
          * @param output The output stream.
@@ -287,7 +287,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
     /**
      * Stores the data for a SceneActionResults fragment.
      */
-    class SceneActionResults(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : FragmentData {
+    class SceneActionResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
          * @see resaver.ess.Element.write
          * @param output The output stream.
@@ -341,7 +341,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
     /**
      * Stores the data for a SceneResults fragment.
      */
-    class SceneResults(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : FragmentData {
+    class SceneResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
          * @see resaver.ess.Element.write
          * @param output The output stream.
@@ -389,7 +389,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
     /**
      * Stores the data for a TerminalRunResults fragment.
      */
-    class TerminalRunResults(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : FragmentData {
+    class TerminalRunResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
          * @see resaver.ess.Element.write
          * @param output The output stream.
@@ -443,7 +443,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
     /**
      * Stores the data for a SceneActionResults fragment.
      */
-    class TopicInfo(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?) : FragmentData {
+    class TopicInfo(input: ByteBuffer?, context: PapyrusContext?) : FragmentData {
         /**
          * @see resaver.ess.Element.write
          * @param output The output stream.
@@ -491,7 +491,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: ess.papyrus.Papyr
                     else -> throw PapyrusFormatException("Unknown ActiveScript QuestData")
                 }
             }
-            VARIABLE = if (unknown3.toInt() == 3 || unknown3.toInt() == 2) ess.papyrus.Variable.read(input, context) else null
+            VARIABLE = if (unknown3.toInt() == 3 || unknown3.toInt() == 2) Variable.read(input, context) else null
         } catch (ex: PapyrusFormatException) {
             throw ex
         }

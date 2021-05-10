@@ -32,10 +32,10 @@ class StringTable {
      * @param stringsFiles
      * @param plugin
      */
-    fun populateFromFiles(stringsFiles: Collection<resaver.esp.StringsFile>, plugin: Plugin) {
+    fun populateFromFiles(stringsFiles: Collection<StringsFile>, plugin: Plugin) {
         Objects.requireNonNull(stringsFiles)
         val SUBTABLE = TABLE.computeIfAbsent(plugin) { p: Plugin? -> HashMap() }
-        stringsFiles.forEach(Consumer { stringsFile: resaver.esp.StringsFile -> SUBTABLE.putAll(stringsFile.TABLE) })
+        stringsFiles.forEach(Consumer { stringsFile: StringsFile -> SUBTABLE.putAll(stringsFile.TABLE) })
     }
 
     /**

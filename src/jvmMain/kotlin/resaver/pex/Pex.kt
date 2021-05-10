@@ -435,7 +435,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             val DOC: TString
             val USERFLAGS: Int
             val CONSTFLAG: Byte
-            val VALUE: resaver.pex.VData
+            val VALUE: VData
 
             /**
              * Creates a Member by reading from a DataInput.
@@ -449,7 +449,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
                 this.NAME = strings.read(input)
                 TYPE = strings.read(input)
                 this.USERFLAGS = input.int
-                VALUE = resaver.pex.VData.readVariableData(input, strings)
+                VALUE = VData.readVariableData(input, strings)
                 this.CONSTFLAG = input.get()
                 DOC = strings.read(input)
             }
@@ -1050,7 +1050,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
                 }
                 AssemblyLevel.FULL -> try {
                     Disassembler.preMap(block.toMutableList(), types, terms)
-                    val code2 = resaver.pex.Disassembler.disassemble(block, types, indent + 1)
+                    val code2 = Disassembler.disassemble(block, types, indent + 1)
                     code.addAll(code2)
                 } catch (ex: DisassemblyException) {
                     code.addAll(ex.partial)
@@ -1109,7 +1109,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
              * @param code
              * @param args
              */
-            constructor(code: Opcode, args: List<resaver.pex.VData>?) {
+            constructor(code: Opcode, args: List<VData>?) {
                 OP = code.ordinal.toByte()
                 OPCODE = code
                 ARGS = ArrayList(args)
@@ -1130,18 +1130,18 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
                     OPCODE.ARGS > 0 -> {
                         ARGS = ArrayList(OPCODE.ARGS)
                         for (i in 0 until OPCODE.ARGS) {
-                            ARGS.add(resaver.pex.VData.readVariableData(input, strings))
+                            ARGS.add(VData.readVariableData(input, strings))
                         }
                     }
                     OPCODE.ARGS < 0 -> {
                         ARGS = ArrayList(-OPCODE.ARGS)
                         for (i in 0 until 1 - OPCODE.ARGS) {
-                            ARGS.add(resaver.pex.VData.readVariableData(input, strings))
+                            ARGS.add(VData.readVariableData(input, strings))
                         }
                         val count = ARGS[-OPCODE.ARGS] as? VDataInt ?: throw IOException("Invalid instruction")
                         val numVargs = count.value
                         for (i in 0 until numVargs) {
-                            ARGS.add(resaver.pex.VData.readVariableData(input, strings))
+                            ARGS.add(VData.readVariableData(input, strings))
                         }
                     }
                     else -> {
@@ -1235,7 +1235,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             @JvmField
             val OPCODE: Opcode
             @JvmField
-            val ARGS: MutableList<resaver.pex.VData>
+            val ARGS: MutableList<VData>
         }
 
         /**
@@ -1373,7 +1373,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         val NAME: TString
         val TYPE: TString
         val USERFLAGS: Int
-        val DATA: resaver.pex.VData
+        val DATA: VData
         var CONST: Byte = 0
 
         /**
@@ -1387,7 +1387,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             this.NAME = strings.read(input)
             TYPE = strings.read(input)
             this.USERFLAGS = input.int
-            DATA = resaver.pex.VData.readVariableData(input, strings)
+            DATA = VData.readVariableData(input, strings)
             CONST = if (GAME.isFO4) {
                 input.get()
             } else {

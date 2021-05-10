@@ -27,7 +27,7 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-class SuspendedStack(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
+class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
@@ -74,7 +74,7 @@ class SuspendedStack(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : P
      */
     override fun toHTML(target: Element?): String {
         if (null != target && hasMessage()) {
-            var result: ess.papyrus.Variable? = null
+            var result: Variable? = null
             for (v in message?.variables!!) {
                 if (v != null) {
                     if (v.hasRef()) {
@@ -168,8 +168,8 @@ class SuspendedStack(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : P
     /**
      * @return The message field.
      */
-    var message: ess.papyrus.FunctionMessageData? = null
-    private val THREAD: ess.papyrus.ActiveScript?
+    var message: FunctionMessageData? = null
+    private val THREAD: ActiveScript?
 
     /**
      * Creates a new `SuspendedStack` by reading from a
@@ -189,11 +189,11 @@ class SuspendedStack(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : P
         if (FLAG.toInt() == 0) {
             message = null
         } else {
-            var message: ess.papyrus.FunctionMessageData? = null
+            var message: FunctionMessageData? = null
             try {
-                message = ess.papyrus.FunctionMessageData(input, this, context)
+                message = FunctionMessageData(input, this, context)
             } catch (ex: PapyrusElementException) {
-                message = ex.partial as ess.papyrus.FunctionMessageData
+                message = ex.partial as FunctionMessageData
                 throw PapyrusElementException("Failed to read message for SuspendedStack.", ex, this)
             } catch (ex: PapyrusFormatException) {
                 throw PapyrusElementException("Failed to read message for SuspendedStack.", ex, this)

@@ -28,7 +28,7 @@ class Member
  * @param var The member's variable.
  */(
     val DESC: MemberDesc?, //static final private IString[] _PLAYER_REFS = new IString[]{
-    val VAR: ess.papyrus.Variable?
+    val VAR: Variable?
 ) {
     /**
      * @return A flag indicating whether this member stores a player reference.

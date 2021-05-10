@@ -20,9 +20,6 @@ import ess.Element
 import ess.GlobalDataBlock
 import ess.Linkable
 import ess.ModelBuilder
-import ess.papyrus.ActiveScript
-import ess.papyrus.Papyrus
-import ess.papyrus.ScriptInstance
 import mf.Counter
 import resaver.ListException
 import java.nio.BufferUnderflowException
@@ -67,11 +64,11 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
         ARRAYS!!.write(output)
         PAPYRUS_RUNTIME!!.write(output)
         ACTIVESCRIPTS!!.write(output)
-        SCRIPT_INSTANCES?.values?.forEach(Consumer { data: ScriptInstance -> data.data!!.write(output) })
-        REFERENCES?.values?.forEach(Consumer { ref: Reference -> ref.data!!.write(output) })
-        STRUCT_INSTANCES?.values?.forEach(Consumer { struct: StructInstance -> struct.writeData(output) })
-        ARRAYS?.values?.forEach(Consumer { info: ArrayInfo -> info.writeData(output) })
-        ACTIVESCRIPTS?.values?.forEach(Consumer { script: ActiveScript -> script.writeData(output) })
+        SCRIPT_INSTANCES?.values?.forEach { data: ScriptInstance -> data.data!!.write(output) }
+        REFERENCES?.values?.forEach { ref: Reference -> ref.data!!.write(output) }
+        STRUCT_INSTANCES?.values?.forEach { struct: StructInstance -> struct.writeData(output) }
+        ARRAYS?.values?.forEach { info: ArrayInfo -> info.writeData(output) }
+        ACTIVESCRIPTS?.values?.forEach { script: ActiveScript -> script.writeData(output) }
 
         // Write the function message table and suspended stacks.
         output?.putInt(FUNCTIONMESSAGES.size)

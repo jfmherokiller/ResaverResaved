@@ -60,7 +60,7 @@ class FileLocationTable : Element {
      *
      * @param ess The `ESS` to rebuild for.
      */
-    constructor(ess: ess.ESS) {
+    constructor(ess: ESS) {
         GAME = ess.header.GAME
         TABLE1COUNT = ess.table1.size
         TABLE2COUNT = ess.table2.size
@@ -111,7 +111,7 @@ class FileLocationTable : Element {
      *
      * @param ess The `ESS` to rebuild for.
      */
-    fun rebuild(ess: ess.ESS) {
+    fun rebuild(ess: ESS) {
         var table1Size = 0
         for (globalData in ess.table1) {
             val calculateSize = globalData.calculateSize()

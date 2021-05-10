@@ -86,7 +86,7 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
         channel.read(NAMEBUFFER)
         for (i in 0 until HEADER.FILE_COUNT) {
             NAMEBUFFER.flip()
-            val fileName = mf.BufferUtil.getWString(NAMEBUFFER)
+            val fileName = BufferUtil.getWString(NAMEBUFFER)
             FILES[i].name = fileName
             NAMEBUFFER.compact()
             channel.read(NAMEBUFFER)

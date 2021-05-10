@@ -383,19 +383,19 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
                         }
                     }
                     DataType.Variable -> if (PAPYRUS_CONTEXT != null) {
-                        val `var` = ess.papyrus.Variable.read(currentSlice, PAPYRUS_CONTEXT)
+                        val `var` = Variable.read(currentSlice, PAPYRUS_CONTEXT)
                         BUF.append(`var`.toHTML(null))
                         when (`var`) {
-                            is ess.papyrus.VarArray -> {
+                            is VarArray -> {
                                 addHighlight(dataPos, `var`.calculateSize(), Color.PINK)
                             }
-                            is ess.papyrus.VarRef -> {
+                            is VarRef -> {
                                 addHighlight(dataPos, `var`.calculateSize(), Color.GREEN)
                             }
-                            is ess.papyrus.VarNull -> {
+                            is VarNull -> {
                                 //this.addHighlight(dataPos, var.calculateSize(), Color.GREEN);
                             }
-                            is ess.papyrus.VarNull -> {
+                            is VarNull -> {
                                 addHighlight(dataPos, `var`.calculateSize(), Color.YELLOW)
                             }
                         }
@@ -416,7 +416,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
     val DATA: ByteBuffer
     private val SAVE: ess.ESS?
     private val ESS_CONTEXT: ESSContext?
-    private val PAPYRUS_CONTEXT: ess.papyrus.PapyrusContext?
+    private val PAPYRUS_CONTEXT: PapyrusContext?
     private val ANALYSIS: Analysis?
     private var currentSlice: ByteBuffer
     private val SIZE: Int

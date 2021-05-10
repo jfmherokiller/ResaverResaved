@@ -225,7 +225,7 @@ class BatchCleaner(window: SaveWindow?, save: ess.ESS?) : SwingWorker<Boolean, D
 
     private val WINDOW: SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
     private val SAVE: ess.ESS = Objects.requireNonNull(save, "The save field must not be null.")!!
-    private val CONTEXT: ess.papyrus.PapyrusContext = SAVE.papyrus!!.context
+    private val CONTEXT: PapyrusContext = SAVE.papyrus!!.context
     private val LISTENER: WindowAdapter = object : WindowAdapter() {
         override fun windowClosing(e: WindowEvent) {
             if (!isDone) {

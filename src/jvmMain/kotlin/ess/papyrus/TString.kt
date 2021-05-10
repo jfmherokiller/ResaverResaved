@@ -160,7 +160,7 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
      * @param save
      * @return
      */
-    override fun getInfo(analysis: Analysis?, save: ess.ESS?): String? {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
         Objects.requireNonNull(save)
         val BUILDER = StringBuilder()
         BUILDER.append("<html><h3>STRING</h3>")

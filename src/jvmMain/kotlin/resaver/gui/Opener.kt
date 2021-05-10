@@ -32,14 +32,14 @@ import javax.swing.Timer
  *
  * @author Mark Fairchild
  */
-class Opener(window: resaver.gui.SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, doAfter: Runnable?) : SwingWorker<ess.ESS?, Double?>() {
+class Opener(window: SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, doAfter: Runnable?) : SwingWorker<ess.ESS?, Double?>() {
     /**
      *
      * @return @throws Exception
      */
     @Throws(Exception::class)
     override fun doInBackground(): ess.ESS? {
-        if (!resaver.gui.Configurator.validateSavegame(SAVEFILE)) {
+        if (!Configurator.validateSavegame(SAVEFILE)) {
             return null
         }
         WINDOW.progressIndicator.start("Loading")
@@ -94,7 +94,7 @@ class Opener(window: resaver.gui.SaveWindow?, savefile: Path, worrier: ess.papyr
     }
 
     private val SAVEFILE: Path = savefile
-    private val WINDOW: resaver.gui.SaveWindow = window!!
+    private val WINDOW: SaveWindow = window!!
     private val WORRIER: ess.papyrus.Worrier = worrier
     private val DOAFTER: Runnable? = doAfter
     private val LISTENER: WindowAdapter = object : WindowAdapter() {
@@ -117,6 +117,6 @@ class Opener(window: resaver.gui.SaveWindow?, savefile: Path, worrier: ess.papyr
      * @param doAfter
      */
     init {
-        resaver.gui.Configurator.setPreviousSave(savefile)
+        Configurator.setPreviousSave(savefile)
     }
 }

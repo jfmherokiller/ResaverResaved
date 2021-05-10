@@ -28,10 +28,10 @@ import javax.swing.SwingWorker
  *
  * @author Mark
  */
-class Watcher(window: resaver.gui.SaveWindow?, worrier: ess.papyrus.Worrier?) {
+class Watcher(window: SaveWindow?, worrier: ess.papyrus.Worrier?) {
     @Synchronized
     fun start(newWatchDir: Path?) {
-        require(!(newWatchDir != null && !resaver.gui.Configurator.validDir(newWatchDir))) { "Invalid watch directory." }
+        require(!(newWatchDir != null && !Configurator.validDir(newWatchDir))) { "Invalid watch directory." }
         if (!isRunning || watchDir != newWatchDir) {
             stop()
             watchDir = newWatchDir
@@ -87,7 +87,7 @@ class Watcher(window: resaver.gui.SaveWindow?, worrier: ess.papyrus.Worrier?) {
             } else {
                 val list: MutableList<Path> = ArrayList()
                 for (VALUE in resaver.Game.VALUES) {
-                    val saveDirectory = resaver.gui.Configurator.getSaveDirectory(VALUE)
+                    val saveDirectory = Configurator.getSaveDirectory(VALUE)
                     if (Files.exists(saveDirectory)) {
                         list.add(saveDirectory)
                     }
@@ -124,7 +124,7 @@ class Watcher(window: resaver.gui.SaveWindow?, worrier: ess.papyrus.Worrier?) {
                                     //this.wait(250, 0)
                                     i++
                                 }
-                                if (resaver.gui.Configurator.validateSavegame(FULL)) {
+                                if (Configurator.validateSavegame(FULL)) {
                                     val OPENER = Opener(WINDOW, FULL, WORRIER, null)
                                     OPENER.execute()
                                 } else {
@@ -151,7 +151,7 @@ class Watcher(window: resaver.gui.SaveWindow?, worrier: ess.papyrus.Worrier?) {
         }
     }
 
-    private val WINDOW: resaver.gui.SaveWindow = window!!
+    private val WINDOW: SaveWindow = window!!
     private val WORRIER: ess.papyrus.Worrier = worrier!!
     private var worker: WatchWorker? = null
     private var watchDir: Path? = null

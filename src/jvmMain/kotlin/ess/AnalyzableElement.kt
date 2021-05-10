@@ -29,7 +29,7 @@ interface AnalyzableElement : Element {
      * @param save The full set of savegame papyrus data.
      * @return A string to show users about the element.
      */
-    fun getInfo(analysis: resaver.Analysis?, save: ess.ESS?): String?
+    fun getInfo(analysis: resaver.Analysis?, save: ESS?): String?
 
     /**
      * Evaluates whether the element could have originated from the specified

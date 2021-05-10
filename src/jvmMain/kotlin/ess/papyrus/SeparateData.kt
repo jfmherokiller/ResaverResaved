@@ -24,6 +24,6 @@ import java.nio.ByteBuffer
  */
 interface SeparateData {
     @Throws(PapyrusFormatException::class, PapyrusElementException::class)
-    fun readData(input: ByteBuffer?, context: ess.papyrus.PapyrusContext?)
+    fun readData(input: ByteBuffer?, context: PapyrusContext?)
     fun writeData(input: ByteBuffer?)
 }

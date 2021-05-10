@@ -28,7 +28,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class Struct(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definition() {
+class Struct(input: ByteBuffer, context: PapyrusContext) : Definition() {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.

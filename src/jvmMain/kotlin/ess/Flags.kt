@@ -92,7 +92,7 @@ abstract class Flags : Element {
             FLAGS = input.get()
         }
 
-        constructor(`val`: kotlin.Byte) {
+        constructor(`val`: Byte) {
             FLAGS = `val`
         }
 
@@ -109,7 +109,7 @@ abstract class Flags : Element {
             return 0x1 and (FLAGS.toInt() ushr index) != 0
         }
 
-        fun checkMask(mask: kotlin.Byte): Boolean {
+        fun checkMask(mask: Byte): Boolean {
             val i1 = mask.toInt() and 0xFF
             val i2 = FLAGS.toInt() and 0xFF
             val result = i1 and i2
@@ -131,7 +131,7 @@ abstract class Flags : Element {
             return other is FlagsByte && other.FLAGS == FLAGS
         }
 
-        val FLAGS: kotlin.Byte
+        val FLAGS: Byte
     }
 
     /**
@@ -143,11 +143,11 @@ abstract class Flags : Element {
             FLAGS = input.short
         }
 
-        constructor(`val`: kotlin.Short) {
+        constructor(`val`: Short) {
             FLAGS = `val`
         }
 
-        fun checkMask(mask: kotlin.Short): Boolean {
+        fun checkMask(mask: Short): Boolean {
             val result: Int = (FLAGS and mask).toInt()
             return result != 0
         }
@@ -181,7 +181,7 @@ abstract class Flags : Element {
             return other is FlagsShort && other.FLAGS == FLAGS
         }
 
-        val FLAGS: kotlin.Short
+        val FLAGS: Short
     }
 
     /**
@@ -197,7 +197,7 @@ abstract class Flags : Element {
             FLAGS = `val`
         }
 
-        fun checkMask(mask: kotlin.Short): Boolean {
+        fun checkMask(mask: Short): Boolean {
             val result = FLAGS and mask.toInt()
             return result != 0
         }

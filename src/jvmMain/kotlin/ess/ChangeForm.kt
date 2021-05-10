@@ -242,8 +242,8 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
             val k = 0
         }
         BUF.append(" refid=").append(refID)
-        if (parsedData != null && parsedData is ess.GeneralElement) {
-            val gen = parsedData as ess.GeneralElement?
+        if (parsedData != null && parsedData is GeneralElement) {
+            val gen = parsedData as GeneralElement?
             if (gen!!.hasVal("BASE_OBJECT")) {
                 val base = gen.getVal("BASE_OBJECT") as RefID
                 BUF.append(" base=").append(base.toString())
@@ -264,7 +264,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      * @param save
      * @return
      */
-    override fun getInfo(analysis: Analysis?, save: ess.ESS?): String {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         val HOLDERS = save!!.papyrus?.scriptInstances?.values
             ?.filter { i: ess.papyrus.ScriptInstance -> refID == i.refID }

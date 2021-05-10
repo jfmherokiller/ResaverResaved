@@ -28,7 +28,7 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, context: ess.papyrus.PapyrusContext) :
+abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, context: PapyrusContext) :
     AnalyzableElement, Linkable, PapyrusElement, HasID {
     /**
      * @see resaver.ess.Element.write

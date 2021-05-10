@@ -109,11 +109,11 @@ class ChangeFormLVLN(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSConte
      * @param save
      * @return
      */
-    override fun getInfo(analysis: resaver.Analysis?, save: ess.ESS?): String? {
+    override fun getInfo(analysis: resaver.Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         BUILDER.append("<hr/><p>FORMLIST:</p>")
         if (null != refID) {
-            BUILDER.append(String.format("<p>ChangeFormFlags: %s</p>", refID))
+            BUILDER.append("<p>ChangeFormFlags: $refID</p>")
         }
         if (null != ENTRIES) {
             BUILDER.append(String.format("<p>List size: %d</p><ol start=0>", ENTRIES!!.size))

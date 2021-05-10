@@ -22,8 +22,8 @@ import ess.Plugin
  *
  * @author Mark Fairchild
  */
-class Analysis(profileAnalysis: resaver.Mod.Analysis, espInfos: MutableMap<Plugin?, resaver.esp.PluginData>, strings: StringTable) :
-    resaver.Mod.Analysis() {
+class Analysis(profileAnalysis: Mod.Analysis, espInfos: MutableMap<Plugin?, resaver.esp.PluginData>, strings: StringTable) :
+    Mod.Analysis() {
     fun getName(plugin: Plugin?, formID: Int): String? {
         return if (ESP_INFOS.containsKey(plugin)) ESP_INFOS[plugin]!!.getName(formID, STRINGS) else null
     }

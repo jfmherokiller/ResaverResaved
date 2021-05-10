@@ -28,7 +28,7 @@ import javax.swing.*
  *
  * @author Mark Fairchild
  */
-class ModalProgressDialog(private val OWNER: resaver.gui.SaveWindow, title: String?, task: Runnable) : JDialog(
+class ModalProgressDialog(private val OWNER: SaveWindow, title: String?, task: Runnable) : JDialog(
     OWNER, title, ModalityType.APPLICATION_MODAL
 ) {
     /**

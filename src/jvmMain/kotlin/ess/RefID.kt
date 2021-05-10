@@ -25,7 +25,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class RefID internal constructor(private val DATA: Int, ess: ess.ESS) : Element, Linkable, Comparable<RefID?> {
+class RefID internal constructor(private val DATA: Int, ess: ESS) : Element, Linkable, Comparable<RefID?> {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.

@@ -28,7 +28,7 @@ import javax.swing.*
  *
  * @author Mark
  */
-class ChangeFlagDialog(parent: resaver.gui.SaveWindow?, mask: Int, filter: Int, done: BiIntConsumer) : JDialog(parent, "", true) {
+class ChangeFlagDialog(parent: SaveWindow?, mask: Int, filter: Int, done: BiIntConsumer) : JDialog(parent, "", true) {
     /**
      *
      */

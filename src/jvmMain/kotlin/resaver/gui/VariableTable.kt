@@ -32,7 +32,7 @@ import java.util.Objects
  *
  * @author Mark Fairchild
  */
-class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
+class VariableTable(window: SaveWindow?) : JTable() {
     /**
      * Initializes the table's components.
      */
@@ -45,8 +45,8 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
             val modelRow = convertRowIndexToModel(viewRow)
             val column = model.columnCount - 1
             val o = model.getValueAt(modelRow, column)
-            assert(o is ess.papyrus.Variable)
-            val `var` = o as ess.papyrus.Variable
+            assert(o is Variable)
+            val `var` = o as Variable
             if (`var`.hasRef() && `var`.ref?.isZero!!.not()) {
                 WINDOW.findElement(`var`.referent)
             }
@@ -60,8 +60,8 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
                     val modelRow = convertRowIndexToModel(row)
                     val column = model.columnCount - 1
                     val o = model.getValueAt(modelRow, column)
-                    assert(o is ess.papyrus.Variable)
-                    val `var` = o as ess.papyrus.Variable
+                    assert(o is Variable)
+                    val `var` = o as Variable
                     if (`var`.hasRef() && `var`.ref?.isZero!!.not()) {
                         TABLE_POPUP_MENU.show(e.component, e.x, e.y)
                     }
@@ -95,15 +95,15 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
      * @return
      */
     fun isSupported(element: AnalyzableElement?): Boolean {
-        return (element is ess.papyrus.ScriptInstance
-                || element is ess.papyrus.StructInstance
+        return (element is ScriptInstance
+                || element is StructInstance
                 || element is Struct
-                || element is ess.papyrus.StackFrame
+                || element is StackFrame
                 || element is ArrayInfo
-                || element is ess.papyrus.FunctionMessageData
+                || element is FunctionMessageData
                 || element is SuspendedStack
                 || element is FunctionMessage
-                || element is ess.papyrus.Reference)
+                || element is Reference)
     }
 
     /**
@@ -119,14 +119,14 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
      * @param element The `PapyrusElement` to display.
      * @param context The `PapyrusContext` info.
      */
-    fun displayElement(element: AnalyzableElement?, context: ess.papyrus.PapyrusContext) {
+    fun displayElement(element: AnalyzableElement?, context: PapyrusContext) {
         if (element is ArrayInfo) {
             displayArray(element, context)
         } else if (element is HasVariables) {
             displayVariableTable(element as HasVariables, context)
         } else if (element is Definition) {
             displayDefinition(element, context)
-        } else if (element is ess.papyrus.FunctionMessageData) {
+        } else if (element is FunctionMessageData) {
             displayVariableTable(element, context)
         } else if (element is SuspendedStack) {
             if (element.hasMessage()) {
@@ -151,9 +151,9 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
      * @param def The `Definition` to display.
      * @param context The `PapyrusContext` info.
      */
-    private fun displayDefinition(def: Definition, context: ess.papyrus.PapyrusContext) {
-        setDefaultRenderer(ess.papyrus.Variable::class.java, VariableCellRenderer())
-        setDefaultEditor(ess.papyrus.Variable::class.java, VariableCellEditor(context))
+    private fun displayDefinition(def: Definition, context: PapyrusContext) {
+        setDefaultRenderer(Variable::class.java, VariableCellRenderer())
+        setDefaultEditor(Variable::class.java, VariableCellEditor(context))
         this.model = DefinitionTableModel(def)
         getColumn(getColumnName(0)).minWidth = 25
         getColumn(getColumnName(0)).maxWidth = 25
@@ -165,9 +165,9 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
      * @param instance The `PapyrusElement` to display.
      * @param context The `PapyrusContext` info.
      */
-    private fun displayVariableTable(instance: HasVariables, context: ess.papyrus.PapyrusContext) {
-        setDefaultRenderer(ess.papyrus.Variable::class.java, VariableCellRenderer())
-        setDefaultEditor(ess.papyrus.Variable::class.java, VariableCellEditor(context))
+    private fun displayVariableTable(instance: HasVariables, context: PapyrusContext) {
+        setDefaultRenderer(Variable::class.java, VariableCellRenderer())
+        setDefaultEditor(Variable::class.java, VariableCellEditor(context))
         this.model = VariableTableModel(instance)
         getColumn(getColumnName(0)).minWidth = 25
         getColumn(getColumnName(0)).maxWidth = 25
@@ -181,9 +181,9 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
      * @param array The `PapyrusElement` to display.
      * @param context The `PapyrusContext` info.
      */
-    private fun displayArray(array: ArrayInfo, context: ess.papyrus.PapyrusContext) {
-        setDefaultRenderer(ess.papyrus.Variable::class.java, VariableCellRenderer())
-        setDefaultEditor(ess.papyrus.Variable::class.java, VariableCellEditor(context))
+    private fun displayArray(array: ArrayInfo, context: PapyrusContext) {
+        setDefaultRenderer(Variable::class.java, VariableCellRenderer())
+        setDefaultEditor(Variable::class.java, VariableCellEditor(context))
         this.model = ArrayTableModel(array)
         getColumn(getColumnName(0)).minWidth = 25
         getColumn(getColumnName(0)).maxWidth = 25
@@ -193,7 +193,7 @@ class VariableTable(window: resaver.gui.SaveWindow?) : JTable() {
 
     private val TABLE_POPUP_MENU: JPopupMenu = JPopupMenu("Table")
     private val MI_FIND: JMenuItem = JMenuItem("Find", KeyEvent.VK_F)
-    private val WINDOW: resaver.gui.SaveWindow = Objects.requireNonNull(window)!!
+    private val WINDOW: SaveWindow = Objects.requireNonNull(window)!!
 
     /**
      * Creates a new `VariableTable`.

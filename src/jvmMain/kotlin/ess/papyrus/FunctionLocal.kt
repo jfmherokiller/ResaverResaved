@@ -29,7 +29,7 @@ class FunctionLocal
  * @param strtab The StringTable.
  * @throws PapyrusFormatException
  */
-    (input: ByteBuffer?, context: ess.papyrus.PapyrusContext) : MemberDesc(input, context) {
+    (input: ByteBuffer?, context: PapyrusContext) : MemberDesc(input, context) {
     /**
      * @return String representation.
      */

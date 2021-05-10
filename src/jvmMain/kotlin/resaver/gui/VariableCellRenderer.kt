@@ -36,7 +36,7 @@ internal class VariableCellRenderer : DefaultTableCellRenderer() {
         row: Int,
         column: Int
     ): Component {
-        return if (value is ess.papyrus.Variable) {
+        return if (value is Variable) {
             val VAR = value
             val STR = value.toValueString()
             val C = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)

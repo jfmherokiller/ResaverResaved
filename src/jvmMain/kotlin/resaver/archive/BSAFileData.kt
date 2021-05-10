@@ -59,8 +59,8 @@ object BSAFileData {
             } else {
                 val uncompressedSize = buffer.int
                 val uncompressedData: ByteBuffer = when (header.VERSION) {
-                    104 -> mf.BufferUtil.inflateZLIB(buffer, uncompressedSize, record.FILESIZE)
-                    105 -> mf.BufferUtil.inflateLZ4(buffer, uncompressedSize)
+                    104 -> BufferUtil.inflateZLIB(buffer, uncompressedSize, record.FILESIZE)
+                    105 -> BufferUtil.inflateLZ4(buffer, uncompressedSize)
                     else -> throw IOException("Unknown version " + header.VERSION)
                 } // = ByteBuffer.allocate(uncompressedSize);
                 uncompressedData.order(ByteOrder.LITTLE_ENDIAN)

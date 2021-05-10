@@ -22,11 +22,11 @@ import java.nio.ByteBuffer
  * @author Mark Fairchild
  */
 class ReferenceMap :
-    ess.papyrus.PapyrusElementMap<ess.papyrus.Reference> {
-    internal constructor(input: ByteBuffer?, scripts: ess.papyrus.ScriptMap?, context: ess.papyrus.PapyrusContext?) : super(
+    PapyrusElementMap<Reference> {
+    internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusContext?) : super(
         input!!,
-        PapyrusElementReader<ess.papyrus.Reference> { b: ByteBuffer? ->
-            ess.papyrus.Reference(
+        PapyrusElementReader<Reference> { b: ByteBuffer? ->
+            Reference(
                 b!!,
                 scripts!!,
                 context!!

@@ -41,7 +41,7 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
         channel.read(FILENAMESBLOCK, FILENAMES_OFFSET)
         FILENAMESBLOCK.order(ByteOrder.LITTLE_ENDIAN)
         (FILENAMESBLOCK as Buffer).flip()
-        return Supplier { mf.BufferUtil.getZString(FILENAMESBLOCK) }
+        return Supplier { BufferUtil.getZString(FILENAMESBLOCK) }
     }
 
     /**

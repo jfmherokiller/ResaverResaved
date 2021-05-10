@@ -25,7 +25,7 @@ interface HasVariables : PapyrusElement {
      * @return The `Variable` `List` stored by the
      * `PapyrusElement`.
      */
-    val variables: List<ess.papyrus.Variable?>?
+    val variables: List<Variable?>?
 
     /**
      * @return The `MemberDesc` `List` for the
@@ -39,7 +39,7 @@ interface HasVariables : PapyrusElement {
      * @param index The index of the `Variable` to replace.
      * @param newVar The new `Variable`.
      */
-    fun setVariable(index: Int, newVar: ess.papyrus.Variable?)
+    fun setVariable(index: Int, newVar: Variable?)
     /**
      * @return A new `List` made by pairing each
      * `Variable` with its corresponding `MemberDesc`.

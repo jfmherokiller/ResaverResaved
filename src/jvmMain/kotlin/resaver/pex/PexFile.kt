@@ -33,7 +33,7 @@ import java.util.regex.Pattern
  *
  * @author Mark Fairchild
  */
-class PexFile private constructor(input: ByteBuffer, game: resaver.Game) {
+class PexFile private constructor(input: ByteBuffer, game: Game) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -157,7 +157,7 @@ class PexFile private constructor(input: ByteBuffer, game: resaver.Game) {
             return IString[COMPILED]
         }
     @JvmField
-    var GAME: resaver.Game? = null
+    var GAME: Game? = null
     var HEADER: Header? = null
     var STRINGS: StringTable? = null
     var DEBUG: DebugInfo? = null
@@ -178,8 +178,8 @@ class PexFile private constructor(input: ByteBuffer, game: resaver.Game) {
         @Throws(IOException::class)
         fun readScript(data: ByteBuffer): PexFile {
             return when (data.getInt(0)) {
-                -0x213fa806 -> PexFile(data, resaver.Game.FALLOUT4)
-                -0x5a83f22 -> PexFile(data, resaver.Game.SKYRIM_LE)
+                -0x213fa806 -> PexFile(data, Game.FALLOUT4)
+                -0x5a83f22 -> PexFile(data, Game.SKYRIM_LE)
                 else -> throw IOException("Invalid magic number.")
             }
         }

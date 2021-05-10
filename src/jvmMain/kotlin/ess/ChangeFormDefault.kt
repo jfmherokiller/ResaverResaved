@@ -45,7 +45,7 @@ class ChangeFormDefault(input: ByteBuffer, size: Int) : ChangeFormData {
      * @param save
      * @return
      */
-    override fun getInfo(analysis: resaver.Analysis?, save: ess.ESS?): String? {
+    override fun getInfo(analysis: resaver.Analysis?, save: ESS?): String? {
         val BUILDER = StringBuilder()
         BUILDER.append("<hr/><p>RAW DATA:</p><code><pre>")
         for (i in DATA.indices) {

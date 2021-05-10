@@ -34,7 +34,7 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, ana
      * @param save
      * @return
      */
-    override fun getInfo(analysis: resaver.Analysis?, save: ess.ESS?): String {
+    override fun getInfo(analysis: resaver.Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         if (FLAGS.FLAGS != 0) {
             BUILDER.append("<hr/>")

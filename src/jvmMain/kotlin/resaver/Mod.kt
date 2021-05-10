@@ -37,7 +37,7 @@ import kotlin.streams.toList
  *
  * @author Mark Fairchild
  */
-class Mod(game: resaver.Game?, dir: Path) : Serializable {
+class Mod(game: Game?, dir: Path) : Serializable {
     /**
      * An estimate of the total amount of data that would be scanned to read
      * this mod. The Math.sqrt operation is applied, to model the fact that
@@ -480,7 +480,7 @@ class Mod(game: resaver.Game?, dir: Path) : Serializable {
          * @return The `Mod`, or null if it couldn't be created.
          */
         @JvmStatic
-        fun createMod(game: resaver.Game?, dir: Path): Mod? {
+        fun createMod(game: Game?, dir: Path): Mod? {
             return try {
                 Mod(game, dir)
             } catch (ex: FileNotFoundException) {

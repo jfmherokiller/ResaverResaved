@@ -137,7 +137,7 @@ class ChangeFormFLST(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSConte
      * @param save
      * @return
      */
-    override fun getInfo(analysis: resaver.Analysis?, save: ess.ESS?): String {
+    override fun getInfo(analysis: resaver.Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         BUILDER.append("<hr/><p>FORMLIST:</p>")
         if (null != refID) {

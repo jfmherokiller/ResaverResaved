@@ -30,14 +30,14 @@ import javax.swing.SwingWorker
  *
  * @author Mark Fairchild
  */
-class Saver(window: resaver.gui.SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnable?) : SwingWorker<ess.ESS?, Double?>() {
+class Saver(window: SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnable?) : SwingWorker<ess.ESS?, Double?>() {
     /**
      *
      * @return @throws Exception
      */
     @Throws(Exception::class)
     override fun doInBackground(): ess.ESS? {
-        if (!resaver.gui.Configurator.validWrite(SAVEFILE)) {
+        if (!Configurator.validWrite(SAVEFILE)) {
             return null
         }
         WINDOW.progressIndicator.start("Saving")
@@ -94,7 +94,7 @@ class Saver(window: resaver.gui.SaveWindow?, saveFile: Path, save: ess.ESS?, doA
     }
 
     private val SAVEFILE: Path = Objects.requireNonNull(saveFile, "The saveFile field must not be null.")
-    private val WINDOW: resaver.gui.SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
+    private val WINDOW: SaveWindow = Objects.requireNonNull(window, "The window field must not be null.")!!
     private val SAVE: ess.ESS = Objects.requireNonNull(save, "The save field must not be null.")!!
     private val DOAFTER: Runnable? = doAfter
     private val LISTENER: WindowAdapter = object : WindowAdapter() {

@@ -602,7 +602,7 @@ open class GeneralElement protected constructor() : Element {
                 }
                 else -> checkNotNull(v) { "Null element!" }
             }
-            throw IllegalStateException("Unknown element: " + v.javaClass)
+            throw IllegalStateException("Unknown element: ${v.javaClass}")
         }
     }
 
@@ -675,15 +675,21 @@ open class GeneralElement protected constructor() : Element {
      * @return
      */
     override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        } else if (other == null) {
-            return false
-        } else if (javaClass != other.javaClass) {
-            return false
+        when {
+            this === other -> {
+                return true
+            }
+            other == null -> {
+                return false
+            }
+            javaClass != other.javaClass -> {
+                return false
+            }
+            else -> {
+                val other2 = other as GeneralElement
+                return DATA == other2.DATA
+            }
         }
-        val other2 = other as GeneralElement
-        return DATA == other2.DATA
     }
 
     /**

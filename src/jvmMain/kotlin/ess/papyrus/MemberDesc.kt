@@ -76,7 +76,7 @@ open class MemberDesc(input: ByteBuffer?, context: PapyrusContext?) : PapyrusEle
          */
         @Throws(ListException::class)
         fun readList(input: ByteBuffer?, count: Int, context: PapyrusContext): List<MemberDesc> {
-            val DESCS: MutableList<MemberDesc> = ArrayList(count)
+            val DESCS: MutableList<MemberDesc> = mutableListOf()
             for (i in 0 until count) {
                 try {
                     val desc = MemberDesc(input, context)

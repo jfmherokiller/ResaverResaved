@@ -37,7 +37,7 @@ import java.nio.ByteBuffer
  * @throws PapyrusFormatException
  * @throws PapyrusElementException
  */
-class Script(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definition() {
+class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
@@ -84,7 +84,7 @@ class Script(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definitio
     /**
      * @param scripts The ScriptMap.
      */
-    fun resolveParent(scripts: ess.papyrus.ScriptMap) {
+    fun resolveParent(scripts: ScriptMap) {
         parent = scripts[type]
     }
 

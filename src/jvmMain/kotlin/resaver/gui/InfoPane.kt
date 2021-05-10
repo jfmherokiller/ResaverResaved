@@ -23,6 +23,10 @@ import javax.swing.JTextPane
  *
  * @author Mark Fairchild
  */
+/**
+ * @param text
+ * @param listener
+ */
 class InfoPane(text: String?, listener: HyperlinkListener?) : JTextPane() {
     /**
      *
@@ -33,18 +37,15 @@ class InfoPane(text: String?, listener: HyperlinkListener?) : JTextPane() {
         super.setCaretPosition(0)
     }
 
-    /**
-     * @param text
-     * @param listener
-     */
+
     init {
         super.setEditable(false)
         super.setContentType("text/html")
         if (text != null) {
-            this.text = text;
+            this.text = text
         }
         if (listener != null) {
-            super.addHyperlinkListener(listener);
+            super.addHyperlinkListener(listener)
         }
     }
 }

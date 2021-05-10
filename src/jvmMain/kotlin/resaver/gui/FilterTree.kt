@@ -32,7 +32,7 @@ import javax.swing.tree.TreePath
  *
  * @author Mark Fairchild
  */
-class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
+class FilterTree : JTree(FilterTreeModel()) {
     /**
      * Initialize the swing and AWT components.
      */
@@ -64,12 +64,12 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
         MI_DELETE.addActionListener { e: ActionEvent? -> deleteNodes() }
         MI_FILTER.addActionListener { e: ActionEvent? ->
             if (null != pluginFilterHandler) {
-                val plugin = (selectionPath?.lastPathComponent as resaver.gui.FilterTreeModel.Node).element as Plugin
+                val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
                 pluginFilterHandler!!.accept(plugin)
             }
         }
         MI_PURGE.addActionListener { e: ActionEvent? ->
-            val plugin = (selectionPath?.lastPathComponent as resaver.gui.FilterTreeModel.Node).element as Plugin
+            val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
             if (null != purgeHandler) {
                 purgeHandler!!.accept(mutableListOf(plugin))
             }
@@ -91,13 +91,13 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
             }
         }
         MI_DELETE_FORMS.addActionListener { e: ActionEvent? ->
-            val plugin = (selectionPath?.lastPathComponent as resaver.gui.FilterTreeModel.Node).element as Plugin
+            val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
             if (null != deleteFormsHandler) {
                 deleteFormsHandler!!.accept(plugin)
             }
         }
         MI_DELETE_INSTANCES.addActionListener { e: ActionEvent? ->
-            val plugin = (selectionPath?.lastPathComponent as resaver.gui.FilterTreeModel.Node).element as Plugin
+            val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
             if (null != deleteInstancesHandler) {
                 deleteInstancesHandler!!.accept(plugin)
             }
@@ -109,25 +109,25 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
                     return@addActionListener
                 }
                 val ELEMENTS = model?.parsePaths(PATHS)
-                val THREADS: MutableList<ess.papyrus.ActiveScript> = ELEMENTS?.keys
+                val THREADS: MutableList<ActiveScript> = ELEMENTS?.keys
                     ?.asSequence()
-                    ?.filter { ess.ESS.THREAD.test(it) }
-                    ?.map { it as ess.papyrus.ActiveScript }
+                    ?.filter { ESS.THREAD.test(it) }
+                    ?.map { it as ActiveScript }
                     ?.toMutableList()?.toList()!!.toMutableList()
                 zeroThreadHandler!!.accept(THREADS)
             }
         }
         MI_FIND_OWNER.addActionListener { e: ActionEvent? ->
-            val element = (selectionPath?.lastPathComponent as resaver.gui.FilterTreeModel.Node).element
+            val element = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element
             if (null != findHandler) {
-                if (element is ess.papyrus.ActiveScript) {
+                if (element is ActiveScript) {
                     if (null != element.instance) {
                         findHandler!!.accept(element.instance!!)
                     }
-                } else if (element is ess.papyrus.StackFrame) {
+                } else if (element is StackFrame) {
                     val owner = element.owner
-                    if (owner is ess.papyrus.VarRef) {
-                        val ref = element.owner as ess.papyrus.VarRef?
+                    if (owner is VarRef) {
+                        val ref = element.owner as VarRef?
                         ref!!.referent?.let { findHandler!!.accept(it) }
                     }
                 } else if (element is ArrayInfo) {
@@ -138,7 +138,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
             }
         }
         MI_CLEANSE_FLST.addActionListener { e: ActionEvent? ->
-            val form = (selectionPath?.lastPathComponent as resaver.gui.FilterTreeModel.Node).element as ChangeForm
+            val form = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as ChangeForm
         }
         MI_COMPRESS_UNCOMPRESSED.addActionListener { e: ActionEvent? ->
             if (compressionHandler != null) {
@@ -169,7 +169,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
                     val ELEMENTS = model?.parsePaths(paths)
                     if (ELEMENTS?.size == 1) {
                         val ELEMENT = ELEMENTS.keys.iterator().next()
-                        if (ELEMENT is ess.ESS) {
+                        if (ELEMENT is ESS) {
                             val ESS = ELEMENT
                             if (ESS.supportsCompression()) {
                                 when (ESS.header.getCompression()) {
@@ -185,11 +185,11 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
                             }
                         } else if (ELEMENT is Plugin) {
                             PLUGIN_POPUP_MENU.show(evt.component, evt.x, evt.y)
-                        } else if (ess.ESS.DELETABLE.test(ELEMENT) || ess.ESS.THREAD.test(ELEMENT) || ess.ESS.OWNABLE.test(ELEMENT)) {
+                        } else if (ESS.DELETABLE.test(ELEMENT) || ESS.THREAD.test(ELEMENT) || ESS.OWNABLE.test(ELEMENT)) {
                             MI_DELETE.text = "Delete (1 element)"
-                            MI_DELETE.isVisible = ess.ESS.DELETABLE.test(ELEMENT)
-                            MI_ZERO_THREAD.isVisible = ess.ESS.THREAD.test(ELEMENT)
-                            MI_FIND_OWNER.isVisible = ess.ESS.OWNABLE.test(ELEMENT)
+                            MI_DELETE.isVisible = ESS.DELETABLE.test(ELEMENT)
+                            MI_ZERO_THREAD.isVisible = ESS.THREAD.test(ELEMENT)
+                            MI_FIND_OWNER.isVisible = ESS.OWNABLE.test(ELEMENT)
                             //MI_CLEANSE_FLST.setVisible(ELEMENT instanceof ChangeForm && ((ChangeForm) ELEMENT).getData() instanceof ChangeFormFLST);
                             MI_CLEANSE_FLST.isVisible = false
                             TREE_POPUP_MENU.show(evt.component, evt.x, evt.y)
@@ -199,7 +199,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
                         var count = 0L
                         ELEMENTS.keys
                             .asSequence()
-                            .filter { ess.ESS.PURGEABLE.test(it) }
+                            .filter { ESS.PURGEABLE.test(it) }
                             .forEach { _ -> count++ }
                         val purgeable = count.toInt()
                         MI_PURGES.isEnabled = purgeable > 0
@@ -207,7 +207,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
                         var result = 0L
                         ELEMENTS.keys
                             .asSequence()
-                            .filter { ess.ESS.DELETABLE.test(it) }
+                            .filter { ESS.DELETABLE.test(it) }
                             .forEach { _ -> result++ }
                         val deletable = result.toInt()
                         MI_DELETE.isEnabled = deletable > 0
@@ -215,7 +215,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
                         var count1 = 0L
                         ELEMENTS.keys
                             .asSequence()
-                            .filter { ess.ESS.THREAD.test(it) }
+                            .filter { ESS.THREAD.test(it) }
                             .forEach { _ -> count1++ }
                         val threads = count1.toInt()
                         MI_ZERO_THREAD.isVisible = threads > 0
@@ -230,7 +230,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
      * Clears the `ESS`.
      */
     fun clearESS() {
-        this.model = resaver.gui.FilterTreeModel()
+        this.model = FilterTreeModel()
     }
 
     /**
@@ -240,7 +240,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
      * @param model A `FilterTreeModel`.
      * @param filter An optional setFilter.
      */
-    fun setESS(ess: ess.ESS?, model: resaver.gui.FilterTreeModel?, filter: Predicate<resaver.gui.FilterTreeModel.Node>?) {
+    fun setESS(ess: ESS?, model: FilterTreeModel?, filter: Predicate<FilterTreeModel.Node>?) {
         val PATHS = this.selectionPaths
         if (null != filter) {
             model!!.setFilter(filter)
@@ -273,7 +273,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
      *
      * @param newHandler The new delete handler.
      */
-    fun setDeleteHandler(newHandler: Consumer<Map<Element, resaver.gui.FilterTreeModel.Node>>?) {
+    fun setDeleteHandler(newHandler: Consumer<Map<Element, FilterTreeModel.Node>>?) {
         deleteHandler = newHandler
     }
 
@@ -327,7 +327,7 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
      *
      * @param newHandler The new handler.
      */
-    fun setZeroThreadHandler(newHandler: Consumer<List<ess.papyrus.ActiveScript>>?) {
+    fun setZeroThreadHandler(newHandler: Consumer<List<ActiveScript>>?) {
         zeroThreadHandler = newHandler
     }
 
@@ -373,10 +373,10 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
         deleteHandler!!.accept(ELEMENTS!!)
     }
 
-    override fun getModel(): resaver.gui.FilterTreeModel? {
+    override fun getModel(): FilterTreeModel? {
         val model = super.getModel()
         if(model != null) {
-            return model as resaver.gui.FilterTreeModel
+            return model as FilterTreeModel
         }
         return null
     }
@@ -397,9 +397,9 @@ class FilterTree : JTree(resaver.gui.FilterTreeModel()) {
     private val TREE_POPUP_MENU: JPopupMenu = JPopupMenu()
     private val PLUGIN_POPUP_MENU: JPopupMenu = JPopupMenu()
     private val COMPRESSION_POPUP_MENU: JPopupMenu = JPopupMenu()
-    private var deleteHandler: Consumer<Map<Element, resaver.gui.FilterTreeModel.Node>>? =
+    private var deleteHandler: Consumer<Map<Element, FilterTreeModel.Node>>? =
         null
-    private var zeroThreadHandler: Consumer<List<ess.papyrus.ActiveScript>>? = null
+    private var zeroThreadHandler: Consumer<List<ActiveScript>>? = null
     private var editHandler: Consumer<Element>? = null
     private var pluginFilterHandler: Consumer<Plugin>? = null
     private var deleteFormsHandler: Consumer<Plugin>? = null
