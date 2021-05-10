@@ -116,7 +116,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
     /**
      * @return The name of the mod.
      */
-    fun getName(): String? {
+    fun getName(): String {
         return MODNAME
     }
 
@@ -131,7 +131,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
      * @return A list of the names of the esp files in the mod.
      */
     fun getESPNames(): List<String> {
-        val NAMES: MutableList<String> = ArrayList(PLUGIN_FILES.size)
+        val NAMES: MutableList<String> = mutableListOf()
         for (v in PLUGIN_FILES) {
             NAMES.add(v.fileName.toString())
         }
@@ -148,11 +148,11 @@ class Mod(game: Game?, dir: Path) : Serializable {
      * @return
      */
     private fun getStringsFilePlugin(stringsFilePath: Path, language: String, plugins: PluginInfo): Plugin? {
-        val SSREGEX = String.format("_%s\\.(il|dl)?strings", language)
+        val SSREGEX = "_$language\\.(il|dl)?strings"
         val FILENAME = stringsFilePath.fileName.toString()
         val pathPluginMap = plugins.paths
         val pathPluginMap1 = plugins.paths
-        for (path in Arrays.asList(
+        for (path in listOf(
             Paths.get(FILENAME.replace(SSREGEX.toRegex(), ".esm")),
             Paths.get(FILENAME.replace(SSREGEX.toRegex(), ".esp")),
             Paths.get(FILENAME.replace(SSREGEX.toRegex(), ".esl"))
@@ -177,17 +177,17 @@ class Mod(game: Game?, dir: Path) : Serializable {
         val LANG = "_" + language.toLowerCase()
         val GLOB = "glob:**$LANG.*strings"
         val MATCHER = FS.getPathMatcher(GLOB)
-        val ARCHIVE_ERRORS: MutableList<Path> = LinkedList()
-        val STRINGSFILE_ERRORS: MutableList<Path> = LinkedList()
+        val ARCHIVE_ERRORS: MutableList<Path> = mutableListOf()
+        val STRINGSFILE_ERRORS: MutableList<Path> = mutableListOf()
 
         // Read the archives.
-        val STRINGSFILES: MutableList<resaver.esp.StringsFile> = LinkedList()
+        val STRINGSFILES: MutableList<resaver.esp.StringsFile> = mutableListOf()
         val SCRIPT_ORIGINS: MutableMap<Path, Path> = hashMapOf()
         for (archivePath in ARCHIVE_FILES) {
             try {
                 FileChannel.open(archivePath, StandardOpenOption.READ).use { channel ->
                     createParser(archivePath, channel).use { PARSER ->
-                        val ARCHIVE_STRINGSFILES: MutableList<resaver.esp.StringsFile> = LinkedList()
+                        val ARCHIVE_STRINGSFILES: MutableList<resaver.esp.StringsFile> = mutableListOf()
                         for ((path, input) in PARSER!!.getFiles(Paths.get("strings"), MATCHER)!!) {
                             if (input.isPresent) {
                                 val PLUGIN = path?.let { getStringsFilePlugin(it, language, plugins) }
@@ -213,11 +213,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
                         }
                         val scriptsCount = ARCHIVE_SCRIPTS.size
                         if (stringsCount > 0 || scriptsCount > 0) {
-                            val msg = String.format(
-                                "Read %5d scripts and %5d strings from ${ARCHIVE_STRINGSFILES.size} stringsfiles in ${archivePath.fileName} of \"$SHORTNAME\"",
-                                scriptsCount,
-                                stringsCount,
-                            )
+                            val msg = String.format("Read %5d scripts and %5d strings from ${ARCHIVE_STRINGSFILES.size} stringsfiles in ${archivePath.fileName} of \"$SHORTNAME\"", scriptsCount, stringsCount)
                             LOG.info(msg)
                         }
                     }
@@ -260,11 +256,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
         }
         val scriptsCount = LOOSE_SCRIPTS.size
         if (stringsCount > 0 || scriptsCount > 0) {
-            val msg = String.format(
-                "Read %5d scripts and %5d strings from ${LOOSE_STRINGSFILES.size} stringsfiles in loose files of \"$SHORTNAME\"",
-                scriptsCount,
-                stringsCount
-            )
+            val msg = String.format("Read %5d scripts and %5d strings from ${LOOSE_STRINGSFILES.size} stringsfiles in loose files of \"$SHORTNAME\"", scriptsCount, stringsCount)
             LOG.info(msg)
         }
         return ModReadResults(SCRIPT_ORIGINS, STRINGSFILES, ARCHIVE_ERRORS, null, STRINGSFILE_ERRORS)
@@ -292,21 +284,21 @@ class Mod(game: Game?, dir: Path) : Serializable {
      * @return A copy of the list of ESP files.
      */
     fun getESPFiles(): List<Path> {
-        return ArrayList(PLUGIN_FILES)
+        return listOf(*PLUGIN_FILES.toTypedArray())
     }
 
     /**
      * @return A copy of the list of archive files.
      */
     fun getArchiveFiles(): List<Path> {
-        return ArrayList(ARCHIVE_FILES)
+        return listOf(*ARCHIVE_FILES.toTypedArray())
     }
 
     /**
      * @return A copy of the list of PEX files.
      */
     fun getPexFiles(): List<Path> {
-        return ArrayList(SCRIPT_FILES)
+        return listOf(*SCRIPT_FILES.toTypedArray())
     }
 
     /**
@@ -461,11 +453,11 @@ class Mod(game: Game?, dir: Path) : Serializable {
         init {
             //super(String.format("Some data could not be read: %d archives, %d scripts, %d stringtables", archives.size(), scripts.size(), strings.size()));
             MOD = this@Mod
-            SCRIPT_ORIGINS = scriptOrigins!!
-            STRINGSFILES = Collections.unmodifiableList(strings ?: emptyList())
-            ARCHIVE_ERRORS = Collections.unmodifiableList(archiveErrors ?: emptyList())
-            SCRIPT_ERRORS = Collections.unmodifiableList(scriptErrors ?: emptyList())
-            STRINGS_ERRORS = Collections.unmodifiableList(stringsErrors ?: emptyList())
+            SCRIPT_ORIGINS = scriptOrigins
+            STRINGSFILES = strings ?: emptyList()
+            ARCHIVE_ERRORS = archiveErrors ?: emptyList()
+            SCRIPT_ERRORS = scriptErrors ?: emptyList()
+            STRINGS_ERRORS = stringsErrors ?: emptyList()
         }
     }
 
@@ -484,10 +476,10 @@ class Mod(game: Game?, dir: Path) : Serializable {
             return try {
                 Mod(game, dir)
             } catch (ex: FileNotFoundException) {
-                LOG.warning(String.format("Couldn't read mod: %s\n%s", dir, ex.message))
+                LOG.warning("Couldn't read mod: $dir\n${ex.message}")
                 null
             } catch (ex: IOException) {
-                LOG.log(Level.WARNING, String.format("Couldn't read mod: %s", dir), ex)
+                LOG.log(Level.WARNING, "Couldn't read mod: $dir", ex)
                 null
             }
         }
@@ -519,8 +511,6 @@ class Mod(game: Game?, dir: Path) : Serializable {
      * @throws IOException Thrown if there is a problem reading data.
      */
     init {
-        Objects.requireNonNull(game)
-        Objects.requireNonNull(dir)
         directory = dir
         if (!Files.exists(dir)) {
             throw FileNotFoundException("Directory doesn't exists: $dir")
@@ -561,25 +551,25 @@ class Mod(game: Game?, dir: Path) : Serializable {
 
         // Print out some status information.
         if (!Files.exists(directory)) {
-            LOG.warning(String.format("Mod \"%s\" doesn't exist.", MODNAME))
+            LOG.warning("Mod \"$MODNAME\" doesn't exist.")
         } else {
             if (PLUGIN_FILES.isEmpty()) {
-                LOG.fine(String.format("Mod \"%s\" contains no plugins.", MODNAME))
+                LOG.fine("Mod \"$MODNAME\" contains no plugins.")
             } else {
                 LOG.fine(String.format("Mod \"%s\" contains %d plugins.", MODNAME, PLUGIN_FILES.size))
             }
             if (ARCHIVE_FILES.isEmpty()) {
-                LOG.fine(String.format("Mod \"%s\" contains no archives.", MODNAME))
+                LOG.fine("Mod \"$MODNAME\" contains no archives.")
             } else {
                 LOG.fine(String.format("Mod \"%s\" contains %d archives.", MODNAME, ARCHIVE_FILES.size))
             }
             if (STRINGS_FILES.isEmpty()) {
-                LOG.fine(String.format("Mod \"%s\" contains no loose localization files.", MODNAME))
+                LOG.fine("Mod \"$MODNAME\" contains no loose localization files.")
             } else {
                 LOG.fine(String.format("Mod \"%s\" contains %d loose localization files.", MODNAME, STRINGS_FILES.size))
             }
             if (SCRIPT_FILES.isEmpty()) {
-                LOG.fine(String.format("Mod \"%s\" contains no loose scripts.", MODNAME))
+                LOG.fine("Mod \"$MODNAME\" contains no loose scripts.")
             } else {
                 LOG.fine(String.format("Mod \"%s\" contains %d loose scripts.", MODNAME, SCRIPT_FILES.size))
             }

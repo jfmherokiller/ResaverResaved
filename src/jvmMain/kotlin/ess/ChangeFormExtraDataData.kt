@@ -18,6 +18,7 @@ package ess
 import ess.ESS.ESSContext
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.logging.Logger
 
 /**
  * Manages the data in one element of a change form's extra data.
@@ -247,7 +248,12 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
                 NAME = "PromotedRef"
                 super.readVSElemArray(input, "REFS") { `in`: ByteBuffer? -> context.readRefID(input) }
             }
-            else -> throw ElementException("Unknown ExtraData: type=$TYPE", null, this)
+            else -> {
+                LOG.severe("Unknown ExtraData: type=$TYPE")
+                throw ElementException("Unknown ExtraData: type=$TYPE", null, this)}
         }
+    }
+    companion object {
+        private val LOG = Logger.getLogger(this::class.java.canonicalName)
     }
 }

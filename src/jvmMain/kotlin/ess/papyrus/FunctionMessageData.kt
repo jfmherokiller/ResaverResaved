@@ -73,8 +73,8 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
      * @see HasVariables.getDescriptors
      * @return
      */
-    override val descriptors: List<MemberDesc>
-        get() = script!!.extendedMembers
+    override val descriptors: MutableList<MemberDesc>?
+        get() = script?.extendedMembers
 
     /**
      * @see HasVariables.setVariable

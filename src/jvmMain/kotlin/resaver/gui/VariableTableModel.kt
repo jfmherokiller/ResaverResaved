@@ -47,7 +47,7 @@ class VariableTableModel(data: HasVariables?) : TableModel {
             1 -> DATA.variables?.get(rowIndex)?.toTypeString()
             2 -> {
                 val mb = DATA.descriptors?.getOrNull(rowIndex)
-                if (null == mb) "" else mb.name
+                mb?.name ?: ""
             }
             3 -> DATA.variables?.get(rowIndex)
             else -> throw IllegalStateException()

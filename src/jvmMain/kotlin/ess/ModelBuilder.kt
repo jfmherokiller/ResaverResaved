@@ -319,7 +319,7 @@ class ModelBuilder(progress: ProgressModel) {
             LOG.log(Level.SEVERE, "Model building was interrupted.", ex)
             return null
         }
-        if (!TASKS.stream().allMatch { obj: Future<Node> -> obj.isDone }) {
+        if (!TASKS.all { obj: Future<Node> -> obj.isDone }) {
             LOG.severe("Some tasks didn't finish.")
             return null
         }
