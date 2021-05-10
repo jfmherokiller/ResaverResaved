@@ -35,6 +35,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:1.5.0")
     implementation("no.tornado:tornadofx:1.7.20")
     implementation("com.github.ajalt.clikt:clikt:3.1.0")
+    implementation ("io.github.microutils:kotlin-logging:1.12.5")
 }
 javafx {
     version = "15"
@@ -77,9 +78,23 @@ tasks.withType<Jar> {
     }
 }
 tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar> {
-    minimize()
+
 }
 tasks.withType<Test> {
     minHeapSize="2048m"
     maxHeapSize="4096m"
 }
+//task copyRuntimeLibs(type: Copy) {
+//    into "lib"
+//    from configurations.testRuntime - configurations.runtime
+//}
+
+
+tasks.create<Copy>("copyRuntimeLibsAndJar") {
+    dependsOn(tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>())
+    val Libraries by configurations.runtimeClasspath
+    into("lib")
+    from(Libraries)
+    from(tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>())
+}
+
