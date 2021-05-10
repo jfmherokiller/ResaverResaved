@@ -23,7 +23,6 @@ import java.util.function.Function
  * @author Mark
  */
 object ResaverFormatting {
-    @JvmStatic
     fun <T> makeHTMLList(msg: String?, items: List<T>, limit: Int, namer: Function<T, CharSequence?>): CharSequence {
         val BUF = StringBuilder()
         BUF.append("<p>")
