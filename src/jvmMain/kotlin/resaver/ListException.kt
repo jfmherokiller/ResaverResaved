@@ -15,8 +15,6 @@
  */
 package resaver
 
-import java.lang.RuntimeException
-
 /**
  *
  * @author Mark
