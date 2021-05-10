@@ -24,7 +24,6 @@ import java.util.*
 import java.util.logging.Logger
 import java.util.stream.Collectors
 import java.util.stream.Stream
-import kotlin.collections.ArrayList
 
 /**
  *
@@ -112,21 +111,15 @@ class Worrier {
             shouldWorry = true
         }
         val numStacks = result.ESS.papyrus.activeScripts.size
-        val active: Stream<Script> = result.ESS.papyrus.activeScripts.values.parallelStream()
+        val active: Stream<Script> = result.ESS.papyrus.activeScripts.values
             .filter { obj: ActiveScript -> obj.hasStack() }
-            .flatMap { `as`: ActiveScript -> `as`.stackFrames.stream() }
-            .map(StackFrame::script)
-        val suspended: Stream<Script?> = result.ESS.papyrus.suspendedStacks.values.parallelStream()
-            .map(SuspendedStack::script)
-            .filter { obj: Script? -> obj != null }
+            .flatMap { `as`: ActiveScript -> `as`.stackFrames }.mapNotNull(StackFrame::script).stream()
+        val suspended: Stream<Script> = result.ESS.papyrus.suspendedStacks.values.mapNotNull(SuspendedStack::script).stream()
         val frameCounts: Map<Script, Long> = Stream.concat(active, suspended)
             .filter { obj: Script? -> obj != null }
             .collect(Collectors.groupingBy({ f: Script? -> f }, Collectors.counting()))
-        val frames: List<Script> = ArrayList(frameCounts.keys)
-        frames.sortedWith { a: Script, b: Script ->
-            frameCounts[b]!!
-                .compareTo(frameCounts[a]!!)
-        }
+        val frames: List<Script> = arrayListOf(*frameCounts.keys.toTypedArray())
+        frames.sortedWith { a: Script, b: Script -> frameCounts[b]!!.compareTo(frameCounts[a]!!) }
         if (frames.isNotEmpty()) {
             val most = frames[0]
             var numFrames = 0L
@@ -134,20 +127,8 @@ class Worrier {
                 numFrames += v
             }
             if (numStacks > 200 || numFrames > 1000) {
-                BUF.append(
-                    String.format(
-                        "<p>There are %d stacks and %d frames, which probably indicates a problem.<br/>",
-                        numStacks,
-                        numFrames
-                    )
-                )
-                BUF.append(
-                    String.format(
-                        "%s occurs the most often (%d occurrences)</p>",
-                        most.toHTML(null),
-                        frameCounts[most]
-                    )
-                )
+                BUF.append(String.format("<p>There are %d stacks and %d frames, which probably indicates a problem.<br/>", numStacks, numFrames))
+                BUF.append(String.format("${most.toHTML(null)} occurs the most often (%d occurrences)</p>", frameCounts[most]))
                 shouldWorry = true
             } else if (numStacks > 50 || numFrames > 150) {
                 BUF.append(
@@ -158,11 +139,7 @@ class Worrier {
                     )
                 )
                 BUF.append(
-                    String.format(
-                        "%s occurs the most often (%d occurrences)</p>",
-                        most.toHTML(null),
-                        frameCounts[most]
-                    )
+                    String.format("${most.toHTML(null)} occurs the most often (%d occurrences)</p>", frameCounts[most])
                 )
                 shouldWorry = true
             }
