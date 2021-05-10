@@ -16,7 +16,7 @@
 package ess.papyrus
 
 import java.nio.ByteBuffer
-import java.util.*
+
 import java.util.regex.Pattern
 
 /**
@@ -94,7 +94,7 @@ abstract class Parameter : PapyrusElement {
      */
     fun paren(): String {
         return if (type == ParamType.TERM) {
-            "(" + toValueString() + ")"
+            "(${toValueString()})"
         } else {
             toValueString()
         }
@@ -119,8 +119,6 @@ abstract class Parameter : PapyrusElement {
          */
         @Throws(PapyrusFormatException::class)
         fun read(input: ByteBuffer, context: PapyrusContext): Parameter {
-            Objects.requireNonNull(input)
-            Objects.requireNonNull(context)
             val TYPE = ParamType.read(input)
             return when (TYPE) {
                 ParamType.NULL -> ParamNull()
@@ -164,11 +162,11 @@ abstract class Parameter : PapyrusElement {
             return value?.let { ParamTerm(it) }!!
         }
 
-        @JvmField
+
         val TEMP_PATTERN = Pattern.compile("^::.+$", Pattern.CASE_INSENSITIVE).asPredicate()
-        @JvmField
+
         val NONE_PATTERN = Pattern.compile("^::NoneVar$", Pattern.CASE_INSENSITIVE).asPredicate()
-        @JvmField
+
         val AUTOVAR_PATTERN = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE).asPredicate()
     }
 }

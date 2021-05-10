@@ -1,7 +1,7 @@
 package ess.papyrus
 
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * An opcode parameter that stores a boolean.
@@ -25,20 +25,20 @@ class ParamBool(val VALUE: Byte) : Parameter() {
 
     override fun hashCode(): Int {
         var hash = 7
-        hash = 41 * hash + Objects.hashCode(type)
-        hash = 41 * hash + java.lang.Byte.hashCode(VALUE)
+        hash = 41 * hash + type.hashCode()
+        hash = 41 * hash + VALUE.hashCode()
         return hash
     }
 
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
-        } else if (obj == null) {
+        } else if (other == null) {
             return false
-        } else if (javaClass != obj.javaClass) {
+        } else if (javaClass != other.javaClass) {
             return false
         }
-        val other = obj as ParamBool
-        return VALUE == other.VALUE
+        val other2 = other as ParamBool
+        return VALUE == other2.VALUE
     }
 }

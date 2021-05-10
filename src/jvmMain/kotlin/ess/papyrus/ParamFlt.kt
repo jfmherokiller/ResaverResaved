@@ -1,7 +1,7 @@
 package ess.papyrus
 
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * An opcode parameter that stores a float.
@@ -25,20 +25,26 @@ class ParamFlt(val VALUE: Float) : Parameter() {
 
     override fun hashCode(): Int {
         var hash = 7
-        hash = 41 * hash + Objects.hashCode(type)
-        hash = 41 * hash + java.lang.Float.hashCode(VALUE)
+        hash = 41 * hash + type.hashCode()
+        hash = 41 * hash + VALUE.hashCode()
         return hash
     }
 
     override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
-            return true
-        } else if (obj == null) {
-            return false
-        } else if (javaClass != obj.javaClass) {
-            return false
+        return when {
+            this === obj -> {
+                true
+            }
+            obj == null -> {
+                false
+            }
+            javaClass != obj.javaClass -> {
+                false
+            }
+            else -> {
+                val other = obj as ParamFlt
+                VALUE == other.VALUE
+            }
         }
-        val other = obj as ParamFlt
-        return VALUE == other.VALUE
     }
 }

@@ -1,7 +1,7 @@
 package ess.papyrus
 
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * An opcode parameter that stores Null.
@@ -27,15 +27,15 @@ class ParamNull : Parameter() {
 
     override fun hashCode(): Int {
         var hash = 7
-        hash = 41 * hash + Objects.hashCode(type)
+        hash = 41 * hash + type.hashCode()
         return hash
     }
 
-    override fun equals(obj: Any?): Boolean {
-        return if (this === obj) {
+    override fun equals(other: Any?): Boolean {
+        return if (this === other) {
             true
-        } else if (obj == null) {
+        } else if (other == null) {
             false
-        } else javaClass == obj.javaClass
+        } else javaClass == other.javaClass
     }
 }

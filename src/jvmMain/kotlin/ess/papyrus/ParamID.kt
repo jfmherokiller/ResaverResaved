@@ -1,7 +1,7 @@
 package ess.papyrus
 
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * An opcode parameter that stores an identifier.
@@ -28,21 +28,27 @@ class ParamID(`val`: TString?) : Parameter() {
 
     override fun hashCode(): Int {
         var hash = 7
-        hash = 41 * hash + Objects.hashCode(type)
-        hash = 41 * hash + Objects.hashCode(VALUE)
+        hash = 41 * hash + type.hashCode()
+        hash = 41 * hash + VALUE.hashCode()
         return hash
     }
 
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
-            return true
-        } else if (obj == null) {
-            return false
-        } else if (javaClass != obj.javaClass) {
-            return false
+    override fun equals(other: Any?): Boolean {
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as ParamID
+                VALUE.equals(other2.VALUE)
+            }
         }
-        val other = obj as ParamID
-        return VALUE.equals(other.VALUE)
     }
 
     override val isTemp: Boolean
@@ -61,9 +67,6 @@ class ParamID(`val`: TString?) : Parameter() {
      */
     override val isNonevar: Boolean
         get() = NONE_PATTERN.test(VALUE.toString())
-    val VALUE: TString
+    val VALUE: TString = `val`!!
 
-    init {
-        VALUE = Objects.requireNonNull(`val`)!!
-    }
 }
