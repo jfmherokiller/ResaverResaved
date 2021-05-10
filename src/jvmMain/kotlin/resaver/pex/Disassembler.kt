@@ -16,8 +16,8 @@
 package resaver.pex
 
 import resaver.IString
-import java.util.*
 import java.util.regex.Pattern
+import kotlin.collections.ArrayDeque
 import kotlin.collections.ArrayList
 import kotlin.collections.List
 import kotlin.collections.MutableList
@@ -151,8 +151,8 @@ object Disassembler {
         var rhs = false // Flag indicating whether this is the right-hand side of a predicate.
         var end = false // Flag indicating that the end of the term has been reached.
         var lhs = StringBuilder() // The left-hand side, this is where the term is accumulated.
-        val stack1 = LinkedList<Boolean>()
-        val stack2 = LinkedList<String>()
+        val stack1 = ArrayDeque<Boolean>()
+        val stack2 = ArrayDeque<String>()
 
         // Step through until we reach an actual instruction of some kind.
         var ptr = 0
@@ -198,15 +198,15 @@ object Disassembler {
             } else if (rhs && !end) {
                 lhs.append(term)
                 while (!stack1.isEmpty() && rhs) {
-                    rhs = stack1.pop()
-                    lhs = StringBuilder(stack2.pop().toString() + "(" + lhs + ")")
+                    rhs = stack1.removeFirst()
+                    lhs = StringBuilder("${stack2.removeFirst()}($lhs)")
                 }
                 lhs = StringBuilder("($lhs) $operator ")
             } else if (rhs && end) {
                 lhs.append(term)
                 while (!stack1.isEmpty() && rhs) {
-                    rhs = stack1.pop()
-                    lhs = StringBuilder(stack2.pop().toString() + "(" + lhs + ")")
+                    rhs = stack1.removeFirst()
+                    lhs = StringBuilder("${stack2.removeFirst()}($lhs)")
                 }
             }
 
@@ -227,8 +227,8 @@ object Disassembler {
                 false
             }
             if (subclause) {
-                stack1.push(rhs)
-                stack2.push(lhs.toString())
+                stack1.addFirst(rhs)
+                stack2.addFirst(lhs.toString())
                 rhs = false
                 lhs = StringBuilder()
             }
@@ -354,7 +354,7 @@ object Disassembler {
         types: MutableList<VariableType>,
         indent: Int
     ): List<String> {
-        val CODE: MutableList<String> = LinkedList()
+        val CODE: MutableList<String> = mutableListOf()
         val WHILE = detectWHILE(block, 0)
         val offset = WHILE!![0]
         val SUB = disassemble(block.subList(1, offset - 1), types, indent + 1)
@@ -672,14 +672,14 @@ object Disassembler {
                 val dest = args[0] as VDataID?
                 val arg = args[1]
                 val name: IString = dest!!.value
-                var found: Optional<VariableType> = Optional.empty()
+                var found: VariableType? = null
                 for (t in types) {
                     if (t.name.equals(name)) {
-                        found = Optional.of(t)
+                        found = t
                         break
                     }
                 }
-                val type: IString = found.get().TYPE
+                val type: IString = found?.TYPE!!
                 term = when {
                     type.equals(IString["bool"]) -> {
                         arg.toString()
@@ -743,14 +743,14 @@ object Disassembler {
                 val size = args[1]
                 val dest = args[0] as VDataID?
                 val name: IString = dest!!.value
-                var found: Optional<VariableType> = Optional.empty()
+                var found: VariableType? = null
                 for (t in types) {
                     if (t.name.equals(name)) {
-                        found = Optional.of(t)
+                        found = t
                         break
                     }
                 }
-                val type: IString = found.get().TYPE
+                val type: IString = found?.TYPE!!
                 val subtype = type.toString().substring(0, type.length - 2)
                 term = "new $subtype[$size]"
                 processTerm(args, terms, 0, term)
@@ -868,14 +868,14 @@ object Disassembler {
                 val dest = inst.ARGS[0] as VDataID
                 val arg = inst.ARGS[1]
                 val name: IString = dest.value
-                var found: Optional<VariableType> = Optional.empty()
+                var found: VariableType? = null
                 for (t in types) {
                     if (t.name.equals(name)) {
-                        found = Optional.of(t)
+                        found = t
                         break
                     }
                 }
-                val type: IString = found.get().TYPE
+                val type: IString = found?.TYPE!!
                 "${arg.paren()} as $type"
             }
             Opcode.PROPGET -> {
@@ -915,14 +915,14 @@ object Disassembler {
                 val size = inst.ARGS[1]
                 val dest = inst.ARGS[0] as VDataID
                 val name: IString = dest.value
-                var found: Optional<VariableType> = Optional.empty()
+                var found: VariableType? = null
                 for (t in types) {
                     if (t.name.equals(name)) {
-                        found = Optional.of(t)
+                        found = t
                         break
                     }
                 }
-                val type: IString = found.get().TYPE
+                val type: IString = found?.TYPE!!
                 val subtype = type.toString().substring(0, type.length - 2)
                 "new $subtype[$size]"
             }
