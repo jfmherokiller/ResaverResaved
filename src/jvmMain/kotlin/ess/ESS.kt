@@ -18,6 +18,8 @@ package ess
 import ess.ChangeForm.Companion.verifyIdentical
 import ess.Header.Companion.verifyIdentical
 import ess.papyrus.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.toLocalDateTime
 import mf.BufferUtil
 import mf.Counter
 import mf.Timer
@@ -36,7 +38,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
-import java.text.SimpleDateFormat
 import java.util.function.Predicate
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -422,15 +423,9 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         val time = header.FILETIME
         val millis = time / 10000L - 11644473600000L
         val DATE = Date(millis)
-        BUILDER.append(
-            String.format(
-                "<h3>$name the level $level $race $gender, in $location on $gameDate (%1.0f/%1.0f xp).</h3>",
-                xp,
-                nexp
-            )
-        )
+        BUILDER.append(String.format("<h3>$name the level $level $race $gender, in $location on $gameDate (%1.0f/%1.0f xp).</h3>", xp, nexp))
         BUILDER.append(String.format("<fixed><ul><li>Save number %d, created on %s.</li>", header.SAVENUMBER, DATE))
-        BUILDER.append(String.format("<li>Version string: %s</li>", versionString))
+        BUILDER.append("<li>Version string: $versionString</li>")
         BUILDER.append(String.format("<li>Form version: %d</li>", formVersion))
         val actualSize = calculateSize() / 1048576.0f
         val papyrusSize = papyrus!!.calculateSize() / 1048576.0f
@@ -869,7 +864,8 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          */
         @Throws(IOException::class)
         private fun makeBackupFile(file: Path): Path {
-            val TIME = SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(Date())
+            val newdate = Clock.System.now().toLocalDateTime(kotlinx.datetime.TimeZone.UTC)
+            val TIME = "${newdate.year}.${newdate.monthNumber}.${newdate.dayOfWeek.value}.${newdate.hour}.${newdate.minute}.${newdate.second}"
             val FILENAME = file.fileName.toString()
             val REGEX = Pattern.compile("^(.+)\\.([ -~]+)$")
             val MATCHER = REGEX.matcher(FILENAME)

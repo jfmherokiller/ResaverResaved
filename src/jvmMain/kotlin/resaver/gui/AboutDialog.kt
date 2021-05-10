@@ -36,18 +36,11 @@ object AboutDialog {
             .append(version)
             .append("\n\nCopyright Mark Fairchild 2016.")
             .append("\nDistributed under the Apache 2.0 license.\n")
-            .append(
-                String.format(
-                    "\nRunning on %s (%s %s)",
-                    System.getProperty("os.name"),
-                    System.getProperty("os.version"),
-                    System.getProperty("os.arch")
-                )
-            )
+            .append("\nRunning on ${System.getProperty("os.name")} (${System.getProperty("os.version")} ${System.getProperty("os.arch")})")
             .append(String.format("\n%1.2fgb memory available.", Runtime.getRuntime().maxMemory() / 1073741824.0))
-            .append(String.format("\nJava path: %s", System.getProperty("java.home")))
-            .append(String.format("\nJava vendor: %s", System.getProperty("java.vendor")))
-            .append(String.format("\nJava version: %s", System.getProperty("java.version")))
+            .append("\nJava path: ${System.getProperty("java.home")}")
+            .append("\nJava vendor: ${System.getProperty("java.vendor")}")
+            .append("\nJava version: ${System.getProperty("java.version")}")
         val ICON = logo
         if (ICON == null) {
             JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE)
