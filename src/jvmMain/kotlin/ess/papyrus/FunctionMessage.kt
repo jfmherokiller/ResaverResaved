@@ -21,7 +21,7 @@ import ess.Element
 import ess.Linkable
 import ess.papyrus.EID.Companion.pad8
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * Describes a function message in a Skyrim savegame.
@@ -30,7 +30,7 @@ import java.util.*
  */
 class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable {
     /**
-     * @see resaver.ess.Element.write
+     * @see Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -159,8 +159,6 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
      * @return
      */
     override fun matches(analysis: Analysis?, mod: String?): Boolean {
-        Objects.requireNonNull(analysis)
-        Objects.requireNonNull(mod)
         return hasMessage() && message!!.matches(analysis, mod)
     }
 
@@ -170,19 +168,19 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
      */
     val isUndefined: Boolean
         get() = hasMessage() && message!!.isUndefined
-    private val UNKNOWN: Byte
+    private val UNKNOWN: Byte = input.get()
 
     /**
      * @return The ID of the papyrus element.
      */
-    val iD: EID?
-    private val FLAG: Byte
+    val iD: EID? = if (UNKNOWN <= 2) context.readEID32(input) else null
+    private val FLAG: Byte = input.get()
 
     /**
      * @return The message field.
      */
     var message: FunctionMessageData? = null
-    private val THREAD: ActiveScript?
+    private val THREAD: ActiveScript? = if (iD == null) null else context.findActiveScript(iD)
     //, HasID {
     /**
      * Creates a new `FunctionMessage` by reading from a
@@ -193,10 +191,6 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
      * @throws PapyrusElementException
      */
     init {
-        UNKNOWN = input.get()
-        iD = if (UNKNOWN <= 2) context.readEID32(input) else null
-        FLAG = input.get()
-        THREAD = if (iD == null) null else context.findActiveScript(iD)
         assert(THREAD != null)
         if (FLAG.toInt() == 0) {
             message = null

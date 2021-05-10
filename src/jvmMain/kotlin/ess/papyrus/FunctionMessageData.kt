@@ -24,8 +24,8 @@ import resaver.IString
 import resaver.IString.Companion.format
 import resaver.ListException
 import java.nio.ByteBuffer
-import java.util.*
-import java.util.function.Consumer
+
+
 
 /**
  * Describes a function message data in a Skyrim savegame.
@@ -44,7 +44,7 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
         event.write(output)
         UNKNOWNVAR.write(output)
         output?.putInt(VARIABLES.size)
-        VARIABLES.forEach(Consumer { `var`: Variable? -> `var`!!.write(output) })
+        VARIABLES.forEach { `var`: Variable? -> `var`!!.write(output) }
     }
 
     /**
@@ -57,11 +57,7 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
         sum += event.calculateSize()
         sum += UNKNOWNVAR.calculateSize()
         sum += 4
-        var result = 0
-        for (VARIABLE in VARIABLES) {
-            val calculateSize = VARIABLE!!.calculateSize()
-            result += calculateSize
-        }
+        val result = VARIABLES.sumOf { it!!.calculateSize() }
         sum += result
         return sum
     }
@@ -71,7 +67,7 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
      * @return
      */
     override val variables: List<Variable>
-        get() = if (VARIABLES == null) emptyList() else VARIABLES.filterNotNull()
+        get() = VARIABLES.filterNotNull()
 
     /**
      * @see HasVariables.getDescriptors
@@ -116,35 +112,35 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
      * @param save
      * @return
      */
-    override fun getInfo(analysis: Analysis?, save: ESS?): String? {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         if (null != script) {
-            BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGEDATA of %s</h3>", script.toHTML(null)))
+            BUILDER.append("<html><h3>FUNCTIONMESSAGEDATA of ${script.toHTML(null)}</h3>")
         } else {
-            BUILDER.append(String.format("<html><h3>FUNCTIONMESSAGEDATA of %s</h3>", scriptName))
+            BUILDER.append("<html><h3>FUNCTIONMESSAGEDATA of $scriptName</h3>")
         }
         if (null != analysis) {
             val providers = analysis.SCRIPT_ORIGINS[scriptName.toIString()]
             if (null != providers) {
                 val probablyProvider = providers.last()
-                BUILDER.append(String.format("<p>This message probably came from \"%s\".</p>", probablyProvider))
+                BUILDER.append("<p>This message probably came from \"$probablyProvider\".</p>")
                 if (providers.size > 1) {
                     BUILDER.append("<p>Full list of providers:</p><ul>")
-                    providers.forEach(Consumer { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) })
+                    providers.forEach { mod: String? -> BUILDER.append("<li>$mod") }
                     BUILDER.append("</ul>")
                 }
             }
         }
         BUILDER.append("<p>")
         if (null != script) {
-            BUILDER.append(String.format("Script: %s<br/>", script.toHTML(null)))
+            BUILDER.append("Script: ${script.toHTML(null)}<br/>")
         } else {
-            BUILDER.append(String.format("Script: %s<br/>", scriptName))
+            BUILDER.append("Script: $scriptName<br/>")
         }
-        BUILDER.append(String.format("Event: %s<br/>", event))
+        BUILDER.append("Event: $event<br/>")
         BUILDER.append(String.format("Unknown: %02x<br/>", UNKNOWN))
         if (null != UNKNOWNVAR) {
-            BUILDER.append(String.format("Unknown variable: %s<br/>", UNKNOWNVAR.toHTML(null)))
+            BUILDER.append("Unknown variable: ${UNKNOWNVAR.toHTML(null)}<br/>")
         } else {
             BUILDER.append("Unknown variable: null<br/>")
         }
@@ -161,8 +157,6 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
      * @return
      */
     override fun matches(analysis: Analysis?, mod: String?): Boolean {
-        Objects.requireNonNull(analysis)
-        Objects.requireNonNull(mod)
         val OWNERS = analysis?.SCRIPT_ORIGINS?.get(scriptName.toIString()) ?: return false
         return OWNERS.contains(mod)
     }
@@ -173,23 +167,23 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
      */
     val isUndefined: Boolean
         get() = script?.isUndefined ?: !Script.NATIVE_SCRIPTS.contains(scriptName.toWString())
-    private val UNKNOWN: Byte
+    private val UNKNOWN: Byte = input.get()
 
     /**
      * @return The script name field.
      */
-    val scriptName: TString
+    val scriptName: TString = context.readTString(input)
 
     /**
      * @return The script field.
      */
-    val script: Script?
+    val script: Script? = context.findScript(scriptName)
 
     /**
      * @return The event field.
      */
-    val event: TString
-    private val UNKNOWNVAR: Variable
+    val event: TString = context.readTString(input)
+    private val UNKNOWNVAR: Variable = read(input, context)
     private var VARIABLES: MutableList<Variable?> = mutableListOf()
 
     /**
@@ -203,13 +197,6 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
      * @throws PapyrusElementException
      */
     init {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(context)
-        UNKNOWN = input.get()
-        scriptName = context.readTString(input)
-        script = context.findScript(scriptName)
-        event = context.readTString(input)
-        UNKNOWNVAR = read(input, context)
         try {
             val count = input.int
             VARIABLES = readList(input, count, context).toMutableList()

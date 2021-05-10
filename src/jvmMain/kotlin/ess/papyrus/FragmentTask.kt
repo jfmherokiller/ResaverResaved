@@ -58,7 +58,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     }
 
     /**
-     * @see resaver.ess.Linkable.toHTML
+     * @see Linkable.toHTML
      * @param target A target within the `Linkable`.
      * @return
      */
@@ -94,7 +94,6 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
 
     val TYPECODE: ByteArray?
 
-    @JvmField
     var TYPE: FragmentType? = null
     var DATA: FragmentData? = null
     var VARIABLE: Variable? = null
@@ -117,7 +116,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
      */
     class Type2(input: ByteBuffer?, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element.write
+         * @see Element.write
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {
@@ -125,7 +124,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
         }
 
         /**
-         * @see resaver.ess.Element.calculateSize
+         * @see Element.calculateSize
          * @return The size of the `Element` in bytes.
          */
         override fun calculateSize(): Int {
@@ -133,7 +132,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
         }
 
         /**
-         * @see resaver.ess.Linkable.toHTML
+         * @see Linkable.toHTML
          * @param target A target within the `Linkable`.
          * @return
          */
@@ -197,7 +196,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
 
         override fun toHTML(target: Element?): String {
             val BUF = StringBuilder()
-            BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
+            BUF.append(QUEST?.toHTML(target) ?: QUESTID)
             return BUF.append(" stage=")
                 .append(STAGE.toInt())
                 .append(" ").append(FLAGS)
@@ -215,19 +214,12 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
                 .toString()
         }
 
-        val QUESTID: RefID
-        val STAGE: Short
-        val FLAGS: Flags.FlagsByte
-        val UNKNOWN_4BYTES: Int?
-        val QUEST: ChangeForm?
+        val QUESTID: RefID = context.readRefID(input)
+        val STAGE: Short = input.short
+        val FLAGS: Flags.FlagsByte = Flags.readByteFlags(input)
+        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.int else null
+        val QUEST: ChangeForm? = context.getChangeForm(QUESTID)
 
-        init {
-            QUESTID = context.readRefID(input)
-            STAGE = input.short
-            FLAGS = Flags.readByteFlags(input)
-            UNKNOWN_4BYTES = if (context.game?.isFO4 == true) input.int else null
-            QUEST = context.getChangeForm(QUESTID)
-        }
     }
 
     /**
@@ -235,7 +227,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
      */
     class ScenePhaseResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element.write
+         * @see Element.write
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {
@@ -255,7 +247,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
 
         override fun toHTML(target: Element?): String {
             val BUF = StringBuilder()
-            BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
+            BUF.append(QUEST?.toHTML(target) ?: QUESTID)
             return BUF.append(" stage=")
                 .append(INT)
                 .append(UNKNOWN_4BYTES)
@@ -271,17 +263,11 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
                 .toString()
         }
 
-        val QUESTID: RefID
-        val INT: Int
-        val UNKNOWN_4BYTES: Int?
-        val QUEST: ChangeForm?
+        val QUESTID: RefID = context.readRefID(input)
+        val INT: Int = input.int
+        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.int else null
+        val QUEST: ChangeForm? = context.getChangeForm(QUESTID)
 
-        init {
-            QUESTID = context.readRefID(input)
-            INT = input.int
-            UNKNOWN_4BYTES = if (context.game?.isFO4 == true) input.int else null
-            QUEST = context.getChangeForm(QUESTID)
-        }
     }
 
     /**
@@ -289,7 +275,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
      */
     class SceneActionResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element.write
+         * @see Element.write
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {
@@ -309,7 +295,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
 
         override fun toHTML(target: Element?): String {
             val BUF = StringBuilder()
-            BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
+            BUF.append(QUEST?.toHTML(target) ?: QUESTID)
             return BUF.append(" stage=")
                 .append(INT)
                 .append(UNKNOWN_4BYTES)
@@ -325,17 +311,11 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
                 .toString()
         }
 
-        val QUESTID: RefID
-        val INT: Int
-        val UNKNOWN_4BYTES: Int?
-        val QUEST: ChangeForm?
+        val QUESTID: RefID = context.readRefID(input)
+        val INT: Int = input.int
+        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.int else null
+        val QUEST: ChangeForm? = context.getChangeForm(QUESTID)
 
-        init {
-            QUESTID = context.readRefID(input)
-            INT = input.int
-            UNKNOWN_4BYTES = if (context.game?.isFO4 == true) input.int else null
-            QUEST = context.getChangeForm(QUESTID)
-        }
     }
 
     /**
@@ -343,7 +323,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
      */
     class SceneResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element.write
+         * @see Element.write
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {
@@ -361,7 +341,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
 
         override fun toHTML(target: Element?): String {
             val BUF = StringBuilder()
-            BUF.append(if (QUEST == null) QUESTID else QUEST.toHTML(target))
+            BUF.append(QUEST?.toHTML(target) ?: QUESTID)
             return BUF.append(" stage=")
                 .append(UNKNOWN_4BYTES)
                 .toString()
@@ -375,15 +355,10 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
                 .toString()
         }
 
-        val QUESTID: RefID
-        val UNKNOWN_4BYTES: Int?
-        val QUEST: ChangeForm?
+        val QUESTID: RefID = context.readRefID(input)
+        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.int else null
+        val QUEST: ChangeForm? = context.getChangeForm(QUESTID)
 
-        init {
-            QUESTID = context.readRefID(input)
-            UNKNOWN_4BYTES = if (context.game?.isFO4 == true) input.int else null
-            QUEST = context.getChangeForm(QUESTID)
-        }
     }
 
     /**
@@ -391,7 +366,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
      */
     class TerminalRunResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
         /**
-         * @see resaver.ess.Element.write
+         * @see Element.write
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {
@@ -410,7 +385,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
 
         override fun toHTML(target: Element?): String {
             return StringBuilder()
-                .append(if (FORM == null) REFID.toHTML(target) else FORM.toHTML(target))
+                .append(FORM?.toHTML(target) ?: REFID.toHTML(target))
                 .append(" ").append(TSTRING)
                 .append(String.format(" %08x %02x", INT, BYTE))
                 .toString()
@@ -425,19 +400,12 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
                 .toString()
         }
 
-        val BYTE: Byte
-        val INT: Int
-        val REFID: RefID
-        val TSTRING: TString
-        val FORM: ChangeForm?
+        val BYTE: Byte = input.get()
+        val INT: Int = input.int
+        val REFID: RefID = context.readRefID(input)
+        val TSTRING: TString = context.readTString(input)
+        val FORM: ChangeForm? = context.getChangeForm(REFID)
 
-        init {
-            BYTE = input.get()
-            INT = input.int
-            REFID = context.readRefID(input)
-            TSTRING = context.readTString(input)
-            FORM = context.getChangeForm(REFID)
-        }
     }
 
     /**
@@ -445,7 +413,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
      */
     class TopicInfo(input: ByteBuffer?, context: PapyrusContext?) : FragmentData {
         /**
-         * @see resaver.ess.Element.write
+         * @see Element.write
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {}
