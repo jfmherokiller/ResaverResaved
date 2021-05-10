@@ -20,7 +20,6 @@ import resaver.ProgressModel
 import ess.papyrus.*
 import resaver.gui.FilterTreeModel.*
 import java.util.concurrent.*
-import java.util.function.Consumer
 import java.util.function.Function
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -76,11 +75,8 @@ class ModelBuilder(progress: ProgressModel) {
         TASKS.add(EXECUTOR.submit(Callable {
             val DICTIONARY = table.stream()
                 .collect(Collectors.groupingBy(ALPHABETICAL))
-            val NODES: List<Node> = DICTIONARY.entries
-                .map { (key, value) -> ContainerNode(key.toString(), value).sort() }
-                .toList()
-            val NODE = ContainerNode("Strings")
-            NODE.addAll(NODES).sort()
+            val NODES: List<Node> = DICTIONARY.entries.map { (key, value) -> ContainerNode(key.toString(), value).sort() }
+            val NODE = ContainerNode("Strings").addAll(NODES).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -182,10 +178,8 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addScriptInstances(instances: ScriptInstanceMap) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val DICTIONARY = instances.values.stream()
-                .collect(Collectors.groupingBy(ALPHABETICAL))
-            val NODES: List<Node> = DICTIONARY.entries
-                .map { (key, value) -> ContainerNode(key.toString(), value).sort() }.toList()
+            val DICTIONARY = instances.values.stream().collect(Collectors.groupingBy(ALPHABETICAL))
+            val NODES: List<Node> = DICTIONARY.entries.map { (key, value) -> ContainerNode(key.toString(), value).sort() }.toList()
             val NODE = ContainerNode("Script Instances").addAll(NODES).sort()
             PROGRESS.modifyValue(1)
             NODE
@@ -212,9 +206,7 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addThreads(threads: ActiveScriptMap) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Active Scripts").addAll(
-                threads.values.map { element: ActiveScript? -> element?.let { ActiveScriptNode(it) } }.toList()
-            ).sort()
+            val NODE = ContainerNode("Active Scripts").addAll(threads.values.map { element: ActiveScript? -> element?.let { ActiveScriptNode(it) } }).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -227,9 +219,7 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addFunctionMessages(messages: List<FunctionMessage?>) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Function Messages").addAll(
-                messages.map { element: FunctionMessage? -> element?.let { FunctionMessageNode(it) } }.toList()
-            ).sort()
+            val NODE = ContainerNode("Function Messages").addAll(messages.map { element: FunctionMessage? -> element?.let { FunctionMessageNode(it) } }).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -242,9 +232,7 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addSuspendedStacks1(stacks: SuspendedStackMap) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Suspended Stacks 1").addAll(
-                stacks.values.map { element: SuspendedStack? -> element?.let { SuspendedStackNode(it) } }
-                    .toList()).sort()
+            val NODE = ContainerNode("Suspended Stacks 1").addAll(stacks.values.map { element: SuspendedStack? -> element?.let { SuspendedStackNode(it) } }).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -257,9 +245,7 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addSuspendedStacks2(stacks: SuspendedStackMap) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val NODE = ContainerNode("Suspended Stacks 2").addAll(
-                stacks.values.map { element: SuspendedStack? -> element?.let { SuspendedStackNode(it) } }
-                    .toList()).sort()
+            val NODE = ContainerNode("Suspended Stacks 2").addAll(stacks.values.map { element: SuspendedStack? -> element?.let { SuspendedStackNode(it) } }).sort()
             PROGRESS.modifyValue(1)
             NODE
         }))
@@ -324,8 +310,8 @@ class ModelBuilder(progress: ProgressModel) {
         }
 
         // Populate the root elementNode.
-        val ROOT_NODES = ArrayList<Node>(15)
-        TASKS.forEach(Consumer { task: Future<Node> ->
+        val ROOT_NODES = mutableListOf<Node>()
+        TASKS.forEach { task: Future<Node> ->
             try {
                 val NODE = task.get()
                 ROOT_NODES.add(NODE)
@@ -335,7 +321,7 @@ class ModelBuilder(progress: ProgressModel) {
             } catch (ex: ExecutionException) {
                 throw IllegalStateException("ModelBuilding failed.", ex)
             }
-        })
+        }
         val ROOT: Node = ess?.let { RootNode(it, ROOT_NODES) }!!
         MODEL.root = ROOT
         return MODEL
