@@ -17,7 +17,6 @@ package ess
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.*
 
 /**
  * Describes a the data for a `GlobalData` when it is not parsed.

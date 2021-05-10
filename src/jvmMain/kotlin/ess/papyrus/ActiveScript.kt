@@ -21,7 +21,6 @@ import ess.papyrus.Variable.Companion.read
 import resaver.Analysis
 import resaver.ListException
 import java.nio.ByteBuffer
-import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.experimental.and

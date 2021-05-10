@@ -19,7 +19,6 @@ import resaver.IString
 import resaver.ProgressModel
 import ess.papyrus.*
 import resaver.gui.FilterTreeModel.*
-import java.util.*
 import java.util.concurrent.*
 import java.util.function.Consumer
 import java.util.function.Function
@@ -290,7 +289,7 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addOtherData(data: OtherData?) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val OTHERDATA_NODES: MutableList<Node> = LinkedList()
+            val OTHERDATA_NODES: MutableList<Node> = mutableListOf()
             data?.values?.forEach { (key: IString?, `val`: Any?) ->
                 if (`val` is Array<*>) {
                     val convertedArray = `val`.map {i:Any? -> i as Element?}
@@ -352,7 +351,7 @@ class ModelBuilder(progress: ProgressModel) {
             val MB = ModelBuilder(progress)
             val papyrus = ess.papyrus
             MB.addPluginInfo(ess.pluginInfo)
-            ess.globals?.let { MB.addGlobalVariableTable(it) }
+            ess.globals.let { MB.addGlobalVariableTable(it) }
             MB.addChangeForms(ess.changeForms)
             if (papyrus != null) {
                 MB.addStringTable(papyrus.stringTable)
@@ -418,7 +417,7 @@ class ModelBuilder(progress: ProgressModel) {
         progress.maximum = 36
         MODEL = resaver.gui.FilterTreeModel()
         EXECUTOR = Executors.newFixedThreadPool(2)
-        TASKS = Collections.synchronizedList(ArrayList(15))
+        TASKS = mutableListOf()
         PROGRESS = progress
     }
 }

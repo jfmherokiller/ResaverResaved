@@ -16,7 +16,7 @@
 package ess
 
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * Describes the table of file locations.
@@ -241,7 +241,7 @@ class FileLocationTable : Element {
                 false
             }
             else -> {
-                Objects.deepEquals(UNUSED, other2.UNUSED)
+                UNUSED.contentEquals(other2.UNUSED)
             }
         }
     }

@@ -17,7 +17,6 @@ package ess
 
 import ess.ESS.ESSContext
 import java.nio.ByteBuffer
-import java.util.*
 
 
 /**
@@ -104,8 +103,8 @@ class ChangeFormFLST(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSConte
      */
     override fun hashCode(): Int {
         var hash = 7
-        hash = 41 * hash + Objects.hashCode(refID)
-        hash = 41 * hash + Objects.hashCode(FORMS)
+        hash = 41 * hash + refID.hashCode()
+        hash = 41 * hash + FORMS.hashCode()
         return hash
     }
 

@@ -222,7 +222,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         this.modified = true;
     }*/
     /**
-     * @see resaver.ess.Linkable.toHTML
+     * @see Linkable.toHTML
      * @param target A target within the `Linkable`.
      * @return
      */
@@ -270,10 +270,10 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
             ?.filter { i: ess.papyrus.ScriptInstance -> refID == i.refID }
             ?.toList()?.toSet()
         BUILDER.append("<html><h3>CHANGEFORM</h3>")
-        BUILDER.append(String.format("<p>RefID: %s</p>", refID))
-        BUILDER.append(String.format("<p style=\"display:inline-table;\">ChangeFlags: %s</p>", changeFlags.toHTML()))
+        BUILDER.append("<p>RefID: $refID</p>")
+        BUILDER.append("<p style=\"display:inline-table;\">ChangeFlags: ${changeFlags.toHTML()}</p>")
         BUILDER.append("<p>")
-        BUILDER.append(String.format("DataLength: %s<br/>", dataLength))
+        BUILDER.append("DataLength: $dataLength<br/>")
         BUILDER.append(type?.let { String.format("Type: %s (%d : %d)<br/>", type, it.SKYRIMCODE, type!!.FULL) })
         BUILDER.append(String.format("Version: %d<br/>", VERSION))
         if (length2 > 0) {
@@ -290,18 +290,14 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
                 HOLDERS.forEach { owner: ess.papyrus.ScriptInstance? ->
                     if (owner != null) {
                         BUILDER.append(
-                            String.format(
-                                "<li>%s - %s",
-                                owner.javaClass.simpleName,
-                                (owner as Linkable).toHTML(this)
-                            )
+                            "<li>${owner.javaClass.simpleName} - ${(owner as Linkable).toHTML(this)}"
                         )
                     }
                 }
                 BUILDER.append("</ul>")
             }
         }
-        BUILDER.append(refID?.let { String.format("<h3>ANALYZE RAW DATA: %s</h3>", it.toHTML(null)) })
+        BUILDER.append(refID?.let { "<h3>ANALYZE RAW DATA: ${it.toHTML(null)}</h3>" })
         val BODY = getData(analysis, save.context, true)
         when (BODY) {
             null -> {

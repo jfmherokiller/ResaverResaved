@@ -17,7 +17,6 @@ package ess
 
 import ess.ESS.ESSContext
 import java.nio.ByteBuffer
-import java.util.*
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -85,8 +84,7 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, ana
      * @param context The `ESSContext` info.
      */
     init {
-        Objects.requireNonNull(input)
-        FLAGS = Objects.requireNonNull(flags)
+        FLAGS = flags
         val initialType: Int
         initialType = if (refid.type === RefID.Type.CREATED) {
             5

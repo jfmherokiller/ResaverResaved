@@ -39,8 +39,8 @@ class ArrayTableModel(data: ArrayInfo?) : TableModel {
         assert(0 <= rowIndex && rowIndex < this.rowCount)
         return when (columnIndex) {
             0 -> rowIndex
-            1 -> DATA.variables?.get(rowIndex)?.toTypeString()!!
-            2 -> DATA.variables?.get(rowIndex)!!
+            1 -> DATA.variables[rowIndex]?.toTypeString()!!
+            2 -> DATA.variables[rowIndex]!!
             else -> throw IllegalStateException()
         }
     }

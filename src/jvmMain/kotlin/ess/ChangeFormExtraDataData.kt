@@ -17,7 +17,6 @@ package ess
 
 import ess.ESS.ESSContext
 import java.nio.ByteBuffer
-import java.util.*
 import java.util.logging.Logger
 
 /**
@@ -82,7 +81,6 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
      * @param context The `ESSContext` info.
      */
     init {
-        Objects.requireNonNull(input)
         val TYPE = super.readByte(input, "TYPE")?.let { UtilityFunctions.toUnsignedInt(it) }!!
         require(!(TYPE < 0 || TYPE >= 256)) { "Invalid extraData type: $TYPE" }
         when (TYPE) {

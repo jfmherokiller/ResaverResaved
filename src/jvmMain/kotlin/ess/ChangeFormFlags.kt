@@ -15,7 +15,6 @@
  */
 package ess
 
-import java.util.Objects
 import java.lang.StringBuilder
 import java.nio.ByteBuffer
 
@@ -30,7 +29,6 @@ class ChangeFormFlags(input: ByteBuffer) : Element {
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
-        Objects.requireNonNull(output)
         output!!.putInt(flags)
         output.putShort(unknown)
     }

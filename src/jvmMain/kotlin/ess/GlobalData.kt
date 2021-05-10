@@ -19,7 +19,6 @@ import ess.ESS.ESSContext
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.util.*
 
 /**
  * Describes 3-byte formIDs from Skyrim savegames.
@@ -71,7 +70,7 @@ class GlobalData(input: ByteBuffer, context: ESSContext?, model: ModelBuilder?) 
      */
     override fun hashCode(): Int {
         var hash = 7
-        hash = 89 * hash + Objects.hashCode(dataBlock)
+        hash = 89 * hash + dataBlock.hashCode()
         return hash
     }
 
@@ -79,18 +78,18 @@ class GlobalData(input: ByteBuffer, context: ESSContext?, model: ModelBuilder?) 
      * @see Object.equals
      * @return
      */
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (obj == null) {
+        if (other == null) {
             return false
         }
-        if (javaClass != obj.javaClass) {
+        if (javaClass != other.javaClass) {
             return false
         }
-        val other = obj as GlobalData
-        return dataBlock == other.dataBlock
+        val other2 = other as GlobalData
+        return dataBlock == other2.dataBlock
     }
 
     /**

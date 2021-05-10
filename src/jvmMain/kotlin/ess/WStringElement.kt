@@ -60,7 +60,7 @@ class WStringElement : WString, Element {
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {

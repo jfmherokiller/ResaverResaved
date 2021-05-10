@@ -58,10 +58,7 @@ class ChangeFormACHR(
      * @return
      */
     override fun getInfo(analysis: Analysis?, save: ESS?): String {
-        return "<hr/>" +
-                "<pre><code>" +
-                super.toString("REFR", 0) +
-                "</code></pre>"
+        return "<hr/><pre><code>${super.toString("REFR", 0)}</code></pre>"
     }
 
     // The change flags.

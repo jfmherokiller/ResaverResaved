@@ -17,7 +17,6 @@ package ess
 
 import ess.ESS.ESSContext
 import java.nio.ByteBuffer
-import java.util.*
 
 /**
  * Describes an entry in a leveled list.

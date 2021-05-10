@@ -31,14 +31,20 @@ class ParamBool(val VALUE: Byte) : Parameter() {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        } else if (other == null) {
-            return false
-        } else if (javaClass != other.javaClass) {
-            return false
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as ParamBool
+                VALUE == other2.VALUE
+            }
         }
-        val other2 = other as ParamBool
-        return VALUE == other2.VALUE
     }
 }

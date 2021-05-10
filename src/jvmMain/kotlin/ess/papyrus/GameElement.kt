@@ -19,7 +19,6 @@ import ess.AnalyzableElement
 import ess.Linkable
 import resaver.Analysis
 import java.nio.ByteBuffer
-import java.util.*
 
 /**
  * `GameElement` is a superclass of `ScriptInstance`,
@@ -35,7 +34,6 @@ abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, 
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
-        Objects.requireNonNull(output)
         iD.write(output)
         definitionName.write(output)
     }
@@ -63,8 +61,6 @@ abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, 
      * @return
      */
     override fun matches(analysis: Analysis?, mod: String?): Boolean {
-        Objects.requireNonNull(analysis)
-        Objects.requireNonNull(mod)
         val OWNERS = analysis!!.SCRIPT_ORIGINS[definitionName.toIString()] ?: return false
         return OWNERS.contains(mod)
     }
@@ -116,9 +112,6 @@ abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, 
      * @throws PapyrusFormatException
      */
     init {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(defs)
-        Objects.requireNonNull(context)
         iD = context.readEID(input)
         definitionName = context.readTString(input)
         definition = defs.getOrDefault(definitionName, null)
