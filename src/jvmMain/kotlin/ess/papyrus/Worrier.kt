@@ -20,9 +20,11 @@ import ess.WStringElement
 import resaver.ResaverFormatting.makeHTMLList
 import java.nio.file.FileSystems
 import java.util.*
+
 import java.util.logging.Logger
 import java.util.stream.Collectors
 import java.util.stream.Stream
+import kotlin.collections.ArrayList
 
 /**
  *
@@ -82,7 +84,7 @@ class Worrier {
         BUF.append("<p>The savefile was successfully loaded.<ul>")
         BUF.append(String.format("<li>Read %1.1f mb in %1.1f seconds.</li>", size, time))
         if (result.ESS.hasCosave()) {
-            BUF.append("<li>${result.GAME!!.COSAVE_EXT.toUpperCase()} co-save was loaded.</li>")
+            BUF.append("<li>${result.GAME!!.COSAVE_EXT.uppercase(Locale.getDefault())} co-save was loaded.</li>")
         } else {
             BUF.append("<li>No co-save was found.</li>")
         }
@@ -116,9 +118,9 @@ class Worrier {
             .map(StackFrame::script)
         val suspended: Stream<Script?> = result.ESS.papyrus.suspendedStacks.values.parallelStream()
             .map(SuspendedStack::script)
-            .filter { obj: Script? -> Objects.nonNull(obj) }
+            .filter { obj: Script? -> obj != null }
         val frameCounts: Map<Script, Long> = Stream.concat(active, suspended)
-            .filter { obj: Script? -> Objects.nonNull(obj) }
+            .filter { obj: Script? -> obj != null }
             .collect(Collectors.groupingBy({ f: Script? -> f }, Collectors.counting()))
         val frames: List<Script> = ArrayList(frameCounts.keys)
         frames.sortedWith { a: Script, b: Script ->
