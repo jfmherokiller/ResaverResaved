@@ -20,7 +20,6 @@ import ess.WStringElement
 import resaver.ResaverFormatting.makeHTMLList
 import java.nio.file.FileSystems
 import java.util.*
-import java.util.function.Function
 import java.util.logging.Logger
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -227,7 +226,7 @@ class Worrier {
             }
             if (missingNamespaces.isNotEmpty()) {
                 val msg = "This savefile has %d missing namespaces (the Canary error)."
-                BUF.append(makeHTMLList(msg, missingNamespaces, LIMIT, Function { i: String? -> i }))
+                BUF.append(makeHTMLList(msg, missingNamespaces, LIMIT) { i: String? -> i })
                 shouldWorry = true
             }
             val canaryErrors: MutableList<Script?> = mutableListOf()
@@ -242,7 +241,7 @@ class Worrier {
             }
             if (canaryErrors.isNotEmpty()) {
                 val msg = "This savefile has %d zeroed canaries."
-                BUF.append(makeHTMLList(msg, canaryErrors, LIMIT, Function { i: Script? -> i?.toHTML(null) }))
+                BUF.append(makeHTMLList(msg, canaryErrors, LIMIT) { i: Script? -> i?.toHTML(null) })
                 shouldWorry = true
             }
         }
@@ -254,7 +253,7 @@ class Worrier {
         }
         if (memberless.isNotEmpty()) {
             val msg = "This savefile has %d script instances whose data is missing."
-            BUF.append(makeHTMLList(msg, memberless, LIMIT, Function { i: ScriptInstance -> i.script!!.toHTML(null) }))
+            BUF.append(makeHTMLList(msg, memberless, LIMIT) { i: ScriptInstance -> i.script!!.toHTML(null) })
             shouldWorry = true
         }
         val definitionErrors: MutableList<ScriptInstance> = mutableListOf()
@@ -266,7 +265,7 @@ class Worrier {
         if (definitionErrors.isNotEmpty()) {
             val msg = "This savefile has %d script instances with mismatched member data."
             BUF.append(
-                makeHTMLList(msg, definitionErrors, LIMIT, Function { i: ScriptInstance -> i.script!!.toHTML(null) }))
+                makeHTMLList(msg, definitionErrors, LIMIT) { i: ScriptInstance -> i.script!!.toHTML(null) })
             shouldWorry = true
         }
         previousNamespaces = currentNamespaces
