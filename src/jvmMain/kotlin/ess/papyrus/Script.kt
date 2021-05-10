@@ -310,7 +310,8 @@ class Script(input: ByteBuffer, context: ess.papyrus.PapyrusContext) : Definitio
             IString["Utility"],
             IString["CommonArrayFunctions"],
             IString["ScriptObject"],
-            IString["InputEnableLayer"]
+            IString["InputEnableLayer"],
+            IString["Sound"]
         )
     }
 
