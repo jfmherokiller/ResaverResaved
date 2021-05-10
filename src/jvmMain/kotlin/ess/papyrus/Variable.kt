@@ -20,7 +20,7 @@ import ess.Linkable
 import ess.papyrus.VarType.Companion.read
 import resaver.ListException
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * Describes a variable in a Skyrim savegame.
@@ -172,8 +172,6 @@ abstract class Variable : PapyrusElement, Linkable {
         @JvmStatic
         @Throws(PapyrusFormatException::class)
         fun read(input: ByteBuffer, context: PapyrusContext): Variable {
-            Objects.requireNonNull(input)
-            Objects.requireNonNull(context)
             val VarTYPE = read(input)
             return when (VarTYPE) {
                 VarType.NULL -> VarNull(input)

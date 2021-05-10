@@ -379,8 +379,6 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @return
      */
     override fun matches(analysis: Analysis?, mod: String?): Boolean {
-        Objects.requireNonNull(analysis)
-        Objects.requireNonNull(mod)
         val OWNERS = analysis?.SCRIPT_ORIGINS?.get(scriptName.toIString()) ?: return false
         return OWNERS.contains(mod)
     }
@@ -536,7 +534,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 2)
                     method = args[0]!!.toValueString()
                     obj = args[1]!!.toValueString()
-                    val result1: MutableList<String> = ArrayList()
+                    val result1: MutableList<String> = mutableListOf()
                     for (v1 in args
                         .subList(3, args.size)) {
                         val paren1 = v1!!.paren()
@@ -549,7 +547,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                 Opcode.CALLPARENT -> {
                     replaceVariables(args, terms, 1)
                     method = args[0]!!.toValueString()
-                    val list1: MutableList<String> = ArrayList()
+                    val list1: MutableList<String> = mutableListOf()
                     for (parameter in args
                         .subList(3, args.size)) {
                         val s = parameter!!.paren()
@@ -563,7 +561,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 2)
                     obj = args[0]!!.toValueString()
                     method = args[1]!!.toValueString()
-                    val list: MutableList<String> = ArrayList()
+                    val list: MutableList<String> = mutableListOf()
                     for (v in args
                         .subList(3, args.size)) {
                         val paren = v!!.paren()
@@ -592,14 +590,14 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                     replaceVariables(args, terms, 0)
                     dest = args[0]!!.toValueString()
                     arg = args[1]!!.paren()
-                    var result: Optional<MemberDesc> = Optional.empty()
+                    var result: MemberDesc? = null
                     for (memberDesc in types) {
                         if (memberDesc.name.equals(dest)) {
-                            result = Optional.of(memberDesc)
+                            result = memberDesc
                             break
                         }
                     }
-                    type = result.get().type.toWString()
+                    type = result?.type?.toWString()!!
                     term = if (type.equals("bool")) {
                         arg
                     } else {
@@ -656,14 +654,14 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
                 Opcode.ARR_CREATE -> {
                     val size = args[1]!!.intValue
                     dest = args[0]!!.toValueString()
-                    var found: Optional<MemberDesc> = Optional.empty()
+                    var found: MemberDesc? = null
                     for (t in types) {
                         if (t.name.equals(dest)) {
-                            found = Optional.of(t)
+                            found = t
                             break
                         }
                     }
-                    type = found.get().type.toWString()
+                    type = found?.type?.toWString()!!
                     val subtype = type.toString().substring(0, type.length - 2)
                     term = "new $subtype[$size]"
                     processTerm(args, terms, 0, term)
@@ -747,12 +745,8 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
          * @return
         </T> */
         fun <T> paramList(params: List<T>): String {
-            val joiner = StringJoiner(", ", "(", ")")
-            for (p in params) {
-                val s = p.toString()
-                joiner.add(s)
-            }
-            return joiner.toString()
+            val parts = params.joinToString(", ","(",")")
+            return parts
         }
 
         val AUTOVAR_REGEX = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE)
@@ -769,9 +763,6 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @throws PapyrusElementException
      */
     init {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(thread)
-        Objects.requireNonNull(context)
         val variableCount = input.int
         if (variableCount < 0 || variableCount > 50000) {
             throw PapyrusFormatException("Invalid variableCount $variableCount")
@@ -791,24 +782,24 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         docString = context.readTString(input)
         FN_USERFLAGS = Flags.FlagsInt(input)
         FN_FLAGS = Flags.FlagsByte(input)
-        val functionParameterCount = java.lang.Short.toUnsignedInt(input.short)
+        val functionParameterCount = UtilityFunctions.toUnsignedInt(input.short)
         assert(functionParameterCount in 0..2047) { "Invalid functionParameterCount $functionParameterCount" }
-        FN_PARAMS = ArrayList(functionParameterCount)
+        FN_PARAMS = mutableListOf()
         for (i in 0 until functionParameterCount) {
             val param = FunctionParam(input, context)
             FN_PARAMS.add(param)
         }
-        val functionLocalCount = java.lang.Short.toUnsignedInt(input.short)
+        val functionLocalCount = UtilityFunctions.toUnsignedInt(input.short)
         assert(functionLocalCount in 0..2047) { "Invalid functionLocalCount $functionLocalCount" }
         FN_LOCALS = ArrayList(functionLocalCount)
         for (i in 0 until functionLocalCount) {
             val local = FunctionLocal(input, context)
             FN_LOCALS.add(local)
         }
-        val opcodeCount = java.lang.Short.toUnsignedInt(input.short)
+        val opcodeCount = UtilityFunctions.toUnsignedInt(input.short)
         assert(0 <= opcodeCount)
         try {
-            CODE = ArrayList(opcodeCount)
+            CODE = mutableListOf()
             for (i in 0 until opcodeCount) {
                 val opcode = OpcodeData(input, context)
                 CODE.add(opcode)

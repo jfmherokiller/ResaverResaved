@@ -23,7 +23,7 @@ import resaver.Analysis
 import resaver.ListException
 import java.nio.ByteBuffer
 import java.util.*
-import java.util.function.Consumer
+
 import kotlin.experimental.and
 
 /**
@@ -176,7 +176,7 @@ internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusCont
                 BUILDER.append(String.format("<p>This script probably came from \"%s\".</p>", probablyProvider))
                 if (providers.size > 1) {
                     BUILDER.append("<p>Full list of providers:</p><ul>")
-                    providers.forEach(Consumer { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) })
+                    providers.forEach { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) }
                     BUILDER.append("</ul>")
                 }
             }
@@ -246,10 +246,10 @@ internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusCont
             return sum
         }
 
-        private val FLAG: Byte
-        val TYPE: TString
-        val UNKNOWN1: Int
-        val UNKNOWN2: Int
+        private val FLAG: Byte = input.get()
+        val TYPE: TString = context.readTString(input)
+        val UNKNOWN1: Int = input.int
+        val UNKNOWN2: Int = if ((FLAG and 0x04.toByte()).toInt() != 0) input.int else 0
         var VARIABLES: MutableList<Variable?> = mutableListOf()
 
         /**
@@ -262,10 +262,6 @@ internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusCont
          * @throws PapyrusFormatException
          */
         init {
-            FLAG = input.get()
-            TYPE = context.readTString(input)
-            UNKNOWN1 = input.int
-            UNKNOWN2 = if ((FLAG and 0x04.toByte()).toInt() != 0) input.int else 0
             try {
                 val count = input.int
                 VARIABLES = readList(input, count, context).toMutableList()

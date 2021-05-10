@@ -20,8 +20,7 @@ import resaver.IString
 import ess.*
 import ess.Linkable.Companion.makeLink
 import java.nio.ByteBuffer
-import java.util.*
-import java.util.stream.Stream
+
 
 /**
  * A case-insensitive string with value semantics that reads and writes as an
@@ -39,7 +38,7 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
      */
     protected constructor(wstr: WStringElement?, index: Int) {
         require(index >= 0) { "Illegal index: $index" }
-        WSTR = Objects.requireNonNull(wstr)!!
+        WSTR = wstr!!
         INDEX = index
     }
 
@@ -91,19 +90,19 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
      * Tests for case-insensitive value-equality with another
      * `TString`, `IString`, or `String`.
      *
-     * @param obj The object to which to compare.
+     * @param other The object to which to compare.
      * @see java.lang.String.equalsIgnoreCase
      */
-    override fun equals(obj: Any?): Boolean {
+    override fun equals(other: Any?): Boolean {
         return when {
-            this === obj -> {
+            this === other -> {
                 true
             }
-            obj is TString -> {
-                INDEX == obj.INDEX
+            other is TString -> {
+                INDEX == other.INDEX
             }
             else -> {
-                WSTR == obj
+                WSTR == other
             }
         }
     }
@@ -128,7 +127,6 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
      * @see java.lang.String.equalsIgnoreCase
      */
     fun equals(other: TString): Boolean {
-        Objects.requireNonNull(other)
         return if (INDEX < 0 || other.INDEX < 0) {
             WSTR.equals(other.WSTR)
         } else {
@@ -161,10 +159,9 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
      * @return
      */
     override fun getInfo(analysis: Analysis?, save: ESS?): String? {
-        Objects.requireNonNull(save)
         val BUILDER = StringBuilder()
         BUILDER.append("<html><h3>STRING</h3>")
-        BUILDER.append(String.format("<p>Value: \"%s\".</p>", this))
+        BUILDER.append("<p>Value: \"$this\".</p>")
         BUILDER.append(String.format("<p>Length: %d</p>", WSTR.length))
 
         /*if (null != analysis) {
@@ -182,12 +179,12 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
             }
         }*/
         val PAPYRUS = save!!.papyrus
-        val LINKS: MutableList<String?> = LinkedList()
+        val LINKS: MutableList<String?> = mutableListOf()
 
         // Check definitions (Scripts and Structs).
         if (PAPYRUS != null) {
-            Stream.concat(PAPYRUS.scripts.values.stream(), PAPYRUS.structs.values.stream()).parallel()
-                .forEach { def: Definition ->
+                val vals = (PAPYRUS.scripts.values + PAPYRUS.structs.values)
+                vals.forEach { def: Definition ->
                     if (this === def.name) {
                         LINKS.add(def.toHTML(null))
                     }
@@ -276,7 +273,7 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
         MESSAGES
                 .filter(p -> Objects.equals(p.B.getEvent(), this))
                 .forEach(p -> HOLDERS.add(Pair.make(p.A, p.B)));
-         */if (!LINKS.isEmpty()) {
+         */if (LINKS.isNotEmpty()) {
             BUILDER.append(String.format("<p>This string occurs %d times in this save.</p>", LINKS.size))
             LINKS.forEach { link: String? -> BUILDER.append(link).append("<br/>") }
         }
@@ -317,7 +314,7 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
     }
 
     /**
-     * @see resaver.ess.Linkable.toHTML
+     * @see Linkable.toHTML
      * @param target A target within the `Linkable`.
      * @return
      */

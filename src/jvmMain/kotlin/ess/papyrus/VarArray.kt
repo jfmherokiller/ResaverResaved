@@ -3,7 +3,6 @@ package ess.papyrus
 import ess.Element
 import ess.Linkable.Companion.makeLink
 import java.nio.ByteBuffer
-import java.util.*
 
 /**
  * Variable that stores an ARRAY.
@@ -56,15 +55,15 @@ class VarArray(varType: VarType, input: ByteBuffer, context: PapyrusContext) : V
             }
         }
         return if (VarTYPE.isRefType) {
-            VarTYPE.toString() + ":" + "" + REFTYPE + "[" + array.length + "]"
+            "$VarTYPE:$REFTYPE[${array.length}]"
         } else {
-            VarTYPE.toString() + ":" + elementType + "[" + array.length + "]"
+            "$VarTYPE:$elementType[${array.length}]"
         }
     }
 
     override fun toValueString(): String {
         return if (null != array) {
-            "" + arrayID + ": " + array.toValueString()
+            "$arrayID: ${array.toValueString()}"
         } else {
             arrayID.toString()
         }
@@ -76,7 +75,7 @@ class VarArray(varType: VarType, input: ByteBuffer, context: PapyrusContext) : V
     }
 
     override fun toString(): String {
-        return toTypeString() + " " + arrayID
+        return "${toTypeString()} $arrayID"
     }
 
     private val VarTYPE: VarType
@@ -85,8 +84,6 @@ class VarArray(varType: VarType, input: ByteBuffer, context: PapyrusContext) : V
     val array: ArrayInfo?
 
     init {
-        Objects.requireNonNull(varType)
-        Objects.requireNonNull(input)
         VarTYPE = varType
         REFTYPE = if (VarTYPE.isRefType) context.readTString(input) else null
         arrayID = context.readEID(input)

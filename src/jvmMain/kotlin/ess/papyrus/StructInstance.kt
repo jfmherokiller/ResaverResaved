@@ -25,7 +25,7 @@ import resaver.Analysis
 import resaver.ListException
 import java.nio.ByteBuffer
 import java.util.*
-import java.util.function.Consumer
+
 
 /**
  *
@@ -209,11 +209,10 @@ class StructInstance
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {
-            Objects.requireNonNull(output)
             iD.write(output)
             FLAG.write(output)
             output?.putInt(VARIABLES.size)
-            VARIABLES.forEach(Consumer { `var`: Variable? -> `var`!!.write(output) })
+            VARIABLES.forEach { `var`: Variable? -> `var`!!.write(output) }
         }
 
         /**
@@ -253,8 +252,6 @@ class StructInstance
          * @throws PapyrusElementException
          */
         init {
-            Objects.requireNonNull(input)
-            Objects.requireNonNull(context)
             FLAG = readByteFlags(input)
             try {
                 val count = input.int

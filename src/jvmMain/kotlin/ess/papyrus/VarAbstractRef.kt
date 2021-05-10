@@ -3,22 +3,20 @@ package ess.papyrus
 import ess.Element
 import ess.Linkable.Companion.makeLink
 import java.nio.ByteBuffer
-import java.util.*
 
 /**
  * ABT for a variable that stores some type of ref.
  */
 abstract class VarAbstractRef : Variable {
     constructor(input: ByteBuffer, context: PapyrusContext) {
-        Objects.requireNonNull(input)
         refType = context.readTString(input)
         ref = context.readEID(input)
         referent = context.findReferrent(ref)
     }
 
     constructor(type: TString?, id: EID?, context: PapyrusContext) {
-        ref = Objects.requireNonNull(id)!!
-        refType = Objects.requireNonNull(type)!!
+        ref = id!!
+        refType = type!!
         referent = context.findReferrent(ref)
     }
 
@@ -58,10 +56,10 @@ abstract class VarAbstractRef : Variable {
     override fun toHTML(target: Element?): String? {
         return if (null != referent) {
             val REFLINK = referent!!.toHTML(this)
-            String.format("%s : %s", type, REFLINK)
+            "$type : $REFLINK"
         } else {
             val DEFLINK = makeLink("script", refType, refType.toString())
-            String.format("%s : %s (%s)", type, ref, DEFLINK)
+            "$type : $ref ($DEFLINK)"
         }
     }
     val isNull: Boolean

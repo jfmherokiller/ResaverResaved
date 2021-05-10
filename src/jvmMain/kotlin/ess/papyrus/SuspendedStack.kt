@@ -20,7 +20,7 @@ import ess.AnalyzableElement
 import ess.Element
 import ess.Linkable
 import java.nio.ByteBuffer
-import java.util.*
+
 
 /**
  * Describes an active script's stack in a Skyrim savegame.
@@ -147,8 +147,6 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
      * @return
      */
     override fun matches(analysis: Analysis?, mod: String?): Boolean {
-        Objects.requireNonNull(analysis)
-        Objects.requireNonNull(mod)
         return hasMessage() && message!!.matches(analysis, mod)
     }
 
@@ -181,8 +179,6 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
      * @throws PapyrusElementException
      */
     init {
-        Objects.requireNonNull(input)
-        Objects.requireNonNull(context)
         iD = context.readEID32(input)
         FLAG = input.get()
         THREAD = context.findActiveScript(iD)
