@@ -18,7 +18,6 @@ package resaver.esp
 import mf.BufferUtil
 import resaver.IString
 import java.nio.ByteBuffer
-import java.util.function.Consumer
 
 /**
  * Describes script fragments for QUST records.
@@ -30,7 +29,7 @@ class FragmentTerm(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         output?.put(UNKNOWN)
         SCRIPT.write(output)
         output?.putShort(FRAGMENTS.size.toShort())
-        FRAGMENTS.forEach(Consumer { fragment: Fragment -> fragment.write(output) })
+        FRAGMENTS.forEach { fragment: Fragment -> fragment.write(output) }
     }
 
     override fun calculateSize(): Int {

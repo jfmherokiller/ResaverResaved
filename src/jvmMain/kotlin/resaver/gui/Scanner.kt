@@ -22,6 +22,7 @@ import resaver.Mod
 import resaver.ResaverFormatting
 import resaver.esp.StringTable
 import ess.Plugin
+import specialConsumer
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.IOException
@@ -29,7 +30,6 @@ import java.nio.channels.ClosedByInterruptException
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
-import java.util.function.Consumer
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.swing.JOptionPane
@@ -46,7 +46,7 @@ class Scanner(
     gameDir: Path,
     mo2Ini: Path?,
     doAfter: Runnable?,
-    progress: Consumer<String>
+    progress: specialConsumer
 ) : SwingWorker<Analysis?, Double?>() {
     /**
      *
@@ -57,7 +57,7 @@ class Scanner(
         val TIMER = startNew("Load Plugins")
         val GAME = SAVE.header.GAME
         WINDOW.addWindowListener(LISTENER)
-        PROGRESS.accept("Initializing")
+        PROGRESS.invoke("Initializing")
         return try {
             val PLUGINS = SAVE.pluginInfo
             LOG.info("Scanning plugins.")
@@ -65,12 +65,12 @@ class Scanner(
             val CORE = Mod(GAME, GAME_DIR.resolve("data"))
             MODS.add(CORE)
             if (null != MO2_INI) {
-                PROGRESS.accept("Analyzing MO2")
+                PROGRESS.invoke("Analyzing MO2")
                 LOG.info("Checking Mod Organizer 2.")
                 val MOMODS = Configurator.analyzeModOrganizer2(GAME, MO2_INI)!!
                 MODS.addAll(MOMODS)
             }
-            PROGRESS.accept("Organizing")
+            PROGRESS.invoke("Organizing")
             val PLUGINFILEMAP: MutableMap<Plugin?, Path> = HashMap()
             MODS
                 .asSequence()
@@ -107,9 +107,9 @@ class Scanner(
             MODS.forEach { mod ->
                 if (mod === CORE) {
                     COUNTER.click()
-                    PROGRESS.accept("Reading ${GAME.NAME}'s data")
+                    PROGRESS.invoke("Reading ${GAME.NAME}'s data")
                 } else {
-                    PROGRESS.accept("Reading ${COUNTER.eval()}: mod data for ${mod.getShortName()}")
+                    PROGRESS.invoke("Reading ${COUNTER.eval()}: mod data for ${mod.getShortName()}")
                 }
                 val RESULTS = mod.readData(PLUGINS, LANGUAGE)
                 STRINGSFILES.addAll(RESULTS.STRINGSFILES)
@@ -122,7 +122,7 @@ class Scanner(
                     LOG.warning(MSG)
                 }
             }
-            PROGRESS.accept("Combine StringsFiles")
+            PROGRESS.invoke("Combine StringsFiles")
 
             // Map plugins to their stringsfiles.
             val PLUGIN_STRINGS: MutableMap<Plugin, MutableList<resaver.esp.StringsFile>> = hashMapOf()
@@ -143,7 +143,7 @@ class Scanner(
             val SIZES: MutableMap<Plugin, Long> = hashMapOf()
             COUNTER.reset(PLUGINS.size)
             PLUGINS.allPlugins.forEach { plugin ->
-                PROGRESS.accept("Parsing ${COUNTER.eval()}: ${plugin.indexName()}")
+                PROGRESS.invoke("Parsing ${COUNTER.eval()}: ${plugin.indexName()}")
                 if (!PLUGINFILEMAP.containsKey(plugin)) {
                     ERR_PLUGINS.add(Paths.get(plugin.NAME))
                     LOG.info("Plugin $plugin could not be found.")
@@ -174,7 +174,7 @@ class Scanner(
                     }
                 }
             }
-            PROGRESS.accept("Creating analysis")
+            PROGRESS.invoke("Creating analysis")
             val ANALYSIS = Analysis(PROFILEANALYSIS, PLUGIN_DATA, STRINGTABLE)
             WINDOW.setAnalysis(ANALYSIS)
             TIMER.stop()
@@ -321,7 +321,7 @@ class Scanner(
     private val GAME_DIR: Path = Objects.requireNonNull(gameDir, "The game directory field must not be null.")
     private val MO2_INI: Path? = mo2Ini
     private val DOAFTER: Runnable? = doAfter
-    private val PROGRESS: Consumer<String> = Objects.requireNonNull(progress)
+    private val PROGRESS: specialConsumer = Objects.requireNonNull(progress)
     private val LISTENER: WindowAdapter = object : WindowAdapter() {
         override fun windowClosing(e: WindowEvent) {
             if (!isDone) {

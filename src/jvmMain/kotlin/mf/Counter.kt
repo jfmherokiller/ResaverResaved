@@ -15,9 +15,8 @@
  */
 package mf
 
-import java.util.function.Consumer
-import java.util.function.DoubleConsumer
-import java.util.function.IntConsumer
+import MDoubleConsumer
+import MIntConsumer
 
 /**
  * A class for counting.
@@ -32,10 +31,10 @@ class Counter(newLimit: Int) {
         counter++
         if (percentListeners != null && percentListeners!!.isNotEmpty()) {
             val percent = counter.toDouble() / limit.toDouble()
-            percentListeners!!.forEach(Consumer { l: DoubleConsumer -> l.accept(percent) })
+            percentListeners!!.forEach { l: MDoubleConsumer -> l.invoke(percent) }
         }
         if (countListeners != null && countListeners!!.isNotEmpty()) {
-            countListeners!!.forEach(Consumer { l: IntConsumer -> l.accept(counter) })
+            countListeners!!.forEach { l: MIntConsumer -> l.invoke(counter) }
         }
     }
 
@@ -50,10 +49,10 @@ class Counter(newLimit: Int) {
         counter += num
         if (percentListeners != null && percentListeners!!.isNotEmpty()) {
             val percent = percentage
-            percentListeners!!.forEach(Consumer { l: DoubleConsumer -> l.accept(percent) })
+            percentListeners!!.forEach { l: MDoubleConsumer -> l.invoke(percent) }
         }
         if (countListeners != null && countListeners!!.isNotEmpty()) {
-            countListeners!!.forEach(Consumer { l: IntConsumer -> l.accept(counter) })
+            countListeners!!.forEach { l: MIntConsumer -> l.invoke(counter) }
         }
     }
 
@@ -122,7 +121,7 @@ class Counter(newLimit: Int) {
      *
      * @param listener The listener.
      */
-    fun addCountListener(listener: IntConsumer) {
+    fun addCountListener(listener: MIntConsumer) {
         if (countListeners == null) {
             countListeners = mutableListOf()
         }
@@ -135,7 +134,7 @@ class Counter(newLimit: Int) {
      *
      * @param listener The listener.
      */
-    fun addPercentListener(listener: DoubleConsumer) {
+    fun addPercentListener(listener: MDoubleConsumer) {
         if (percentListeners == null) {
             percentListeners = mutableListOf()
         }
@@ -146,7 +145,7 @@ class Counter(newLimit: Int) {
      * Removes a listener.
      * @param listener The listener.
      */
-    fun removeCountListener(listener: IntConsumer) {
+    fun removeCountListener(listener: MIntConsumer) {
         if (countListeners != null) {
             countListeners!!.remove(listener)
         }
@@ -156,7 +155,7 @@ class Counter(newLimit: Int) {
      * Removes a listener.
      * @param listener The listener.
      */
-    fun removePercentListener(listener: DoubleConsumer) {
+    fun removePercentListener(listener: MDoubleConsumer) {
         if (percentListeners != null) {
             percentListeners!!.remove(listener)
         }
@@ -169,8 +168,8 @@ class Counter(newLimit: Int) {
         private set
     private var limit = 0
     private var format: String? = null
-    private var percentListeners: MutableList<DoubleConsumer>?
-    private var countListeners: MutableList<IntConsumer>?
+    private var percentListeners: MutableList<MDoubleConsumer>?
+    private var countListeners: MutableList<MIntConsumer>?
 
     /**
      * Create a new `Counter` with the specified limit.

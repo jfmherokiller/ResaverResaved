@@ -15,6 +15,7 @@
  */
 package resaver.gui
 
+import GenericConsumer
 import ess.*
 import ess.papyrus.*
 import java.awt.event.ActionEvent
@@ -22,7 +23,6 @@ import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.*
-import java.util.function.Consumer
 import java.util.function.Predicate
 import javax.swing.*
 import javax.swing.tree.TreePath
@@ -65,13 +65,13 @@ class FilterTree : JTree(FilterTreeModel()) {
         MI_FILTER.addActionListener { e: ActionEvent? ->
             if (null != pluginFilterHandler) {
                 val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
-                pluginFilterHandler!!.accept(plugin)
+                pluginFilterHandler!!.invoke(plugin)
             }
         }
         MI_PURGE.addActionListener { e: ActionEvent? ->
             val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
             if (null != purgeHandler) {
-                purgeHandler!!.accept(mutableListOf(plugin))
+                purgeHandler!!.invoke(mutableListOf(plugin))
             }
         }
         MI_PURGES.addActionListener { e: ActionEvent? ->
@@ -87,19 +87,19 @@ class FilterTree : JTree(FilterTreeModel()) {
                         PLUGINS.add(v)
                     }
                 }
-                purgeHandler!!.accept(PLUGINS)
+                purgeHandler!!.invoke(PLUGINS)
             }
         }
         MI_DELETE_FORMS.addActionListener { e: ActionEvent? ->
             val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
             if (null != deleteFormsHandler) {
-                deleteFormsHandler!!.accept(plugin)
+                deleteFormsHandler!!.invoke(plugin)
             }
         }
         MI_DELETE_INSTANCES.addActionListener { e: ActionEvent? ->
             val plugin = (selectionPath?.lastPathComponent as FilterTreeModel.Node).element as Plugin
             if (null != deleteInstancesHandler) {
-                deleteInstancesHandler!!.accept(plugin)
+                deleteInstancesHandler!!.invoke(plugin)
             }
         }
         MI_ZERO_THREAD.addActionListener { e: ActionEvent? ->
@@ -114,7 +114,7 @@ class FilterTree : JTree(FilterTreeModel()) {
                     ?.filter { ESS.THREAD.test(it) }
                     ?.map { it as ActiveScript }
                     ?.toMutableList()?.toList()!!.toMutableList()
-                zeroThreadHandler!!.accept(THREADS)
+                zeroThreadHandler!!.invoke(THREADS)
             }
         }
         MI_FIND_OWNER.addActionListener { e: ActionEvent? ->
@@ -122,17 +122,17 @@ class FilterTree : JTree(FilterTreeModel()) {
             if (null != findHandler) {
                 if (element is ActiveScript) {
                     if (null != element.instance) {
-                        findHandler!!.accept(element.instance!!)
+                        findHandler!!.invoke(element.instance!!)
                     }
                 } else if (element is StackFrame) {
                     val owner = element.owner
                     if (owner is VarRef) {
                         val ref = element.owner as VarRef?
-                        ref!!.referent?.let { findHandler!!.accept(it) }
+                        ref!!.referent?.let { findHandler!!.invoke(it) }
                     }
                 } else if (element is ArrayInfo) {
                     if (null != element.holder) {
-                        findHandler!!.accept(element.holder!!)
+                        findHandler!!.invoke(element.holder!!)
                     }
                 }
             }
@@ -142,17 +142,17 @@ class FilterTree : JTree(FilterTreeModel()) {
         }
         MI_COMPRESS_UNCOMPRESSED.addActionListener { e: ActionEvent? ->
             if (compressionHandler != null) {
-                compressionHandler!!.accept(CompressionType.UNCOMPRESSED)
+                compressionHandler!!.invoke(CompressionType.UNCOMPRESSED)
             }
         }
         MI_COMPRESS_ZLIB.addActionListener { e: ActionEvent? ->
             if (compressionHandler != null) {
-                compressionHandler!!.accept(CompressionType.ZLIB)
+                compressionHandler!!.invoke(CompressionType.ZLIB)
             }
         }
         MI_COMPRESS_LZ4.addActionListener { e: ActionEvent? ->
             if (compressionHandler != null) {
-                compressionHandler!!.accept(CompressionType.LZ4)
+                compressionHandler!!.invoke(CompressionType.LZ4)
             }
         }
         addMouseListener(object : MouseAdapter() {
@@ -181,7 +181,7 @@ class FilterTree : JTree(FilterTreeModel()) {
                             }
                         } else if (ELEMENT is GlobalVariable) {
                             if (null != editHandler) {
-                                editHandler!!.accept(ELEMENT)
+                                editHandler!!.invoke(ELEMENT)
                             }
                         } else if (ELEMENT is Plugin) {
                             PLUGIN_POPUP_MENU.show(evt.component, evt.x, evt.y)
@@ -273,7 +273,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new delete handler.
      */
-    fun setDeleteHandler(newHandler: Consumer<Map<Element, FilterTreeModel.Node>>?) {
+    fun setDeleteHandler(newHandler: GenericConsumer<Map<Element, FilterTreeModel.Node>>?) {
         deleteHandler = newHandler
     }
 
@@ -282,7 +282,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new edit handler.
      */
-    fun setEditHandler(newHandler: Consumer<Element>?) {
+    fun setEditHandler(newHandler: GenericConsumer<Element>?) {
         editHandler = newHandler
     }
 
@@ -291,7 +291,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new delete handler.
      */
-    fun setFilterPluginsHandler(newHandler: Consumer<Plugin>?) {
+    fun setFilterPluginsHandler(newHandler: GenericConsumer<Plugin>?) {
         pluginFilterHandler = newHandler
     }
 
@@ -300,7 +300,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new delete handler.
      */
-    fun setPurgeHandler(newHandler: Consumer<MutableList<Plugin>>?) {
+    fun setPurgeHandler(newHandler: GenericConsumer<MutableList<Plugin>>?) {
         purgeHandler = newHandler
     }
 
@@ -309,7 +309,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new delete handler.
      */
-    fun setDeleteFormsHandler(newHandler: Consumer<Plugin>?) {
+    fun setDeleteFormsHandler(newHandler: GenericConsumer<Plugin>?) {
         deleteFormsHandler = newHandler
     }
 
@@ -318,7 +318,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new delete handler.
      */
-    fun setDeleteInstancesHandler(newHandler: Consumer<Plugin>?) {
+    fun setDeleteInstancesHandler(newHandler: GenericConsumer<Plugin>?) {
         deleteInstancesHandler = newHandler
     }
 
@@ -327,7 +327,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new handler.
      */
-    fun setZeroThreadHandler(newHandler: Consumer<List<ActiveScript>>?) {
+    fun setZeroThreadHandler(newHandler: GenericConsumer<List<ActiveScript>>?) {
         zeroThreadHandler = newHandler
     }
 
@@ -336,7 +336,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new handler.
      */
-    fun setFindHandler(newHandler: Consumer<Element>?) {
+    fun setFindHandler(newHandler: GenericConsumer<Element>?) {
         findHandler = newHandler
     }
 
@@ -345,7 +345,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new handler.
      */
-    fun setCleanseFLSTHandler(newHandler: Consumer<ChangeFormFLST>?) {
+    fun setCleanseFLSTHandler(newHandler: GenericConsumer<ChangeFormFLST>?) {
         cleanFLSTHandler = newHandler
     }
 
@@ -354,7 +354,7 @@ class FilterTree : JTree(FilterTreeModel()) {
      *
      * @param newHandler The new compression type handler.
      */
-    fun setCompressionHandler(newHandler: Consumer<CompressionType>?) {
+    fun setCompressionHandler(newHandler: GenericConsumer<CompressionType>?) {
         compressionHandler = newHandler
     }
 
@@ -370,7 +370,7 @@ class FilterTree : JTree(FilterTreeModel()) {
             return
         }
         val ELEMENTS = model?.parsePaths(PATHS)
-        deleteHandler!!.accept(ELEMENTS!!)
+        deleteHandler!!.invoke(ELEMENTS!!)
     }
 
     override fun getModel(): FilterTreeModel? {
@@ -397,17 +397,17 @@ class FilterTree : JTree(FilterTreeModel()) {
     private val TREE_POPUP_MENU: JPopupMenu = JPopupMenu()
     private val PLUGIN_POPUP_MENU: JPopupMenu = JPopupMenu()
     private val COMPRESSION_POPUP_MENU: JPopupMenu = JPopupMenu()
-    private var deleteHandler: Consumer<Map<Element, FilterTreeModel.Node>>? =
+    private var deleteHandler: GenericConsumer<Map<Element, FilterTreeModel.Node>>? =
         null
-    private var zeroThreadHandler: Consumer<List<ActiveScript>>? = null
-    private var editHandler: Consumer<Element>? = null
-    private var pluginFilterHandler: Consumer<Plugin>? = null
-    private var deleteFormsHandler: Consumer<Plugin>? = null
-    private var deleteInstancesHandler: Consumer<Plugin>? = null
-    private var purgeHandler: Consumer<MutableList<Plugin>>? = null
-    private var findHandler: Consumer<Element>? = null
-    private var cleanFLSTHandler: Consumer<ChangeFormFLST>? = null
-    private var compressionHandler: Consumer<CompressionType>? = null
+    private var zeroThreadHandler: GenericConsumer<List<ActiveScript>>? = null
+    private var editHandler: GenericConsumer<Element>? = null
+    private var pluginFilterHandler: GenericConsumer<Plugin>? = null
+    private var deleteFormsHandler: GenericConsumer<Plugin>? = null
+    private var deleteInstancesHandler: GenericConsumer<Plugin>? = null
+    private var purgeHandler: GenericConsumer<MutableList<Plugin>>? = null
+    private var findHandler: GenericConsumer<Element>? = null
+    private var cleanFLSTHandler: GenericConsumer<ChangeFormFLST>? = null
+    private var compressionHandler: GenericConsumer<CompressionType>? = null
 
     /**
      * Creates a new `FilterTree`.

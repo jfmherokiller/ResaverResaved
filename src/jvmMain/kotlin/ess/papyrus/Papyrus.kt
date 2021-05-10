@@ -26,7 +26,6 @@ import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
-import java.util.function.Consumer
 import java.util.logging.Logger
 
 /**
@@ -72,7 +71,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
 
         // Write the function message table and suspended stacks.
         output?.putInt(FUNCTIONMESSAGES.size)
-        FUNCTIONMESSAGES.forEach(Consumer { message: FunctionMessage -> message.write(output) })
+        FUNCTIONMESSAGES.forEach { message: FunctionMessage -> message.write(output) }
         SUSPENDEDSTACKS1!!.write(output)
         SUSPENDEDSTACKS2!!.write(output)
 
@@ -80,7 +79,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
         output?.putInt(UNK1)
         UNK2.ifPresent { value: Int? -> output?.putInt(value!!) }
         output?.putInt(UNKS.size)
-        UNKS.forEach(Consumer { id: EID? -> id!!.write(output) })
+        UNKS.forEach { id: EID? -> id!!.write(output) }
 
         // Write the unbind map.
         UNBINDMAP!!.write(output)
@@ -416,7 +415,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
                 TERMINATED.add(v)
             }
         }
-        TERMINATED.forEach(Consumer { obj: ActiveScript -> obj.zero() })
+        TERMINATED.forEach { obj: ActiveScript -> obj.zero() }
         return TERMINATED
     }
 
@@ -716,7 +715,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
             }
             if (ls.size in 1..49) {
                 builder.append("<ul>")
-                ls.forEach(Consumer { i: Linkable? -> builder.append("<li>").append(i!!.toHTML(ref)).append("</a>") })
+                ls.forEach { i: Linkable? -> builder.append("<li>").append(i!!.toHTML(ref)).append("</a>") }
                 builder.append("</ul>")
             }
         }
@@ -777,11 +776,11 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
                 scriptMap = ScriptMap(scriptCount, input, context)
             } finally {
                 SCRIPTS = scriptMap
-                SCRIPTS!!.values.forEach(Consumer { script: Script ->
+                SCRIPTS!!.values.forEach { script: Script ->
                     script.resolveParent(
                         SCRIPTS!!
                     )
-                })
+                }
                 model.addScripts(SCRIPTS!!)
                 SUM.click(SCRIPTS!!.calculateSize() - 4)
             }
@@ -1040,7 +1039,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
             // For Skyrim, readRefID the save file version field.
             SAVE_FILE_VERSION = if (essContext.game!!.isSkyrim) Optional.of(input.short) else Optional.empty()
             val stacks: Map<EID?, SuspendedStack?> = suspendedStacks
-            activeScripts.values.forEach(Consumer { script: ActiveScript -> script.resolveStack(stacks) })
+            activeScripts.values.forEach { script: ActiveScript -> script.resolveStack(stacks) }
 
             // Stuff the remaining data into a buffer.
             val remaining = input.limit() - input.position()

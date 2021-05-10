@@ -18,7 +18,6 @@ package resaver.esp
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.*
-import java.util.function.Consumer
 
 /**
  * Describes GRUP records.
@@ -41,7 +40,7 @@ class RecordGrup(
         output?.put(this.code.toString().toByteArray(StandardCharsets.UTF_8))
         output?.putInt(calculateSize())
         output?.put(HEADER)
-        RECORDS.forEach(Consumer { record: Record -> record.write(output) })
+        RECORDS.forEach { record: Record -> record.write(output) }
     }
 
     /**

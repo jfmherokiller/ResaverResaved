@@ -17,7 +17,6 @@ package resaver.gui
 
 import ess.papyrus.HasVariables
 import ess.papyrus.VarType
-import java.util.function.Consumer
 import javax.swing.event.TableModelEvent
 import javax.swing.event.TableModelListener
 import javax.swing.table.TableModel
@@ -86,7 +85,7 @@ class VariableTableModel(data: HasVariables?) : TableModel {
 
     fun fireTableCellUpdate(row: Int, column: Int) {
         val event = TableModelEvent(this, row, row, column, TableModelEvent.UPDATE)
-        LISTENERS.forEach(Consumer { l: TableModelListener -> l.tableChanged(event) })
+        LISTENERS.forEach { l: TableModelListener -> l.tableChanged(event) }
     }
 
     override fun addTableModelListener(l: TableModelListener) {

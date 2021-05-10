@@ -20,7 +20,6 @@ import resaver.IString
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.*
-import java.util.function.Consumer
 
 /**
  * Describes script fragments for QUST records.
@@ -37,9 +36,9 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         if (null != SCRIPT) {
             SCRIPT?.write(output)
         }
-        FRAGMENTS.forEach(Consumer { fragment: Fragment -> fragment.write(output) })
+        FRAGMENTS.forEach { fragment: Fragment -> fragment.write(output) }
         output?.putShort(ALIASES.size.toShort())
-        ALIASES.forEach(Consumer { alias: Alias -> alias.write(output) })
+        ALIASES.forEach { alias: Alias -> alias.write(output) }
     }
 
     override fun calculateSize(): Int {

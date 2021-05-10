@@ -17,7 +17,6 @@ package resaver.esp
 
 import ess.Plugin
 import java.util.*
-import java.util.function.Consumer
 import java.util.regex.Pattern
 
 /**
@@ -35,7 +34,7 @@ class StringTable {
     fun populateFromFiles(stringsFiles: Collection<StringsFile>, plugin: Plugin) {
         Objects.requireNonNull(stringsFiles)
         val SUBTABLE = TABLE.computeIfAbsent(plugin) { p: Plugin? -> HashMap() }
-        stringsFiles.forEach(Consumer { stringsFile: StringsFile -> SUBTABLE.putAll(stringsFile.TABLE) })
+        stringsFiles.forEach { stringsFile: StringsFile -> SUBTABLE.putAll(stringsFile.TABLE) }
     }
 
     /**

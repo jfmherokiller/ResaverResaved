@@ -20,7 +20,6 @@ import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
-import java.util.function.Consumer
 import java.util.zip.DataFormatException
 
 /**
@@ -47,9 +46,9 @@ class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: Byte
     private val uncompressedData: ByteBuffer
         private get() {
             val DATA = ByteBuffer.allocate(uncompressedSize)
-            FIELDS.forEach(Consumer { field: Field? ->
+            FIELDS.forEach { field: Field? ->
                 field?.write(DATA)
-            })
+            }
             return DATA
         }
 

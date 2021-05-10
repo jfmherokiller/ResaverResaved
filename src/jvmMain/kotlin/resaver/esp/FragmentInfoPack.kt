@@ -19,7 +19,6 @@ import mf.BufferUtil
 import resaver.IString
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.util.function.Consumer
 
 /**
  * Describes script fragments for INFO records and PACK records.
@@ -36,7 +35,7 @@ class FragmentInfoPack(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         if (null != FILENAME) {
             output?.put(FILENAME!!.toByteArray(StandardCharsets.UTF_8))
         }
-        FRAGMENTS.forEach(Consumer { fragment: Fragment -> fragment.write(output) })
+        FRAGMENTS.forEach { fragment: Fragment -> fragment.write(output) }
     }
 
     override fun calculateSize(): Int {
