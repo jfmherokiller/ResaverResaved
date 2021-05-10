@@ -24,8 +24,6 @@ import resaver.Analysis
 import resaver.ListException
 import java.nio.ByteBuffer
 import java.util.*
-import java.util.function.Consumer
-import java.util.function.Predicate
 import java.util.logging.Logger
 import kotlin.experimental.and
 
@@ -115,7 +113,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
     fun hasMemberlessError(): Boolean {
         val DESCS = if (null != script) script!!.extendedMembers else emptyList()
         val VARS = variables
-        return VARS.isEmpty() && !DESCS.isEmpty()
+        return VARS.isEmpty() && DESCS.isNotEmpty()
     }
 
     /**
@@ -215,13 +213,13 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
     override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         if (null != script) {
-            BUILDER.append(String.format("<html><h3>INSTANCE of %s</h3>", script!!.toHTML(this)))
+            BUILDER.append("<html><h3>INSTANCE of ${script!!.toHTML(this)}</h3>")
         } else {
-            BUILDER.append(String.format("<html><h3>INSTANCE of %s</h3>", this.scriptName))
+            BUILDER.append("<html><h3>INSTANCE of ${this.scriptName}</h3>")
         }
         val PLUGIN = refID.PLUGIN
         if (PLUGIN != null) {
-            BUILDER.append(String.format("<p>This instance is attached to an object from %s.</p>", PLUGIN.toHTML(this)))
+            BUILDER.append("<p>This instance is attached to an object from ${PLUGIN.toHTML(this)}.</p>")
         } else if (refID.type === RefID.Type.CREATED) {
             BUILDER.append("<p>This instance was created in-game.</p>")
         }
@@ -238,10 +236,10 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
             val PROVIDERS = analysis.SCRIPT_ORIGINS[this.scriptName.toIString()]
             if (null != PROVIDERS) {
                 val probableProvider = PROVIDERS.last()
-                BUILDER.append(String.format("<p>The script probably came from mod \"%s\".</p>", probableProvider))
+                BUILDER.append("<p>The script probably came from mod \"$probableProvider\".</p>")
                 if (PROVIDERS.size > 1) {
                     BUILDER.append("<p>Full list of providers:</p><ul>")
-                    PROVIDERS.forEach(Consumer { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) })
+                    PROVIDERS.forEach { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) }
                     BUILDER.append("</ul>")
                 }
             }
@@ -251,9 +249,9 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
         BUILDER.append(String.format("Type: %s<br/>", type))
         val mysteryFlag = unknown.toInt() == -1
         if (save?.changeForms?.containsKey(refID) == true) {
-            BUILDER.append(String.format("RefID%s: %s<br/>", if (mysteryFlag) "@" else "", refID.toHTML(null)))
+            BUILDER.append("RefID${if (mysteryFlag) "@" else ""}: ${refID.toHTML(null)}<br/>")
         } else {
-            BUILDER.append(String.format("RefID%s: %s<br/>", if (mysteryFlag) "@" else "", refID))
+            BUILDER.append("RefID${if (mysteryFlag) "@" else ""}: $refID<br/>")
         }
         BUILDER.append(String.format("Unknown2bits: %01X<br/>", UNKNOWN2BITS))
         BUILDER.append(String.format("UnknownShort: %04X<br/>", unknown))
@@ -280,7 +278,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
         }
         val DESCS: List<MemberDesc> = script!!.extendedMembers
         for (DESC in DESCS) {
-            if (isCanary.test(DESC)) {
+            if (isCanary.invoke(DESC)) {
                 return true
             }
         }
@@ -300,7 +298,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
             val NAMES: List<MemberDesc> = script!!.extendedMembers
             var canary: MemberDesc? = null
             for (NAME in NAMES) {
-                if (isCanary.test(NAME)) {
+                if (isCanary.invoke(NAME)) {
                     canary = NAME
                     break
                 }
@@ -370,7 +368,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
                 output?.putInt(UNKNOWN2)
             }
             output?.putInt(VARIABLES.size)
-            VARIABLES.forEach(Consumer { `var`: Variable? -> `var`!!.write(output) })
+            VARIABLES.forEach { `var`: Variable? -> `var`!!.write(output) }
         }
 
         /**
@@ -398,12 +396,12 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
         override fun toString(): String {
             val BUILDER = StringBuilder()
             BUILDER.append("SCRIPTDATA\n")
-            BUILDER.append(String.format("ID = %s\n", iD))
+            BUILDER.append("ID = $iD\n")
             BUILDER.append(String.format("flag= %d\n", FLAG))
-            BUILDER.append(String.format("type = %s\n", this.type))
+            BUILDER.append("type = ${this.type}\n")
             BUILDER.append(String.format("unknown1 = %d\n", UNKNOWN1))
             BUILDER.append(String.format("unknown2 = %d\n\n", UNKNOWN2))
-            VARIABLES.forEach(Consumer { `var`: Variable? -> BUILDER.append(String.format("%s\n", `var`)) })
+            VARIABLES.forEach { `var`: Variable? -> BUILDER.append("$`var`\n") }
             return BUILDER.toString()
         }
 
@@ -428,8 +426,6 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
          * @throws PapyrusFormatException
          */
         init {
-            Objects.requireNonNull(input)
-            Objects.requireNonNull(context)
             FLAG = input.get()
             this.type = context.readTString(input)
             UNKNOWN1 = input.int
@@ -444,7 +440,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
     }
 
     companion object {
-        private val isCanary = Predicate { desc: MemberDesc -> desc.name.equals("::iPapyrusDataVerification_var") }
+        private val isCanary = { desc: MemberDesc -> desc.name.equals("::iPapyrusDataVerification_var") }
         private val LOG = Logger.getLogger(ScriptInstance::class.java.canonicalName)
     }
 
