@@ -13,32 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mf;
+package mf
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
-import java.util.function.Supplier;
+import kotlin.jvm.Volatile
+import java.util.function.Supplier
+import kotlin.jvm.Synchronized
+import java.util.Objects
 
 /**
  *
  * @author Mark
  */
-public final class Lazy<T> {
-
-    private volatile T value;
-
-    public T getOrCompute(@NotNull Supplier<T> supplier) {
-        final T result = value; // Just one volatile read 
-        return result == null ? maybeCompute(supplier) : result;
+class Lazy<T> {
+    @Volatile
+    private var value: T? = null
+    fun getOrCompute(supplier: Supplier<T>): T? {
+        val result = value // Just one volatile read 
+        return result ?: maybeCompute(supplier)
     }
 
-    private synchronized T maybeCompute(@NotNull Supplier<T> supplier) {
+    @Synchronized
+    private fun maybeCompute(supplier: Supplier<T>): T? {
         if (value == null) {
-            value = Objects.requireNonNull(supplier.get());
+            value = Objects.requireNonNull(supplier.get())
         }
-        return value;
-
+        return value
     }
-
 }

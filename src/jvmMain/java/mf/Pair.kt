@@ -13,70 +13,54 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package mf;
+package mf
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.Objects;
+import java.util.Objects
+import java.util.function.Function
 
 /**
  *
  * @author Mark Fairchild
  * @param <TypeA>
  * @param <TypeB>
- */
-final public class Pair<TypeA, TypeB> {
-
-    @Nullable
-    static public <A> Pair<A, A> make(A a) {
-        return new Pair<>(a, null);
+</TypeB></TypeA> */
+class Pair<TypeA, TypeB>(val A: TypeA, val B: TypeB) {
+    fun <C, D> map(f1: Function<TypeA, C>, f2: Function<TypeB, D>): Pair<C, D> {
+        return make(f1.apply(A), f2.apply(B))
     }
 
-    @NotNull
-    static public <A, B> Pair<A, B> make(A a, B b) {
-        return new Pair<>(a, b);
+    override fun toString(): String {
+        return "Pair{A=$A, B=$B}"
     }
 
-    public Pair(TypeA a, TypeB b) {
-        this.A = a;
-        this.B = b;
+    override fun hashCode(): Int {
+        var hash = 5
+        hash = 97 * hash + Objects.hashCode(A)
+        hash = 97 * hash + Objects.hashCode(B)
+        return hash
     }
 
-    @NotNull
-    public <C, D> Pair<C, D> map(@NotNull java.util.function.Function<TypeA, C> f1, @NotNull java.util.function.Function<TypeB, D> f2) {
-        return Pair.make(f1.apply(this.A), f2.apply(this.B));
-    }
-
-    @NotNull
-    @Override
-    public String toString() {
-        return "Pair{" + "A=" + A + ", B=" + B + '}';
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 5;
-        hash = 97 * hash + Objects.hashCode(this.A);
-        hash = 97 * hash + Objects.hashCode(this.B);
-        return hash;
-    }
-
-    @Override
-    public boolean equals(@Nullable Object obj) {
-        if (this == obj) {
-            return true;
+    override fun equals(obj: Any?): Boolean {
+        if (this === obj) {
+            return true
         }
         if (obj == null) {
-            return false;
+            return false
         }
-        if (getClass() != obj.getClass()) {
-            return false;
+        if (javaClass != obj.javaClass) {
+            return false
         }
-        final Pair<?, ?> other = (Pair<?, ?>) obj;
-        return Objects.equals(this.A, other.A) && Objects.equals(this.B, other.B);
+        val other = obj as Pair<*, *>
+        return A == other.A && B == other.B
     }
 
-    final public TypeA A;
-    final public TypeB B;
+    companion object {
+        fun <A> make(a: A): Pair<A, A?>? {
+            return Pair(a, null)
+        }
+
+        fun <A, B> make(a: A, b: B): Pair<A, B> {
+            return Pair(a, b)
+        }
+    }
 }
