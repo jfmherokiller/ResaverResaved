@@ -15,11 +15,10 @@
  */
 package resaver
 
+import mu.KotlinLogging
 import kotlin.jvm.JvmOverloads
 import javax.swing.DefaultBoundedRangeModel
 import kotlin.jvm.Synchronized
-import resaver.gui.Saver
-import java.util.logging.Logger
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -27,6 +26,7 @@ import kotlin.math.sqrt
  *
  * @author Mark Fairchild
  */
+private val logger = KotlinLogging.logger {}
 class ProgressModel @JvmOverloads constructor(max: Int = 18) : DefaultBoundedRangeModel(0, 0, 0, max) {
     constructor(max: Double) : this(max.roundToInt())
 
@@ -47,6 +47,5 @@ class ProgressModel @JvmOverloads constructor(max: Int = 18) : DefaultBoundedRan
     }
 
     companion object {
-        private val LOG = Logger.getLogger(Saver::class.java.canonicalName)
     }
 }

@@ -21,13 +21,7 @@ package resaver
  */
 class ListException : RuntimeException {
     constructor(msg: String?, index: Int, total: Int, cause: Throwable?) : super(
-        String.format(
-            "%s : %d/%d",
-            msg,
-            index,
-            total
-        ), cause
-    ) {
+        String.format("$msg : %d/%d", index, total), cause) {
         INDEX = index
         TOTAL = total
     }

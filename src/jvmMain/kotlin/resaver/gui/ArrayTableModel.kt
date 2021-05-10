@@ -28,7 +28,7 @@ import javax.swing.table.TableModel
  */
 class ArrayTableModel(data: ArrayInfo?) : TableModel {
     override fun getRowCount(): Int {
-        return DATA.variables?.size ?: 0
+        return DATA.variables.size
     }
 
     override fun getColumnCount(): Int {
@@ -58,7 +58,7 @@ class ArrayTableModel(data: ArrayInfo?) : TableModel {
             return false
         }
         assert(0 <= rowIndex && rowIndex < this.rowCount)
-        val `var` = DATA.variables?.get(rowIndex)
+        val `var` = DATA.variables[rowIndex]
         return when (`var`?.type) {
             VarType.STRING, VarType.INTEGER, VarType.FLOAT, VarType.BOOLEAN, VarType.REF -> true
             else -> false
