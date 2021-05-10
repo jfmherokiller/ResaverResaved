@@ -153,31 +153,20 @@ class Header(input: ByteBuffer, path: Path?) : Element {
         else -> throw IllegalArgumentException("Unrecognized header: $PREFIX")
     }
     val VERSION: Int
-    @JvmField
     val SAVENUMBER: Int
-    @JvmField
     val NAME: WStringElement
-    @JvmField
     val LEVEL: Int
-    @JvmField
     val LOCATION: WStringElement
-    @JvmField
     val GAMEDATE: WStringElement
-    @JvmField
     val RACEID: WStringElement
-    @JvmField
     val SEX: Short
-    @JvmField
     val CURRENT_XP: Float
-    @JvmField
     val NEEDED_XP: Float
-    @JvmField
     val FILETIME: Long
     val SCREENSHOT_WIDTH: Int
     val SCREENSHOT_HEIGHT: Int
     var BYPP = 0
     private var compression: CompressionType?
-    @JvmField
     var GAME: resaver.Game? = null
     var SCREENSHOT: ByteArray
     private var IMAGE: BufferedImage? = null

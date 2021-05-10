@@ -66,7 +66,6 @@ class FileLocationTable : Element {
         TABLE2COUNT = ess.table2.size
         TABLE3COUNT = ess.table3.size
         UNUSED = IntArray(15)
-        Arrays.fill(UNUSED, 0)
         var table1Size = 0
         for (globalData in ess.table1) {
             val calculateSize = globalData.calculateSize()
@@ -210,49 +209,55 @@ class FileLocationTable : Element {
             return false
         }
         val other2 = other as FileLocationTable
-        return if (formIDArrayCountOffset != other2.formIDArrayCountOffset) {
-            false
-        } else if (unknownTable3Offset != other2.unknownTable3Offset) {
-            false
-        } else if (table1Offset != other2.table1Offset) {
-            false
-        } else if (table2Offset != other2.table2Offset) {
-            false
-        } else if (changeFormsOffset != other2.changeFormsOffset) {
-            false
-        } else if (table3Offset != other2.table3Offset) {
-            false
-        } else if (TABLE1COUNT != other2.TABLE1COUNT) {
-            false
-        } else if (TABLE2COUNT != other2.TABLE2COUNT) {
-            false
-        } else if (TABLE3COUNT != other2.TABLE3COUNT) {
-            false
-        } else if (changeFormCount != other2.changeFormCount) {
-            false
-        } else {
-            Objects.deepEquals(UNUSED, other2.UNUSED)
+        return when {
+            formIDArrayCountOffset != other2.formIDArrayCountOffset -> {
+                false
+            }
+            unknownTable3Offset != other2.unknownTable3Offset -> {
+                false
+            }
+            table1Offset != other2.table1Offset -> {
+                false
+            }
+            table2Offset != other2.table2Offset -> {
+                false
+            }
+            changeFormsOffset != other2.changeFormsOffset -> {
+                false
+            }
+            table3Offset != other2.table3Offset -> {
+                false
+            }
+            TABLE1COUNT != other2.TABLE1COUNT -> {
+                false
+            }
+            TABLE2COUNT != other2.TABLE2COUNT -> {
+                false
+            }
+            TABLE3COUNT != other2.TABLE3COUNT -> {
+                false
+            }
+            changeFormCount != other2.changeFormCount -> {
+                false
+            }
+            else -> {
+                Objects.deepEquals(UNUSED, other2.UNUSED)
+            }
         }
     }
 
     var t1size = 0
     var t2size = 0
     var t3size = 0
-    @JvmField
     var formIDArrayCountOffset: Int
     var unknownTable3Offset: Int
-    @JvmField
     var table1Offset: Int
     var table2Offset: Int
     var changeFormsOffset: Int
     var table3Offset: Int
-    @JvmField
     val TABLE1COUNT: Int
-    @JvmField
     val TABLE2COUNT: Int
-    @JvmField
     val TABLE3COUNT: Int
-    @JvmField
     var changeFormCount: Int
     val UNUSED: IntArray
     val GAME: resaver.Game?
