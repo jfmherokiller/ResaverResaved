@@ -15,15 +15,16 @@
  */
 package resaver
 
-
-import java.util.function.Function
+import FormattingFunction
+import FormattingFunction2
 
 /**
  *
  * @author Mark
  */
+
 object ResaverFormatting {
-    fun <T> makeHTMLList(msg: String?, items: List<T>, limit: Int, namer: Function<T, CharSequence?>): CharSequence {
+    fun <T> makeHTMLList(msg: String?, items: List<T>, limit: Int, namer: FormattingFunction<T>): CharSequence {
         val BUF = StringBuilder()
         BUF.append("<p>")
             .append(String.format(msg!!, items.size))
@@ -31,7 +32,7 @@ object ResaverFormatting {
         var limit1 = limit.toLong()
         for (item in items) {
             if (limit1-- == 0L) break
-            val charSequence = namer.apply(item)
+            val charSequence = namer.invoke(item)
             BUF.append("<li>").append(charSequence).append("</li>")
         }
         BUF.append("</ol>")
@@ -43,13 +44,13 @@ object ResaverFormatting {
         return BUF
     }
 
-    fun <T> makeTextList(msg: String?, items: List<T>, limit: Int, namer: Function<T, CharSequence>): CharSequence {
+    fun <T> makeTextList(msg: String?, items: List<T>, limit: Int, namer: FormattingFunction2<T>): CharSequence {
         val BUF = StringBuilder()
         BUF.append(String.format(msg!!, items.size))
         var limit1 = limit.toLong()
         for (item in items) {
             if (limit1-- == 0L) break
-            val charSequence = namer.apply(item)
+            val charSequence = namer.invoke(item)
             BUF.append(NLDOT).append(charSequence)
         }
         val excess = items.size - limit

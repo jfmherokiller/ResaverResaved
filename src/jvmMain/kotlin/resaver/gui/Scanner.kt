@@ -30,7 +30,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
 import java.util.function.Consumer
-import java.util.function.Function
 import java.util.logging.Level
 import java.util.logging.Logger
 import javax.swing.JOptionPane
@@ -208,7 +207,7 @@ class Scanner(
                     BUF.append(String.format("%3.2f mb for %s.\n", SIZE, plugin))
                 }
             }
-            val NAMER = Function<Path, CharSequence> { p: Path -> p.fileName.toString() }
+            val NAMER = { p: Path -> p.fileName.toString() }
             if (ERR_PLUGINS.size == 1) {
                 BUF.append(ResaverFormatting.makeTextList("\n\n%d plugin could not be read.", ERR_PLUGINS, 10, NAMER))
             } else if (ERR_PLUGINS.size > 1) {
