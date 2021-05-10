@@ -16,7 +16,7 @@
 package ess
 
 import java.nio.ByteBuffer
-import java.util.*
+
 import kotlin.experimental.and
 
 /**
@@ -139,7 +139,6 @@ abstract class Flags : Element {
      */
     class FlagsShort : Flags {
         constructor(input: ByteBuffer) {
-            Objects.requireNonNull(input)
             FLAGS = input.short
         }
 
@@ -189,7 +188,6 @@ abstract class Flags : Element {
      */
     class FlagsInt : Flags {
         constructor(input: ByteBuffer) {
-            Objects.requireNonNull(input)
             FLAGS = input.int
         }
 
