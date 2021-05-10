@@ -83,7 +83,7 @@ class Worrier {
         BUF.append("<p>The savefile was successfully loaded.<ul>")
         BUF.append(String.format("<li>Read %1.1f mb in %1.1f seconds.</li>", size, time))
         if (result.ESS.hasCosave()) {
-            BUF.append(String.format("<li>%s co-save was loaded.</li>", result.GAME!!.COSAVE_EXT.toUpperCase()))
+            BUF.append("<li>${result.GAME!!.COSAVE_EXT.toUpperCase()} co-save was loaded.</li>")
         } else {
             BUF.append("<li>No co-save was found.</li>")
         }
@@ -171,29 +171,25 @@ class Worrier {
                     deep.add(thread)
                 }
             }
-            deep.sortWith { a1: ActiveScript, a2: ActiveScript ->
-                a2.stackFrames.size.compareTo(a1.stackFrames.size)
-            }
+            deep.sortWith { a1: ActiveScript, a2: ActiveScript -> a2.stackFrames.size.compareTo(a1.stackFrames.size) }
             if (deep.isNotEmpty()) {
                 val deepest = deep[0]
                 val depth = deepest.stackFrames.size
-                val msg = String.format("<p>There is a stack %d frames deep (%s).</p>", depth, deepest.toHTML(null))
+                val msg = String.format("<p>There is a stack %d frames deep (${deepest.toHTML(null)}).</p>", depth)
                 BUF.append(msg)
                 shouldWorry = true
             }
         }
 
         // Get a map of namespaces to scriptInstances in that namespace.
-        val currentNamespaces: MutableMap<String, MutableList<ScriptInstance>> = HashMap()
+        val currentNamespaces: MutableMap<String, MutableList<ScriptInstance>> = mutableMapOf()
         for (instance in result.ESS.papyrus.scriptInstances.values) {
             if (instance.scriptName.toString().contains(":")) {
-                currentNamespaces.computeIfAbsent(
-                    instance.scriptName.toString().split(":").toTypedArray()[0]
-                ) { k: String? -> ArrayList() }
-                    .add(instance)
+                val SplitValues = instance.scriptName.toString().split(":")
+                currentNamespaces.getOrPut(SplitValues[0]) { ArrayList() }.add(instance)
             }
         }
-        val currentCanaries: MutableMap<Script?, Int?> = HashMap()
+        val currentCanaries: MutableMap<Script?, Int?> = mutableMapOf()
         for (instance in result.ESS.papyrus.scriptInstances.values) {
             if (instance.hasCanary()) {
                 check(currentCanaries.put(instance.script, instance.canary) == null) { "Duplicate key" }
@@ -270,12 +266,7 @@ class Worrier {
         if (definitionErrors.isNotEmpty()) {
             val msg = "This savefile has %d script instances with mismatched member data."
             BUF.append(
-                makeHTMLList(
-                    msg,
-                    definitionErrors,
-                    LIMIT,
-                    Function { i: ScriptInstance -> i.script!!.toHTML(null) })
-            )
+                makeHTMLList(msg, definitionErrors, LIMIT, Function { i: ScriptInstance -> i.script!!.toHTML(null) }))
             shouldWorry = true
         }
         previousNamespaces = currentNamespaces
