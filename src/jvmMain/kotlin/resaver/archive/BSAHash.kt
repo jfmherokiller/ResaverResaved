@@ -16,8 +16,6 @@
 package resaver.archive
 
 import java.io.File
-import resaver.archive.BSAHash
-import java.lang.IllegalArgumentException
 import java.lang.UnsupportedOperationException
 import java.util.*
 import java.util.regex.Pattern
