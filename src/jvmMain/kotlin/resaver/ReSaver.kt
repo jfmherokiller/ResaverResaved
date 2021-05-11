@@ -62,7 +62,7 @@ class ReSaver : Callable<Int> {
         }
 
         // Set the font scaling.
-        val fontScale = Math.max(0.5f, PREFS.getFloat("settings.fontScale", 1.0f))
+        val fontScale = 0.5f.coerceAtLeast(PREFS.getFloat("settings.fontScale", 1.0f))
         for (key in UIManager.getLookAndFeelDefaults().keys) {
             if (key.toString().endsWith(".font")) {
                 val font = UIManager.getFont(key)
@@ -77,7 +77,7 @@ class ReSaver : Callable<Int> {
                 val LEVEL = record.level
                 val MSG = record.message
                 val SRC = record.sourceClassName + "." + record.sourceMethodName
-                return String.format("%s: %s: %s\n", SRC, LEVEL, MSG)
+                return "$SRC: $LEVEL: $MSG\n"
             }
         }
         LOG.parent.handlers[0].level = Level.INFO

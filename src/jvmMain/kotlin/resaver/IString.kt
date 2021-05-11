@@ -195,7 +195,6 @@ open class IString : CharSequence, Serializable, Comparable<IString> {
         /**
          * A re-usable blank `IString`.
          */
-        @JvmField
         val BLANK = IString()
 
         /**
@@ -217,12 +216,10 @@ open class IString : CharSequence, Serializable, Comparable<IString> {
          * @param args The arguments to the format string.
          * @return A formatted `IString`
          */
-        @JvmStatic
         fun format(format: String?, vararg args: Any?): IString {
             return IString(String.format(format!!, *args))
         }
 
-        @JvmStatic
         fun compare(s1: IString, s2: IString): Int {
             return compareValuesBy(s1.STRING, s2.STRING) {
                 s1.STRING.compareTo(
