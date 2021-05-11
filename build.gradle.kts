@@ -45,7 +45,9 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:3.1.0")
     implementation("io.github.microutils:kotlin-logging:1.12.5")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.0")
-    implementation("okio:2.10.0")
+    implementation("com.squareup.okio:okio:2.10.0")
+    implementation("org.slf4j:slf4j-api:1.7.25")
+    implementation("org.slf4j:slf4j-simple:1.7.5")
 }
 javafx {
     version = "15"
