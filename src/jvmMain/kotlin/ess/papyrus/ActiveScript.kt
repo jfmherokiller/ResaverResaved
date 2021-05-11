@@ -18,11 +18,10 @@ package ess.papyrus
 import ess.*
 import ess.Linkable.Companion.makeLink
 import ess.papyrus.Variable.Companion.read
+import mu.KotlinLogging
 import resaver.Analysis
 import resaver.ListException
 import java.nio.ByteBuffer
-import java.util.logging.Level
-import java.util.logging.Logger
 import kotlin.experimental.and
 
 /**
@@ -30,6 +29,7 @@ import kotlin.experimental.and
  *
  * @author Mark Fairchild
  */
+private val logger = KotlinLogging.logger {}
 class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement, HasID, SeparateData {
     /**
      * @see ess.Element.write
@@ -555,7 +555,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
             if (null != ATTACHED && ATTACHED?.isZero?.not() == true) {
                 ATTACHED_ELEMENT = context.findAny(ATTACHED!!)
                 if (ATTACHED_ELEMENT == null) {
-                    LOG.log(Level.WARNING, "Attachment ID did not match anything: $ATTACHED\n")
+                    logger.warn{"Attachment ID did not match anything: $ATTACHED\n"}
                 }
             } else {
                 ATTACHED_ELEMENT = null
@@ -576,7 +576,6 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
     }
 
     companion object {
-        private val LOG = Logger.getLogger(ActiveScript::class.java.canonicalName)
     }
 
     /**
