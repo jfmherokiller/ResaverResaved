@@ -24,6 +24,9 @@ import mf.BufferUtil
 import mf.Counter
 import mf.Timer
 import mf.Timer.Companion.startNew
+import okio.ExperimentalFileSystem
+import okio.FileSystem
+import okio.Path.Companion.toPath
 import resaver.Analysis
 import resaver.Game
 import resaver.ListException
@@ -49,7 +52,6 @@ import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashMap
 import java.util.*
-
 /**
  * Describes a Skyrim or Fallout4 savegame.
  *
@@ -706,6 +708,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          * @return A `Result` object with details about results.
          * @throws IOException
          */
+        @OptIn(ExperimentalFileSystem::class)
         @JvmStatic
         @Throws(IOException::class)
         fun readESS(saveFile: Path, model: ModelBuilder): Result {
@@ -722,24 +725,44 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             // If the F4SE co-save is present, readRefID it too.
             try {
                 //try (LittleEndianInputStream input = LittleEndianInputStream.openCtxDig(saveFile)) {
-                FileChannel.open(saveFile, StandardOpenOption.READ).use { channel ->
-                    val saveSize = Files.size(saveFile).toInt()
-                    val input = ByteBuffer.allocate(saveSize).order(ByteOrder.LITTLE_ENDIAN)
-                    channel.read(input)
-                    (input as Buffer).flip()
-                    val ESS = ESS(input, saveFile, model)
-                    val TREEMODEL = model.finish(ESS)
-                    TIMER.stop()
-                    val SIZE = ESS.calculateSize() / 1048576.0f
-                    LOG.fine(String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE))
-                    return ESS.Result(null, TIMER, TREEMODEL)
-                }
+            return FilePart(saveFile.toString().toPath(),model,TIMER)
+                //return FileParsing(saveFile, model, TIMER)
             } catch (ex: IOException) {
                 val msg = "Failed to load $saveFile\n${ex.message}"
                 throw IOException(msg, ex)
             } catch (ex: DataFormatException) {
                 val msg = "Failed to load $saveFile\n${ex.message}"
                 throw IOException(msg, ex)
+            }
+        }
+        @OptIn(ExperimentalFileSystem::class)
+        private fun FilePart(saveFile: okio.Path, model: ModelBuilder, TIMER: Timer):Result {
+            val fileSystem: FileSystem = FileSystem.SYSTEM
+            val entireFileByteString = fileSystem.read(saveFile) {
+                readByteString()
+            }
+            var outbuffer = ByteBuffer.allocate(entireFileByteString.size).order(ByteOrder.LITTLE_ENDIAN)
+            outbuffer = outbuffer.put(entireFileByteString.asByteBuffer())
+            outbuffer.flip()
+            val ESS = ESS(outbuffer, saveFile.toNioPath(), model)
+            val TREEMODEL = model.finish(ESS)
+            TIMER.stop()
+            val SIZE = ESS.calculateSize() / 1048576.0f
+            LOG.fine(String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE))
+            return ESS.Result(null, TIMER, TREEMODEL)
+        }
+        private fun FileParsing(saveFile: Path, model: ModelBuilder, TIMER: Timer): Result {
+            FileChannel.open(saveFile, StandardOpenOption.READ).use { channel: FileChannel ->
+                val saveSize = Files.size(saveFile).toInt()
+                val input = ByteBuffer.allocate(saveSize).order(ByteOrder.LITTLE_ENDIAN)
+                channel.read(input)
+                (input as Buffer).flip()
+                val ESS = ESS(input, saveFile, model)
+                val TREEMODEL = model.finish(ESS)
+                TIMER.stop()
+                val SIZE = ESS.calculateSize() / 1048576.0f
+                LOG.fine(String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE))
+                return ESS.Result(null, TIMER, TREEMODEL)
             }
         }
 
