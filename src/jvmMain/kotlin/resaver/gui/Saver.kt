@@ -53,22 +53,18 @@ class Saver(window: SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnab
             if (watcherRunning) {
                 WINDOW.watcher.resume()
             }
-            val time = RESULT?.TIME_S
-            val size = RESULT?.SIZE_MB
+            val time = RESULT.TIME_S
+            val size = RESULT.SIZE_MB
             val MSG = StringBuilder()
             MSG.append("The savefile was successfully written.")
             MSG.append(String.format("\nWrote %1.1f mb in %1.1f seconds.", size, time))
-            if (RESULT != null) {
-                if (null != RESULT.BACKUP_FILE) {
-                    MSG.append("\nBackup written to ${RESULT.BACKUP_FILE}.")
-                }
+            if (null != RESULT.BACKUP_FILE) {
+                MSG.append("\nBackup written to ${RESULT.BACKUP_FILE}.")
             }
-            if (RESULT != null) {
-                if (RESULT.ESS.hasCosave()) {
-                    MSG.append(RESULT.GAME?.COSAVE_EXT?.let {
-                        "\n${it.uppercase(Locale.getDefault())} co-save was copied."
-                    })
-                }
+            if (RESULT.ESS.hasCosave()) {
+                MSG.append(RESULT.GAME?.COSAVE_EXT?.let {
+                    "\n${it.uppercase(Locale.getDefault())} co-save was copied."
+                })
             }
             val TITLE = "Save Written"
             JOptionPane.showMessageDialog(WINDOW, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)

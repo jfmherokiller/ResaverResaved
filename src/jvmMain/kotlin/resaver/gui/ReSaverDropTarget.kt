@@ -50,10 +50,10 @@ class ReSaverDropTarget(handler: GenericConsumer<Path>) : DropTarget() {
             Objects.requireNonNull(DATA, "The DnD data block must not be null.")
             if (DATA is List<*>) {
                 val FILES = DATA
-                FILES.stream()
-                    .map { obj: Any? -> (obj as File).toPath() }
-                    .findFirst()
-                    .ifPresent(HANDLER)
+                val file = FILES.map { obj: Any? -> (obj as File).toPath() }.firstOrNull()
+                if(file != null) {
+                    HANDLER.invoke(file)
+                }
             }
         } catch (ex: UnsupportedFlavorException) {
             logger.warn{"Drop and drop problem: ${ex.message}"}
