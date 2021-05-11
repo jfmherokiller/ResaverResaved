@@ -49,8 +49,7 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:1.12.5")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.0")
     implementation("com.squareup.okio:okio:3.0.0-alpha.5")
-    implementation("org.slf4j:slf4j-api:1.7.25")
-    implementation("org.slf4j:slf4j-simple:1.7.5")
+
 }
 javafx {
     version = "15"
@@ -69,10 +68,18 @@ kotlin {
         }
     }
     sourceSets {
-        //val commonMain by getting
+        val commonMain by getting
         val jvmTest by getting {
             dependencies {
+                implementation("org.slf4j:slf4j-api:1.7.25")
+                implementation("org.slf4j:slf4j-simple:1.7.5")
                 implementation(kotlin("test"))
+            }
+        }
+        val jvmMain by getting {
+            dependencies {
+                implementation("org.slf4j:slf4j-api:1.7.25")
+                implementation("org.slf4j:slf4j-simple:1.7.5")
             }
         }
     }

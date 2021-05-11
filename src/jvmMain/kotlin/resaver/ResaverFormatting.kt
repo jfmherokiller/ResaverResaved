@@ -81,7 +81,7 @@ object ResaverFormatting {
      * @return The zero-padded string.
      */
     fun zeroPad6(`val`: Int): String {
-        val hex = java.lang.Long.toHexString(`val`.toLong())
+        val hex = (`val`.toULong()).toString(16)
         val length = hex.length
         return ZEROES[6 - length].toString() + hex
     }
