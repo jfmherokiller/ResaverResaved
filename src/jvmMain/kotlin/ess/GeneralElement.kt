@@ -19,10 +19,10 @@ import ess.ESS.ESSContext
 import ess.papyrus.EID
 import ess.papyrus.PapyrusContext
 import mf.BufferUtil
+import mu.KotlinLogging
 import resaver.Analysis
 import resaver.IString
 import java.nio.ByteBuffer
-import java.util.logging.Logger
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
@@ -36,6 +36,7 @@ import kotlin.reflect.safeCast
  *
  * @author Mark Fairchild
  */
+public val logger = KotlinLogging.logger {}
 open class GeneralElement protected constructor() : Element {
     /**
      *
@@ -528,7 +529,7 @@ open class GeneralElement protected constructor() : Element {
         if (`val` != null) {
             check(b) { "Invalid type for $name: ${`val`::class}" }
             if(!b) {
-                LOG.severe("Invalid type for $name: ${`val`::class}")
+                logger.error {"Invalid type for $name: ${`val`::class}"}
             }
         }
         DATA[IString[name]] = converted
@@ -675,19 +676,19 @@ open class GeneralElement protected constructor() : Element {
      * @return
      */
     override fun equals(other: Any?): Boolean {
-        when {
+        return when {
             this === other -> {
-                return true
+                true
             }
             other == null -> {
-                return false
+                false
             }
             javaClass != other.javaClass -> {
-                return false
+                false
             }
             else -> {
                 val other2 = other as GeneralElement
-                return DATA == other2.DATA
+                DATA == other2.DATA
             }
         }
     }
@@ -830,25 +831,30 @@ open class GeneralElement protected constructor() : Element {
         val BUF = StringBuilder()
         BUF.append("<table border=1>")
         DATA.forEach { (key: IString, `val`: Any?) ->
-            if (`val` is Linkable) {
-                val STR = `val`.toHTML(null)
-                BUF.append("<td>$key</td><td>$STR</td></tr>")
-            } else if (`val` is List<*>) {
-                val STR = analysis?.let {
-                    if (save != null) {
-                        formatList(key.toString(), `val`, it, save)
-                    }
+            when (`val`) {
+                is Linkable -> {
+                    val STR = `val`.toHTML(null)
+                    BUF.append("<td>$key</td><td>$STR</td></tr>")
                 }
-                BUF.append("<td>$key</td><td>$STR</td></tr>")
-            } else if (`val` is GeneralElement) {
-                val STR = analysis?.let {
-                    if (save != null) {
-                        formatGeneralElement(key.toString(), `val`, it, save)
+                is List<*> -> {
+                    val STR = analysis?.let {
+                        if (save != null) {
+                            formatList(key.toString(), `val`, it, save)
+                        }
                     }
+                    BUF.append("<td>$key</td><td>$STR</td></tr>")
                 }
-                BUF.append("<td>$key</td><td>$STR</td></tr>")
-            } else {
-                BUF.append("<td>$key</td><td>$`val`</td></tr>")
+                is GeneralElement -> {
+                    val STR = analysis?.let {
+                        if (save != null) {
+                            formatGeneralElement(key.toString(), `val`, it, save)
+                        }
+                    }
+                    BUF.append("<td>$key</td><td>$STR</td></tr>")
+                }
+                else -> {
+                    BUF.append("<td>$key</td><td>$`val`</td></tr>")
+                }
             }
         }
         BUF.append("</table>")
@@ -861,7 +867,6 @@ open class GeneralElement protected constructor() : Element {
     public val DATA: MutableMap<IString, Any?> = mutableMapOf()
 
     companion object {
-        public val LOG: Logger = Logger.getLogger(ChangeForm::class.java.canonicalName)
         /**
          * Appends `n` indents to a `StringBuilder`.
          *

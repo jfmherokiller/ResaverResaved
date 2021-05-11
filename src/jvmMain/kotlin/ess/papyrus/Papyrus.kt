@@ -21,12 +21,12 @@ import ess.GlobalDataBlock
 import ess.Linkable
 import ess.ModelBuilder
 import mf.Counter
+import mu.KotlinLogging
 import resaver.ListException
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.*
-import java.util.logging.Logger
 
 /**
  * Describes a the data for a `GlobalData` when it is the Papyrus
@@ -34,6 +34,7 @@ import java.util.logging.Logger
  *
  * @author Mark Fairchild
  */
+private val logger = KotlinLogging.logger {}
 class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : PapyrusElement, GlobalDataBlock {
     /**
      * @see ess.Element.write
@@ -136,8 +137,8 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
         }
         sum += 4 + sum1
         sum += unbinds.calculateSize()
-        sum += if (SAVE_FILE_VERSION != null && SAVE_FILE_VERSION.isPresent) 2 else 0
-        sum += if (ARRAYSBLOCK == null) 0 else ARRAYSBLOCK.size
+        sum += if (SAVE_FILE_VERSION.isPresent) 2 else 0
+        sum += ARRAYSBLOCK.size
         return sum
     }
 
@@ -193,7 +194,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
      * @return Accessor for the list of function messages.
      */
     val functionMessages: List<FunctionMessage?>
-        get() = FUNCTIONMESSAGES ?: emptyList()
+        get() = FUNCTIONMESSAGES
 
     /**
      * @return Accessor for the combined list of suspended stacks.
@@ -230,7 +231,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
      * @return
      */
     val unknownIDList: List<EID?>
-        get() = UNKS ?: emptyList()
+        get() = UNKS
 
     /**
      * @return Accessor for the Arrays block.
@@ -251,16 +252,22 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
      * @return
      */
     fun findReferrent(id: EID): GameElement? {
-        return if (scriptInstances.containsKey(id)) {
-            scriptInstances[id]
-        } else if (references.containsKey(id)) {
-            references[id]
-        } else if (structInstances.containsKey(id)) {
-            structInstances[id]
-        } else if (id.isZero) {
-            null
-        } else {
-            null
+        return when {
+            scriptInstances.containsKey(id) -> {
+                scriptInstances[id]
+            }
+            references.containsKey(id) -> {
+                references[id]
+            }
+            structInstances.containsKey(id) -> {
+                structInstances[id]
+            }
+            id.isZero -> {
+                null
+            }
+            else -> {
+                null
+            }
         }
     }
 
@@ -486,7 +493,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
                     suspendedStacks2.remove(STACK.iD)?.let { REMOVED.add(it) }
                 }
             } else {
-                LOG.warning("Papyrus.removeElements: can't delete element: $ELEMENT")
+                logger.warn{"Papyrus.removeElements: can't delete element: $ELEMENT"}
             }
         }
         return REMOVED
@@ -698,20 +705,18 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
             if (null == ls) {
                 return
             }
-            if (ls.isEmpty()) {
-                builder.append(String.format("<p>There are zero %s %s this %s.</p>", lname, relationship, myname))
-            } else if (ls.size == 1) {
-                builder.append(String.format("<p>There is one %s %s this %s.</p>", lname, relationship, myname))
-            } else {
-                builder.append(
-                    String.format(
-                        "<p>There are %s %s %s this %s.</p>",
-                        ls.size,
-                        lname,
-                        relationship,
-                        myname
+            when {
+                ls.isEmpty() -> {
+                    builder.append("<p>There are zero $lname $relationship this $myname.</p>")
+                }
+                ls.size == 1 -> {
+                    builder.append("<p>There is one $lname $relationship this $myname.</p>")
+                }
+                else -> {
+                    builder.append(
+                        "<p>There are ${ls.size} $lname $relationship this $myname.</p>"
                     )
-                )
+                }
             }
             if (ls.size in 1..49) {
                 builder.append("<ul>")
@@ -719,8 +724,6 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
                 builder.append("</ul>")
             }
         }
-
-        private val LOG = Logger.getLogger(Papyrus::class.java.canonicalName)
     }
 
     /**
