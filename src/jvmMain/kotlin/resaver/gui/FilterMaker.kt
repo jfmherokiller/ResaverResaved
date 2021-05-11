@@ -44,7 +44,7 @@ object FilterMaker {
      * @return
      */
     fun createModFilter(mod: Mod, plugins: PluginInfo, analysis: Analysis?): Predicate<FilterTreeModel.Node> {
-        LOG.info(String.format("Filtering: mod = \"%s\"", mod))
+        LOG.info("Filtering: mod = \"$mod\"")
         val MODNAME = mod.getName()
         val PLUGINS: MutableSet<Plugin?> = HashSet()
         mod.getESPNames().forEach { espName: String? ->
@@ -71,7 +71,7 @@ object FilterMaker {
      * @return
      */
     fun createPluginFilter(plugins: Set<Plugin?>): Predicate<FilterTreeModel.Node> {
-        LOG.info(String.format("Filtering: plugins = \"%s\"", plugins))
+        LOG.info("Filtering: plugins = \"$plugins\"")
         return Predicate { node: FilterTreeModel.Node ->
             // If the node doesn't contain an element, it automatically fails.
             if (!node.hasElement()) {
@@ -101,10 +101,10 @@ object FilterMaker {
      * @return
      */
     fun createRegexFilter(regex: String): Predicate<FilterTreeModel.Node> {
-        LOG.info(String.format("Filtering: regex = \"%s\"", regex))
+        LOG.info("Filtering: regex = \"$regex\"")
         if (regex.isNotEmpty()) {
             try {
-                LOG.info(String.format("Filtering: regex = \"%s\"", regex))
+                LOG.info("Filtering: regex = \"$regex\"")
                 val pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
                 return Predicate { node: FilterTreeModel.Node -> pattern.matcher(node.name).find() }
             } catch (ex: PatternSyntaxException) {
@@ -263,7 +263,7 @@ object FilterMaker {
             if (!(FORM!!.type === ChangeFormType.ACHR || FORM!!.type === ChangeFormType.REFR)) {
                 return@Predicate false
             }
-            if (!FORM!!.changeFlags!!.getFlag(1) && !FORM.changeFlags!!.getFlag(3)) {
+            if (!FORM!!.changeFlags.getFlag(1) && !FORM.changeFlags.getFlag(3)) {
                 return@Predicate false
             }
             val DATA = FORM.getData(analysis, context, true) ?: return@Predicate false
@@ -349,7 +349,7 @@ object FilterMaker {
                 }
                 val FORM = node.element as ChangeForm?
                 val FLAGS = FORM!!.changeFlags
-                val flags = FLAGS!!.FLAGS
+                val flags = FLAGS.FLAGS
                 val filtered = filter.inv() xor flags
                 val masked = filtered or mask.inv()
                 masked == -1
@@ -378,7 +378,7 @@ object FilterMaker {
                 }
                 val FORM = node.element as ChangeForm?
                 val FLAGS = FORM!!.changeFlags
-                if (!FLAGS!!.getFlag(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS)) {
+                if (!FLAGS.getFlag(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS)) {
                     return@Predicate false
                 }
                 try {
@@ -435,7 +435,7 @@ object FilterMaker {
                 ) {
                     return@Predicate false
                 }
-                if (!FORM.changeFlags!!.getFlag(0)) {
+                if (!FORM.changeFlags.getFlag(0)) {
                     return@Predicate false
                 }
                 val DATA = FORM.getData(analysis, context, true)

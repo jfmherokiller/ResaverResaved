@@ -42,11 +42,7 @@ class FragmentPerk(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         var sum = 3
         sum += SCRIPT?.calculateSize() ?: 0
         sum += if (null != FILENAME) 2 + FILENAME?.length!! else 0
-        var result = 0
-        for (FRAGMENT in FRAGMENTS) {
-            val calculateSize = FRAGMENT.calculateSize()
-            result += calculateSize
-        }
+        val result = FRAGMENTS.sumOf { it.calculateSize() }
         sum += result
         return sum
     }
@@ -89,8 +85,8 @@ class FragmentPerk(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         private val INDEX: Int = UtilityFunctions.toUnsignedInt(input.short)
         private val UNKNOWN1: Short = input.short
         private val UNKNOWN2: Byte = input.get()
-        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)!!]
-        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)!!]
+        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)]
+        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)]
 
     }
 

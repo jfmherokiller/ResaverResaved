@@ -64,11 +64,7 @@ class AnimObjects : GlobalDataBlock {
      */
     override fun calculateSize(): Int {
         var sum = 4
-        var result = 0
-        for (ANIMATION in ANIMATIONS) {
-            val calculateSize = ANIMATION.calculateSize()
-            result += calculateSize
-        }
+        val result = ANIMATIONS.sumOf { it.calculateSize() }
         sum += result
         return sum
     }

@@ -21,7 +21,7 @@ import java.lang.RuntimeException
  *
  * @author Mark
  */
-class ElementException
+class ElementException(msg: String?, cause: Throwable?, val partial: Element)
 /**
  * Constructs an instance of `ElementException` with the
  * specified detail message, cause, and a partial `Element`.
@@ -31,10 +31,6 @@ class ElementException
  * @param cause
  * @param partial
  */
-    : RuntimeException {
-    val partial: Element
+    : RuntimeException(msg, cause) {
 
-    constructor(msg: String?, cause: Throwable?, partial: Element) : super(msg, cause) {
-        this.partial = partial
-    }
 }

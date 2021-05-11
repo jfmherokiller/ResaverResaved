@@ -42,11 +42,7 @@ class FragmentInfoPack(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         var sum = 2
         sum += (if (null != SCRIPT) SCRIPT?.calculateSize() else 0)!!
         sum += if (null != FILENAME) 2 + FILENAME?.length!! else 0
-        var result = 0
-        for (FRAGMENT in FRAGMENTS) {
-            val calculateSize = FRAGMENT.calculateSize()
-            result += calculateSize
-        }
+        val result = FRAGMENTS.sumOf { it.calculateSize() }
         sum += result
         return sum
     }
@@ -98,8 +94,8 @@ class FragmentInfoPack(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         }
 
         private val UNKNOWN: Byte = input.get()
-        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)!!]
-        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)!!]
+        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)]
+        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)]
 
     }
 

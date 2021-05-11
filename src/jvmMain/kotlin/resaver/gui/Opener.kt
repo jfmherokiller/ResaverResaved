@@ -52,12 +52,8 @@ class Opener(window: SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, 
             val MB = ModelBuilder(PROGRESS)
             WINDOW.progressIndicator.setModel(PROGRESS)
             val RESULT = ess.ESS.readESS(SAVEFILE, MB)
-            if (RESULT != null) {
-                WORRIER.check(RESULT)
-            }
-            if (RESULT != null) {
-                RESULT.MODEL?.let { WINDOW.setESS(RESULT.SAVE_FILE, RESULT.ESS, it, WORRIER.shouldDisableSaving()) }
-            }
+            WORRIER.check(RESULT)
+            RESULT.MODEL?.let { WINDOW.setESS(RESULT.SAVE_FILE, RESULT.ESS, it, WORRIER.shouldDisableSaving()) }
             if (WORRIER.shouldWorry() || WORRIER.shouldDisableSaving()) {
                 Thread(Toolkit.getDefaultToolkit().getDesktopProperty("win.sound.exclamation") as Runnable).start()
                 val TITLE = "Save Read"

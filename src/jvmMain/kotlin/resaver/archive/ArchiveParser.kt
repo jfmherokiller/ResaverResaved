@@ -33,11 +33,8 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
         CHANNEL.close()
     }
 
-    @JvmField
     protected val CHANNEL: FileChannel
-    @JvmField
     protected val NAME: String
-    @JvmField
     protected var PATH: Path = Path.of("")
 
     /**
@@ -100,8 +97,6 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
      * @throws IOException
      */
     init {
-        Objects.requireNonNull(path)
-        Objects.requireNonNull(channel)
         if (path != null) {
             PATH = path
         }

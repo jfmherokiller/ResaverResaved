@@ -37,7 +37,6 @@ internal class BA2FileRecord(input: ByteBuffer, header: BA2Header?) {
     }
 
     fun getData(channel: FileChannel): Optional<ByteBuffer> {
-        Objects.requireNonNull(channel)
         return try {
             when (FILESIZE) {
                 0 -> {

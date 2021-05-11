@@ -125,8 +125,8 @@ class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
 
         init {
             this.UNKNOWN = input.get()
-            SCRIPTNAME = IString[BufferUtil.getUTF(input)!!]
-            FRAGMENTNAME = IString[BufferUtil.getUTF(input)!!]
+            SCRIPTNAME = IString[BufferUtil.getUTF(input)]
+            FRAGMENTNAME = IString[BufferUtil.getUTF(input)]
         }
     }
 
@@ -160,8 +160,8 @@ class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
             UNKNOWN1 = input.get()
             PHASE = input.int
             UNKNOWN2 = input.get()
-            SCRIPTNAME = IString[BufferUtil.getUTF(input)!!]
-            FRAGMENTNAME = IString[BufferUtil.getUTF(input)!!]
+            SCRIPTNAME = IString[BufferUtil.getUTF(input)]
+            FRAGMENTNAME = IString[BufferUtil.getUTF(input)]
         }
     }
 

@@ -82,9 +82,6 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
      * @param newVar
      */
     override fun setVariable(index: Int, newVar: Variable?) {
-        if (VARIABLES == null) {
-            throw NullPointerException("The variable list is missing.")
-        }
         require(!(index <= 0 || index >= VARIABLES.size)) { "Invalid variable index: $index" }
         VARIABLES[index] = newVar
     }

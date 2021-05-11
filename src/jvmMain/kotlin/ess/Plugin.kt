@@ -67,7 +67,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @return String representation.
      */
     fun indexName(): String {
-        return if (LIGHTWEIGHT) String.format("FE%03x: %s", INDEX, NAME) else String.format("%02x: %s", INDEX, NAME)
+        return if (LIGHTWEIGHT) String.format("FE%03x: $NAME", INDEX) else String.format("%02x: $NAME", INDEX)
     }
 
     /**
@@ -138,10 +138,10 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
                 val modFilter = { e: Set<String?> -> e.contains(probableProvider) }
                 val numScripts: Int = analysis.SCRIPT_ORIGINS.values.filter(modFilter).count()
                 BUILDER.append(String.format("<p>%d scripts.</p>", numScripts))
-                BUILDER.append(String.format("<p>The plugin probably came from mod \"%s\".</p>", probableProvider))
+                BUILDER.append("<p>The plugin probably came from mod \"$probableProvider\".</p>")
                 if (PROVIDERS.size > 1) {
                     BUILDER.append("<p>Full list of providers:</p><ul>")
-                    PROVIDERS.forEach { mod: String? -> BUILDER.append(String.format("<li>%s", mod)) }
+                    PROVIDERS.forEach { mod: String? -> BUILDER.append("<li>$mod") }
                     BUILDER.append("</ul>")
                 }
             }

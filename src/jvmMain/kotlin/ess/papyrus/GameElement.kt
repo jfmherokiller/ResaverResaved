@@ -30,7 +30,7 @@ import java.nio.ByteBuffer
 abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, context: PapyrusContext) :
     AnalyzableElement, Linkable, PapyrusElement, HasID {
     /**
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -39,7 +39,7 @@ abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, 
     }
 
     /**
-     * @see Element.calculateSize
+     * @see ess.Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {

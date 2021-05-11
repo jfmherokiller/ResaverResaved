@@ -166,7 +166,7 @@ class FilterTree : JTree(FilterTreeModel()) {
                         selectionPath = path
                         paths = selectionPaths
                     }
-                    val ELEMENTS = model?.parsePaths(paths)
+                    val ELEMENTS = model?.parsePaths(paths!!)
                     if (ELEMENTS?.size == 1) {
                         val ELEMENT = ELEMENTS.keys.iterator().next()
                         if (ELEMENT is ESS) {

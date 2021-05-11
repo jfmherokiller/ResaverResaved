@@ -48,11 +48,7 @@ class ChangeFormLVLN(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSConte
         }
         if (null != ENTRIES) {
             sum += 2
-            var result = 0
-            for (ENTRY in ENTRIES!!) {
-                val calculateSize = ENTRY.calculateSize()
-                result += calculateSize
-            }
+            val result = ENTRIES!!.sumOf { it.calculateSize() }
             sum += result
         }
         return sum

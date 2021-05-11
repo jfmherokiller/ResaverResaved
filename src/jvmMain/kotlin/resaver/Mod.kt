@@ -55,23 +55,11 @@ class Mod(game: Game?, dir: Path) : Serializable {
         size = 0.0
         val sum = SCRIPT_FILES.sumOf { toSize.applyAsDouble(it) }
         this.size += sum
-        var result = 0.0
-        for (STRINGS_FILE in STRINGS_FILES) {
-            val v = toSize.applyAsDouble(STRINGS_FILE)
-            result += v
-        }
+        val result = STRINGS_FILES.sumOf { toSize.applyAsDouble(it) }
         size += result
-        var sum1 = 0.0
-        for (PLUGIN_FILE in PLUGIN_FILES) {
-            val v = toSize.applyAsDouble(PLUGIN_FILE)
-            sum1 += v
-        }
+        val sum1 = PLUGIN_FILES.sumOf { toSize.applyAsDouble(it) }
         size += sum1
-        var result1 = 0.0
-        for (ARCHIVE_FILE in ARCHIVE_FILES) {
-            val v = toSize.applyAsDouble(ARCHIVE_FILE)
-            result1 += v
-        }
+        val result1 = ARCHIVE_FILES.sumOf { toSize.applyAsDouble(it) }
         size += result1
         return size.toInt()
     }

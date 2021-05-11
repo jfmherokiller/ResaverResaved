@@ -43,10 +43,10 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
         val BUILDER = StringBuilder()
         BUILDER.append("<hr/><p>NPC:</p>")
         if (this.hasVal("FULLNAME")) {
-            BUILDER.append(String.format("<p>FullName: %s\n", this.getVal("FULLNAME")))
+            BUILDER.append("<p>FullName: ${this.getVal("FULLNAME")}\n")
         }
         if (null != changeFormFlags) {
-            BUILDER.append(String.format("<p>ChangeFormFlags: %s\n", changeFormFlags))
+            BUILDER.append("<p>ChangeFormFlags: $changeFormFlags\n")
         }
         if (this.hasVal("ACBS")) {
             BUILDER.append("<p>Base stats: ")
@@ -64,8 +64,8 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
             if(UncastedFactions is List<*>) {
                 ranks = UncastedFactions.map { i -> i as FactionRank }
             }
-            BUILDER.append(String.format("<p>%s faction ranks.</p><ul>", ranks.size))
-            ranks.forEach { v: FactionRank? -> BUILDER.append(String.format("<li>%s", v)) }
+            BUILDER.append("<p>${ranks.size} faction ranks.</p><ul>")
+            ranks.forEach { v: FactionRank? -> BUILDER.append("<li>$v") }
             BUILDER.append("</ul>")
         }
         if (super.hasVal("SPELLS")) {
@@ -93,14 +93,14 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
             if(uncastedShouts is List<*>) {
                 shouts = uncastedShouts.map { i -> i as RefID }
             }
-            BUILDER.append(String.format("<p>%s spells.</p><ul>", spells.size))
-            spells.forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
+            BUILDER.append("<p>${spells.size} spells.</p><ul>")
+            spells.forEach { v: RefID? -> BUILDER.append("<li>$v") }
             BUILDER.append("</ul>")
-            BUILDER.append(String.format("<p>%s levelled spells.</p><ul>", spells_levelled.size))
-            spells_levelled.forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
+            BUILDER.append("<p>${spells_levelled.size} levelled spells.</p><ul>")
+            spells_levelled.forEach { v: RefID? -> BUILDER.append("<li>$v") }
             BUILDER.append("</ul>")
-            BUILDER.append(String.format("<p>%s shouts.</p><ul>", shouts.size))
-            shouts.forEach { v: RefID? -> BUILDER.append(String.format("<li>%s", v)) }
+            BUILDER.append("<p>${shouts.size} shouts.</p><ul>")
+            shouts.forEach { v: RefID? -> BUILDER.append("<li>$v") }
             BUILDER.append("</ul>")
         }
         if (super.hasVal("AIDT")) {
@@ -140,7 +140,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
      */
     private class FactionRank(input: ByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
         override fun toString(): String {
-            return String.format("Rank %s with %s", this.getVal("RANK").toString(), this.getVal("FACTION"))
+            return "Rank ${this.getVal("RANK").toString()} with ${this.getVal("FACTION")}"
         }
 
         init {

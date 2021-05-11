@@ -64,7 +64,7 @@ class StringTable {
             Pattern.compile(".+\\.DLSTRINGS$", Pattern.CASE_INSENSITIVE)
         );
 
-        val REGEX: Pattern
+        val REGEX: Pattern = regex
 
         companion object {
             fun match(filename: String?): Type? {
@@ -80,9 +80,6 @@ class StringTable {
             }
         }
 
-        init {
-            REGEX = Objects.requireNonNull(regex)
-        }
     }
 
     init {

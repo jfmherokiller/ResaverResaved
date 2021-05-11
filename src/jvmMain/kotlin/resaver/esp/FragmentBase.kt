@@ -31,7 +31,6 @@ abstract class FragmentBase : Entry {
          * @param i The integer to count the bits.
          * @return The number of bits.
          */
-        @JvmStatic
         fun NumberOfSetBits(i: Int): Int {
             return i.countOneBits()
         }

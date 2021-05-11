@@ -35,10 +35,9 @@ class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: Byte
      */
     private val uncompressedSize: Int
         private get() {
-            val sum = FIELDS
+            return FIELDS
                 .mapNotNull { it?.calculateSize() }
                 .sum()
-            return sum
         }
 
     /**

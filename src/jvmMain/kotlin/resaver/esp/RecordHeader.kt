@@ -43,7 +43,6 @@ class RecordHeader(input: ByteBuffer, ctx: ESPContext) : Entry {
     val isLocalized: Boolean
         get() = FLAGS and 0x00000080 != 0
     val FLAGS: Int
-    @JvmField
     val ID: Int
     val REVISION: Int
     val VERSION: Short

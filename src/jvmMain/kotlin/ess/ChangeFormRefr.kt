@@ -157,7 +157,7 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, ana
             LOG.log(Level.WARNING, "Error parsing NPC_ ChangeForm.", ex)
             var count = 0
             while (input.hasRemaining()) {
-                val size = Math.min(256, input.capacity() - input.position())
+                val size = 256.coerceAtMost(input.capacity() - input.position())
                 super.readBytes(input, "UNPARSED_DATA_$count", size)
                 count++
             }

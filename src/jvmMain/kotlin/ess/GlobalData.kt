@@ -117,13 +117,13 @@ class GlobalData(input: ByteBuffer, context: ESSContext?, model: ModelBuilder?) 
         val subSection = input.slice().order(ByteOrder.LITTLE_ENDIAN)
         (subSection as Buffer).limit(blockSize)
         (input as Buffer).position((input as Buffer).position() + blockSize)
-        when (type) {
-            3 -> dataBlock = GlobalVariableTable(subSection, context)
-            1001 -> dataBlock = context?.let { model?.let { it1 -> ess.papyrus.Papyrus(subSection, it, it1) } }
+        dataBlock = when (type) {
+            3 -> GlobalVariableTable(subSection, context)
+            1001 -> context?.let { model?.let { it1 -> ess.papyrus.Papyrus(subSection, it, it1) } }
             else -> {
                 val DATA = ByteArray(blockSize)
                 subSection[DATA]
-                dataBlock = DefaultGlobalDataBlock(DATA)
+                DefaultGlobalDataBlock(DATA)
             }
         }
         val calculatedSize = (calculateSize() - 8).toLong()

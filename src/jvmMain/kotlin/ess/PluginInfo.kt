@@ -70,7 +70,7 @@ class PluginInfo(input: ByteBuffer, supportsESL: Boolean) : Element {
      * @return The list of all plugins.
      */
     fun stream(): Stream<Plugin> {
-        return Stream.concat(fullPlugins.stream(), litePlugins.stream())
+        return (fullPlugins+ litePlugins).stream()
     }
 
     /**

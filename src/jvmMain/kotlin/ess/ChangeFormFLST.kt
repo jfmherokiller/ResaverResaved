@@ -140,15 +140,15 @@ class ChangeFormFLST(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSConte
         val BUILDER = StringBuilder()
         BUILDER.append("<hr/><p>FORMLIST:</p>")
         if (null != refID) {
-            BUILDER.append(String.format("<p>ChangeFormFlags: %s</p>", refID))
+            BUILDER.append("<p>ChangeFormFlags: $refID</p>")
         }
         if (null != FORMS) {
             BUILDER.append(String.format("<p>List size: %d</p><ol start=0>", FORMS!!.size))
             FORMS!!.forEach { refid: RefID ->
                 if (save!!.changeForms.containsKey(refid)) {
-                    BUILDER.append(String.format("<li>%s", refid.toHTML(null)))
+                    BUILDER.append("<li>${refid.toHTML(null)}")
                 } else {
-                    BUILDER.append(String.format("<li>%s", refid))
+                    BUILDER.append("<li>$refid")
                 }
             }
             BUILDER.append("</ol>")

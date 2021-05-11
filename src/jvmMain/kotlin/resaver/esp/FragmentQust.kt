@@ -45,17 +45,9 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         var sum = 5
         sum += if (null != FILENAME) 2 + FILENAME!!.length else 0
         sum += SCRIPT?.calculateSize() ?: 0
-        var result = 0
-        for (FRAGMENT in FRAGMENTS) {
-            val calculateSize = FRAGMENT.calculateSize()
-            result += calculateSize
-        }
+        val result = FRAGMENTS.sumOf { it.calculateSize() }
         sum += result
-        var sum1 = 0
-        for (ALIAS in ALIASES) {
-            val calculateSize = ALIAS.calculateSize()
-            sum1 += calculateSize
-        }
+        val sum1 = ALIASES.sumOf { it.calculateSize() }
         sum += sum1
         return sum
     }
@@ -116,8 +108,8 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         private val UNKNOWN1: Short = input.short
         private val LOGENTRY: Int = input.int
         private val UNKNOWN2: Byte = input.get()
-        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)!!]
-        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)!!]
+        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)]
+        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)]
 
     }
 
