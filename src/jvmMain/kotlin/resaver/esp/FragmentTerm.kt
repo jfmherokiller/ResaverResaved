@@ -73,8 +73,8 @@ class FragmentTerm(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
 
         private val INDEX: Int = input.int
         private val UNKNOWN: Byte = input.get()
-        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)!!]
-        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)!!]
+        private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)]
+        private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)]
 
     }
 

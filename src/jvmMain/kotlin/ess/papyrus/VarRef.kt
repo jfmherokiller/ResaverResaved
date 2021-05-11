@@ -11,7 +11,7 @@ class VarRef : VarAbstractRef {
     constructor(type: TString?, id: EID?, context: PapyrusContext) : super(type, id, context) {}
 
     fun derive(id: Long, context: PapyrusContext): VarRef {
-        return VarRef(refType, ref?.derive(id), context)
+        return VarRef(refType, ref.derive(id), context)
     }
 
     override val type: VarType

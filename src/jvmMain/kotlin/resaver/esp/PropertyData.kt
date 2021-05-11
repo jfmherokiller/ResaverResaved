@@ -80,7 +80,7 @@ abstract class PropertyData : Entry {
             return DATA
         }
 
-        private val DATA: String = BufferUtil.getUTF(input!!)!!
+        private val DATA: String = BufferUtil.getUTF(input!!)
 
     }
 

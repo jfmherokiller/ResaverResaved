@@ -86,7 +86,7 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
                 }
             }
             if (result != null) {
-                val i: Int = message!!.variables?.indexOf(result) ?: 0
+                val i: Int = message!!.variables.indexOf(result)
                 if (i >= 0) {
                     return Linkable.makeLink("suspended", iD, i, this.toString())
                 }

@@ -243,7 +243,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
         val scriptsCount = LOOSE_SCRIPTS.size
         if (stringsCount > 0 || scriptsCount > 0) {
             val msg = String.format("Read %5d scripts and %5d strings from ${LOOSE_STRINGSFILES.size} stringsfiles in loose files of \"$SHORTNAME\"", scriptsCount, stringsCount)
-            logger.info(msg)
+            logger.info{msg}
         }
         return ModReadResults(SCRIPT_ORIGINS, STRINGSFILES, ARCHIVE_ERRORS, null, STRINGSFILE_ERRORS)
     }

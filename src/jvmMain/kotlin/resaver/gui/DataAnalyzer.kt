@@ -475,9 +475,9 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
     init {
         DATA = newData.duplicate().order(ByteOrder.LITTLE_ENDIAN)
         SAVE = save
-        ANALYSIS = if (save.analysis == null) null else save.analysis
+        ANALYSIS = save.analysis
         ESS_CONTEXT = save.context
-        PAPYRUS_CONTEXT = if (save.papyrus == null) null else save.papyrus!!.context
+        PAPYRUS_CONTEXT = if (save.papyrus == null) null else save.papyrus.context
         currentSlice = DATA.slice()
         SIZE = 2048.coerceAtMost(currentSlice.limit())
         currentSlice.limit(SIZE)
