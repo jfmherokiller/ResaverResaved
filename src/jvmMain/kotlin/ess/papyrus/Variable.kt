@@ -148,7 +148,7 @@ abstract class Variable : PapyrusElement, Linkable {
         @JvmStatic
         @Throws(ListException::class)
         fun readList(input: ByteBuffer, count: Int, context: PapyrusContext): List<Variable> {
-            val VARIABLES: MutableList<Variable> = ArrayList(count)
+            val VARIABLES: MutableList<Variable> = mutableListOf()
             for (i in 0 until count) {
                 try {
                     val `var` = read(input, context)
@@ -182,7 +182,13 @@ abstract class Variable : PapyrusElement, Linkable {
                 VarType.BOOLEAN -> VarBool(input)
                 VarType.VARIANT -> VarVariant(input, context)
                 VarType.STRUCT -> VarStruct(input, context)
-                VarType.REF_ARRAY, VarType.STRING_ARRAY, VarType.INTEGER_ARRAY, VarType.FLOAT_ARRAY, VarType.BOOLEAN_ARRAY, VarType.VARIANT_ARRAY, VarType.STRUCT_ARRAY -> VarArray(
+                VarType.REF_ARRAY,
+                VarType.STRING_ARRAY,
+                VarType.INTEGER_ARRAY,
+                VarType.FLOAT_ARRAY,
+                VarType.BOOLEAN_ARRAY,
+                VarType.VARIANT_ARRAY,
+                VarType.STRUCT_ARRAY -> VarArray(
                     VarTYPE,
                     input,
                     context

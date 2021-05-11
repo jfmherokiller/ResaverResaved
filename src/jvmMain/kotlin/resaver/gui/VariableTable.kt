@@ -25,7 +25,6 @@ import javax.swing.table.DefaultTableModel
 import java.awt.event.*
 import javax.swing.JPopupMenu
 import javax.swing.JMenuItem
-import java.util.Objects
 
 /**
  * Describes a JTable specialized for displaying variable tables.
@@ -193,7 +192,7 @@ class VariableTable(window: SaveWindow?) : JTable() {
 
     private val TABLE_POPUP_MENU: JPopupMenu = JPopupMenu("Table")
     private val MI_FIND: JMenuItem = JMenuItem("Find", KeyEvent.VK_F)
-    private val WINDOW: SaveWindow = Objects.requireNonNull(window)!!
+    private val WINDOW: SaveWindow = window!!
 
     /**
      * Creates a new `VariableTable`.

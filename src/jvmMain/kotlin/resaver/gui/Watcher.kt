@@ -15,12 +15,11 @@
  */
 package resaver.gui
 
+import mu.KotlinLogging
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.IOException
 import java.nio.file.*
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.swing.JOptionPane
 import javax.swing.SwingWorker
 
@@ -28,6 +27,7 @@ import javax.swing.SwingWorker
  *
  * @author Mark
  */
+private val logger = KotlinLogging.logger {}
 class Watcher(window: SaveWindow?, worrier: ess.papyrus.Worrier?) {
     @Synchronized
     fun start(newWatchDir: Path?) {
@@ -99,28 +99,28 @@ class Watcher(window: SaveWindow?, worrier: ess.papyrus.Worrier?) {
                 FS.newWatchService().use { WATCHSERVICE ->
                     val REGKEYS: MutableMap<WatchKey, Path> = HashMap()
                     for (dir in watchDirectories) {
-                        LOG.info("WATCHER: initializing for $dir")
+                        logger.info{"WATCHER: initializing for $dir"}
                         REGKEYS[dir.register(WATCHSERVICE, StandardWatchEventKinds.ENTRY_CREATE)] = dir
                     }
                     while (true) {
                         val EVENTKEY = WATCHSERVICE.take()
                         //final WatchKey EVENTKEY = WATCHSERVICE.poll(1, TimeUnit.SECONDS);
                         if (EVENTKEY == null || !EVENTKEY.isValid) {
-                            LOG.info("INVALID EVENTKEY")
+                            logger.info{"INVALID EVENTKEY"}
                             break
                         }
                         for (event in EVENTKEY.pollEvents()) {
                             if (event.kind() === StandardWatchEventKinds.OVERFLOW) {
-                                LOG.info("WATCHER OVERFLOW")
+                                logger.info{"WATCHER OVERFLOW"}
                                 continue
                             }
                             val NAME = (event as WatchEvent<Path?>).context()
                             val FULL = REGKEYS[EVENTKEY]!!.resolve(NAME!!)
                             if (Files.exists(FULL) && MATCHER.matches(FULL)) {
-                                LOG.info("WATCHER: Trying to open $FULL.")
+                                logger.info{"WATCHER: Trying to open $FULL."}
                                 var i = 0
                                 while (i < 50 && !Files.isReadable(FULL)) {
-                                    LOG.info("Waiting for $FULL to be readable.")
+                                    logger.info{"Waiting for $FULL to be readable."}
                                     //this.wait(250, 0)
                                     i++
                                 }
@@ -128,7 +128,7 @@ class Watcher(window: SaveWindow?, worrier: ess.papyrus.Worrier?) {
                                     val OPENER = Opener(WINDOW, FULL, WORRIER, null)
                                     OPENER.execute()
                                 } else {
-                                    LOG.info("WATCHER: Invalid file $FULL.")
+                                    logger.info{"WATCHER: Invalid file $FULL."}
                                 }
                             }
                         }
@@ -138,13 +138,13 @@ class Watcher(window: SaveWindow?, worrier: ess.papyrus.Worrier?) {
                     }
                 }
             } catch (ex: InterruptedException) {
-                LOG.info("WatcherService interrupted.")
+                logger.info{"WatcherService interrupted."}
             } catch (ex: ClosedWatchServiceException) {
-                LOG.info("WatcherService interrupted.")
+                logger.info{"WatcherService interrupted."}
             } catch (ex: IOException) {
-                val MSG = String.format("Error.\n%s", ex.message)
+                val MSG = "Error.\n${ex.message}"
                 JOptionPane.showMessageDialog(WINDOW, MSG, "Watch Error", JOptionPane.ERROR_MESSAGE)
-                LOG.log(Level.SEVERE, "Watcher Error.", ex)
+                logger.info(ex) {"Watcher Error." }
             } finally {
                 return watchDir
             }
@@ -157,7 +157,6 @@ class Watcher(window: SaveWindow?, worrier: ess.papyrus.Worrier?) {
     private var watchDir: Path? = null
 
     companion object {
-        private val LOG = Logger.getLogger(Opener::class.java.canonicalName)
         private val MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{fos,ess}")
     }
 

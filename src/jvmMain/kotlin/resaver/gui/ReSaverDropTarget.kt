@@ -16,6 +16,7 @@
 package resaver.gui
 
 import GenericConsumer
+import mu.KotlinLogging
 import java.awt.dnd.DropTarget
 import kotlin.jvm.Synchronized
 import java.awt.dnd.DropTargetDropEvent
@@ -26,13 +27,13 @@ import java.io.File
 import java.awt.datatransfer.UnsupportedFlavorException
 import java.io.IOException
 import java.nio.file.Path
-import java.util.logging.Logger
 
 /**
  * Handles file-drop events.
  *
  * @author Mark Fairchild
  */
+private val logger = KotlinLogging.logger {}
 class ReSaverDropTarget(handler: GenericConsumer<Path>) : DropTarget() {
     /**
      *
@@ -55,16 +56,15 @@ class ReSaverDropTarget(handler: GenericConsumer<Path>) : DropTarget() {
                     .ifPresent(HANDLER)
             }
         } catch (ex: UnsupportedFlavorException) {
-            LOG.warning(String.format("Drop and drop problem: %s", ex.message))
+            logger.warn{"Drop and drop problem: ${ex.message}"}
         } catch (ex: IOException) {
-            LOG.warning(String.format("Drop and drop problem: %s", ex.message))
+            logger.warn{"Drop and drop problem: ${ex.message}"}
         }
     }
 
     private val HANDLER: GenericConsumer<Path> = handler
 
     companion object {
-        private val LOG = Logger.getLogger(ReSaverDropTarget::class.java.canonicalName)
     }
 
 }

@@ -16,6 +16,7 @@
 package resaver.gui
 
 import javafx.stage.FileChooser
+import mu.KotlinLogging
 import resaver.Game
 import resaver.Mod
 import resaver.Mod.Companion.createMod
@@ -31,8 +32,6 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import java.util.function.Predicate
 import java.util.function.Supplier
-import java.util.logging.Level
-import java.util.logging.Logger
 import java.util.prefs.Preferences
 import java.util.regex.Pattern
 import javax.swing.JFileChooser
@@ -45,6 +44,7 @@ import javax.swing.filechooser.FileNameExtensionFilter
  *
  * @author Mark Fairchild
  */
+private val logger = KotlinLogging.logger {}
 object Configurator {
     /**
      * Generalized way to get a `Path`.
@@ -78,10 +78,10 @@ object Configurator {
             }
             PROMPT.get()
         } catch (ex: InterruptedException) {
-            LOG.log(Level.SEVERE, "Interrupted while displaying FileChooser.", ex)
+            logger.info(ex) { "Interrupted while displaying FileChooser."}
             null
         } catch (ex: ExecutionException) {
-            LOG.log(Level.SEVERE, "Interrupted while displaying FileChooser.", ex)
+            logger.info(ex) {"Interrupted while displaying FileChooser."}
             null
         }
     }
@@ -130,7 +130,7 @@ object Configurator {
      */
     @JvmStatic
     fun selectPluginsExport(parent: SaveWindow, savefile: Path?): Path? {
-        LOG.info("Choosing an export file.")
+        logger.info {"Choosing an export file."}
         val previousExport = previousPluginsExport
         val exportPath: Path
         exportPath = if (null != savefile && previousExport != null && Files.exists(previousExport.parent)) {
@@ -152,7 +152,7 @@ object Configurator {
             while (true) {
                 val exportFile = CHOOSER.showSaveDialog(null)
                 if (exportFile == null) {
-                    LOG.fine("User cancelled.")
+                    logger.info("User cancelled.")
                     return null
                 }
 
@@ -160,7 +160,7 @@ object Configurator {
                 val selection = if (TEXTFILES.accept(exportFile)) exportFile.toPath() else exportFile.toPath()
                     .resolveSibling(exportFile.name + ".txt")
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
-                    val MSG = String.format("That directory isn't writeable:\n%s", selection)
+                    val MSG = "That directory isn't writeable:\n$selection"
                     JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE)
                 } else {
                     setPreviousPluginsExport(selection)
@@ -176,7 +176,7 @@ object Configurator {
                 val result = CHOOSER.showSaveDialog(parent)
                 val exportFile = CHOOSER.selectedFile
                 if (result == JFileChooser.CANCEL_OPTION || CHOOSER.selectedFile == null) {
-                    LOG.fine("User cancelled.")
+                    logger.info{"User cancelled."}
                     return null
                 }
 
@@ -184,7 +184,7 @@ object Configurator {
                 val selection = if (TEXTFILES.accept(exportFile)) exportFile.toPath() else exportFile.toPath()
                     .resolveSibling(exportFile.name + ".txt")
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
-                    val MSG = String.format("That directory isn't writeable:\n%s", selection)
+                    val MSG = "That directory isn't writeable:\n$selection"
                     JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE)
                 } else if (Files.exists(selection)) {
                     val MSG = "That file already exists. Replace it?"
@@ -218,7 +218,7 @@ object Configurator {
      */
     @JvmStatic
     fun selectNewSaveFile(parent: SaveWindow, game: Game): Path? {
-        LOG.info("Choosing a savefile.")
+        logger.info {"Choosing a savefile."}
         val previousSave = previousSave
         val startingDirectory =
             if (previousSave != null && validDir(previousSave.parent)) previousSave.parent else MYGAMES
@@ -235,7 +235,7 @@ object Configurator {
             while (true) {
                 val selected = CHOOSER.showSaveDialog(null)
                 if (null == selected) {
-                    LOG.fine("User cancelled.")
+                    logger.info{"User cancelled."}
                     return null
                 }
 
@@ -243,7 +243,7 @@ object Configurator {
                 val selection = if (game.FILTER.accept(selected)) selected.toPath() else selected.toPath()
                     .resolveSibling(selected.name + "." + game.SAVE_EXT)
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
-                    val MSG = String.format("That directory isn't writeable:\n%s", selection)
+                    val MSG = "That directory isn't writeable:\n$selection"
                     JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE)
                 } else {
                     return setPreviousSave(selection)
@@ -258,7 +258,7 @@ object Configurator {
                 val result = CHOOSER.showSaveDialog(parent)
                 val selected = CHOOSER.selectedFile
                 if (result == JFileChooser.CANCEL_OPTION || null == selected) {
-                    LOG.fine("User cancelled.")
+                    logger.info{"User cancelled."}
                     return null
                 }
 
@@ -266,7 +266,7 @@ object Configurator {
                 val selection = if (game.FILTER.accept(selected)) selected.toPath() else selected.toPath()
                     .resolveSibling(selected.name + "." + game.SAVE_EXT)
                 if (Files.exists(selection) && !Files.isWritable(selection)) {
-                    val MSG = String.format("That directory isn't writeable:\n%s", selection)
+                    val MSG = "That directory isn't writeable:\n$selection"
                     JOptionPane.showMessageDialog(parent, MSG, "Can't Write", JOptionPane.ERROR_MESSAGE)
                 } else {
                     setPreviousSave(selection)
@@ -287,16 +287,16 @@ object Configurator {
      */
     @JvmStatic
     fun confirmSaveFile(parent: SaveWindow, game: Game, selectedPath: Path): Path? {
-        LOG.info("Choosing a savefile.")
+        logger.info{"Choosing a savefile."}
         return if (Files.exists(selectedPath) && !Files.isWritable(selectedPath)) {
-            val MSG = String.format("That directory isn't writeable:\n%s", selectedPath)
+            val MSG = "That directory isn't writeable:\n$selectedPath"
             val TITLE = "Can't Write"
             JOptionPane.showMessageDialog(parent, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
             null
         } else if (Files.exists(selectedPath)) {
             val MSG = "That file already exists. Replace it?"
             val TITLE = "File Exists"
-            LOG.warning(MSG)
+            logger.warn{MSG}
             val overwrite = JOptionPane.showConfirmDialog(
                 parent,
                 MSG,
@@ -323,7 +323,7 @@ object Configurator {
      */
     @JvmStatic
     fun selectSaveFile(parent: SaveWindow): Path? {
-        LOG.info("Choosing a savefile.")
+        logger.info{"Choosing a savefile."}
         val previousSave = previousSave
         val startingDirectory =
             if (previousSave != null && validDir(previousSave.parent)) previousSave.parent else MYGAMES
@@ -340,7 +340,7 @@ object Configurator {
             while (true) {
                 val selected = CHOOSER.showOpenDialog(null)
                 if (selected == null) {
-                    LOG.fine("User cancelled.")
+                    logger.info {"User cancelled."}
                     return null
                 } else if (!validateSavegame(selected.toPath())) {
                     val MSG = "That does not seem to be a valid savegame."
@@ -364,7 +364,7 @@ object Configurator {
                 val result = CHOOSER.showOpenDialog(parent)
                 val selected = CHOOSER.selectedFile
                 if (result == JFileChooser.CANCEL_OPTION || null == selected) {
-                    LOG.fine("User cancelled.")
+                    logger.info{"User cancelled."}
                     return null
                 } else if (!validateSavegame(selected.toPath())) {
                     val MSG = "That does not seem to be a valid savegame."
@@ -388,13 +388,13 @@ object Configurator {
      */
     @JvmStatic
     fun selectMO2Ini(parent: SaveWindow?, game: Game): Path? {
-        LOG.info("Choosing the ModOrganizer path.")
+        logger.info{"Choosing the ModOrganizer path."}
         val CHOOSER = JFileChooser()
         CHOOSER.dialogTitle = "Locate ModOrganizer.ini"
         CHOOSER.fileSelectionMode = JFileChooser.FILES_ONLY
         CHOOSER.isMultiSelectionEnabled = false
         if (validateMODir(getMO2Ini(game)!!)) {
-            LOG.fine("Choosing a ModOrganizer path: trying the pre-existing path.")
+            logger.info {"Choosing a ModOrganizer path: trying the pre-existing path."}
             CHOOSER.selectedFile = getMO2Ini(game)!!.toFile()
         } else {
             CHOOSER.currentDirectory = MO2ROOT.toFile()
@@ -405,17 +405,17 @@ object Configurator {
             val file = CHOOSER.selectedFile
             saveChooserPrefs(CHOOSER)
             if (null == file || result == JFileChooser.CANCEL_OPTION) {
-                LOG.fine("User cancelled.")
+                logger.info {"User cancelled."}
                 return null
             } else if (!validateMO2Ini(game, file.toPath())) {
                 if (!Files.exists(file.toPath())) {
-                    val MSG = String.format("That file doesn't exist:\n%s", file)
+                    val MSG = "That file doesn't exist:\n$file"
                     JOptionPane.showMessageDialog(parent, MSG, "Doesn't Exist", JOptionPane.ERROR_MESSAGE)
                 } else if (!Files.isReadable(file.toPath())) {
-                    val MSG = String.format("That file isn't readable:\n%s", file)
+                    val MSG = "That file isn't readable:\n$file"
                     JOptionPane.showMessageDialog(parent, MSG, "Not readable", JOptionPane.ERROR_MESSAGE)
                 } else {
-                    val MSG = String.format("That directory doesn't seem to contain Mod Organizer:\n%s", file)
+                    val MSG = "That directory doesn't seem to contain Mod Organizer:\n$file"
                     JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE)
                 }
             } else {
@@ -435,14 +435,14 @@ object Configurator {
      */
     @JvmStatic
     fun selectGameDirectory(parent: SaveWindow?, game: Game): Path? {
-        LOG.info(String.format("Choosing the %s directory.", game))
+        logger.info{ "Choosing the $game directory." }
         val CHOOSER = JFileChooser()
-        CHOOSER.dialogTitle = String.format("Select %s directory", game.NAME)
+        CHOOSER.dialogTitle = "Select ${game.NAME} directory"
         CHOOSER.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
         CHOOSER.isMultiSelectionEnabled = false
         val PREV_DIR = getGameDirectory(game)
         if (validateGameDirectory(game, PREV_DIR!!)) {
-            LOG.fine("Trying to use the stored value for the game directory.")
+            logger.info{"Trying to use the stored value for the game directory."}
             CHOOSER.selectedFile = PREV_DIR.toFile()
         }
         while (true) {
@@ -453,7 +453,7 @@ object Configurator {
             if (null == file || result == JFileChooser.CANCEL_OPTION) {
                 return null
             } else if (!validateGameDirectory(game, file.toPath())) {
-                val MSG = String.format("This directory doesn't seem to be the %s directory.", game.NAME)
+                val MSG = "This directory doesn't seem to be the ${game.NAME} directory."
                 JOptionPane.showMessageDialog(parent, MSG, "Invalid", JOptionPane.ERROR_MESSAGE)
             } else {
                 return setGameDirectory(game, file.toPath())
@@ -472,14 +472,14 @@ object Configurator {
      */
     @JvmStatic
     fun selectSavefileDirectory(parent: SaveWindow?, game: Game): Path? {
-        LOG.info("Choosing a directory to watch.")
+        logger.info{"Choosing a directory to watch."}
         val CHOOSER = JFileChooser()
         CHOOSER.dialogTitle = "Select folder to watch"
         CHOOSER.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
         CHOOSER.isMultiSelectionEnabled = false
         val previousDir = getSaveDirectory(game)
         if (validDir(previousDir)) {
-            LOG.fine("Trying to use the stored value for the savefile directory.")
+            logger.info{"Trying to use the stored value for the savefile directory."}
             CHOOSER.selectedFile = previousDir.toFile()
         } else {
             CHOOSER.selectedFile = MO2ROOT.toFile()
@@ -490,10 +490,10 @@ object Configurator {
             val file = CHOOSER.selectedFile
             saveChooserPrefs(CHOOSER)
             if (null == file || result == JFileChooser.CANCEL_OPTION) {
-                LOG.fine("User cancelled.")
+                logger.info{"User cancelled."}
                 return null
             } else if (Files.exists(file.toPath()) && !Files.isReadable(file.toPath())) {
-                val MSG = String.format("That directory isn't readable:\n%s", file)
+                val MSG = "That directory isn't readable:\n$file"
                 JOptionPane.showMessageDialog(parent, MSG, "Not Readable", JOptionPane.ERROR_MESSAGE)
             } else {
                 return setSaveDirectory(game, file.toPath())
@@ -564,10 +564,10 @@ object Configurator {
                 val GAME_NAME = TOKENS["gamename"]
                 val GAME_DIR = TOKENS["gamepath"]
                 val GAME_PATH = Paths.get(GAME_DIR!!)
-                LOG.info(String.format("Scanned %s", mo2Ini))
-                LOG.info(String.format("GameName=%s", GAME_NAME))
+                logger.info{"Scanned $mo2Ini"}
+                logger.info{"GameName=$GAME_NAME"}
                 if (!Files.exists(GAME_PATH)) {
-                    LOG.warning(String.format("Directory %s missing.", GAME_PATH))
+                    logger.warn{"Directory $GAME_PATH missing."}
                     return
                 }
                 try {
@@ -595,9 +595,9 @@ object Configurator {
                 }
             }
         } catch (ex: IOException) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            logger.info(ex){ "Problem while parsing MO2 ini file."}
         } catch (ex: RuntimeException) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            logger.info(ex) {"Problem while parsing MO2 ini file."}
         }
     }
 
@@ -634,28 +634,28 @@ object Configurator {
                 val MODS = BASEDIR.resolve("mods")
                 val PROFILES = BASEDIR.resolve("profiles")
                 val PROFILE = PROFILES.resolve(PROFILE_NAME)
-                LOG.info(String.format("Scanned %s", mo2Ini))
-                LOG.info(String.format("GameName=%s", GAME_NAME))
-                LOG.info(String.format("selected_profile=%s", PROFILE_NAME))
-                LOG.info(String.format("base_directory=%s", BASEDIR_NAME))
+                logger.info{"Scanned $mo2Ini"}
+                logger.info{"GameName=$GAME_NAME"}
+                logger.info{"selected_profile=$PROFILE_NAME"}
+                logger.info{"base_directory=$BASEDIR_NAME"}
                 return if (!Files.exists(MODS)) {
-                    LOG.warning(String.format("Directory %s missing.", MODS))
+                    logger.warn{"Directory $MODS missing."}
                     false
                 } else if (!Files.exists(PROFILES)) {
-                    LOG.warning(String.format("Directory %s missing.", PROFILES))
+                    logger.warn{"Directory $PROFILES missing."}
                     false
                 } else if (!Files.exists(PROFILE)) {
-                    LOG.warning(String.format("Directory %s missing.", PROFILE))
+                    logger.warn{"Directory $PROFILE missing."}
                     false
                 } else {
                     validateMODir(BASEDIR)
                 }
             }
         } catch (ex: IOException) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            logger.info(ex) {"Problem while parsing MO2 ini file."}
             return false
         } catch (ex: RuntimeException) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            logger.info(ex) {"Problem while parsing MO2 ini file."}
             return false
         }
     }
@@ -689,28 +689,28 @@ object Configurator {
                 val MODS = BASEDIR.resolve("mods")
                 val PROFILES = BASEDIR.resolve("profiles")
                 val PROFILE = PROFILES.resolve(PROFILE_NAME)
-                LOG.info(String.format("Scanned %s", mo2Ini))
-                LOG.info(String.format("GameName=%s", GAME_NAME))
-                LOG.info(String.format("selected_profile=%s", PROFILE_NAME))
-                LOG.info(String.format("base_directory=%s", BASEDIR_NAME))
+                logger.info{"Scanned $mo2Ini"}
+                logger.info{"GameName=$GAME_NAME"}
+                logger.info{"selected_profile=$PROFILE_NAME"}
+                logger.info{"base_directory=$BASEDIR_NAME"}
                 return if (!Files.exists(MODS)) {
-                    LOG.warning(String.format("Directory %s missing.", MODS))
+                    logger.warn{"Directory $MODS missing."}
                     null
                 } else if (!Files.exists(PROFILES)) {
-                    LOG.warning(String.format("Directory %s missing.", PROFILES))
+                    logger.warn{"Directory $PROFILES missing."}
                     null
                 } else if (!Files.exists(PROFILE)) {
-                    LOG.warning(String.format("Directory %s missing.", PROFILE))
+                    logger.warn{"Directory $PROFILE missing."}
                     null
                 } else {
                     analyzeModDirectory(game, PROFILE, MODS)
                 }
             }
         } catch (ex: IOException) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            logger.info(ex) {"Problem while parsing MO2 ini file."}
             return null
         } catch (ex: RuntimeException) {
-            LOG.log(Level.WARNING, "Problem while parsing MO2 ini file.", ex)
+            logger.info(ex) {"Problem while parsing MO2 ini file."}
             return null
         }
     }
@@ -726,13 +726,13 @@ object Configurator {
      * for any reason.
      */
     fun analyzeModDirectory(game: Game?, profile: Path, modDir: Path): List<Mod>? {
-        LOG.info("Attempting to analyze the Mod Organizer directory.")
+        logger.info{"Attempting to analyze the Mod Organizer directory."}
         return try {
             val MOD_LIST = profile.resolve(MODLIST_PATH)
-            LOG.info("Reading the profile's \"ModList.txt\".")
+            logger.info{"Reading the profile's \"ModList.txt\"."}
             val MODNAMES: MutableList<String> = LinkedList()
             Files.newBufferedReader(MOD_LIST).use { input ->
-                LOG.fine("Reading from \"ModList.txt\".")
+                logger.info {"Reading from \"ModList.txt\"."}
                 while (input.ready()) {
                     val line = input.readLine()
                     val matcher = MODLIST_REGEX.matcher(line)
@@ -742,7 +742,7 @@ object Configurator {
                         }
                     }
                 }
-                LOG.fine(String.format("\"ModList.txt\" contained %d mod names.", MODNAMES.size))
+                logger.info{String.format("\"ModList.txt\" contained %d mod names.", MODNAMES.size)}
             }
             val MODS: MutableList<Mod> = ArrayList()
             for (MODNAME in MODNAMES) {
@@ -752,10 +752,10 @@ object Configurator {
                     MODS.add(mod)
                 }
             }
-            LOG.info(String.format("analyzeModDirectory: checked %d mods.", MODS.size))
+            logger.info{String.format("analyzeModDirectory: checked %d mods.", MODS.size)}
             MODS
         } catch (ex: IOException) {
-            LOG.severe("Something went wrong while analyzing ModOrganizer. Let's not stress about what it was, let's just fail and return.")
+            logger.error {"Something went wrong while analyzing ModOrganizer. Let's not stress about what it was, let's just fail and return."}
             null
         }
     }
@@ -957,13 +957,13 @@ object Configurator {
      */
     fun validFile(path: Path?): Boolean {
         return if (null == path) {
-            LOG.info("validFile check: null.")
+            logger.info{"validFile check: null."}
             false
         } else if (!Files.isRegularFile(path)) {
-            LOG.info("validFile check: irregular.")
+            logger.info{"validFile check: irregular."}
             false
         } else if (!Files.isReadable(path)) {
-            LOG.info("validFile check: unreadable.")
+            logger.info{"validFile check: unreadable."}
             false
         } else {
             true
@@ -1022,14 +1022,12 @@ object Configurator {
         return Arrays.stream(items).filter { obj: String? -> Objects.nonNull(obj) }.findFirst().orElse(null)
     }
 
-    private val LOG = Logger.getLogger(Configurator::class.java.canonicalName)
     const val MODS_PATH = "mods"
     const val PROFILES_PATH = "profiles"
     const val INI_PATH = "ModOrganizer.ini"
     const val MODLIST_PATH = "modlist.txt"
     const val MODLIST_PATTERN = "^([+-])(.+)$"
     val MODLIST_REGEX = Pattern.compile(MODLIST_PATTERN)
-    @JvmField
     val GLOB_INI = FileSystems.getDefault().getPathMatcher("glob:**.ini")
     private val TEXTFILES = FileNameExtensionFilter("Text file", "txt")
     private val PREFS = Preferences.userNodeForPackage(ReSaver::class.java)

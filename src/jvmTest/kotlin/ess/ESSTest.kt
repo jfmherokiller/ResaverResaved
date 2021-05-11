@@ -77,20 +77,20 @@ class ESSTest {
         try {
             val MODEL_ORIGINAL = ModelBuilder(ProgressModel(1))
             val IN_RESULT = ESS.readESS(path, MODEL_ORIGINAL)
-            val ORIGINAL = IN_RESULT?.ESS
+            val ORIGINAL = IN_RESULT.ESS
             if (ORIGINAL != null) {
                 if (ORIGINAL.isTruncated || ORIGINAL.papyrus?.stringTable!!.hasSTB()) {
                     return
                 }
             }
-            val EXT = "." + (ORIGINAL.header?.GAME?.SAVE_EXT ?: "ess")
+            val EXT = "." + (ORIGINAL.header.GAME?.SAVE_EXT ?: "ess")
             val F2 = Files.createTempFile("ess_test", EXT)
             if (ORIGINAL != null) {
                 ESS.writeESS(ORIGINAL, F2)
             }
             val MODEL_RESAVE = ModelBuilder(ProgressModel(1))
             val OUT_RESULT = ESS.readESS(F2, MODEL_RESAVE)
-            val REWRITE = OUT_RESULT?.ESS
+            val REWRITE = OUT_RESULT.ESS
             if (ORIGINAL != null) {
                 if (REWRITE != null) {
                     Assertions.assertEquals(ORIGINAL.digest, REWRITE.digest, "Verify that digests match for $path")
