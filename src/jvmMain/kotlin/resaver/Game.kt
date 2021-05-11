@@ -169,13 +169,11 @@ enum class Game(
         /**
          * A filename filter for all of the games.
          */
-        @JvmField
         val FILTER_ALL = FileNameExtensionFilter("Bethesda Savefiles", "ess", "fos", "sav0")
 
         /**
          * Cached list version of the values.
          */
-        @JvmField
         var VALUES = listOf(*values())
     }
 

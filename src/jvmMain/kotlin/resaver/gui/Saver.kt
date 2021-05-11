@@ -44,7 +44,7 @@ class Saver(window: SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnab
         WINDOW.addWindowListener(LISTENER)
         return try {
             LOG.info("================")
-            LOG.info(String.format("Writing to savegame file \"%s\".", SAVEFILE))
+            LOG.info("Writing to savegame file \"$SAVEFILE\".")
             val MODEL = ProgressModel()
             WINDOW.progressIndicator.setModel(MODEL)
             val watcherRunning = WINDOW.watcher.isRunning
@@ -60,7 +60,7 @@ class Saver(window: SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnab
             MSG.append(String.format("\nWrote %1.1f mb in %1.1f seconds.", size, time))
             if (RESULT != null) {
                 if (null != RESULT.BACKUP_FILE) {
-                    MSG.append(String.format("\nBackup written to %s.", RESULT.BACKUP_FILE))
+                    MSG.append("\nBackup written to ${RESULT.BACKUP_FILE}.")
                 }
             }
             if (RESULT != null) {
@@ -78,12 +78,12 @@ class Saver(window: SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnab
             }
             SAVE
         } catch (ex: Exception) {
-            val MSG = String.format("Error while writing file \"%s\".\n%s", SAVEFILE.fileName, ex.message)
+            val MSG = "Error while writing file \"${SAVEFILE.fileName}\".\n${ex.message}"
             LOG.log(Level.SEVERE, MSG, ex)
             JOptionPane.showMessageDialog(WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE)
             null
         } catch (ex: Error) {
-            val MSG = String.format("Error while writing file \"%s\".\n%s", SAVEFILE.fileName, ex.message)
+            val MSG = "Error while writing file \"${SAVEFILE.fileName}\".\n${ex.message}"
             LOG.log(Level.SEVERE, MSG, ex)
             JOptionPane.showMessageDialog(WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE)
             null

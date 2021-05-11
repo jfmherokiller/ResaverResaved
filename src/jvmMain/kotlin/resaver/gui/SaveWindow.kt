@@ -56,7 +56,7 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import java.util.function.Predicate
 
-import java.util.function.Supplier
+
 import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.prefs.BackingStoreException
@@ -367,7 +367,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             val fullName = savefile?.fileName.toString()
             val MAXLEN = 80
             val NAME = if (fullName.length > MAXLEN) fullName.substring(0, MAXLEN) + "..." else fullName
-            val TITLE = String.format("ReSaver %s: %s (%1.2f mb, digest = %08x)", version, NAME, size, DIGEST)
+            val TITLE = String.format("ReSaver $version: $NAME (%1.2f mb, digest = %08x)", size, DIGEST)
             title = TITLE
         }
     }
@@ -403,7 +403,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             MODCOMBO.model = DefaultComboBoxModel()
             MODPANEL.isVisible = false
         } else {
-            val MODS = analysis!!.MODS.sortedWith { a:Mod, b:Mod -> a.getName()!!.compareTo(b.getName()!!,ignoreCase = true) }.toTypedArray()
+            val MODS = analysis!!.MODS.sortedWith { a:Mod, b:Mod -> a.getName().compareTo(b.getName(),ignoreCase = true) }.toTypedArray()
             val modModel = DefaultComboBoxModel(MODS)
             modModel.insertElementAt(null, 0)
             MODCOMBO.model = modModel
@@ -866,7 +866,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
     private fun exportPlugins() {
         val EXPORT = choosePathModal(this,
             null,
-            Supplier { selectPluginsExport(this, save!!.originalFile) }, { obj: Path? -> validWrite(obj) },
+             { selectPluginsExport(this, save!!.originalFile) }, { obj: Path? -> validWrite(obj) },
             true
         ) ?: return
         try {
@@ -929,11 +929,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         if (save == null) {
             return
         }
-        val otherPath = choosePathModal(this,
-            null,
-            Supplier { selectSaveFile(this) }, { obj: Path? -> validateSavegame(obj) },
-            true
-        ) ?: return
+        val otherPath = choosePathModal(this, null,{ selectSaveFile(this) }, { obj: Path? -> validateSavegame(obj) }, true) ?: return
         try {
             val RESULT = readESS(otherPath, ModelBuilder(ProgressModel(1)))
             verifyIdentical(save!!, RESULT.ESS)
