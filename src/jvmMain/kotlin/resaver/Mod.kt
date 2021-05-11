@@ -469,7 +469,6 @@ class Mod(game: Game?, dir: Path) : Serializable {
          * @param dir The directory containing the mod.
          * @return The `Mod`, or null if it couldn't be created.
          */
-        @JvmStatic
         fun createMod(game: Game?, dir: Path): Mod? {
             return try {
                 Mod(game, dir)
@@ -489,7 +488,6 @@ class Mod(game: Game?, dir: Path) : Serializable {
         val GLOB_INTEREST = FS.getPathMatcher("glob:**.{esm,esp,esl,bsa,ba2}")
         val GLOB_PLUGIN = FS.getPathMatcher("glob:**.{esm,esp,esl}")
         val GLOB_ARCHIVE = FS.getPathMatcher("glob:**.{bsa,ba2}")
-        @JvmField
         val GLOB_SCRIPT = FS.getPathMatcher("glob:**.pex")
         val GLOB_STRINGS = FS.getPathMatcher("glob:**.{strings,ilstrings,dlstrings}")
         val GLOB_ALL = FS.getPathMatcher("glob:**.{esm,esp,esl,bsa,ba2,pex,strings,ilstrings,dlstrings}")
