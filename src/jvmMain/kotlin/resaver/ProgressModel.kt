@@ -15,6 +15,8 @@
  */
 package resaver
 
+import mu.KLoggable
+import mu.KLogger
 import mu.KotlinLogging
 import kotlin.jvm.JvmOverloads
 import javax.swing.DefaultBoundedRangeModel
@@ -26,7 +28,6 @@ import kotlin.math.sqrt
  *
  * @author Mark Fairchild
  */
-private val logger = KotlinLogging.logger {}
 class ProgressModel @JvmOverloads constructor(max: Int = 18) : DefaultBoundedRangeModel(0, 0, 0, max) {
     constructor(max: Double) : this(max.roundToInt())
 
@@ -46,6 +47,8 @@ class ProgressModel @JvmOverloads constructor(max: Int = 18) : DefaultBoundedRan
         super.setValue(n)
     }
 
-    companion object {
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 }

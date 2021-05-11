@@ -24,6 +24,8 @@ import mf.BufferUtil
 import mf.Counter
 import mf.Timer
 import mf.Timer.Companion.startNew
+import mu.KLoggable
+import mu.KLogger
 import okio.ExperimentalFileSystem
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -42,8 +44,6 @@ import java.nio.file.Path
 import java.nio.file.StandardCopyOption
 import java.nio.file.StandardOpenOption
 import java.util.function.Predicate
-import java.util.logging.Level
-import java.util.logging.Logger
 import java.util.regex.Pattern
 import java.util.zip.CRC32
 import java.util.zip.DataFormatException
@@ -117,30 +117,30 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
 
         // Write the PLUGIN info section.
         pluginInfo.write(output)
-        LOG.fine("Writing savegame: wrote plugin table.")
+        logger.info {"Writing savegame: wrote plugin table."}
 
         // Rebuild and then write the file location table.
         fLT!!.rebuild(this)
         fLT.write(output)
-        LOG.fine("Writing savegame: rebuilt and wrote file location table.")
+        logger.info {"Writing savegame: rebuilt and wrote file location table."}
         TABLE1.forEach { data: GlobalData ->
             try {
                 data.write(output)
-                LOG.log(Level.FINE, "Writing savegame: \tGlobalData type {0}.", data.type)
+                logger.info {"Writing savegame: \tGlobalData type ${data.type}."}
             } catch (ex: RuntimeException) {
                 throw ElementException("GlobalDataTable1", ex, data)
             }
         }
-        LOG.fine("Writing savegame: wrote GlobalDataTable #1.")
+        logger.info {"Writing savegame: wrote GlobalDataTable #1."}
         TABLE2.forEach { data: GlobalData ->
             try {
                 data.write(output)
-                LOG.log(Level.FINE, "Writing savegame: \tGlobalData type {0}.", data.type)
+                logger.info {"Writing savegame: \tGlobalData type ${data.type}."}
             } catch (ex: RuntimeException) {
                 throw ElementException("GlobalDataTable2", ex, data)
             }
         }
-        LOG.fine("Writing savegame: wrote GlobalDataTable #2.")
+        logger.info {"Writing savegame: wrote GlobalDataTable #2."}
         CHANGEFORMS.values.forEach { form: ChangeForm? ->
             try {
                 form!!.write(output)
@@ -148,32 +148,32 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                 throw ElementException("Error writing ChangeForm", ex, form!!)
             }
         }
-        LOG.fine("Writing savegame: wrote changeform table.")
+        logger.info {"Writing savegame: wrote changeform table."}
         TABLE3.forEach { data: GlobalData ->
             try {
                 data.write(output)
-                LOG.log(Level.FINE, "Writing savegame: \tGlobalData type {0}.", data.type)
+                logger.info {"Writing savegame: \tGlobalData type ${data.type}."}
             } catch (ex: RuntimeException) {
                 throw ElementException("GlobalDataTable3", ex, data)
             }
         }
-        LOG.fine("Writing savegame: wrote GlobalDataTable #3.")
+        logger.info {"Writing savegame: wrote GlobalDataTable #3."}
         output?.putInt(FORMIDARRAY!!.size)
         if (FORMIDARRAY != null) {
             for (formID in FORMIDARRAY) {
                 output?.putInt(formID)
             }
         }
-        LOG.fine("Writing savegame: wrote formid array.")
+        logger.info {"Writing savegame: wrote formid array."}
         output?.putInt(visitedWorldspaceArray!!.size)
         if (visitedWorldspaceArray != null) {
             for (formID in visitedWorldspaceArray) {
                 output?.putInt(formID)
             }
         }
-        LOG.fine("Writing savegame: wrote visited worldspace array.")
+        logger.info {"Writing savegame: wrote visited worldspace array."}
         output?.put(unknown3)
-        LOG.fine("Writing savegame: wrote unknown block.")
+        logger.info {"Writing savegame: wrote unknown block."}
     }
 
     /**
@@ -447,7 +447,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                         fileSize)
                 )
             } catch (ex: IOException) {
-                LOG.log(Level.WARNING, "Error retrieving savefile size on disk.", ex)
+                logger.warn(ex) {"Error retrieving savefile size on disk."}
                 BUILDER.append(String.format("<li>Total size: %1.1f mb</li>", actualSize))
             }
         } else {
@@ -668,7 +668,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                     return eSS.CHANGEFORMS[ref]
                 }
             } catch (ex: RuntimeException) {
-                LOG.log(Level.WARNING, "RuntimeException during BroadSpectrumMatch.", ex)
+                logger.warn(ex) {"RuntimeException during BroadSpectrumMatch."}
             }
             return null
         }
@@ -697,7 +697,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         protected val eSS: ESS
     }
 
-    companion object {
+    companion object:KLoggable {
         /**
          * Reads a savegame and creates an `ESS` object to represent it.
          *
@@ -748,7 +748,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             val TREEMODEL = model.finish(ESS)
             TIMER.stop()
             val SIZE = ESS.calculateSize() / 1048576.0f
-            LOG.fine(String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE))
+            logger.info {String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE)}
             return ESS.Result(null, TIMER, TREEMODEL)
         }
         private fun FileParsing(saveFile: Path, model: ModelBuilder, TIMER: Timer): Result {
@@ -761,7 +761,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                 val TREEMODEL = model.finish(ESS)
                 TIMER.stop()
                 val SIZE = ESS.calculateSize() / 1048576.0f
-                LOG.fine(String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE))
+                logger.info {String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE)}
                 return ESS.Result(null, TIMER, TREEMODEL)
             }
         }
@@ -804,7 +804,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             ).use { channel -> ess.write(channel) }
             val SIZE = Files.size(saveFile) / 1048576.0f
             TIMER.stop()
-            LOG.fine(String.format("Savegame written: %.1f mb in ${TIMER.formattedTime} ($saveFile).",SIZE))
+            logger.info {String.format("Savegame written: %.1f mb in ${TIMER.formattedTime} ($saveFile).",SIZE)}
             return ess.Result(backup, TIMER, null)
         }
 
@@ -859,7 +859,6 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             check(BUF1.array().contentEquals(BUF2.array())) { "Papyrus mismatch." }
         }
 
-        private val LOG = Logger.getLogger(ESS::class.java.canonicalName)
         @JvmField
         val THREAD = Predicate { v: Element? -> v is ActiveScript }
         val OWNABLE = Predicate { v: Element? ->
@@ -903,6 +902,9 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             Files.copy(file, NEWFILE, StandardCopyOption.REPLACE_EXISTING)
             return NEWFILE
         }
+
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**
@@ -916,12 +918,12 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
     init {
         REFIDS = hashMapOf()
         originalFile = saveFile
-        LOG.fine("Reading savegame.")
+        logger.info {"Reading savegame."}
 
         // Read the header. This includes the magic string.
         header = Header(buffer, saveFile)
         val GAME: Game = header.GAME!!
-        LOG.fine("Reading savegame: read header.")
+        logger.info {"Reading savegame: read header."}
 
         // Determine the filename of the co-save.
         val filename = saveFile.fileName.toString()
@@ -953,19 +955,19 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             check(!buffer.hasRemaining()) { "Some data was not compressed." }
             when (COMPRESSION) {
                 CompressionType.ZLIB -> {
-                    LOG.fine("ZLIB DECOMPRESSION")
+                    logger.info {"ZLIB DECOMPRESSION"}
                     INPUT = BufferUtil.inflateZLIB(COMPRESSED, UNCOMPRESSED_LEN, COMPRESSED_LEN)
                     INPUT.order(ByteOrder.LITTLE_ENDIAN)
                 }
                 CompressionType.LZ4 -> {
-                    LOG.fine("LZ4 DECOMPRESSION")
+                    logger.info {"LZ4 DECOMPRESSION"}
                     INPUT = BufferUtil.inflateLZ4(COMPRESSED, UNCOMPRESSED_LEN)
                     INPUT.order(ByteOrder.LITTLE_ENDIAN)
                 }
                 else -> throw IOException("Unknown compression type: $COMPRESSION")
             }
         } else {
-            LOG.fine("NO FILE COMPRESSION")
+            logger.info {"NO FILE COMPRESSION"}
             INPUT = buffer.slice()
             INPUT.order(ByteOrder.LITTLE_ENDIAN)
         }
@@ -1005,7 +1007,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         // Read the form version.
         formVersion = INPUT.get()
         SUM.click()
-        LOG.info(
+        logger.info {
             String.format(
                 "Detected %s with form version %d, %s in %s.",
                 GAME,
@@ -1013,7 +1015,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                 COMPRESSION,
                 saveFile.parent.relativize(saveFile)
             )
-        )
+        }
         when (GAME) {
             Game.SKYRIM_LE -> {
                 require(formVersion >= 73) { "Invalid formVersion: $formVersion" }
@@ -1034,7 +1036,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         // Read the PLUGIN info section.
         pluginInfo = PluginInfo(INPUT, supportsESL())
         SUM.click(pluginInfo.calculateSize())
-        LOG.fine("Reading savegame: read plugin table.")
+        logger.info {"Reading savegame: read plugin table."}
 
         // Add the plugins to the model.
         model.addPluginInfo(pluginInfo)
@@ -1046,7 +1048,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         TABLE3 = ArrayList(fLT.TABLE3COUNT)
         CHANGEFORMS = LinkedHashMap(fLT.changeFormCount)
         SUM.click(fLT.calculateSize())
-        LOG.fine("Reading savegame: read file location table.")
+        logger.info {"Reading savegame: read file location table."}
 
         // Read the FormID table.
         var formIDs: IntArray? = null
@@ -1061,16 +1063,16 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                     throw ListException("Truncation in the FormID array.", formIDIndex, formIDCount, ex)
                 }
             }
-            LOG.fine("Reading savegame: read formid array.")
+            logger.info {"Reading savegame: read formid array."}
         } catch (ex: ListException) {
             truncated = true
-            LOG.log(Level.SEVERE, "Error while reading FormID array.", ex)
+            logger.error(ex) {"Error while reading FormID array."}
         } catch (ex: IllegalArgumentException) {
             truncated = true
-            LOG.log(Level.SEVERE, "Error while reading FormID array.", ex)
+            logger.error(ex) {"Error while reading FormID array."}
         } catch (ex: BufferUnderflowException) {
             truncated = true
-            LOG.log(Level.SEVERE, "FormID table missing.", ex)
+            logger.error(ex) {"FormID table missing."}
         } finally {
             FORMIDARRAY = formIDs
         }
@@ -1083,8 +1085,8 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                 val DATA = GlobalData(INPUT, context, model)
                 require(!(DATA.type < 0 || DATA.type > 100)) { "Invalid type for Table1: " + DATA.type }
                 TABLE1.add(DATA)
-                LOG.log(Level.FINE, "Reading savegame: \tGlobalData type {0}.", DATA.type)
-                LOG.fine("Reading savegame: read global data table 1.")
+                logger.info {"Reading savegame: \tGlobalData type ${DATA.type}."}
+                logger.info {"Reading savegame: read global data table 1."}
             } catch (ex: PapyrusException) {
                 throw IOException(
                     String.format(
@@ -1109,13 +1111,13 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             sum += i
         }
         SUM.click(sum)
-        LOG.fine("Reading savegame: read GlobalDataTable #1.")
+        logger.info {"Reading savegame: read GlobalDataTable #1."}
         for (tableIndex in 0 until fLT.TABLE2COUNT) {
             try {
                 val DATA = GlobalData(INPUT, context, model)
                 require(!(DATA.type < 100 || DATA.type > 1000)) { "Invalid type for Table1: " + DATA.type }
                 TABLE2.add(DATA)
-                LOG.log(Level.FINE, "Reading savegame: \tGlobalData type {0}.", DATA.type)
+                logger.info {"Reading savegame: \tGlobalData type ${DATA.type}."}
             } catch (ex: PapyrusException) {
                 throw IOException(
                     String.format(
@@ -1140,7 +1142,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             result += i
         }
         SUM.click(result)
-        LOG.fine("Reading savegame: read GlobalDataTable #2.")
+        logger.info {"Reading savegame: read GlobalDataTable #2."}
 
         // Get the GlobalVariableTable.
         var found = GlobalVariableTable()
@@ -1176,7 +1178,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             sum1 += i
         }
         SUM.click(sum1)
-        LOG.fine("Reading savegame: read changeform table.")
+        logger.info {"Reading savegame: read changeform table."}
 
         // Read the third set of data tables.
         var papyrusPartial: Papyrus? = null
@@ -1185,9 +1187,9 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                 val DATA = GlobalData(INPUT, context, model)
                 require(!(DATA.type < 1000 || DATA.type > 1100)) { "Invalid type for Table1: " + DATA.type }
                 TABLE3.add(DATA)
-                LOG.log(Level.FINE, "Reading savegame: \tGlobalData type {0}.", DATA.type)
+                logger.info {"Reading savegame: \tGlobalData type ${DATA.type}."}
             } catch (ex: PapyrusException) {
-                LOG.log(Level.SEVERE, "Error reading GlobalData 1001 (Papyrus).", ex)
+                logger.error(ex) {"Error reading GlobalData 1001 (Papyrus)."}
                 truncated = true
                 papyrusPartial = ex.partial
             } catch (ex: RuntimeException) {
@@ -1226,7 +1228,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         model.addAnimations(animations)
         val sum2 = TABLE3.sumOf { it.calculateSize() }
         SUM.click(sum2)
-        LOG.fine("Reading savegame: read GlobalDataTable #3.")
+        logger.info {"Reading savegame: read GlobalDataTable #3."}
 
         // Try to readRefID the visited worldspaces block.
         var visitedWorldSpaces: IntArray? = null
@@ -1240,16 +1242,16 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             for (worldspaceIndex in 0 until worldspaceIDCount) {
                 visitedWorldSpaces[worldspaceIndex] = INPUT.int
             }
-            LOG.fine("Reading savegame: read visited worldspace array.")
+            logger.info {"Reading savegame: read visited worldspace array."}
         } catch (ex: BufferUnderflowException) {
             if (!truncated) {
                 truncated = true
-                LOG.log(Level.SEVERE, "Error reading VisitedWorldSpace array.", ex)
+                logger.error(ex) {"Error reading VisitedWorldSpace array."}
             }
         } catch (ex: IllegalArgumentException) {
             if (!truncated) {
                 truncated = true
-                LOG.log(Level.SEVERE, "Error reading VisitedWorldSpace array.", ex)
+                logger.error(ex) {"Error reading VisitedWorldSpace array."}
             }
         } finally {
             visitedWorldspaceArray = visitedWorldSpaces
@@ -1257,7 +1259,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
 
         // Read whatever is left.
         val U3SIZE = INPUT.limit() - INPUT.position()
-        LOG.fine(String.format("Reading savegame: read unknown block. %d bytes present.", U3SIZE))
+        logger.info {String.format("Reading savegame: read unknown block. %d bytes present.", U3SIZE)}
         unknown3 = ByteArray(U3SIZE)
         INPUT[unknown3]
         val calculatedBodySize = calculateBodySize().toLong()

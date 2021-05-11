@@ -127,11 +127,7 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
 
         override fun calculateSize(): Int {
             var sum = 14
-            var result = 0
-            for (script in SCRIPTS) {
-                val calculateSize = script.calculateSize()
-                result += calculateSize
-            }
+            val result = SCRIPTS.sumOf { it.calculateSize() }
             sum += result
             return sum
         }

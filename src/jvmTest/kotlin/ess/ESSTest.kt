@@ -144,7 +144,7 @@ class ESSTest {
                 val LEVEL = record.level
                 val MSG = record.message
                 val SRC = record.sourceClassName + "." + record.sourceMethodName
-                return String.format("%s: %s: %s\n", SRC, LEVEL, MSG)
+                return "$SRC: $LEVEL: $MSG\n"
             }
         }
         LOG.parent.handlers[0].level = Level.INFO

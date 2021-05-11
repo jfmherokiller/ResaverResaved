@@ -16,6 +16,8 @@
 package ess
 
 import ess.ESS.ESSContext
+import mu.KLoggable
+import mu.KLogger
 import java.nio.ByteBuffer
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -69,8 +71,9 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, ana
     // The change flags.
     private val FLAGS: Flags.FlagsInt
 
-    companion object {
-        val LOG: Logger = Logger.getLogger(ChangeFormRefr::class.java.canonicalName)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**
@@ -154,7 +157,7 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, ana
                 super.readBytesVS(input, "ANIMATIONS")
             }
         } catch (ex: Throwable) {
-            LOG.log(Level.WARNING, "Error parsing NPC_ ChangeForm.", ex)
+            logger.warn(ex) {"Error parsing NPC_ ChangeForm."}
             var count = 0
             while (input.hasRemaining()) {
                 val size = 256.coerceAtMost(input.capacity() - input.position())

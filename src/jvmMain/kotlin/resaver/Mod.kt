@@ -15,10 +15,11 @@
  */
 package resaver
 
-import resaver.archive.ArchiveParser.Companion.createParser
 import ess.Plugin
 import ess.PluginInfo
-import mu.KotlinLogging
+import mu.KLoggable
+import mu.KLogger
+import resaver.archive.ArchiveParser.Companion.createParser
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.Serializable
@@ -35,7 +36,6 @@ import kotlin.streams.toList
  *
  * @author Mark Fairchild
  */
-private val logger = KotlinLogging.logger {}
 class Mod(game: Game?, dir: Path) : Serializable {
     /**
      * An estimate of the total amount of data that would be scanned to read
@@ -447,7 +447,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
         }
     }
 
-    companion object {
+    companion object:KLoggable {
         /**
          * Creates a new `Mod` from a `File` representing the
          * directory containing the mod's files. The directory will be scanned to
@@ -480,6 +480,8 @@ class Mod(game: Game?, dir: Path) : Serializable {
         val GLOB_STRINGS = FS.getPathMatcher("glob:**.{strings,ilstrings,dlstrings}")
         val GLOB_ALL = FS.getPathMatcher("glob:**.{esm,esp,esl,bsa,ba2,pex,strings,ilstrings,dlstrings}")
         val GLOB_EXE = FS.getPathMatcher("glob:{skyrim.exe,skyrimse.exe,fallout4.exe}")
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

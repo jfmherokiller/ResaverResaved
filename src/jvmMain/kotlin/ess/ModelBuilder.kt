@@ -18,6 +18,8 @@ package ess
 import resaver.IString
 import resaver.ProgressModel
 import ess.papyrus.*
+import mu.KLoggable
+import mu.KLogger
 import resaver.gui.FilterTreeModel.*
 import java.util.concurrent.*
 import java.util.function.Function
@@ -301,11 +303,11 @@ class ModelBuilder(progress: ProgressModel) {
             EXECUTOR.shutdown()
             EXECUTOR.awaitTermination(2, TimeUnit.MINUTES)
         } catch (ex: InterruptedException) {
-            LOG.log(Level.SEVERE, "Model building was interrupted.", ex)
+            logger.error(ex) {"Model building was interrupted."}
             return null
         }
         if (!TASKS.all { obj: Future<Node> -> obj.isDone }) {
-            LOG.severe("Some tasks didn't finish.")
+            logger.error {"Some tasks didn't finish."}
             return null
         }
 
@@ -332,7 +334,7 @@ class ModelBuilder(progress: ProgressModel) {
     private val TASKS: MutableList<Future<Node>>
     private val PROGRESS: ProgressModel
 
-    companion object {
+    companion object:KLoggable {
         fun createModel(ess: ESS, progress: ProgressModel): resaver.gui.FilterTreeModel? {
             val MB = ModelBuilder(progress)
             val papyrus = ess.papyrus
@@ -395,7 +397,8 @@ class ModelBuilder(progress: ProgressModel) {
             val category = if (Character.isLetter(firstChar)) firstChar else '0'
             category
         }
-        private val LOG = Logger.getLogger(ModelBuilder::class.java.canonicalName)
+        override val logger: KLogger
+            get() = logger()
     }
 
 

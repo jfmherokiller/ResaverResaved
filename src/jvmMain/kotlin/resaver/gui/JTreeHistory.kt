@@ -15,11 +15,12 @@
  */
 package resaver.gui
 
+import mu.KLoggable
+import mu.KLogger
 import java.awt.FlowLayout
 import java.awt.event.ActionEvent
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
-import java.util.logging.Logger
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JTree
@@ -53,12 +54,12 @@ class JTreeHistory(tree: JTree) : JPanel(FlowLayout()) {
                 BTN_PREVSELECTION.isEnabled = PREV_SELECTIONS.size > 1
                 BTN_NEXTSELECTION.isEnabled = NEXT_SELECTIONS.size > 0
                 if (selections != null && selections.isNotEmpty()) {
-                    LOG.info(String.format("TreeSelection: selection = %s", selections[0].lastPathComponent))
+                    logger.info{ "TreeSelection: selection = ${selections[0].lastPathComponent}" }
                 } else {
-                    LOG.info("TreeSelection: selection = nothing")
+                    logger.info{"TreeSelection: selection = nothing"}
                 }
             } else {
-                LOG.info("TreeSelection: selection - skipping")
+                logger.info{"TreeSelection: selection - skipping"}
             }
         }
         BTN_PREVSELECTION.addActionListener { e: ActionEvent? ->
@@ -78,9 +79,9 @@ class JTreeHistory(tree: JTree) : JPanel(FlowLayout()) {
                 TREE.selectionPaths = selections
                 if (selections != null && selections.isNotEmpty()) {
                     TREE.scrollPathToVisible(selections[0])
-                    LOG.info(String.format("TreeSelection: prev = %s", selections[0].lastPathComponent))
+                    logger.info{ "TreeSelection: prev = ${selections[0].lastPathComponent}" }
                 } else {
-                    LOG.info("TreeSelection: prev = nothing")
+                    logger.info{"TreeSelection: prev = nothing"}
                 }
             } finally {
                 LOCK.unlock()
@@ -103,9 +104,9 @@ class JTreeHistory(tree: JTree) : JPanel(FlowLayout()) {
                 TREE.selectionPaths = selections
                 if (selections != null && selections.isNotEmpty()) {
                     TREE.scrollPathToVisible(selections[0])
-                    LOG.info(String.format("TreeSelection: next = %s", selections[0].lastPathComponent))
+                    logger.info{ "TreeSelection: next = ${selections[0].lastPathComponent}" }
                 } else {
-                    LOG.info("TreeSelection: next = nothing")
+                    logger.info{"TreeSelection: next = nothing"}
                 }
             } finally {
                 LOCK.unlock()
@@ -120,8 +121,9 @@ class JTreeHistory(tree: JTree) : JPanel(FlowLayout()) {
     private val TREE: JTree
     private val LOCK: ReentrantLock
 
-    companion object {
-        private val LOG = Logger.getLogger(SaveWindow::class.java.canonicalName)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

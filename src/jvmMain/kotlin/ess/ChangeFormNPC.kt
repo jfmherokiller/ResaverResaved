@@ -16,6 +16,8 @@
 package ess
 
 import ess.ESS.ESSContext
+import mu.KLoggable
+import mu.KLogger
 import java.nio.ByteBuffer
 import java.util.logging.Level
 import java.util.logging.Logger
@@ -185,8 +187,9 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
         }
     }
 
-    companion object {
-        val LOG: Logger = Logger.getLogger(ChangeFormNPC::class.java.canonicalName)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**
@@ -247,7 +250,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
                 super.readRefID(input, "SLEEP_OUTFIT", context)
             }
         } catch (ex: RuntimeException) {
-            LOG.log(Level.WARNING, "Error parsing NPC_ ChangeForm.", ex)
+            logger.warn(ex) {"Error parsing NPC_ ChangeForm."}
             var count = 0
             while (input.hasRemaining()) {
                 val size = 256.coerceAtMost(input.capacity() - input.position())

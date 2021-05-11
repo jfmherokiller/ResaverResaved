@@ -15,14 +15,15 @@
  */
 package ess
 
+import UtilityFunctions
 import ess.ESS.ESSContext
+import mu.KLoggable
+import mu.KLogger
 import resaver.Analysis
 import java.nio.Buffer
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-
-import java.util.logging.Logger
 import java.util.zip.DataFormatException
 
 /**
@@ -193,7 +194,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
                 }
             }
         } catch (ex: ElementException) {
-            LOG.warning(ex.message)
+            logger.warn{ex.message}
             if (bestEffort) {
                 (BODYDATA as Buffer).position(0)
                 parsedData = ChangeFormDefault(BODYDATA, length1)
@@ -201,7 +202,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
                 return null
             }
         } catch (ex: BufferUnderflowException) {
-            LOG.warning(ex.message)
+            logger.warn{ex.message}
             if (bestEffort) {
                 (BODYDATA as Buffer).position(0)
                 parsedData = ChangeFormDefault(BODYDATA, length1)
@@ -376,8 +377,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         INT8, INT16, INT32
     }
 
-    companion object {
-        private val LOG = Logger.getLogger(ChangeForm::class.java.canonicalName)
+    companion object: KLoggable {
 
         /**
          * Decompresses a buffer.
@@ -408,6 +408,9 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
             check(cf1.refID == cf2.refID) { "RefID mismatch: ${cf1.refID} vs ${cf2.refID}." }
             check(cf1.type == cf2.type) { "Type mismatch: ${cf1.type} vs ${cf2.type}." }
         }
+
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

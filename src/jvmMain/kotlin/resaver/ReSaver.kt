@@ -15,6 +15,8 @@
  */
 package resaver
 
+import mu.KLoggable
+import mu.KLogger
 import picocli.CommandLine
 import java.awt.Color
 import java.awt.EventQueue
@@ -23,11 +25,10 @@ import java.util.concurrent.Callable
 import java.util.logging.Formatter
 import java.util.logging.Level
 import java.util.logging.LogRecord
-import java.util.logging.Logger
 import java.util.prefs.Preferences
 import javax.swing.UIManager
 import javax.swing.UnsupportedLookAndFeelException
-
+import java.util.logging.Logger
 /**
  * Entry class for ReSaver.
  *
@@ -52,13 +53,13 @@ class ReSaver : Callable<Int> {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
             }
         } catch (ex: ClassNotFoundException) {
-            LOG.log(Level.WARNING, "Couldn't set theme.", ex)
+            logger.warn(ex) {"Couldn't set theme."}
         } catch (ex: InstantiationException) {
-            LOG.log(Level.WARNING, "Couldn't set theme.", ex)
+            logger.warn(ex) {"Couldn't set theme."}
         } catch (ex: IllegalAccessException) {
-            LOG.log(Level.WARNING, "Couldn't set theme.", ex)
+            logger.warn(ex) {"Couldn't set theme."}
         } catch (ex: UnsupportedLookAndFeelException) {
-            LOG.log(Level.WARNING, "Couldn't set theme.", ex)
+            logger.warn(ex) {"Couldn't set theme."}
         }
 
         // Set the font scaling.
@@ -70,17 +71,17 @@ class ReSaver : Callable<Int> {
                 UIManager.put(key, biggerFont)
             }
         }
-
+        //val specallog = (logger.underlyingLogger as Logger)
         // Set up logging stuff.
-        LOG.parent.handlers[0].formatter = object : Formatter() {
-            override fun format(record: LogRecord): String {
-                val LEVEL = record.level
-                val MSG = record.message
-                val SRC = record.sourceClassName + "." + record.sourceMethodName
-                return "$SRC: $LEVEL: $MSG\n"
-            }
-        }
-        LOG.parent.handlers[0].level = Level.INFO
+       // specallog.parent.handlers[0].formatter = object : Formatter() {
+       //     override fun format(record: LogRecord): String {
+       //         val LEVEL = record.level
+       //         val MSG = record.message
+       //         val SRC = "${record.sourceClassName}.${record.sourceMethodName}"
+       //         return "$SRC: $LEVEL: $MSG\n"
+       //     }
+       // }
+        //specallog.parent.handlers[0].level = Level.INFO
 
         // Check the autoparse setting.
         val PREVIOUS = resaver.gui.Configurator.previousSave
@@ -125,7 +126,7 @@ class ReSaver : Callable<Int> {
     @CommandLine.Parameters(description = ["The savefile to open (optional)."])
     private var PATH_PARAMETER: List<Path>? = null
 
-    companion object {
+    companion object:KLoggable {
         /**
          * @param args the command line arguments
          */
@@ -161,17 +162,17 @@ class ReSaver : Callable<Int> {
                     }
                 }
             } catch (ex: ClassNotFoundException) {
-                LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex)
+                logger.warn(ex) {"Error setting Dark Nimbus theme."}
             } catch (ex: InstantiationException) {
-                LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex)
+                logger.warn(ex) {"Error setting Dark Nimbus theme."}
             } catch (ex: IllegalAccessException) {
-                LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex)
+                logger.warn(ex) {"Error setting Dark Nimbus theme."}
             } catch (ex: UnsupportedLookAndFeelException) {
-                LOG.log(Level.WARNING, "Error setting Dark Nimbus theme.", ex)
+                logger.warn(ex) { "Error setting Dark Nimbus theme."}
             }
         }
-
-        val LOG = Logger.getLogger(ReSaver::class.java.canonicalName)
         private val PREFS = Preferences.userNodeForPackage(ReSaver::class.java)
+        override val logger: KLogger
+            get() = logger()
     }
 }

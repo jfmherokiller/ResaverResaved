@@ -19,5 +19,5 @@ package ess
  *
  * @author Mark Fairchild
  */
-typealias ChangeFormMap<k,v> = LinkedHashMap<RefID?, ChangeForm?>
+typealias ChangeFormMap = LinkedHashMap<RefID?, ChangeForm?>
 //class ChangeFormMap(expected: Int) : LinkedHashMap<RefID?, ChangeForm?>(expected)

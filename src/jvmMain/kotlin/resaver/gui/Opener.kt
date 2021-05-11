@@ -17,6 +17,8 @@ package resaver.gui
 
 import resaver.ProgressModel
 import ess.ModelBuilder
+import mu.KLoggable
+import mu.KLogger
 import mu.KotlinLogging
 import java.awt.Dialog
 import java.awt.Toolkit
@@ -31,7 +33,6 @@ import javax.swing.Timer
  *
  * @author Mark Fairchild
  */
-private val logger = KotlinLogging.logger {}
 class Opener(window: SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, doAfter: Runnable?) : SwingWorker<ess.ESS?, Double?>() {
     /**
      *
@@ -101,7 +102,9 @@ class Opener(window: SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, 
         }
     }
 
-    companion object {
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

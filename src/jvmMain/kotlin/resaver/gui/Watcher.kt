@@ -15,6 +15,8 @@
  */
 package resaver.gui
 
+import mu.KLoggable
+import mu.KLogger
 import mu.KotlinLogging
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
@@ -27,7 +29,6 @@ import javax.swing.SwingWorker
  *
  * @author Mark
  */
-private val logger = KotlinLogging.logger {}
 class Watcher(window: SaveWindow?, worrier: ess.papyrus.Worrier?) {
     @Synchronized
     fun start(newWatchDir: Path?) {
@@ -156,8 +157,10 @@ class Watcher(window: SaveWindow?, worrier: ess.papyrus.Worrier?) {
     private var worker: WatchWorker? = null
     private var watchDir: Path? = null
 
-    companion object {
+    companion object:KLoggable {
         private val MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{fos,ess}")
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

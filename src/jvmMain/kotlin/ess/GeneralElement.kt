@@ -19,6 +19,8 @@ import ess.ESS.ESSContext
 import ess.papyrus.EID
 import ess.papyrus.PapyrusContext
 import mf.BufferUtil
+import mu.KLoggable
+import mu.KLogger
 import mu.KotlinLogging
 import resaver.Analysis
 import resaver.IString
@@ -36,7 +38,7 @@ import kotlin.reflect.safeCast
  *
  * @author Mark Fairchild
  */
-public val logger = KotlinLogging.logger {}
+
 open class GeneralElement protected constructor() : Element {
     /**
      *
@@ -866,7 +868,7 @@ open class GeneralElement protected constructor() : Element {
      */
     public val DATA: MutableMap<IString, Any?> = mutableMapOf()
 
-    companion object {
+    companion object: KLoggable {
         /**
          * Appends `n` indents to a `StringBuilder`.
          *
@@ -1016,5 +1018,7 @@ open class GeneralElement protected constructor() : Element {
                 Array<Any>::class,
                 ArrayList::class,  //Check other places where lists are being pulled instead of arrays (kotlin being special)
         )
+        override val logger: KLogger
+            get() = logger()
     }
 }

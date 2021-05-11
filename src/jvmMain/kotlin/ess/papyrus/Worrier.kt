@@ -21,7 +21,6 @@ import resaver.ResaverFormatting.makeHTMLList
 import java.nio.file.FileSystems
 import java.util.*
 
-import java.util.logging.Logger
 import java.util.stream.Collectors
 import java.util.stream.Stream
 
@@ -291,7 +290,6 @@ class Worrier {
         null
 
     companion object {
-        private val LOG = Logger.getLogger(Worrier::class.java.canonicalName)
         private val MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{fos,ess}")
         private const val LIMIT = 12
     }

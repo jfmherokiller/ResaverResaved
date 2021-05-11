@@ -15,6 +15,8 @@
  */
 package resaver.gui
 
+import mu.KLoggable
+import mu.KLogger
 import java.awt.Window
 import java.io.IOException
 import java.net.JarURLConnection
@@ -27,65 +29,75 @@ import javax.swing.JOptionPane
  *
  * @author Mark
  */
-object AboutDialog {
-    @JvmStatic
-    fun show(window: Window?) {
-        val BUF = StringBuilder()
-            .append("ReSaver was developed for YOU personally. I hope you enjoy it.")
-            .append("\n\n")
-            .append(version)
-            .append("\n\nCopyright Mark Fairchild 2016.")
-            .append("\nDistributed under the Apache 2.0 license.\n")
-            .append("\nRunning on ${System.getProperty("os.name")} (${System.getProperty("os.version")} ${System.getProperty("os.arch")})")
-            .append(String.format("\n%1.2fgb memory available.", Runtime.getRuntime().maxMemory() / 1073741824.0))
-            .append("\nJava path: ${System.getProperty("java.home")}")
-            .append("\nJava vendor: ${System.getProperty("java.vendor")}")
-            .append("\nJava version: ${System.getProperty("java.version")}")
-        val ICON = logo
-        if (ICON == null) {
-            JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE)
-        } else {
-            JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE, ICON)
+class AboutDialog {
+    companion object:KLoggable {
+        @JvmStatic
+        fun show(window: Window?) {
+            val BUF = StringBuilder()
+                .append("ReSaver was developed for YOU personally. I hope you enjoy it.")
+                .append("\n\n")
+                .append(version)
+                .append("\n\nCopyright Mark Fairchild 2016.")
+                .append("\nDistributed under the Apache 2.0 license.\n")
+                .append(
+                    "\nRunning on ${System.getProperty("os.name")} (${System.getProperty("os.version")} ${
+                        System.getProperty(
+                            "os.arch"
+                        )
+                    })"
+                )
+                .append(String.format("\n%1.2fgb memory available.", Runtime.getRuntime().maxMemory() / 1073741824.0))
+                .append("\nJava path: ${System.getProperty("java.home")}")
+                .append("\nJava vendor: ${System.getProperty("java.vendor")}")
+                .append("\nJava version: ${System.getProperty("java.version")}")
+            val ICON = logo
+            if (ICON == null) {
+                JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE)
+            } else {
+                JOptionPane.showMessageDialog(window, BUF.toString(), "About", JOptionPane.ERROR_MESSAGE, ICON)
+            }
         }
-    }
 
-    private val logo: ImageIcon?
-        get() = try {
-            val URL = AboutDialog::class.java.classLoader.getResource(ICON_FILENAME)
-            if (URL == null) {
-                LOG.warning("Couldn't get $ICON_FILENAME resource URL.")
+        private val logo: ImageIcon?
+            get() = try {
+                val URL = AboutDialog::class.java.classLoader.getResource(ICON_FILENAME)
+                if (URL == null) {
+                    logger.warn{"Couldn't get $ICON_FILENAME resource URL."}
+                }
+                val IMAGE = ImageIO.read(URL)
+                if (IMAGE == null) {
+                    logger.warn{"Couldn't load $ICON_FILENAME into a BufferedImage."}
+                }
+                ImageIcon(IMAGE)
+            } catch (ex: IOException) {
+                null
+            } catch (ex: IllegalArgumentException) {
+                null
+            } catch (ex: NullPointerException) {
+                null
             }
-            val IMAGE = ImageIO.read(URL)
-            if (IMAGE == null) {
-                LOG.warning("Couldn't load $ICON_FILENAME into a BufferedImage.")
+
+        @JvmStatic
+        val version: CharSequence
+            get() = try {
+                val RES = SaveWindow::class.java.getResource(SaveWindow::class.java.simpleName + ".class")
+                val CONN = RES?.openConnection() as JarURLConnection
+                val MANIFEST = CONN.manifest
+                val ATTR = MANIFEST.mainAttributes
+                StringBuilder()
+                    .append(ATTR.getValue("Implementation-Version"))
+                    .append('.')
+                    .append(ATTR.getValue("Implementation-Build"))
+                    .append(" (")
+                    .append(ATTR.getValue("Built-Date"))
+                    .append(")")
+            } catch (ex: IOException) {
+                "(development version)"
+            } catch (ex: ClassCastException) {
+                "(development version)"
             }
-            ImageIcon(IMAGE)
-        } catch (ex: IOException) {
-            null
-        } catch (ex: IllegalArgumentException) {
-            null
-        } catch (ex: NullPointerException) {
-            null
-        }
-    @JvmStatic
-    val version: CharSequence
-        get() = try {
-            val RES = SaveWindow::class.java.getResource(SaveWindow::class.java.simpleName + ".class")
-            val CONN = RES?.openConnection() as JarURLConnection
-            val MANIFEST = CONN.manifest
-            val ATTR = MANIFEST.mainAttributes
-            StringBuilder()
-                .append(ATTR.getValue("Implementation-Version"))
-                .append('.')
-                .append(ATTR.getValue("Implementation-Build"))
-                .append(" (")
-                .append(ATTR.getValue("Built-Date"))
-                .append(")")
-        } catch (ex: IOException) {
-            "(development version)"
-        } catch (ex: ClassCastException) {
-            "(development version)"
-        }
-    private val LOG = Logger.getLogger(AboutDialog::class.java.canonicalName)
-    private const val ICON_FILENAME = "CatsInSunbeam.jpg"
+        private const val ICON_FILENAME = "CatsInSunbeam.jpg"
+        override val logger: KLogger
+            get() = logger()
+    }
 }

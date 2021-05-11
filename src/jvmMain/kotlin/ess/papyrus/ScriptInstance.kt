@@ -441,7 +441,6 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
 
     companion object {
         private val isCanary = { desc: MemberDesc -> desc.name.equals("::iPapyrusDataVerification_var") }
-        private val LOG = Logger.getLogger(ScriptInstance::class.java.canonicalName)
     }
 
     /**

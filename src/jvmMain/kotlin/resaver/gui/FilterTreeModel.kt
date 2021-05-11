@@ -22,8 +22,9 @@ import ess.papyrus.ActiveScript
 import ess.papyrus.FunctionMessage
 import ess.papyrus.HasID
 import ess.papyrus.SuspendedStack
+import mu.KLoggable
+import mu.KLogger
 import java.util.function.Predicate
-import java.util.logging.Logger
 import javax.swing.event.TreeModelEvent
 import javax.swing.event.TreeModelListener
 import javax.swing.tree.TreeModel
@@ -59,7 +60,7 @@ class FilterTreeModel : TreeModel {
                     iterator.remove()
                     node.countLeaves()
                     fireTreeNodesRemoved(TreeModelEvent(this, path))
-                    LOG.info(String.format("Deleting treepath: %s", path))
+                    logger.info{ "Deleting treepath: $path" }
                 } else if (!child.isLeaf) {
                     this.deleteElements(child, elements)
                 }
@@ -883,8 +884,9 @@ class FilterTreeModel : TreeModel {
         }
     }
 
-    companion object {
-        private val LOG = Logger.getLogger(FilterTreeModel::class.java.canonicalName)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

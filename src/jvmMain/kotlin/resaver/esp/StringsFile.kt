@@ -17,6 +17,8 @@ package resaver.esp
 
 import ess.Plugin
 import mf.BufferUtil
+import mu.KLoggable
+import mu.KLogger
 import org.mozilla.universalchardet.UniversalDetector
 import java.io.IOException
 import java.nio.Buffer
@@ -28,7 +30,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.FileSystems
 import java.nio.file.Path
 import java.nio.file.PathMatcher
-import java.util.logging.Logger
 
 /**
  * A StringsFile stores reads and stores strings from the mod stringtables;
@@ -99,7 +100,7 @@ class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBu
 
     }
 
-    companion object {
+    companion object:KLoggable {
         /**
          * Reads a `StringsFile` from a file.
          *
@@ -136,7 +137,6 @@ class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBu
         }
 
         private val CHARSET_LOG: MutableSet<Charset?> = HashSet()
-        private val LOG = Logger.getLogger(StringsFile::class.java.name)
         private val FS = FileSystems.getDefault()
 
         /**
@@ -155,12 +155,13 @@ class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBu
             val CHARSET =
                 (if (null == ENCODING) StandardCharsets.UTF_8 else Charset.forName(ENCODING))
             if (CHARSET_LOG.add(CHARSET)) {
-                LOG.info(
-                    "Detected a new character encoding: $CHARSET."
-                )
+                logger.info{"Detected a new character encoding: $CHARSET."}
             }
             return String(bytes, CHARSET)
         }
+
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

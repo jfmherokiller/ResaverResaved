@@ -17,6 +17,8 @@ package resaver.esp
 
 import ess.Plugin
 import ess.PluginInfo
+import mu.KLoggable
+import mu.KLogger
 import resaver.Game
 import resaver.esp.Record.Companion.readRecord
 import resaver.esp.Record.Companion.skimRecord
@@ -30,7 +32,6 @@ import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-import java.util.logging.Logger
 
 /**
  * Describes a Skyrim PEX script and will readFully and write it from iostreams.
@@ -71,7 +72,7 @@ class ESP(input: ByteBuffer, game: Game, plugin: Plugin, name: String?, plugins:
 
     private val RECORDS: MutableList<Record>
 
-    companion object {
+    companion object:KLoggable {
         /**
          * Skims a mod file and extracts EDIDs and ids.
          *
@@ -110,17 +111,17 @@ class ESP(input: ByteBuffer, game: Game, plugin: Plugin, name: String?, plugins:
                     return CTX.PLUGIN_INFO
                 }
             } catch (ex: FileNotFoundException) {
-                LOG.warning(ex.message)
+                logger.warn{ex.message}
                 throw ex
             } catch (ex: ClosedByInterruptException) {
                 throw ex
             } catch (ex: IOException) {
-                LOG.warning(ex.message)
+                logger.warn{ex.message}
                 throw IOException("Error reading plugin: $NAME", ex)
             }
         }
-
-        private val LOG = Logger.getLogger(ESP::class.java.canonicalName)
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

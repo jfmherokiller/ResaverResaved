@@ -16,6 +16,8 @@
 package ess
 
 import ess.ESS.ESSContext
+import mu.KLoggable
+import mu.KLogger
 import java.nio.ByteBuffer
 import java.util.logging.Logger
 
@@ -247,11 +249,12 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
                 super.readVSElemArray(input, "REFS") { `in`: ByteBuffer? -> context.readRefID(input) }
             }
             else -> {
-                LOG.severe("Unknown ExtraData: type=$TYPE")
+                logger.error {"Unknown ExtraData: type=$TYPE"}
                 throw ElementException("Unknown ExtraData: type=$TYPE", null, this)}
         }
     }
-    companion object {
-        private val LOG = Logger.getLogger(this::class.java.canonicalName)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 }

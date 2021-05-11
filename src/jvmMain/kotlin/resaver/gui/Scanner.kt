@@ -22,6 +22,8 @@ import resaver.Mod
 import resaver.ResaverFormatting
 import resaver.esp.StringTable
 import ess.Plugin
+import mu.KLoggable
+import mu.KLogger
 import specialConsumer
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
@@ -30,8 +32,6 @@ import java.nio.channels.ClosedByInterruptException
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.*
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 import javax.swing.SwingWorker
@@ -60,13 +60,13 @@ class Scanner(
         PROGRESS.invoke("Initializing")
         return try {
             val PLUGINS = SAVE.pluginInfo
-            LOG.info("Scanning plugins.")
+            logger.info{"Scanning plugins."}
             val MODS: MutableList<Mod> = ArrayList(1024)
             val CORE = Mod(GAME, GAME_DIR.resolve("data"))
             MODS.add(CORE)
             if (null != MO2_INI) {
                 PROGRESS.invoke("Analyzing MO2")
-                LOG.info("Checking Mod Organizer 2.")
+                logger.info{"Checking Mod Organizer 2."}
                 val MOMODS = Configurator.analyzeModOrganizer2(GAME, MO2_INI)!!
                 MODS.addAll(MOMODS)
             }
@@ -119,7 +119,7 @@ class Scanner(
                 ERR_STRINGS.addAll(RESULTS.STRINGS_ERRORS)
                 RESULTS.errorFiles.forEach { v: Path? ->
                     val MSG = "Couldn't read $v from $mod."
-                    LOG.warning(MSG)
+                    logger.warn{MSG}
                 }
             }
             PROGRESS.invoke("Combine StringsFiles")
@@ -146,30 +146,30 @@ class Scanner(
                 PROGRESS.invoke("Parsing ${COUNTER.eval()}: ${plugin.indexName()}")
                 if (!PLUGINFILEMAP.containsKey(plugin)) {
                     ERR_PLUGINS.add(Paths.get(plugin.NAME))
-                    LOG.info("Plugin $plugin could not be found.")
+                    logger.info{"Plugin $plugin could not be found."}
                 } else {
                     try {
                         val INFO = resaver.esp.ESP.skimPlugin(PLUGINFILEMAP[plugin]!!, GAME, plugin, PLUGINS)
                         PLUGIN_DATA[plugin] = INFO
-                        LOG.info(
+                        logger.info {
                             String.format(
                                 "Scanned plugin: %6d names and %5.1f kb script data from %s",
                                 INFO.nameCount,
                                 INFO.scriptDataSize / 1024.0f,
                                 plugin.indexName()
                             )
-                        )
+                        }
                         assert(INFO.scriptDataSize >= 0)
                         SIZES[plugin] = INFO.scriptDataSize
                     } catch (ex: ClosedByInterruptException) {
                         throw ex
                     } catch (ex: RuntimeException) {
                         ERR_PLUGINS.add(Paths.get(plugin.NAME))
-                        LOG.log(Level.WARNING, "Error reading plugin: ${plugin.indexName()}.", ex)
+                        logger.warn(ex) {"Error reading plugin: ${plugin.indexName()}."}
                         ex.printStackTrace(System.err)
                     } catch (ex: IOException) {
                         ERR_PLUGINS.add(Paths.get(plugin.NAME))
-                        LOG.log(Level.WARNING, "Error reading plugin: ${plugin.indexName()}.", ex)
+                        logger.warn(ex) {"Error reading plugin: ${plugin.indexName()}."}
                         ex.printStackTrace(System.err)
                     }
                 }
@@ -178,7 +178,7 @@ class Scanner(
             val ANALYSIS = Analysis(PROFILEANALYSIS, PLUGIN_DATA, STRINGTABLE)
             WINDOW.setAnalysis(ANALYSIS)
             TIMER.stop()
-            LOG.info("Plugin scanning completed, took " + TIMER.formattedTime)
+            logger.info { "Plugin scanning completed, took ${TIMER.formattedTime}"}
 
             // Find the worst offenders for script data size.
             val toSort: MutableList<Map.Entry<Plugin, Long>> = mutableListOf()
@@ -296,16 +296,16 @@ class Scanner(
             RESULTS.setVisible(true);
              */ANALYSIS
         } catch (ex: ClosedByInterruptException) {
-            LOG.severe("Parsing terminated.")
+            logger.error {"Parsing terminated."}
             null
         } catch (ex: Exception) {
             val MSG = "Error reading plugins. ${ex.message}"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex) {MSG}
             JOptionPane.showMessageDialog(WINDOW, MSG, "Read Error", JOptionPane.ERROR_MESSAGE)
             null
         } catch (ex: Error) {
             val MSG = "Error reading plugins. ${ex.message}"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex) {MSG}
             JOptionPane.showMessageDialog(WINDOW, MSG, "Read Error", JOptionPane.ERROR_MESSAGE)
             null
         } finally {
@@ -330,8 +330,9 @@ class Scanner(
         }
     }
 
-    companion object {
-        private val LOG = Logger.getLogger(Scanner::class.java.canonicalName)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
 }

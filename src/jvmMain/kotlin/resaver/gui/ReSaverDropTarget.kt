@@ -16,6 +16,8 @@
 package resaver.gui
 
 import GenericConsumer
+import mu.KLoggable
+import mu.KLogger
 import mu.KotlinLogging
 import java.awt.dnd.DropTarget
 import kotlin.jvm.Synchronized
@@ -33,7 +35,6 @@ import java.nio.file.Path
  *
  * @author Mark Fairchild
  */
-private val logger = KotlinLogging.logger {}
 class ReSaverDropTarget(handler: GenericConsumer<Path>) : DropTarget() {
     /**
      *
@@ -64,7 +65,9 @@ class ReSaverDropTarget(handler: GenericConsumer<Path>) : DropTarget() {
 
     private val HANDLER: GenericConsumer<Path> = handler
 
-    companion object {
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
 }

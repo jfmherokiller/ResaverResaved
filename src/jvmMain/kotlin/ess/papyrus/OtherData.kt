@@ -17,6 +17,8 @@ package ess.papyrus
 
 import ess.Element
 import ess.Flags
+import mu.KLoggable
+import mu.KLogger
 import mu.KotlinLogging
 import java.nio.ByteBuffer
 
@@ -24,7 +26,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-private val logger = KotlinLogging.logger {}
+
 class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement(), PapyrusElement {
     val arrays: List<Array<Element>>
         get() = listOfNotNull(
@@ -357,7 +359,10 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    companion object {
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
+
     }
 
     /*static final private int[] SIZES_SLE = {8, 8, 8, 16, 16, -1, 17, };

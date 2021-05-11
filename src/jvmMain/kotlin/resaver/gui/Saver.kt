@@ -15,6 +15,8 @@
  */
 package resaver.gui
 
+import mu.KLoggable
+import mu.KLogger
 import resaver.ProgressModel
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
@@ -43,8 +45,8 @@ class Saver(window: SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnab
         WINDOW.progressIndicator.start("Saving")
         WINDOW.addWindowListener(LISTENER)
         return try {
-            LOG.info("================")
-            LOG.info("Writing to savegame file \"$SAVEFILE\".")
+            logger.info{"================"}
+            logger.info{"Writing to savegame file \"$SAVEFILE\"."}
             val MODEL = ProgressModel()
             WINDOW.progressIndicator.setModel(MODEL)
             val watcherRunning = WINDOW.watcher.isRunning
@@ -75,12 +77,12 @@ class Saver(window: SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnab
             SAVE
         } catch (ex: Exception) {
             val MSG = "Error while writing file \"${SAVEFILE.fileName}\".\n${ex.message}"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex) { MSG }
             JOptionPane.showMessageDialog(WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE)
             null
         } catch (ex: Error) {
             val MSG = "Error while writing file \"${SAVEFILE.fileName}\".\n${ex.message}"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex) { MSG}
             JOptionPane.showMessageDialog(WINDOW, MSG, "Write Error", JOptionPane.ERROR_MESSAGE)
             null
         } finally {
@@ -101,8 +103,9 @@ class Saver(window: SaveWindow?, saveFile: Path, save: ess.ESS?, doAfter: Runnab
         }
     }
 
-    companion object {
-        private val LOG = Logger.getLogger(Saver::class.java.canonicalName)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
 }

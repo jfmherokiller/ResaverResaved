@@ -17,12 +17,13 @@ fun buildTime(): String {
 plugins {
     java
     `maven-publish`
+    application
+    distribution
     kotlin("multiplatform") version "1.5.0"
     id("org.openjfx.javafxplugin") version "0.0.10"
     kotlin("kapt") version "1.5.0"
     id("com.github.johnrengelman.shadow") version "7.0.0"
 }
-
 repositories {
     mavenCentral()
     mavenLocal()
@@ -34,6 +35,12 @@ repositories {
         url = uri("https://repo.maven.apache.org/maven2/")
     }
 }
+
+
+application {
+    mainClass.set("resaver.ReSaver")
+}
+
 
 dependencies {
     implementation("info.picocli:picocli:4.2.0")
@@ -72,14 +79,14 @@ kotlin {
         val jvmTest by getting {
             dependencies {
                 implementation("org.slf4j:slf4j-api:1.7.25")
-                implementation("org.slf4j:slf4j-simple:1.7.5")
+                implementation("org.slf4j:slf4j-jdk14:1.7.5")
                 implementation(kotlin("test"))
             }
         }
         val jvmMain by getting {
             dependencies {
                 implementation("org.slf4j:slf4j-api:1.7.25")
-                implementation("org.slf4j:slf4j-simple:1.7.5")
+                implementation("org.slf4j:slf4j-jdk14:1.7.5")
             }
         }
     }

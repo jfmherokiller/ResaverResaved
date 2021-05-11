@@ -17,12 +17,12 @@ package resaver.gui
 
 import resaver.Game
 import resaver.ReSaver
-import resaver.gui.Configurator.getGameDirectory
-import resaver.gui.Configurator.getMO2Ini
-import resaver.gui.Configurator.getSaveDirectory
-import resaver.gui.Configurator.selectGameDirectory
-import resaver.gui.Configurator.selectMO2Ini
-import resaver.gui.Configurator.selectSavefileDirectory
+import resaver.gui.Configurator.Companion.getGameDirectory
+import resaver.gui.Configurator.Companion.getMO2Ini
+import resaver.gui.Configurator.Companion.getSaveDirectory
+import resaver.gui.Configurator.Companion.selectGameDirectory
+import resaver.gui.Configurator.Companion.selectMO2Ini
+import resaver.gui.Configurator.Companion.selectSavefileDirectory
 import java.awt.FlowLayout
 import java.awt.event.ActionEvent
 import java.nio.file.Path

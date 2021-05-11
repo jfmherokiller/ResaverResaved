@@ -16,6 +16,8 @@
 package resaver.gui
 
 import ess.papyrus.*
+import mu.KLoggable
+import mu.KLogger
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.util.*
@@ -100,9 +102,9 @@ class BatchCleaner(window: SaveWindow?, save: ess.ESS?) : SwingWorker<Boolean, D
                     // Group 2 is an optional deletion prompt.
                     if (null == MATCHER.group(2)) {
                         CLEAN_NAMES.add(DEF)
-                        LOG.info(String.format("Definition present, adding to cleaning list: %s", DEF))
+                        logger.info{String.format("Definition present, adding to cleaning list: %s", DEF)}
                     } else {
-                        LOG.info(String.format("Definition present, prompting for deletion: %s", DEF))
+                        logger.info{String.format("Definition present, prompting for deletion: %s", DEF)}
                         val PROMPT = MATCHER.group(2).trim { it <= ' ' }
                         val MSG = String.format("Delete %s?\n%s", DEF, PROMPT)
                         val TITLE = "Confirm"
@@ -234,8 +236,9 @@ class BatchCleaner(window: SaveWindow?, save: ess.ESS?) : SwingWorker<Boolean, D
         }
     }
 
-    companion object {
-        private val LOG = Logger.getLogger(Saver::class.java.canonicalName)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
 }

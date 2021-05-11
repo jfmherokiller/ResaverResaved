@@ -21,6 +21,8 @@ import ess.GlobalDataBlock
 import ess.Linkable
 import ess.ModelBuilder
 import mf.Counter
+import mu.KLoggable
+import mu.KLogger
 import mu.KotlinLogging
 import resaver.ListException
 import java.nio.BufferUnderflowException
@@ -34,7 +36,6 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-private val logger = KotlinLogging.logger {}
 class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : PapyrusElement, GlobalDataBlock {
     /**
      * @see ess.Element.write
@@ -684,7 +685,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
     private val ARRAYSBLOCK: ByteArray
     val EIDS: Map<Number, EID>
 
-    companion object {
+    companion object:KLoggable {
         /**
          * Helper for printReferrents.
          *
@@ -724,6 +725,9 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
                 builder.append("</ul>")
             }
         }
+
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**

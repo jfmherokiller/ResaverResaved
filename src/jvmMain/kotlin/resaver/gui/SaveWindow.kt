@@ -23,26 +23,28 @@ import mf.Duad
 import mf.Duad.Companion.make
 import mf.JValueMenuItem
 import mf.Timer
+import mu.KLoggable
+import mu.KLogger
 import resaver.*
-import resaver.gui.AboutDialog.show
-import resaver.gui.AboutDialog.version
+import resaver.gui.AboutDialog.Companion.show
+import resaver.gui.AboutDialog.Companion.version
 import resaver.gui.AutoCompletion.Companion.enable
-import resaver.gui.Configurator.choosePathModal
-import resaver.gui.Configurator.confirmSaveFile
-import resaver.gui.Configurator.getGameDirectory
-import resaver.gui.Configurator.getMO2Ini
-import resaver.gui.Configurator.selectGameDirectory
-import resaver.gui.Configurator.selectMO2Ini
-import resaver.gui.Configurator.selectNewSaveFile
-import resaver.gui.Configurator.selectPluginsExport
-import resaver.gui.Configurator.selectSaveFile
-import resaver.gui.Configurator.storeMO2Ini
-import resaver.gui.Configurator.validWrite
-import resaver.gui.Configurator.validateGameDirectory
-import resaver.gui.Configurator.validateMO2Ini
-import resaver.gui.Configurator.validateSavegame
+import resaver.gui.Configurator.Companion.choosePathModal
+import resaver.gui.Configurator.Companion.confirmSaveFile
+import resaver.gui.Configurator.Companion.getGameDirectory
+import resaver.gui.Configurator.Companion.getMO2Ini
+import resaver.gui.Configurator.Companion.selectGameDirectory
+import resaver.gui.Configurator.Companion.selectMO2Ini
+import resaver.gui.Configurator.Companion.selectNewSaveFile
+import resaver.gui.Configurator.Companion.selectPluginsExport
+import resaver.gui.Configurator.Companion.selectSaveFile
+import resaver.gui.Configurator.Companion.storeMO2Ini
+import resaver.gui.Configurator.Companion.validWrite
+import resaver.gui.Configurator.Companion.validateGameDirectory
+import resaver.gui.Configurator.Companion.validateMO2Ini
+import resaver.gui.Configurator.Companion.validateSavegame
 import resaver.gui.DataAnalyzer.Companion.showDataAnalyzer
-import resaver.gui.FilterMaker.createFilter
+import resaver.gui.FilterMaker.Companion.createFilter
 import resaver.pex.AssemblyLevel
 import resaver.pex.PexFile.Companion.readScript
 import java.awt.*
@@ -303,11 +305,11 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             val ICON: Image = ImageIO.read(INPUT)
             super.setIconImage(ICON)
         } catch (ex: IOException) {
-            LOG.warning("Failed to load icon.")
+            logger.warn{"Failed to load icon."}
         } catch (ex: NullPointerException) {
-            LOG.warning("Failed to load icon.")
+            logger.warn{"Failed to load icon."}
         } catch (ex: IllegalArgumentException) {
-            LOG.warning("Failed to load icon.")
+            logger.warn{"Failed to load icon."}
         }
         MODCOMBO.addItemListener { e: ItemEvent? -> updateFilters(false) }
         PLUGINCOMBO.addItemListener { e: ItemEvent? -> updateFilters(false) }
@@ -356,7 +358,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     0.0f
                 }
             } catch (ex: IOException) {
-                LOG.log(Level.WARNING, "Error setting title.", ex)
+                logger.warn(ex) {"Error setting title."}
                 Float.NEGATIVE_INFINITY
             }
 
@@ -457,8 +459,8 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
      */
     fun setESS(savefile: Path, newSave: ESS, model: FilterTreeModel, disableSaving: Boolean) {
 
-        LOG.info("================")
-        LOG.info("setESS")
+        logger.info{"================"}
+        logger.info{"setESS"}
         TIMER.restart()
 
         // If the game is Skyrim Legendary, and the string table bug was
@@ -511,7 +513,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         TREE.selectionPath = path
         resetTitle(savefile)
         TIMER.stop()
-        LOG.info("Treeview initialized, took ${TIMER.formattedTime}.")
+        logger.info{"Treeview initialized, took ${TIMER.formattedTime}."}
     }
 
     /**
@@ -520,7 +522,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
      * @param model The model to which the filters should be applied.
      */
     private fun createFilter(model: FilterTreeModel): Boolean {
-        LOG.info("Creating filters.")
+        logger.info{"Creating filters."}
         val MOD = MODCOMBO.getItemAt(MODCOMBO.selectedIndex)
         val PLUGIN = PLUGINCOMBO.selectedItem as Plugin?
         val TXT = FILTERFIELD.text
@@ -561,7 +563,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             SwingUtilities.invokeLater {
                 try {
                     TIMER.restart()
-                    LOG.info("Updating filters.")
+                    logger.info{"Updating filters."}
                     if (clear) {
                         MI_SHOWNONEXISTENTCREATED.isSelected = false
                         MI_SHOWNULLREFS.isSelected = false
@@ -581,7 +583,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     this.createFilter(TREE.model!!)
                 } finally {
                     TIMER.stop()
-                    LOG.info("Filter updated, took ${TIMER.formattedTime}.")
+                    logger.info{"Filter updated, took ${TIMER.formattedTime}."}
                 }
             }
         } else {
@@ -591,7 +593,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             SwingUtilities.invokeLater {
                 try {
                     TIMER.restart()
-                    LOG.info("Updating filters.")
+                    logger.info{"Updating filters."}
                     val path = TREE.selectionPath
                     if (clear) {
                         MI_SHOWNONEXISTENTCREATED.isSelected = false
@@ -618,7 +620,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     refreshTree()
                     MODEL.value = 9
                     if (null != path) {
-                        LOG.info("Updating filter: restoring path = $path")
+                        logger.info{"Updating filter: restoring path = $path"}
                         if (path.lastPathComponent == null) {
                             TREE.clearSelection()
                             clearContextInformation()
@@ -631,7 +633,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 } finally {
                     TIMER.stop()
                     progressIndicator.stop()
-                    LOG.info("Filter updated, took ${TIMER.formattedTime}.")
+                    logger.info{"Filter updated, took ${TIMER.formattedTime}."}
                 }
             }
         }
@@ -646,7 +648,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             try {
                 PREFS.flush()
             } catch (ex: BackingStoreException) {
-                LOG.log(Level.WARNING, "Error saving preferences.", ex)
+                logger.warn(ex){"Error saving preferences."}
             }
             FILTERFIELD.terminate()
             LBL_MEMORY.terminate()
@@ -712,9 +714,9 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             val SAVER = Saver(this, SAVEFILE!!, save, doAfter)
             SAVER.execute()
         } catch (ex: InterruptedException) {
-            LOG.log(Level.SEVERE, "Error while saving.", ex)
+            logger.error(ex) {"Error while saving."}
         } catch (ex: ExecutionException) {
-            LOG.log(Level.SEVERE, "Error while saving.", ex)
+            logger.error(ex){"Error while saving."}
         }
     }
 
@@ -797,10 +799,10 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     val TEXT = TextDialog(joinbe)
                     JOptionPane.showMessageDialog(this, TEXT, path.fileName.toString(), JOptionPane.INFORMATION_MESSAGE)
                 } catch (ex: IOException) {
-                    LOG.log(Level.WARNING, "Error while decompiling drag-and-drop script.", ex)
+                    logger.warn(ex){"Error while decompiling drag-and-drop script."}
                     JOptionPane.showMessageDialog(this, ex.message, "Decompile Error", JOptionPane.ERROR_MESSAGE)
                 } catch (ex: RuntimeException) {
-                    LOG.log(Level.WARNING, "Error while decompiling drag-and-drop script.", ex)
+                    logger.warn(ex){"Error while decompiling drag-and-drop script."}
                     JOptionPane.showMessageDialog(this, ex.message, "Decompile Error", JOptionPane.ERROR_MESSAGE)
                 }
             }
@@ -880,7 +882,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             }
         } catch (ex: IOException) {
             val MSG = "Error while writing file \"${EXPORT.fileName}\".\n${ex.message}"
-            LOG.log(Level.SEVERE, "Error while exporting plugin list.", ex)
+            logger.error(ex) {"Error while exporting plugin list."}
             JOptionPane.showMessageDialog(this@SaveWindow, MSG, "Write Error", JOptionPane.ERROR_MESSAGE)
         }
     }
@@ -950,20 +952,20 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             if (null == save) {
                 return
             }
-            LOG.info("Cleaning unattached instances.")
+            logger.info{"Cleaning unattached instances."}
             val papyrus = save!!.papyrus
             val REMOVED = papyrus!!.removeUnattachedInstances()
             val msg = String.format("Removed %d orphaned script instances.", REMOVED.size)
-            LOG.info(msg)
+            logger.info{msg}
             JOptionPane.showMessageDialog(this, msg, "Cleaned", JOptionPane.INFORMATION_MESSAGE)
-            if (REMOVED.size > 0) {
+            if (REMOVED.isNotEmpty()) {
                 deleteNodesFor(REMOVED)
                 setModified()
             }
         } catch (ex: HeadlessException) {
             val MSG = "Error cleaning unattached scripts."
             val TITLE = "Cleaning Error"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex){MSG}
             JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
@@ -976,7 +978,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             if (null == save) {
                 return
             }
-            LOG.info("Cleaning undefined elements.")
+            logger.info{"Cleaning undefined elements."}
             val papyrus = save!!.papyrus
             val REMOVED = papyrus!!.removeUndefinedElements()
             val TERMINATED = papyrus.terminateUndefinedThreads()
@@ -988,7 +990,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 BUF.append("Terminated ").append(TERMINATED).append(" undefined threads.")
             }
             val MSG = BUF.toString()
-            LOG.info(MSG)
+            logger.info{MSG}
             JOptionPane.showMessageDialog(this, MSG, "Cleaned", JOptionPane.INFORMATION_MESSAGE)
             if (REMOVED.isNotEmpty()) {
                 deleteNodesFor(REMOVED)
@@ -997,7 +999,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         } catch (ex: HeadlessException) {
             val MSG = "Error cleaning undefined elements."
             val TITLE = "Cleaning Error"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex){MSG}
             JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
@@ -1021,25 +1023,25 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             if (null == save) {
                 return
             }
-            LOG.info("Cleansing formlists.")
+            logger.info{"Cleansing formlists."}
             val results = save!!.cleanseFormLists()
             if (results[0] == 0) {
                 val MSG = "No nullrefs were found in any formlists."
                 val TITLE = "No nullrefs found."
-                LOG.info(MSG)
+                logger.info{MSG}
                 JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             } else {
                 setModified()
                 val MSG = String.format("%d nullrefs were cleansed from %d formlists.", results[0], results[1])
                 val TITLE = "Nullrefs cleansed."
-                LOG.info(MSG)
+                logger.info{MSG}
                 JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             }
             refreshTree()
         } catch (ex: HeadlessException) {
             val MSG = "Error cleansing formlists."
             val TITLE = "Cleansing Error"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex){MSG}
             JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
@@ -1053,25 +1055,25 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             if (null == save) {
                 return
             }
-            LOG.info("Cleansing formlist $flst.")
+            logger.info{"Cleansing formlist $flst."}
             val result = flst.cleanse()
             if (result == 0) {
                 val MSG = "No nullrefs were found."
                 val TITLE = "No nullrefs found."
-                LOG.info(MSG)
+                logger.info{MSG}
                 JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             } else {
                 setModified()
                 val MSG = String.format("%d nullrefs were cleansed.", result)
                 val TITLE = "Nullrefs cleansed."
-                LOG.info(MSG)
+                logger.info{MSG}
                 JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             }
             refreshTree()
         } catch (ex: HeadlessException) {
             val MSG = "Error cleansing formlists."
             val TITLE = "Cleansing Error"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex){MSG}
             JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
@@ -1091,25 +1093,25 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             if (null == save) {
                 return
             }
-            LOG.info("Removing nonexistent created forms.")
+            logger.info{"Removing nonexistent created forms."}
             val REMOVED: Set<PapyrusElement?> = save!!.removeNonexistentCreated()
             if (REMOVED.isNotEmpty()) {
                 val MSG = "No scripts attached to non-existent created forms were found."
                 val TITLE = "No non-existent created"
-                LOG.info(MSG)
+                logger.info{MSG}
                 JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             } else {
                 setModified()
                 val MSG = String.format("%d instances were removed.", REMOVED.size)
                 val TITLE = "Instances removed."
-                LOG.info(MSG)
+                logger.info{MSG}
                 JOptionPane.showMessageDialog(this, MSG, TITLE, JOptionPane.INFORMATION_MESSAGE)
             }
             deleteNodesFor(REMOVED)
         } catch (ex: HeadlessException) {
             val MSG = "Error cleansing non-existent created."
             val TITLE = "Cleansing Error"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex){MSG}
             JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
@@ -1176,7 +1178,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         } catch (ex: Exception) {
             val MSG = "Error cleansing formlists."
             val TITLE = "Cleansing Error"
-            LOG.log(Level.SEVERE, MSG, ex)
+            logger.error(ex){MSG}
             JOptionPane.showMessageDialog(this@SaveWindow, MSG, TITLE, JOptionPane.ERROR_MESSAGE)
         }
     }
@@ -1445,7 +1447,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         }
         refreshTree()
         val MSG = if (threads.size > 1) "Thread terminated and zeroed." else "Threads terminated and zeroed."
-        LOG.info(MSG)
+        logger.info{MSG}
         JOptionPane.showMessageDialog(this, MSG, "Thread Termination", JOptionPane.INFORMATION_MESSAGE)
     }
 
@@ -1496,11 +1498,11 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             if (REMOVED.containsAll(elements)) {
                 val MSG = "Element Deleted:\n$ELEMENT"
                 JOptionPane.showMessageDialog(this, MSG, "Element Deleted", JOptionPane.INFORMATION_MESSAGE)
-                LOG.info(MSG)
+                logger.info{MSG}
             } else {
                 val MSG = "Couldn't delete element:\n$ELEMENT"
                 JOptionPane.showMessageDialog(this, MSG, "Error", JOptionPane.ERROR_MESSAGE)
-                LOG.warning(MSG)
+                logger.warn{MSG}
             }
         } else {
             val DELETABLE: MutableSet<Element?> = HashSet()
@@ -1588,7 +1590,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 BUF.append(if (deleteThreads) " threads terminated and deleted." else " threads terminated.")
             }
             val MSG = BUF.toString()
-            LOG.info(MSG)
+            logger.info{MSG}
             JOptionPane.showMessageDialog(this, MSG, "Elements Deleted", JOptionPane.INFORMATION_MESSAGE)
         }
 
@@ -1698,7 +1700,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     DOC.insertString(DOC.length, "Ignored", STYLE)
                 }
             } catch (ex: BadLocationException) {
-                LOG.log(Level.WARNING, "Error displaying ESS context information.", ex)
+                logger.warn(ex){"Error displaying ESS context information."}
             }
         } else if (element is AnalyzableElement) {
             INFOPANE.text = element.getInfo(analysis, save)!!
@@ -1737,10 +1739,10 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             return
         }
         val URL = event.description
-        LOG.info("Resolving URL: $URL")
+        logger.info{"Resolving URL: $URL"}
         val MATCHER = URLPATTERN.matcher(URL)
         if (!MATCHER.find()) {
-            LOG.warning("URL could not be resolved: $URL")
+            logger.warn("URL could not be resolved: $URL")
             return
         }
         val TYPE = MATCHER.group("type")
@@ -1869,9 +1871,9 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 }
             }
         } catch (ex: NumberFormatException) {
-            LOG.warning("Invalid address: $URL")
+            logger.warn("Invalid address: $URL")
         } catch (ex: IndexOutOfBoundsException) {
-            LOG.warning("Invalid address: $URL")
+            logger.warn("Invalid address: $URL")
         }
     }
 
@@ -1892,7 +1894,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             }
             null
         } catch (ex: ReflectiveOperationException) {
-            LOG.log(Level.WARNING, "Error initializing JavaFX.", ex)
+            logger.warn(ex){"Error initializing JavaFX."}
             null
         }
     }
@@ -1909,9 +1911,9 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 METHOD_EXIT.invoke(null)
             }
         } catch (ex: ReflectiveOperationException) {
-            LOG.log(Level.WARNING, "Error terminating JavaFX.", ex)
+            logger.warn(ex) {"Error terminating JavaFX."}
         } catch (ex: NullPointerException) {
-            LOG.log(Level.WARNING, "Error terminating JavaFX.", ex)
+            logger.warn(ex) { "Error terminating JavaFX."}
         }
     }
 
@@ -2053,11 +2055,13 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
     private val TIMER: Timer
     private val JFXPANEL: Any?
 
-    companion object {
+    companion object:KLoggable {
         private val PREFS = Preferences.userNodeForPackage(ReSaver::class.java)
         private val LOG = Logger.getLogger(SaveWindow::class.java.canonicalName)
         private val URLPATTERN =
             Pattern.compile("(?<type>[a-z]+)://(?<address>[^\\[\\]]+)(?:\\[(?<target1>\\d+)])?(?:\\[(?<target2>\\d+)])?$")
+        override val logger: KLogger
+            get() = logger()
     }
 
     /**
@@ -2072,7 +2076,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         JFXPANEL = if (PREFS.getBoolean("settings.javafx", false)) initializeJavaFX() else null
         TIMER = Timer("SaveWindow timer")
         TIMER.start()
-        LOG.info("Created timer.")
+        logger.info{"Created timer."}
         save = null
         analysis = null
         filter = Predicate { x: FilterTreeModel.Node? -> true }
@@ -2146,7 +2150,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         watcher = Watcher(this, WORRIER)
         initComponents(path, autoParse)
         TIMER.stop()
-        LOG.info("Version: $version")
-        LOG.info("SaveWindow constructed; took ${TIMER.formattedTime}.")
+        logger.info{"Version: $version"}
+        logger.info{"SaveWindow constructed; took ${TIMER.formattedTime}."}
     }
 }
