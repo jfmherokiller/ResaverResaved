@@ -27,7 +27,6 @@ import java.awt.FlowLayout
 import java.awt.event.ActionEvent
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
 import java.util.prefs.Preferences
 import javax.swing.*
 
@@ -44,7 +43,7 @@ class ReSaverSettings(parent: SaveWindow?, currentGame: Game?) : JDialog(parent,
          * @return
          */
         fun getFirst(vararg items: Path?): Path? {
-            return Arrays.stream(items).filter { obj: Path? -> Objects.nonNull(obj) }.findFirst().orElse(null)
+            return items.firstOrNull()
         }
 
         private val HOME = Paths.get(System.getProperty("user.home"), "appData", "local", "ModOrganizer")

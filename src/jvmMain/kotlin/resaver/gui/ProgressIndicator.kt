@@ -19,7 +19,6 @@ import javax.swing.JPanel
 import kotlin.jvm.Synchronized
 import resaver.ProgressModel
 import java.awt.Cursor
-import java.util.Objects
 import javax.swing.JLabel
 import javax.swing.JProgressBar
 import javax.swing.JComponent
@@ -53,7 +52,6 @@ class ProgressIndicator : JPanel() {
      */
     @Synchronized
     fun start(title: String?, model: ProgressModel?) {
-        Objects.requireNonNull(title)
         LABEL.text = title
         setModel(model)
         if (active > 0) {

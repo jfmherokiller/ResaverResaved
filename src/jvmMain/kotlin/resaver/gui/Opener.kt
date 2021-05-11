@@ -17,14 +17,13 @@ package resaver.gui
 
 import resaver.ProgressModel
 import ess.ModelBuilder
+import mu.KotlinLogging
 import java.awt.Dialog
 import java.awt.Toolkit
 import java.awt.event.ActionEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.nio.file.Path
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.swing.*
 import javax.swing.Timer
 
@@ -32,6 +31,7 @@ import javax.swing.Timer
  *
  * @author Mark Fairchild
  */
+private val logger = KotlinLogging.logger {}
 class Opener(window: SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, doAfter: Runnable?) : SwingWorker<ess.ESS?, Double?>() {
     /**
      *
@@ -46,8 +46,8 @@ class Opener(window: SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, 
         WINDOW.addWindowListener(LISTENER)
         WINDOW.clearESS()
         return try {
-            LOG.info("================")
-            LOG.info(String.format("Reading from savegame file \"%s\".", SAVEFILE))
+            logger.info{"================"}
+            logger.info{"Reading from savegame file \"$SAVEFILE\"."}
             val PROGRESS = ProgressModel()
             val MB = ModelBuilder(PROGRESS)
             WINDOW.progressIndicator.setModel(PROGRESS)
@@ -76,15 +76,15 @@ class Opener(window: SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, 
             if (DOAFTER != null) {
                 SwingUtilities.invokeLater(DOAFTER)
             }
-            RESULT?.ESS
+            RESULT.ESS
         } catch (ex: Exception) {
-            val MSG = String.format("Error while reading file \"%s\".\n%s", SAVEFILE.fileName, ex.message)
-            LOG.log(Level.SEVERE, MSG, ex)
+            val MSG = "Error while reading file \"${SAVEFILE.fileName}\".\n${ex.message}"
+            logger.error(ex) { MSG}
             JOptionPane.showMessageDialog(WINDOW, MSG, "Read Error", JOptionPane.ERROR_MESSAGE)
             null
         } catch (ex: Error) {
-            val MSG = String.format("Error while reading file \"%s\".\n%s", SAVEFILE.fileName, ex.message)
-            LOG.log(Level.SEVERE, MSG, ex)
+            val MSG = "Error while reading file \"${SAVEFILE.fileName}\".\n${ex.message}"
+            logger.error(ex) { MSG}
             JOptionPane.showMessageDialog(WINDOW, MSG, "Read Error", JOptionPane.ERROR_MESSAGE)
             null
         } finally {
@@ -106,7 +106,6 @@ class Opener(window: SaveWindow?, savefile: Path, worrier: ess.papyrus.Worrier, 
     }
 
     companion object {
-        private val LOG = Logger.getLogger(Opener::class.java.canonicalName)
     }
 
     /**
