@@ -498,10 +498,10 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         // If a plugin was previously selected, attempt to re-select it.
         if (null != PLUGINCOMBO.selectedItem && PLUGINCOMBO.selectedItem is Plugin) {
             val PREV = PLUGINCOMBO.selectedItem as Plugin
-            PLUGINCOMBO.setModel(pluginModel)
+            PLUGINCOMBO.model = pluginModel
             PLUGINCOMBO.setSelectedItem(PREV)
         } else {
-            PLUGINCOMBO.setModel(pluginModel)
+            PLUGINCOMBO.model = pluginModel
             PLUGINCOMBO.setSelectedIndex(0)
         }
 
