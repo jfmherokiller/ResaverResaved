@@ -19,12 +19,14 @@ import ess.Plugin
 import mf.BufferUtil
 import mu.KLoggable
 import mu.KLogger
+import okio.ExperimentalFileSystem
+import okio.FileSystem
+import okio.Path.Companion.toPath
 import org.mozilla.universalchardet.UniversalDetector
 import java.io.IOException
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.nio.channels.FileChannel
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.nio.file.FileSystems
@@ -101,6 +103,26 @@ class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBu
     }
 
     companion object:KLoggable {
+//        /**
+//         * Reads a `StringsFile` from a file.
+//         *
+//         * @param file The path to the file.
+//         * @param plugin The `Plugin` that the `StringsFile`
+//         * supplies.
+//         * @return The `StringsFile`.
+//         * @throws IOException
+//         */
+//        @Throws(IOException::class)
+//        fun readStringsFile(file: Path, plugin: Plugin?): StringsFile {
+//            FileChannel.open(file).use { channel ->
+//                val SIZE = channel.size().toInt()
+//                val BUFFER = ByteBuffer.allocate(SIZE)
+//                val bytesRead = channel.read(BUFFER)
+//                assert(bytesRead == SIZE)
+//                (BUFFER as Buffer).flip()
+//                return readStringsFile(file, plugin, BUFFER)
+//            }
+//        }
         /**
          * Reads a `StringsFile` from a file.
          *
@@ -110,18 +132,17 @@ class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBu
          * @return The `StringsFile`.
          * @throws IOException
          */
+        @OptIn(ExperimentalFileSystem::class)
         @Throws(IOException::class)
         fun readStringsFile(file: Path, plugin: Plugin?): StringsFile {
-            FileChannel.open(file).use { channel ->
-                val SIZE = channel.size().toInt()
-                val BUFFER = ByteBuffer.allocate(SIZE)
-                val bytesRead = channel.read(BUFFER)
-                assert(bytesRead == SIZE)
-                (BUFFER as Buffer).flip()
-                return readStringsFile(file, plugin, BUFFER)
+            val fileSystem: FileSystem = FileSystem.SYSTEM
+            val entireFileByteString = fileSystem.read(file.toString().toPath()) {
+                readByteString()
             }
+            val size = entireFileByteString.size
+            val mbuffer = ByteBuffer.allocate(size)
+            return readStringsFile(file,plugin,mbuffer)
         }
-
         /**
          * Reads a `StringsFile` from a `LittleEndianInput`.
          *
