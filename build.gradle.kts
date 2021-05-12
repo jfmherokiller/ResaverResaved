@@ -55,7 +55,9 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:1.12.5")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.2.0")
     implementation("com.squareup.okio:okio:3.0.0-alpha.5")
-
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.7.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 javafx {
     version = "15"

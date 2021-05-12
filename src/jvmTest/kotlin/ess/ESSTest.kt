@@ -18,6 +18,9 @@ package ess
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import org.junit.jupiter.params.provider.ValueSource
 import resaver.Game
 import resaver.ProgressModel
 import java.io.IOException
@@ -57,7 +60,7 @@ class ESSTest {
         }
         return paths.stream()
     }
-    @Test
+
     fun testReadESS() {
         val COUNT = PATHS.size
         for ((index, path) in PATHS.withIndex()) {
@@ -71,7 +74,8 @@ class ESSTest {
      *
      * @param path
      */
-    //@ParameterizedTest
+    @ParameterizedTest
+    @MethodSource("pathProvider")
     fun testReadESS(path: Path) {
         System.out.printf("readESS (%s)\n", WORK_DIR.relativize(path))
         try {
