@@ -40,18 +40,18 @@ class Pair<TypeA, TypeB>(val A: TypeA, val B: TypeB) {
         return hash
     }
 
-    override fun equals(obj: Any?): Boolean {
-        if (this === obj) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (obj == null) {
+        if (other == null) {
             return false
         }
-        if (javaClass != obj.javaClass) {
+        if (javaClass != other.javaClass) {
             return false
         }
-        val other = obj as Pair<*, *>
-        return A == other.A && B == other.B
+        val other2 = other as Pair<*, *>
+        return A == other2.A && B == other2.B
     }
 
     companion object {
