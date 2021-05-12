@@ -17,7 +17,6 @@ package resaver.archive
 
 import mf.BufferUtil
 import java.nio.channels.FileChannel
-import java.util.Optional
 import java.nio.ByteOrder
 import java.io.IOException
 import net.jpountz.lz4.LZ4Exception
@@ -31,7 +30,7 @@ import java.util.zip.DataFormatException
  * @author Mark Fairchild
  */
 object BSAFileData {
-    fun getData(channel: FileChannel, record: BSAFileRecord, header: BSAHeader): Optional<ByteBuffer> {
+    fun getData(channel: FileChannel, record: BSAFileRecord, header: BSAHeader): ByteBuffer? {
         return try {
             channel.position(record.OFFSET.toLong())
             val buffer = ByteBuffer.allocate(record.FILESIZE)
@@ -55,23 +54,23 @@ object BSAFileData {
 
             // If the file is compressed, inflateZLIB it. Otherwise just readFully it in.
             if (!record.ISCOMPRESSED) {
-                Optional.of(buffer)
+                buffer
             } else {
                 val uncompressedSize = buffer.int
                 val uncompressedData: ByteBuffer = when (header.VERSION) {
                     104 -> BufferUtil.inflateZLIB(buffer, uncompressedSize, record.FILESIZE)
                     105 -> BufferUtil.inflateLZ4(buffer, uncompressedSize)
-                    else -> throw IOException("Unknown version " + header.VERSION)
+                    else -> throw IOException("Unknown version ${header.VERSION}")
                 } // = ByteBuffer.allocate(uncompressedSize);
                 uncompressedData.order(ByteOrder.LITTLE_ENDIAN)
-                Optional.of(uncompressedData)
+                uncompressedData
             }
         } catch (ex: LZ4Exception) {
-            Optional.empty()
+            null
         } catch (ex: DataFormatException) {
-            Optional.empty()
+            null
         } catch (ex: IOException) {
-            Optional.empty()
+            null
         }
     }
 }

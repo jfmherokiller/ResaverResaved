@@ -48,14 +48,14 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
      * @see ArchiveParser.getFiles
      */
     @Throws(IOException::class)
-    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer>>? {
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer>> {
         return FOLDERRECORDS!!
             .filter { block: BSAFolderRecord -> dir == null || dir == block.PATH }
             .flatMap { block: BSAFolderRecord -> block.FILERECORDS }
             .filter { rec: BSAFileRecord -> matcher!!.matches(rec.path) }
             .associateBy(
                     { record: BSAFileRecord -> super.PATH.fileName.resolve(record.path!!) },
-                    { record: BSAFileRecord? -> BSAFileData.getData(super.CHANNEL, record!!, HEADER!!) })
+                    { record: BSAFileRecord? -> BSAFileData.getData(super.CHANNEL, record!!, HEADER!!) }).mapValues { Optional.of(it.value!!) }
     }
 
     /**

@@ -1,7 +1,8 @@
 package prefs
 
+import mu.KLoggable
+import mu.KLogger
 import java.io.File
-import java.util.logging.Logger
 import java.util.prefs.Preferences
 import java.util.prefs.PreferencesFactory
 
@@ -25,14 +26,13 @@ class FilePreferencesFactory : PreferencesFactory {
 
     override fun userRoot(): Preferences {
         if (rootPreferences == null) {
-            log.finer("Instantiating root preferences")
+            logger.debug {"Instantiating root preferences"}
             rootPreferences = FilePreferences(null, "")
         }
         return rootPreferences!!
     }
 
-    companion object {
-        private val log = Logger.getLogger(FilePreferencesFactory::class.java.name)
+    companion object:KLoggable {
         const val SYSTEM_PROPERTY_FILE = "prefs.FilePreferencesFactory.file"
 
         /*public static void main(String[] args) throws BackingStoreException
@@ -57,10 +57,12 @@ class FilePreferencesFactory : PreferencesFactory {
                         prefsFile = System.getProperty("user.home") + File.separator + ".fileprefs"
                     }
                     field = File(prefsFile).absoluteFile
-                    log.finer("Preferences file is $field")
+                    logger.error {"Preferences file is $field"}
                 }
                 return field
             }
             private set
+        override val logger: KLogger
+            get() = logger()
     }
 }

@@ -1,13 +1,13 @@
 package prefs
 
 
+import mu.KLoggable
+import mu.KLogger
 import prefs.FilePreferencesFactory.Companion.preferencesFile
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.*
-import java.util.logging.Level
-import java.util.logging.Logger
 import java.util.prefs.AbstractPreferences
 import java.util.prefs.BackingStoreException
 
@@ -26,7 +26,7 @@ class FilePreferences(parent: AbstractPreferences?, name: String) : AbstractPref
         try {
             flush()
         } catch (e: BackingStoreException) {
-            log.log(Level.SEVERE, "Unable to flush after putting $key", e)
+            logger.error(e) {"Unable to flush after putting $key"}
         }
     }
 
@@ -39,7 +39,7 @@ class FilePreferences(parent: AbstractPreferences?, name: String) : AbstractPref
         try {
             flush()
         } catch (e: BackingStoreException) {
-            log.log(Level.SEVERE, "Unable to flush after removing $key", e)
+            logger.error(e) {"Unable to flush after removing $key"}
         }
     }
 
@@ -148,18 +148,19 @@ class FilePreferences(parent: AbstractPreferences?, name: String) : AbstractPref
         }
     }
 
-    companion object {
-        private val log = Logger.getLogger(FilePreferences::class.java.name)
+    companion object:KLoggable {
+        override val logger: KLogger
+            get() = logger()
     }
 
     init {
-        log.finest("Instantiating node $name")
+        logger.debug {"Instantiating node $name"}
         root = TreeMap()
         children = TreeMap()
         try {
             sync()
         } catch (e: BackingStoreException) {
-            log.log(Level.SEVERE, "Unable to sync on creation of node $name", e)
+            logger.error(e) {"Unable to sync on creation of node $name"}
         }
     }
 }

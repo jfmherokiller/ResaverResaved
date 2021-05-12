@@ -33,7 +33,7 @@ class BSAFileRecord(input: ByteBuffer, header: BSAHeader, names: GenericSupplier
 
     val path: Path?
         get() = try {
-            Paths.get(NAME)
+            Paths.get(NAME!!)
         } catch (ex: InvalidPathException) {
             null
         }
