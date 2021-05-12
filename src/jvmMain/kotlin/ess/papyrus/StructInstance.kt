@@ -122,7 +122,7 @@ class StructInstance
             throw NullPointerException("The variable list is missing.")
         }
         require(!(index <= 0 || index >= data!!.VARIABLES.size)) { "Invalid variable index: $index" }
-        data!!.VARIABLES.set(index, newVar)
+        data!!.VARIABLES[index] = newVar
     }
 
     /**

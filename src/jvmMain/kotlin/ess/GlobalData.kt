@@ -61,7 +61,7 @@ class GlobalData(input: ByteBuffer, context: ESSContext?, model: ModelBuilder?) 
      * @return
      */
     override fun toString(): String {
-        return super.toString() + ": type " + Integer.toString(type)
+        return super.toString() + ": type " + type.toString()
     }
 
     /**
