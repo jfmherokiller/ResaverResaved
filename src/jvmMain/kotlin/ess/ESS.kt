@@ -744,7 +744,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             }
             var outbuffer = ByteBuffer.allocate(entireFileByteString.size).order(ByteOrder.LITTLE_ENDIAN)
             outbuffer = outbuffer.put(entireFileByteString.asByteBuffer())
-            outbuffer.flip()
+            (outbuffer as Buffer).flip()
             val ESS = ESS(outbuffer, saveFile.toNioPath(), model)
             val TREEMODEL = model.finish(ESS)
             TIMER.stop()
