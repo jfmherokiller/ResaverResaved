@@ -19,6 +19,8 @@ import ess.ChangeForm.Companion.verifyIdentical
 import ess.Header.Companion.verifyIdentical
 import ess.papyrus.*
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import mf.BufferUtil
 import mf.Counter
@@ -51,7 +53,6 @@ import kotlin.collections.ArrayDeque
 import kotlin.collections.ArrayList
 import kotlin.collections.HashSet
 import kotlin.collections.LinkedHashMap
-import java.util.*
 /**
  * Describes a Skyrim or Fallout4 savegame.
  *
@@ -424,9 +425,9 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         val nexp = header.NEEDED_XP + header.CURRENT_XP
         val time = header.FILETIME
         val millis = time / 10000L - 11644473600000L
-        val DATE = Date(millis)
+        val DATE = Instant.fromEpochMilliseconds(millis).toLocalDateTime(TimeZone.currentSystemDefault())
         BUILDER.append(String.format("<h3>$name the level $level $race $gender, in $location on $gameDate (%1.0f/%1.0f xp).</h3>", xp, nexp))
-        BUILDER.append(String.format("<fixed><ul><li>Save number %d, created on %s.</li>", header.SAVENUMBER, DATE))
+        BUILDER.append("<fixed><ul><li>Save number ${header.SAVENUMBER}, created on ${DATE.dayOfMonth}/${DATE.month}/${DATE.year} ${DATE.hour}:${DATE.minute}.</li>")
         BUILDER.append("<li>Version string: $versionString</li>")
         BUILDER.append(String.format("<li>Form version: %d</li>", formVersion))
         val actualSize = calculateSize() / 1048576.0f
