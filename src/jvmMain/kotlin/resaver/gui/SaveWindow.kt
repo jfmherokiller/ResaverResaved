@@ -109,7 +109,8 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         PROGRESSPANEL.add(progressIndicator)
         STATUSPANEL.add(PROGRESSPANEL, BorderLayout.LINE_START)
         STATUSPANEL.add(TREEHISTORY, BorderLayout.LINE_END)
-        TREESCROLLER.viewport.putClientProperty("EnableWindowBlit", java.lang.Boolean.TRUE)
+        //reason for this seen here https://web.archive.org/web/20210512224921/https://bugs.openjdk.java.net/browse/JDK-4295814
+        TREESCROLLER.viewport.scrollMode = JViewport.BACKINGSTORE_SCROLL_MODE
         FILTERPANEL.add(FILTERFIELD)
         FILTERPANEL.add(PLUGINCOMBO)
         FILTERPANEL.add(BTN_CLEAR_FILTER)
