@@ -15,16 +15,14 @@
  */
 package ess
 
-import resaver.IString
-import resaver.ProgressModel
 import ess.papyrus.*
 import mu.KLoggable
 import mu.KLogger
+import resaver.IString
+import resaver.ProgressModel
 import resaver.gui.FilterTreeModel.*
 import java.util.concurrent.*
 import java.util.function.Function
-import java.util.logging.Level
-import java.util.logging.Logger
 import java.util.stream.Collectors
 
 /**

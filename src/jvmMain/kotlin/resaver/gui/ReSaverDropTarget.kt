@@ -18,17 +18,15 @@ package resaver.gui
 import GenericConsumer
 import mu.KLoggable
 import mu.KLogger
-import mu.KotlinLogging
-import java.awt.dnd.DropTarget
-import kotlin.jvm.Synchronized
-import java.awt.dnd.DropTargetDropEvent
-import java.util.Objects
-import java.awt.dnd.DnDConstants
 import java.awt.datatransfer.DataFlavor
-import java.io.File
 import java.awt.datatransfer.UnsupportedFlavorException
+import java.awt.dnd.DnDConstants
+import java.awt.dnd.DropTarget
+import java.awt.dnd.DropTargetDropEvent
+import java.io.File
 import java.io.IOException
 import java.nio.file.Path
+import java.util.*
 
 /**
  * Handles file-drop events.

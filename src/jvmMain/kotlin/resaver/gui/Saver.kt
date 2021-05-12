@@ -22,8 +22,6 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.nio.file.Path
 import java.util.*
-import java.util.logging.Level
-import java.util.logging.Logger
 import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 import javax.swing.SwingWorker

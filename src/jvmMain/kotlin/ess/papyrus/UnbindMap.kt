@@ -15,10 +15,7 @@
  */
 package ess.papyrus
 
-import ess.papyrus.PapyrusElementMap
-import ess.papyrus.SuspendedStack
-import ess.papyrus.PapyrusContext
-import ess.papyrus.QueuedUnbind
+import ess.papyrus.PapyrusElementMap.PapyrusElementReader
 import java.nio.ByteBuffer
 
 /**

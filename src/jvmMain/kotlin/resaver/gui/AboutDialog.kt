@@ -20,7 +20,6 @@ import mu.KLogger
 import java.awt.Window
 import java.io.IOException
 import java.net.JarURLConnection
-import java.util.logging.Logger
 import javax.imageio.ImageIO
 import javax.swing.ImageIcon
 import javax.swing.JOptionPane

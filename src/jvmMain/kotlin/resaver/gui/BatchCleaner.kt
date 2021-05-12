@@ -21,8 +21,6 @@ import mu.KLogger
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.util.*
-
-import java.util.logging.Logger
 import java.util.regex.Pattern
 import javax.swing.*
 

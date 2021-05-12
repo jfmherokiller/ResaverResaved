@@ -19,8 +19,6 @@ import ess.ESS.ESSContext
 import mu.KLoggable
 import mu.KLogger
 import java.nio.ByteBuffer
-import java.util.logging.Level
-import java.util.logging.Logger
 
 /**
  * Describes a ChangeForm containing a placed Reference.

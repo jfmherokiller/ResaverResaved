@@ -17,10 +17,7 @@ package resaver
 
 import mu.KLoggable
 import mu.KLogger
-import mu.KotlinLogging
-import kotlin.jvm.JvmOverloads
 import javax.swing.DefaultBoundedRangeModel
-import kotlin.jvm.Synchronized
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 

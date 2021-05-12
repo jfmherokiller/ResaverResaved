@@ -17,7 +17,6 @@ package resaver.gui
 
 import mu.KLoggable
 import mu.KLogger
-import mu.KotlinLogging
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.IOException

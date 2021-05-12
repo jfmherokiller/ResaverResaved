@@ -15,11 +15,11 @@
  */
 package ess
 
+import UtilityFunctions
 import ess.ESS.ESSContext
 import mu.KLoggable
 import mu.KLogger
 import java.nio.ByteBuffer
-import java.util.logging.Logger
 
 /**
  * Manages the data in one element of a change form's extra data.

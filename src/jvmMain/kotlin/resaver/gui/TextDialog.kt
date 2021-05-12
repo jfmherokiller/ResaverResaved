@@ -15,9 +15,8 @@
  */
 package resaver.gui
 
-import javax.swing.JScrollPane
-import resaver.gui.InfoPane
 import java.awt.Dimension
+import javax.swing.JScrollPane
 
 /**
  *

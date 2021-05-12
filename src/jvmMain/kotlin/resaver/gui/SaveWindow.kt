@@ -15,6 +15,7 @@
  */
 package resaver.gui
 
+
 import ess.*
 import ess.ESS.Companion.readESS
 import ess.ESS.Companion.verifyIdentical
@@ -57,9 +58,6 @@ import java.util.concurrent.Callable
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import java.util.function.Predicate
-
-
-import java.util.logging.Level
 import java.util.logging.Logger
 import java.util.prefs.BackingStoreException
 import java.util.prefs.Preferences

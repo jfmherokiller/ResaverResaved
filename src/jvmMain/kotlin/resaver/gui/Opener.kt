@@ -15,11 +15,10 @@
  */
 package resaver.gui
 
-import resaver.ProgressModel
 import ess.ModelBuilder
 import mu.KLoggable
 import mu.KLogger
-import mu.KotlinLogging
+import resaver.ProgressModel
 import java.awt.Dialog
 import java.awt.Toolkit
 import java.awt.event.ActionEvent
@@ -27,7 +26,6 @@ import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.nio.file.Path
 import javax.swing.*
-import javax.swing.Timer
 
 /**
  *
