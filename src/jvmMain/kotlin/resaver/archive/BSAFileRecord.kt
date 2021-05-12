@@ -15,18 +15,18 @@
  */
 package resaver.archive
 
+import GenericSupplier
 import java.nio.ByteBuffer
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.function.Supplier
 
 /**
  * Describes a BSA file record.
  *
  * @author Mark Fairchild
  */
-class BSAFileRecord(input: ByteBuffer, header: BSAHeader, names: Supplier<String?>) {
+class BSAFileRecord(input: ByteBuffer, header: BSAHeader, names: GenericSupplier<String?>) {
     override fun toString(): String {
         return NAME ?: String.format("%d bytes at offset %d", FILESIZE, OFFSET)
     }
@@ -66,6 +66,6 @@ class BSAFileRecord(input: ByteBuffer, header: BSAHeader, names: Supplier<String
         FILESIZE = size and BIT30.inv()
         OFFSET = input.int
         ISCOMPRESSED = header.ISCOMPRESSED xor compressToggle
-        NAME = names.get()
+        NAME = names.invoke()
     }
 }

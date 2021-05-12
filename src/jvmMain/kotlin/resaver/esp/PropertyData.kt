@@ -15,10 +15,10 @@
  */
 package resaver.esp
 
+import GenericSupplier
 import mf.BufferUtil
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.util.function.Supplier
 
 /**
  * Stores the data for a script property. Basically a fancy VarArg.
@@ -201,7 +201,7 @@ abstract class PropertyData : Entry {
      *
      * @param <T> The type of PropertyData stored in the array.
     </T> */
-    class ArrayData<T : PropertyData?>(input: ByteBuffer, reader: Supplier<T>) : PropertyData() {
+    class ArrayData<T : PropertyData?>(input: ByteBuffer, reader: GenericSupplier<T>) : PropertyData() {
         override fun write(output: ByteBuffer?) {
             output!!.putInt(MEMBERS.size)
             MEMBERS.forEach { t: T -> t!!.write(output) }
@@ -225,7 +225,7 @@ abstract class PropertyData : Entry {
             val memberCount = input.int
             MEMBERS = mutableListOf()
             for (i in 0 until memberCount) {
-                val member = reader.get()
+                val member = reader.invoke()
                 MEMBERS.add(member)
             }
         }

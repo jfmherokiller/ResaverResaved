@@ -15,8 +15,8 @@
  */
 package mf
 
+import GenericSupplier
 import kotlin.jvm.Volatile
-import java.util.function.Supplier
 import kotlin.jvm.Synchronized
 import java.util.Objects
 
@@ -27,15 +27,15 @@ import java.util.Objects
 class Lazy<T> {
     @Volatile
     private var value: T? = null
-    fun getOrCompute(supplier: Supplier<T>): T? {
+    fun getOrCompute(supplier: GenericSupplier<T>): T? {
         val result = value // Just one volatile read 
         return result ?: maybeCompute(supplier)
     }
 
     @Synchronized
-    private fun maybeCompute(supplier: Supplier<T>): T? {
+    private fun maybeCompute(supplier: GenericSupplier<T>): T? {
         if (value == null) {
-            value = Objects.requireNonNull(supplier.get())
+            value = Objects.requireNonNull(supplier.invoke())
         }
         return value
     }

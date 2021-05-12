@@ -17,7 +17,7 @@ package resaver.esp
 
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
-import java.util.*
+
 
 /**
  * Describes GRUP records.
@@ -49,11 +49,7 @@ class RecordGrup(
      */
     override fun calculateSize(): Int {
         var sum = 24
-        var result = 0
-        for (RECORD in RECORDS) {
-            val calculateSize = RECORD.calculateSize()
-            result += calculateSize
-        }
+        val result = RECORDS.sumOf { it.calculateSize() }
         sum += result
         return sum
     }
@@ -79,7 +75,7 @@ class RecordGrup(
      * @param ctx The mod descriptor.
      */
     init {
-        RECORDS = LinkedList()
+        RECORDS = mutableListOf()
         while (input.hasRemaining()) {
             val record = readRecord(input, ctx)
             RECORDS.add(record)

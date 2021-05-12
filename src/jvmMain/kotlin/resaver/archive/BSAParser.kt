@@ -15,6 +15,7 @@
  */
 package resaver.archive
 
+import GenericSupplier
 import mf.BufferUtil
 import java.io.IOException
 import java.nio.Buffer
@@ -24,7 +25,6 @@ import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.PathMatcher
 import java.util.*
-import java.util.function.Supplier
 
 /**
  * Handles the job of reading scripts out of BSA files.
@@ -33,7 +33,7 @@ import java.util.function.Supplier
  */
 class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel) {
     @Throws(IOException::class)
-    private fun getNames(channel: FileChannel): Supplier<String?> {
+    private fun getNames(channel: FileChannel): GenericSupplier<String?> {
         val FILENAMES_OFFSET = (HEADER!!.FOLDER_OFFSET
                 + HEADER!!.FOLDER_COUNT.toLong() * BSAFolderRecord.SIZE + HEADER!!.TOTAL_FOLDERNAME_LENGTH + HEADER!!.FOLDER_COUNT
                 + HEADER!!.FILE_COUNT.toLong() * BSAFileRecord.SIZE)
@@ -41,7 +41,7 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
         channel.read(FILENAMESBLOCK, FILENAMES_OFFSET)
         FILENAMESBLOCK.order(ByteOrder.LITTLE_ENDIAN)
         (FILENAMESBLOCK as Buffer).flip()
-        return Supplier { BufferUtil.getZString(FILENAMESBLOCK) }
+        return { BufferUtil.getZString(FILENAMESBLOCK) }
     }
 
     /**
@@ -97,7 +97,7 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
             HEADER = BSAHeader(HEADERBLOCK, path?.fileName.toString())
 
             // Read the filename table indirectly.
-            val NAMES: Supplier<String?> = if (HEADER!!.INCLUDE_FILENAMES) getNames(channel) else Supplier { null.toString() }
+            val NAMES: GenericSupplier<String?> = if (HEADER!!.INCLUDE_FILENAMES) getNames(channel) else { { null.toString() } }
 
             // Allocate storage for the folder records and file records.
             FOLDERRECORDS = mutableListOf()

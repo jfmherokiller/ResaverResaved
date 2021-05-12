@@ -23,7 +23,6 @@ import resaver.IString
 import resaver.esp.Entry.Companion.advancingSlice
 import java.nio.ByteBuffer
 import java.nio.file.Paths
-import java.util.*
 
 /**
  * RecordTes4 is the first record. It handles its own data and is not read using
@@ -119,8 +118,8 @@ class RecordTes4(input: ByteBuffer, plugin: Plugin?, plugins: PluginInfo?, ctx: 
      */
     init {
         this.code = RecordCode.TES4
-        PLUGIN = Objects.requireNonNull(plugin)!!
-        PLUGINS = Objects.requireNonNull(plugins)!!
+        PLUGIN = plugin!!
+        PLUGINS = plugins!!
         val CODEBYTES = ByteArray(4)
         input[CODEBYTES]
         val CODESTRING = String(CODEBYTES)
@@ -146,21 +145,21 @@ class RecordTes4(input: ByteBuffer, plugin: Plugin?, plugins: PluginInfo?, ctx: 
                 }
             }
         }
-        MASTERS = Collections.unmodifiableList(ArrayList(masters))
-        var HEDR = Optional.empty<ByteBuffer>()
+        MASTERS = ArrayList(masters)
+        var HEDR:ByteBuffer? = null
         for (f in FIELDS) {
             if (f?.code!!.equals(IString["HEDR"])) {
                 if (f is FieldSimple) {
                     val byteBuffer = f.byteBuffer
-                    HEDR = Optional.of(byteBuffer)
+                    HEDR = byteBuffer
                     break
                 }
             }
         }
-        if (HEDR.isPresent) {
-            VERSION = HEDR.get().float
-            RECORD_COUNT = HEDR.get().int
-            NEXT_RECORD = HEDR.get().int
+        if (HEDR != null) {
+            VERSION = HEDR.float
+            RECORD_COUNT = HEDR.int
+            NEXT_RECORD = HEDR.int
         } else {
             VERSION = Float.NaN
             RECORD_COUNT = 0

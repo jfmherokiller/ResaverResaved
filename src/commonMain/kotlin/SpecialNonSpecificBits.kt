@@ -6,3 +6,4 @@ typealias MIntConsumer = (Int) -> Unit
 typealias MDoubleConsumer = (Double) -> Unit
 typealias GenericConsumer<T> = (T) -> Unit
 typealias GenericPredicate<T> = (T) -> Boolean
+typealias GenericSupplier<T> = () -> T

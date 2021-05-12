@@ -16,8 +16,8 @@
 package resaver.archive
 
 
+import GenericSupplier
 import java.nio.channels.FileChannel
-import java.util.function.Supplier
 import java.io.IOException
 import java.nio.Buffer
 import java.nio.ByteOrder
@@ -31,7 +31,7 @@ import java.nio.file.Path
  *
  * @author Mark Fairchild
  */
-internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: FileChannel, names: Supplier<String?>) {
+internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: FileChannel, names: GenericSupplier<String?>) {
     override fun toString(): String {
         return NAME!!
     }

@@ -15,10 +15,10 @@
  */
 package resaver.gui
 
+import GenericSupplier
 import javafx.stage.FileChooser
 import mu.KLoggable
 import mu.KLogger
-import mu.KotlinLogging
 import resaver.Game
 import resaver.Mod
 import resaver.Mod.Companion.createMod
@@ -33,7 +33,6 @@ import java.util.Scanner
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import java.util.function.Predicate
-import java.util.function.Supplier
 import java.util.prefs.Preferences
 import java.util.regex.Pattern
 import javax.swing.JFileChooser
@@ -65,8 +64,8 @@ class Configurator {
         @JvmStatic
         fun choosePathModal(
             owner: SaveWindow,
-            defval: Supplier<Path?>?,
-            request: Supplier<Path?>?,
+            defval: GenericSupplier<Path?>?,
+            request: GenericSupplier<Path?>?,
             check: Predicate<Path?>,
             interactive: Boolean
         ): Path? {
@@ -102,19 +101,19 @@ class Configurator {
          * @return
          */
         fun choosePath(
-            defval: Supplier<Path?>?,
-            request: Supplier<Path?>?,
+            defval: GenericSupplier<Path?>?,
+            request: GenericSupplier<Path?>?,
             check: Predicate<Path?>,
             interactive: Boolean
         ): Path? {
             if (defval != null) {
-                val DEFAULT = defval.get()
+                val DEFAULT = defval.invoke()
                 if (check.test(DEFAULT)) {
                     return DEFAULT
                 }
             }
             if (interactive && request != null) {
-                val REQUESTED = request.get()
+                val REQUESTED = request.invoke()
                 if (check.test(REQUESTED)) {
                     return REQUESTED
                 }
