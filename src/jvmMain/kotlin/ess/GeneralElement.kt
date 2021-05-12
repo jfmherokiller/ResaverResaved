@@ -517,7 +517,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @param `val` The value.
      */
-    inline fun <reified T: Any> addValue(name: String, `val`: T?): T? {
+    inline fun <reified T: Any> addValue(name: String, `val`: T?): T {
         var b = false
         var converted:Any? = null
         for (type in SUPPORTED) {

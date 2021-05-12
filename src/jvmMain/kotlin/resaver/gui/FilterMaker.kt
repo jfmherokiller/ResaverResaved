@@ -298,7 +298,7 @@ class FilterMaker {
                 if (!(FORM!!.type === ChangeFormType.ACHR || FORM!!.type === ChangeFormType.REFR)) {
                     return@Predicate false
                 }
-                val FLAGS: Flags? = FORM!!.changeFlags
+                val FLAGS: Flags = FORM!!.changeFlags
                 var i = 0
                 while (i <= 7) {
                     if (FLAGS!!.getFlag(i)) {

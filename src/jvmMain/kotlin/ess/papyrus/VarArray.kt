@@ -69,7 +69,7 @@ class VarArray(varType: VarType, input: ByteBuffer, context: PapyrusContext) : V
         }
     }
 
-    override fun toHTML(target: Element?): String? {
+    override fun toHTML(target: Element?): String {
         val LINK = makeLink("array", arrayID, arrayID.toString())
         return String.format("%s : %s", toTypeString(), LINK)
     }

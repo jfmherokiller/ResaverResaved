@@ -116,7 +116,7 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
      * @param save
      * @return
      */
-    override fun getInfo(analysis: Analysis?, save: ess.ESS?): String? {
+    override fun getInfo(analysis: Analysis?, save: ess.ESS?): String {
         val BUILDER = StringBuilder()
         BUILDER.append("<html><h3>SUSPENDEDSTACK</h3>")
         if (THREAD != null) {

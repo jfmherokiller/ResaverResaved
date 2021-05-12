@@ -55,7 +55,7 @@ class Pair<TypeA, TypeB>(val A: TypeA, val B: TypeB) {
     }
 
     companion object {
-        fun <A> make(a: A): Pair<A, A?>? {
+        fun <A> make(a: A): Pair<A, A?> {
             return Pair(a, null)
         }
 
