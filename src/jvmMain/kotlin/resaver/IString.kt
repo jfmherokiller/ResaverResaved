@@ -68,7 +68,7 @@ open class IString : CharSequence, Serializable, Comparable<IString> {
      * @see java.lang.String.isEmpty
      * @return True if the `IString` is empty, false otherwise.
      */
-    override fun isEmpty(): Boolean {
+    fun isEmpty(): Boolean {
         return STRING.isEmpty()
     }
 
