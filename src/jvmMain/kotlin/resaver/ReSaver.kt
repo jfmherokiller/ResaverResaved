@@ -22,13 +22,9 @@ import java.awt.Color
 import java.awt.EventQueue
 import java.nio.file.Path
 import java.util.concurrent.Callable
-import java.util.logging.Formatter
-import java.util.logging.Level
-import java.util.logging.LogRecord
 import java.util.prefs.Preferences
 import javax.swing.UIManager
 import javax.swing.UnsupportedLookAndFeelException
-import java.util.logging.Logger
 /**
  * Entry class for ReSaver.
  *
