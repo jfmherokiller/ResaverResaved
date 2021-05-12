@@ -751,20 +751,20 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             logger.info {String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE)}
             return ESS.Result(null, TIMER, TREEMODEL)
         }
-        private fun FileParsing(saveFile: Path, model: ModelBuilder, TIMER: Timer): Result {
-            FileChannel.open(saveFile, StandardOpenOption.READ).use { channel: FileChannel ->
-                val saveSize = Files.size(saveFile).toInt()
-                val input = ByteBuffer.allocate(saveSize).order(ByteOrder.LITTLE_ENDIAN)
-                channel.read(input)
-                (input as Buffer).flip()
-                val ESS = ESS(input, saveFile, model)
-                val TREEMODEL = model.finish(ESS)
-                TIMER.stop()
-                val SIZE = ESS.calculateSize() / 1048576.0f
-                logger.info {String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE)}
-                return ESS.Result(null, TIMER, TREEMODEL)
-            }
-        }
+//        private fun FileParsing(saveFile: Path, model: ModelBuilder, TIMER: Timer): Result {
+//            FileChannel.open(saveFile, StandardOpenOption.READ).use { channel: FileChannel ->
+//                val saveSize = Files.size(saveFile).toInt()
+//                val input = ByteBuffer.allocate(saveSize).order(ByteOrder.LITTLE_ENDIAN)
+//                channel.read(input)
+//                (input as Buffer).flip()
+//                val ESS = ESS(input, saveFile, model)
+//                val TREEMODEL = model.finish(ESS)
+//                TIMER.stop()
+//                val SIZE = ESS.calculateSize() / 1048576.0f
+//                logger.info {String.format("Savegame read: %.1f mb in ${TIMER.formattedTime} ($saveFile).", SIZE)}
+//                return ESS.Result(null, TIMER, TREEMODEL)
+//            }
+//        }
 
         /**
          * Writes out a savegame.
