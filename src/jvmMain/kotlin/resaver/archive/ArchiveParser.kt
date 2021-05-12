@@ -75,9 +75,9 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
         fun createParser(path: Path?, channel: FileChannel): ArchiveParser? {
             val magic = ByteBuffer.allocate(4)
             channel.read(magic, 0)
-            if (Arrays.equals(magic.array(), BSA_MAGIC)) {
+            if (magic.array().contentEquals(BSA_MAGIC)) {
                 return BSAParser(path, channel)
-            } else if (Arrays.equals(magic.array(), BA2GEN_MAGIC)) {
+            } else if (magic.array().contentEquals( BA2GEN_MAGIC)) {
                 return BA2Parser(path, channel)
             }
             return null
