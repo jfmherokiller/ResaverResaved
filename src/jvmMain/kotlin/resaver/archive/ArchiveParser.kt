@@ -21,6 +21,7 @@ import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.PathMatcher
+import java.nio.file.Paths
 import java.util.*
 
 /**
@@ -35,7 +36,7 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
 
     protected val CHANNEL: FileChannel
     protected val NAME: String
-    protected var PATH: Path = Path.of("")
+    protected var PATH: Path = Paths.get("")
 
     /**
      * Creates a `Map` pairing `Path` and `ByteBuffer`.
