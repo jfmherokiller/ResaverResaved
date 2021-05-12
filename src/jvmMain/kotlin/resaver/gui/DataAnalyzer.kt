@@ -392,9 +392,9 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
                             is VarRef -> {
                                 addHighlight(dataPos, `var`.calculateSize(), Color.GREEN)
                             }
-                            is VarNull -> {
+                            //is VarNull -> {
                                 //this.addHighlight(dataPos, var.calculateSize(), Color.GREEN);
-                            }
+                            //}
                             is VarNull -> {
                                 addHighlight(dataPos, `var`.calculateSize(), Color.YELLOW)
                             }
