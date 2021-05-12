@@ -28,11 +28,10 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven {
-        url = uri("https://builds.archive.org/maven2/")
-    }
-
-    maven {
         url = uri("https://repo.maven.apache.org/maven2/")
+    }
+    flatDir {
+        dirs("OldLibs")
     }
 }
 
@@ -134,4 +133,7 @@ tasks.create<Copy>("copyRuntimeLibsAndJar") {
     from(Libraries)
     from(tasks.withType<ShadowJar>())
 }
-
+distributions.forEach { run {
+        it.contents.from(tasks.getByName("sourcesJar")).into("")
+    }
+}
