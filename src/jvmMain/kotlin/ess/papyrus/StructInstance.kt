@@ -168,9 +168,9 @@ class StructInstance
     override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         if (null != struct) {
-            BUILDER.append(String.format("<html><h3>STRUCTURE of %s</h3>", struct!!.toHTML(this)))
+            BUILDER.append("<html><h3>STRUCTURE of ${struct!!.toHTML(this)}</h3>")
         } else {
-            BUILDER.append(String.format("<html><h3>STRUCTURE of %s</h3>", StructName))
+            BUILDER.append("<html><h3>STRUCTURE of $StructName</h3>")
         }
 
         /*if (null != analysis) {
@@ -185,11 +185,11 @@ class StructInstance
                     BUILDER.append("</ul>");
                 }
             }
-        }*/BUILDER.append(String.format("<p>ID: %s</p>", iD))
+        }*/BUILDER.append("<p>ID: $iD</p>")
         if (null == data) {
             BUILDER.append("<h3>DATA MISSING</h3>")
         } else {
-            BUILDER.append(String.format("<p>Flag: %s</p>", flag))
+            BUILDER.append("<p>Flag: $flag</p>")
         }
         save?.papyrus!!.printReferrents(this, BUILDER, "struct")
         BUILDER.append("</html>")
