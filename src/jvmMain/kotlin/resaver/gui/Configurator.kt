@@ -133,8 +133,7 @@ class Configurator {
         fun selectPluginsExport(parent: SaveWindow, savefile: Path?): Path? {
             logger.info { "Choosing an export file." }
             val previousExport = previousPluginsExport
-            val exportPath: Path
-            exportPath = if (null != savefile && previousExport != null && Files.exists(previousExport.parent)) {
+            val exportPath: Path = if (null != savefile && previousExport != null && Files.exists(previousExport.parent)) {
                 previousExport.resolveSibling(savefile.fileName.toString() + ".txt")
             } else if (null != savefile) {
                 savefile.resolveSibling(savefile.fileName.toString() + ".txt")
@@ -689,7 +688,7 @@ class Configurator {
                     val BASEDIR = if (BASEDIR_NAME == null) mo2Ini.parent else Paths.get(BASEDIR_NAME)
                     val MODS = BASEDIR.resolve("mods")
                     val PROFILES = BASEDIR.resolve("profiles")
-                    val PROFILE = PROFILES.resolve(PROFILE_NAME)
+                    val PROFILE = PROFILES.resolve(PROFILE_NAME!!)
                     logger.info { "Scanned $mo2Ini" }
                     logger.info { "GameName=$GAME_NAME" }
                     logger.info { "selected_profile=$PROFILE_NAME" }
@@ -1010,7 +1009,7 @@ class Configurator {
         fun getFirst(vararg items: Path): Path? {
             return Arrays.stream(items)
                 .filter { obj: Path? -> Objects.nonNull(obj) }
-                .filter { path: Path? -> Files.exists(path) }
+                .filter { path: Path? -> Files.exists(path!!) }
                 .findFirst().orElse(null)
         }
 
@@ -1028,8 +1027,8 @@ class Configurator {
         const val INI_PATH = "ModOrganizer.ini"
         const val MODLIST_PATH = "modlist.txt"
         const val MODLIST_PATTERN = "^([+-])(.+)$"
-        val MODLIST_REGEX = Pattern.compile(MODLIST_PATTERN)
-        val GLOB_INI = FileSystems.getDefault().getPathMatcher("glob:**.ini")
+        val MODLIST_REGEX = Pattern.compile(MODLIST_PATTERN)!!
+        val GLOB_INI = FileSystems.getDefault().getPathMatcher("glob:**.ini")!!
         private val TEXTFILES = FileNameExtensionFilter("Text file", "txt")
         private val PREFS = Preferences.userNodeForPackage(ReSaver::class.java)
         private val KEY_VALUE = Pattern.compile("^(.+)=(?:@ByteArray\\((.+)\\)|(.+))$", Pattern.CASE_INSENSITIVE)
