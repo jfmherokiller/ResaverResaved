@@ -16,7 +16,6 @@
 package resaver
 
 import java.nio.ByteBuffer
-import java.util.*
 
 /**
  * Extends `IString` by handling charsets and storing the original
@@ -51,7 +50,7 @@ open class WString : IString {
      * @param bytes The byte array.
      */
     protected constructor(bytes: ByteArray?) : super(mf.BufferUtil.mozillaString(bytes!!)) {
-        RAW_BYTES = if (Arrays.equals(super.uTF8, bytes)) null else bytes
+        RAW_BYTES = if (super.uTF8.contentEquals( bytes)) null else bytes
     }
 
     /**
