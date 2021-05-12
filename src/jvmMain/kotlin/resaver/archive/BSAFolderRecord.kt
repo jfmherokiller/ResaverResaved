@@ -76,7 +76,7 @@ internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: Fi
                 PADDING = input.int
                 OFFSET = input.long
             }
-            else -> throw IOException("Unknown header version " + header.VERSION)
+            else -> throw IOException("Unknown header version ${header.VERSION}")
         }
         val BLOCK = ByteBuffer.allocate(1024 + COUNT * BSAFileRecord.SIZE)
         channel.read(BLOCK, OFFSET - header.TOTAL_FILENAME_LENGTH)
@@ -95,7 +95,7 @@ internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: Fi
                 val file = BSAFileRecord(BLOCK, header, names)
                 FILERECORDS.add(file)
             } catch (ex: BufferUnderflowException) {
-                throw IOException(String.format("Buffer underflow while reading file %d/%d in %s.", i, COUNT, NAME))
+                throw IOException(String.format("Buffer underflow while reading file %d/%d in $NAME.", i, COUNT))
             }
         }
     }

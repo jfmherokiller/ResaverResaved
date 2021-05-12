@@ -228,7 +228,6 @@ abstract class Flags : Element {
             return other is FlagsInt && other.FLAGS == FLAGS
         }
 
-        @JvmField
         val FLAGS: Int
     }
 

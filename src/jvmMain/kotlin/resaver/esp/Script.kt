@@ -54,7 +54,7 @@ class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
         return sum
     }
 
-    @JvmField
+
     val NAME: IString = IString[mf.BufferUtil.getWString(input)!!]
     private var STATUS: Byte
     var PROPERTIES: MutableList<Property>?

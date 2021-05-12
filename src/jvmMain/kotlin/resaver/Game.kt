@@ -112,7 +112,6 @@ enum class Game(
     /**
      * An FX_FILTER, for dialog boxes that choose a savefile.
      */
-    @JvmField
     val FILTER: FileNameExtensionFilter = FileNameExtensionFilter(saveName, SAVE_EXT)
 
     /**

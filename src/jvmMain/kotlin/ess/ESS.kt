@@ -859,14 +859,13 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             check(BUF1.array().contentEquals(BUF2.array())) { "Papyrus mismatch." }
         }
 
-        @JvmField
         val THREAD = Predicate { v: Element? -> v is ActiveScript }
         val OWNABLE = Predicate { v: Element? ->
             (v is ActiveScript
                     || v is StackFrame
                     || v is ArrayInfo)
         }
-        @JvmField
+
         val DELETABLE = Predicate { v: Element? ->
             (v is Definition
                     || v is GameElement

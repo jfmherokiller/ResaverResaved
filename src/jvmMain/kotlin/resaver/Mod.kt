@@ -345,7 +345,6 @@ class Mod(game: Game?, dir: Path) : Serializable {
         /**
          * List: (Mod name)
          */
-        @JvmField
         val MODS: MutableSet<Mod> = mutableSetOf()
 
         /**
@@ -361,7 +360,6 @@ class Mod(game: Game?, dir: Path) : Serializable {
         /**
          * Map: (IString) -> (List: (Mod name))
          */
-        @JvmField
         val SCRIPT_ORIGINS: MutableMap<IString, MutableSet<String>> = mutableMapOf()
 
         /**

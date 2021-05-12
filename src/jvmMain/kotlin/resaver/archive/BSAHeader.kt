@@ -33,27 +33,17 @@ class BSAHeader(input: ByteBuffer, name: String) {
     val NAME: String
     val TYPE: Type
     val MAGIC: ByteArray
-    @JvmField
     val VERSION: Int
-    @JvmField
     val FOLDER_OFFSET: Int
     val ARCHIVE_FLAGS: Int
-    @JvmField
     val FOLDER_COUNT: Int
-    @JvmField
     val FILE_COUNT: Int
-    @JvmField
     val TOTAL_FOLDERNAME_LENGTH: Int
-    @JvmField
     val TOTAL_FILENAME_LENGTH: Int
     val FILE_FLAGS: Int
-    @JvmField
     val INCLUDE_DIRECTORYNAMES: Boolean
-    @JvmField
     val INCLUDE_FILENAMES: Boolean
-    @JvmField
     val ISCOMPRESSED: Boolean
-    @JvmField
     val EMBED_FILENAME: Boolean
 
     companion object {
@@ -78,10 +68,10 @@ class BSAHeader(input: ByteBuffer, name: String) {
             val magic = String(MAGIC)
             type = Type.valueOf(magic.trim { it <= ' ' })
             if (type !== Type.BSA) {
-                throw IOException("Invalid archive format: " + String(MAGIC))
+                throw IOException("Invalid archive format: ${String(MAGIC)}")
             }
         } catch (ex: IllegalArgumentException) {
-            throw IOException("Invalid archive format: " + String(MAGIC), ex)
+            throw IOException("Invalid archive format: ${String(MAGIC)}", ex)
         }
         TYPE = type
         VERSION = input.int

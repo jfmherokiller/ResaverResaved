@@ -156,7 +156,6 @@ class PexFile private constructor(input: ByteBuffer, game: Game) {
             val COMPILED = MATCHER.replaceAll(REPLACEMENT)
             return IString[COMPILED]
         }
-    @JvmField
     var GAME: Game? = null
     var HEADER: Header? = null
     var STRINGS: StringTable? = null

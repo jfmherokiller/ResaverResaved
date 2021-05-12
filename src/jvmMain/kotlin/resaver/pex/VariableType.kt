@@ -94,9 +94,7 @@ class VariableType private constructor(input: ByteBuffer, strings: StringTable, 
      */
     val isParam: Boolean
         get() = ROLE == Role.PARAM
-    @JvmField
     var name: TString
-    @JvmField
     val TYPE: TString
     val ROLE: Role
 
@@ -108,7 +106,6 @@ class VariableType private constructor(input: ByteBuffer, strings: StringTable, 
          * @param strings The `StringTable` for the `Pex`.
          * @throws IOException Exceptions aren't handled.
          */
-        @JvmStatic
         @Throws(IOException::class)
         fun readLocal(input: ByteBuffer, strings: StringTable): VariableType {
             return VariableType(input, strings, Role.LOCAL)
@@ -121,7 +118,6 @@ class VariableType private constructor(input: ByteBuffer, strings: StringTable, 
          * @param strings The `StringTable` for the `Pex`.
          * @throws IOException Exceptions aren't handled.
          */
-        @JvmStatic
         @Throws(IOException::class)
         fun readParam(input: ByteBuffer, strings: StringTable): VariableType {
             return VariableType(input, strings, Role.PARAM)

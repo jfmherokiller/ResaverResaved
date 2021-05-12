@@ -168,19 +168,16 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
     /**
      * The name field.
      */
-    @JvmField
     val NAME: String = name
 
     /**
      * The index field.
      */
-    @JvmField
     val INDEX: Int = index
 
     /**
      *
      */
-    @JvmField
     val LIGHTWEIGHT: Boolean = lightweight
 
     /**
@@ -228,7 +225,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
     }
 
     companion object {
-        @JvmField
+
         var PROTOTYPE: Plugin = Plugin("Unofficial Skyrim Legendary Edition Patch", -1, false)
 
         /**
@@ -238,7 +235,6 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
          * @param index The index of the plugin.
          * @return The new Plugin.
          */
-        @JvmStatic
         fun readFullPlugin(input: ByteBuffer?, index: Int): Plugin {
             if (index < 0 || index > 255) {
                 throw IllegalArgumentException("Invalid index: $index")

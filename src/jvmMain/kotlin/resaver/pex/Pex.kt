@@ -1232,9 +1232,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             }
 
             val OP: Byte
-            @JvmField
             val OPCODE: Opcode
-            @JvmField
             val ARGS: MutableList<VData>
         }
 

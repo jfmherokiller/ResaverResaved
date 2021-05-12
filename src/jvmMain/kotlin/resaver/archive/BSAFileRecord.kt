@@ -38,11 +38,8 @@ class BSAFileRecord(input: ByteBuffer, header: BSAHeader, names: GenericSupplier
             null
         }
     val NAMEHASH: Long
-    @JvmField
     val FILESIZE: Int
-    @JvmField
     val OFFSET: Int
-    @JvmField
     val ISCOMPRESSED: Boolean
     val NAME: String?
 

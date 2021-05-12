@@ -294,7 +294,6 @@ class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
         /**
          * A list of scripts that only exist implicitly.
          */
-        @JvmField
         val NATIVE_SCRIPTS = listOf(
             IString["ActiveMagicEffect"],
             IString["Alias"],

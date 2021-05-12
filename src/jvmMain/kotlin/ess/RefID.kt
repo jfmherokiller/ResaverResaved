@@ -128,9 +128,7 @@ class RefID internal constructor(private val DATA: Int, ess: ESS) : Element, Lin
         }
     }
 
-    @JvmField
     var FORMID = 0
-    @JvmField
     var PLUGIN: Plugin? = null
 
     /**

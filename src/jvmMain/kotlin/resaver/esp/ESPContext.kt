@@ -65,14 +65,14 @@ class ESPContext(game: resaver.Game, plugin: Plugin, tes4: RecordTes4?) {
         return CONTEXT.toString()
     }
 
-    @JvmField
+
     val GAME: resaver.Game = game
 
-    @JvmField
+
     val TES4: RecordTes4? = tes4
     private val CONTEXT: ArrayDeque<IString> = ArrayDeque()
 
-    @JvmField
+
     val PLUGIN_INFO: PluginData = PluginData(plugin)
 
     /**
