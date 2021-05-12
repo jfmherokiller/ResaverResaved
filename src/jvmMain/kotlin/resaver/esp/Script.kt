@@ -49,11 +49,7 @@ class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
             return 2
         }
         var sum = 5 + NAME.length
-        var result = 0
-        for (PROPERTY in PROPERTIES!!) {
-            val calculateSize = PROPERTY.calculateSize()
-            result += calculateSize
-        }
+        val result = PROPERTIES!!.sumOf { it.calculateSize() }
         sum += result
         return sum
     }
