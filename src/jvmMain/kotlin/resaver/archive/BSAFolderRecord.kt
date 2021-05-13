@@ -82,11 +82,11 @@ internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: Fi
         channel.read(BLOCK, OFFSET - header.TOTAL_FILENAME_LENGTH)
         BLOCK.order(ByteOrder.LITTLE_ENDIAN)
         (BLOCK as Buffer).flip()
-        if (header.INCLUDE_DIRECTORYNAMES) {
+        NAME = if (header.INCLUDE_DIRECTORYNAMES) {
             val NAMELEN = UtilityFunctions.toUnsignedInt(BLOCK.get())
-            NAME = mf.BufferUtil.getZString(BLOCK)
+            mf.BufferUtil.getZString(BLOCK)
         } else {
-            NAME = null
+            null
         }
         PATH = Paths.get(NAME!!)
         FILERECORDS = mutableListOf()

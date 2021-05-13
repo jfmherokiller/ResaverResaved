@@ -50,7 +50,7 @@ abstract class VarAbstractRef : Variable {
     }
 
     override fun toValueString(): String {
-        return if (referent != null) referent.toString() else "$ref ($refType)"
+        return referent?.toString() ?: "$ref ($refType)"
     }
 
     override fun toHTML(target: Element?): String? {
