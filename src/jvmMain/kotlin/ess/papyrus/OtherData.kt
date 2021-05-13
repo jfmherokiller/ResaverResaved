@@ -354,7 +354,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
             val COUNT = input?.let { readInt(it, "COUNT") }
             assert(0 <= COUNT!!)
             val BYTES = super.readBytes(input, "MEMBERS", COUNT)
-            STRING = BYTES?.let { String(it) }.toString()
+            STRING = String(BYTES)
         }
     }
 
@@ -371,31 +371,31 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         logger.info{String.format("Read ARRAY1, %d elements.", ARRAY1.size)}
         ARRAY1A = input?.let { read32ElemArray(it, "Array1a") { `in`: ByteBuffer? -> Array1A(`in`, context) } }
             ?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY1A, %d elements.", ARRAY1A.size)}
-        ARRAY2 = read32ElemArray(input, "Array2") { `in`: ByteBuffer? -> Array2(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY2, %d elements.", ARRAY2.size)}
-        ARRAY3 = read32ElemArray(input, "Array3") { `in`: ByteBuffer? -> Array3(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY3, %d elements.", ARRAY3.size)}
-        ARRAY4 = read32ElemArray(input, "Array4") { `in`: ByteBuffer? -> Array4(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY4, %d elements.", ARRAY4.size)}
-        SCRIPTS = read32ElemArray(input, "Scripts") { input: ByteBuffer? -> LString(input) }?.toTypedArray()!!
-        logger.info{String.format("Read SCRIPTS, %d element.", SCRIPTS.size)}
-        ARRAY4A = read32ElemArray(input, "Array4A") { `in`: ByteBuffer? -> Array4A(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY4A, %d elements.", ARRAY4A.size)}
-        ARRAY4B = read32ElemArray(input, "Array4b") { `in`: ByteBuffer? -> Array4B(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY4B, %d elements.", ARRAY4B.size)}
-        ARRAY4C = read32ElemArray(input, "Array4c") { `in`: ByteBuffer? -> Array4C(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY4C, %d elements.", ARRAY4C.size)}
-        ARRAY4D = read32ElemArray(input, "Array4d") { `in`: ByteBuffer? -> Array4D(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY4D, %d elements.", ARRAY4D.size)}
-        ARRAY5 = read32ElemArray(input, "Array5") { `in`: ByteBuffer? -> Array5(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY5, %d elements.", ARRAY5.size)}
-        ARRAY6 = read32ElemArray(input, "Array6") { `in`: ByteBuffer? -> Array6(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY6, %d elements.", ARRAY6.size)}
-        ARRAY7 = read32ElemArray(input, "Array7") { `in`: ByteBuffer? -> Array7(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY7, %d elements.", ARRAY7.size)}
-        ARRAY8 = read32ElemArray(input, "Array8") { `in`: ByteBuffer? -> Array8(`in`, context) }?.toTypedArray()!!
-        logger.info{String.format("Read ARRAY8, %d elements.", ARRAY8.size)}
+        logger.info{"Read ARRAY1A, ${ARRAY1A.size} elements."}
+        ARRAY2 = read32ElemArray(input, "Array2") { `in`: ByteBuffer? -> Array2(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY2, ${ARRAY2.size} elements."}
+        ARRAY3 = read32ElemArray(input, "Array3") { `in`: ByteBuffer? -> Array3(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY3, ${ARRAY3.size} elements."}
+        ARRAY4 = read32ElemArray(input, "Array4") { `in`: ByteBuffer? -> Array4(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY4, ${ARRAY4.size} elements."}
+        SCRIPTS = read32ElemArray(input, "Scripts") { input: ByteBuffer? -> LString(input) }.toTypedArray()
+        logger.info{"Read SCRIPTS, ${SCRIPTS.size} element."}
+        ARRAY4A = read32ElemArray(input, "Array4A") { `in`: ByteBuffer? -> Array4A(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY4A, ${ARRAY4A.size} elements."}
+        ARRAY4B = read32ElemArray(input, "Array4b") { `in`: ByteBuffer? -> Array4B(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY4B, ${ARRAY4B.size} elements."}
+        ARRAY4C = read32ElemArray(input, "Array4c") { `in`: ByteBuffer? -> Array4C(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY4C, ${ARRAY4C.size} elements."}
+        ARRAY4D = read32ElemArray(input, "Array4d") { `in`: ByteBuffer? -> Array4D(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY4D, ${ARRAY4D.size} elements."}
+        ARRAY5 = read32ElemArray(input, "Array5") { `in`: ByteBuffer? -> Array5(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY5, ${ARRAY5.size} elements."}
+        ARRAY6 = read32ElemArray(input, "Array6") { `in`: ByteBuffer? -> Array6(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY6, ${ARRAY6.size} elements."}
+        ARRAY7 = read32ElemArray(input, "Array7") { `in`: ByteBuffer? -> Array7(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY7, ${ARRAY7.size} elements."}
+        ARRAY8 = read32ElemArray(input, "Array8") { `in`: ByteBuffer? -> Array8(`in`, context) }.toTypedArray()
+        logger.info{"Read ARRAY8, ${ARRAY8.size} elements."}
         ARRAY9 = null
         //LOG.info(String.format("Read ARRAY9, %d elements.", this.ARRAY9.length));
         ARRAY10 = null
