@@ -2,6 +2,7 @@ package resaver.pex
 
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.util.function.Predicate
 import java.util.regex.Pattern
 
 /**
