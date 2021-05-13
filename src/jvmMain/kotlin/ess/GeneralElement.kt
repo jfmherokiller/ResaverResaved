@@ -416,7 +416,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT.let { readShorts(input, name, it.value) }
+        return readShorts(input, name, COUNT.value)
     }
 
     /**
@@ -431,7 +431,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT.let { readInts(input, name, it.value) }
+        return readInts(input, name, COUNT.value)
     }
 
     /**
@@ -446,7 +446,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT.let { readLongs(input, name, it.value) }
+        return readLongs(input, name, COUNT.value)
     }
 
     /**
@@ -461,7 +461,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT.let { readFloats(input, name, it.value) }
+        return readFloats(input, name, COUNT.value)
     }
 
     /**
