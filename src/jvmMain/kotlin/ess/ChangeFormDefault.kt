@@ -22,9 +22,15 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
+/**
+ * Creates a new `ChangeFormDefault` by storing a data buffer.
+ *
+ * @param input The data buffer.
+ * @param size Buffer size
+ */
 class ChangeFormDefault(input: ByteBuffer, size: Int) : ChangeFormData {
     /**
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -32,7 +38,7 @@ class ChangeFormDefault(input: ByteBuffer, size: Int) : ChangeFormData {
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see ess.Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
@@ -104,11 +110,7 @@ class ChangeFormDefault(input: ByteBuffer, size: Int) : ChangeFormData {
 
     private val DATA: ByteArray = ByteArray(size)
 
-    /**
-     * Creates a new `ChangeFormDefault` by storing a data buffer.
-     *
-     * @param input The data buffer.
-     */
+
     init {
         input[DATA]
     }

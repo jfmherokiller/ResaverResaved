@@ -38,7 +38,7 @@ internal class TString16 : TString {
 
     /**
      * @param output The output stream.
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      */
     override fun write(output: ByteBuffer?) {
         if (this.index > 0xFFF0 && !tStrings.STBCORRECTION) {
@@ -51,7 +51,7 @@ internal class TString16 : TString {
 
     /**
      * @return The size of the `Element` in bytes.
-     * @see resaver.ess.Element.calculateSize
+     * @see ess.Element.calculateSize
      */
     override fun calculateSize(): Int {
         return if (this.index > 0xFFF0 && !tStrings.STBCORRECTION) 6 else 2

@@ -58,6 +58,14 @@ import kotlin.collections.LinkedHashMap
  *
  * @author Mark Fairchild
  */
+/**
+ * Creates a new `ESS` by reading from a `ByteBuffer`.
+ *
+ * @param buffer The input stream for the savegame.
+ * @param saveFile The file containing the `ESS`.
+ * @param model A `ModelBuilder`.
+ * @throws IOException
+ */
 class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBuilder) : Element {
     /**
      * Writes the `ESS` to a `ByteBuffer`.
@@ -907,14 +915,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             get() = logger()
     }
 
-    /**
-     * Creates a new `ESS` by reading from a `ByteBuffer`.
-     *
-     * @param buffer The input stream for the savegame.
-     * @param saveFile The file containing the `ESS`.
-     * @param model A `ModelBuilder`.
-     * @throws IOException
-     */
+
     init {
         REFIDS = hashMapOf()
         originalFile = saveFile

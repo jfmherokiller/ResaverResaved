@@ -2,6 +2,7 @@ package ess.papyrus
 
 import resaver.Analysis
 import ess.WStringElement
+import java.io.IOException
 import java.nio.ByteBuffer
 
 /**
@@ -30,15 +31,16 @@ internal class TString32 : TString {
     /**
      * @param output The output stream.
      * @throws IOException
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      */
+    @Throws(IOException::class)
     override fun write(output: ByteBuffer?) {
         output!!.putInt(this.index)
     }
 
     /**
      * @return The size of the `Element` in bytes.
-     * @see resaver.ess.Element.calculateSize
+     * @see ess.Element.calculateSize
      */
     override fun calculateSize(): Int {
         return 4

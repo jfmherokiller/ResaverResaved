@@ -27,9 +27,19 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
+/**
+ * Creates a new `SuspendedStack` by reading from a
+ * `ByteBuffer`. No error handling is performed.
+ *
+ * @param input The input stream.
+ * @param context The `PapyrusContext` info.
+ * @throws PapyrusFormatException
+ * @throws PapyrusElementException
+ */
+class SuspendedStack constructor(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
+
     /**
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -40,7 +50,7 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see ess.Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
@@ -68,7 +78,7 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
         }
 
     /**
-     * @see resaver.ess.Linkable.toHTML
+     * @see ess.Linkable.toHTML
      * @param target A target within the `Linkable`.
      * @return
      */
@@ -76,13 +86,11 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
         if (null != target && hasMessage()) {
             var result: Variable? = null
             for (v in message?.variables!!) {
-                if (v != null) {
-                    if (v.hasRef()) {
-                        if (v.referent === target) {
-                                    result = v
-                                    break
-                                }
-                    }
+                if (v.hasRef()) {
+                    if (v.referent === target) {
+                                result = v
+                                break
+                            }
                 }
             }
             if (result != null) {
@@ -100,12 +108,16 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
      */
     override fun toString(): String {
         val BUF = StringBuilder()
-        if (hasMessage()) {
-            return message.toString()
-        } else if (THREAD != null) {
-            return THREAD.toString()
-        } else {
-            BUF.append(iD)
+        when {
+            hasMessage() -> {
+                return message.toString()
+            }
+            THREAD != null -> {
+                return THREAD.toString()
+            }
+            else -> {
+                BUF.append(iD)
+            }
         }
         return BUF.toString()
     }
@@ -120,16 +132,16 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
         val BUILDER = StringBuilder()
         BUILDER.append("<html><h3>SUSPENDEDSTACK</h3>")
         if (THREAD != null) {
-            BUILDER.append(String.format("<p>ActiveScript: %s</p>", THREAD.toHTML(this)))
+            BUILDER.append("<p>ActiveScript: ${THREAD.toHTML(this)}</p>")
         }
         if (hasMessage()) {
             if (null != analysis) {
                 val mods = analysis.SCRIPT_ORIGINS[message!!.scriptName.toIString()]
                 if (null != mods) {
-                    BUILDER.append(String.format("<p>Probably running code from mod %s.</p>", mods.last()))
+                    BUILDER.append("<p>Probably running code from mod ${mods.last()}.</p>")
                 }
             }
-            BUILDER.append(String.format("<p>Function: %s</p>", message!!.fName))
+            BUILDER.append("<p>Function: ${message!!.fName}</p>")
         }
         BUILDER.append(String.format("<p>Flag: %02x</p>", FLAG))
         if (hasMessage()) {
@@ -169,15 +181,6 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
     var message: FunctionMessageData? = null
     private val THREAD: ActiveScript?
 
-    /**
-     * Creates a new `SuspendedStack` by reading from a
-     * `ByteBuffer`. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The `PapyrusContext` info.
-     * @throws PapyrusFormatException
-     * @throws PapyrusElementException
-     */
     init {
         iD = context.readEID32(input)
         FLAG = input.get()
@@ -198,4 +201,6 @@ class SuspendedStack(input: ByteBuffer, context: PapyrusContext) : PapyrusElemen
             }
         }
     }
+
+
 }

@@ -162,7 +162,7 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
         val BUILDER = StringBuilder()
         BUILDER.append("<html><h3>STRING</h3>")
         BUILDER.append("<p>Value: \"$this\".</p>")
-        BUILDER.append(String.format("<p>Length: %d</p>", WSTR.length))
+        BUILDER.append("<p>Length: ${WSTR.length}</p>")
 
         /*if (null != analysis) {
             final Map<String, Integer> OWNERS = analysis.STRING_ORIGINS.get(this.toIString());

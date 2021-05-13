@@ -221,7 +221,7 @@ abstract class Flags : Element {
         }
 
         override fun hashCode(): Int {
-            return Integer.hashCode(FLAGS)
+            return FLAGS.hashCode()
         }
 
         override fun equals(other: Any?): Boolean {

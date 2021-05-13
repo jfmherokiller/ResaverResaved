@@ -15,6 +15,7 @@
  */
 package ess
 
+import java.io.IOException
 import java.nio.ByteBuffer
 
 
@@ -32,6 +33,7 @@ class FileLocationTable : Element {
      * @param game Specifies which format to use.
      * @throws IOException
      */
+    @Throws(IOException::class)
     constructor(input: ByteBuffer, game: resaver.Game?) {
         GAME = game
         formIDArrayCountOffset = input.int
@@ -151,7 +153,7 @@ class FileLocationTable : Element {
     }
 
     /**
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
