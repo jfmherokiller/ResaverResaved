@@ -70,6 +70,6 @@ abstract class VarAbstractRef : Variable {
     }
 
     val refType: TString
-    override val ref: EID
-    override val referent: GameElement?
+    final override val ref: EID
+    final override val referent: GameElement?
 }

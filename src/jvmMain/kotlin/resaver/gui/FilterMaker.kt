@@ -301,7 +301,7 @@ class FilterMaker {
                 val FLAGS: Flags = FORM!!.changeFlags
                 var i = 0
                 while (i <= 7) {
-                    if (FLAGS!!.getFlag(i)) {
+                    if (FLAGS.getFlag(i)) {
                         return@Predicate false
                     }
                     i++
