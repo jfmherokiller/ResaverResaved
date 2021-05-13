@@ -203,7 +203,7 @@ open class IString : CharSequence, Serializable, Comparable<IString> {
          * @param val The value to store, as a `String`.
          * @return The new `IString`.
          */
-        @JvmStatic
+
         operator fun get(`val`: String): IString {
             //return CACHE.computeIfAbsent(val, v -> new IString(v.intern()));
             return CACHE.getOrPut(`val`) { IString(`val`) }

@@ -65,27 +65,27 @@ interface Linkable {
          * @param text
          * @return
          */
-        @JvmStatic
+
         fun makeLink(type: String?, address: Any?, target1: Int, target2: Int, text: String?): String {
             return String.format("<a href=\"%s://%s[%d][%d]\">%s</a>", type, address, target1, target2, text)
         }
 
-        @JvmStatic
+
         fun makeLink(thread: String, ID: EID, toString: String): String {
             return String.format("<a href=\"%s://%s\">%s</a>", thread, ID, toString)
         }
 
-        @JvmStatic
+
         fun makeLink(frame: String, ID: EID, frameIndex: Int, toString: String): String {
             return String.format("<a href=\"%s://%s[%d]\">%s</a>", frame, ID, frameIndex, toString)
         }
 
-        @JvmStatic
+
         fun makeLink(script: String, REFTYPE: TString, toString: String): String {
             return String.format("<a href=\"%s://%s\">%s</a>", script, REFTYPE, toString)
         }
 
-        @JvmStatic
+
         fun makeLink(string: String, INDEX: Int, toString: String): String {
             return String.format("<a href=\"%s://%s\">%s</a>", string, INDEX, toString)
         }

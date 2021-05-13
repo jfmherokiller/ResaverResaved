@@ -71,7 +71,7 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
          * @return The `ArchiveParser`.
          * @throws IOException
          */
-        @JvmStatic
+
         @Throws(IOException::class)
         fun createParser(path: Path?, channel: FileChannel): ArchiveParser? {
             val magic = ByteBuffer.allocate(4)

@@ -106,7 +106,7 @@ enum class Opcode(val ARGS: Int) {
          * @param input The input stream.
          * @return The `DataType`.
          */
-        @JvmStatic
+
         @Throws(IOException::class)
         fun read(input: ByteBuffer): Opcode {
             val index = UtilityFunctions.toUnsignedInt(input.get())

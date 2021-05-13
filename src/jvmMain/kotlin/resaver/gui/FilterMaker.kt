@@ -498,7 +498,7 @@ class FilterMaker {
          * @param changeFormFlags
          * @return
          */
-        @JvmStatic
+
         fun createFilter(
             savefile: ESS,
             mod: Mod?,

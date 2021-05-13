@@ -168,7 +168,7 @@ class PluginInfo(input: ByteBuffer, supportsESL: Boolean) : Element {
          * @param id
          * @return
          */
-        @JvmStatic
+
         fun makeFormID(plugin: Plugin, id: Int): Int {
             return if (plugin.LIGHTWEIGHT) {
                 -0x2000000 or (plugin.INDEX shl 12) or (id and 0xfff)

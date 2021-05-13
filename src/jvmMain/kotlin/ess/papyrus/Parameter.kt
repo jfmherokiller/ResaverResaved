@@ -158,7 +158,7 @@ abstract class Parameter : PapyrusElement {
          * @param value
          * @return
          */
-        @JvmStatic
+
         fun createTerm(value: String?): Parameter {
             return value?.let { ParamTerm(it) }!!
         }

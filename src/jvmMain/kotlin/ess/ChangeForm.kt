@@ -402,7 +402,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
          * @throws IllegalStateException Thrown if the two instances of
          * `ChangeForm` are not equal.
          */
-        @JvmStatic
+
         @Throws(IllegalStateException::class)
         fun verifyIdentical(cf1: ChangeForm, cf2: ChangeForm) {
             check(cf1.refID == cf2.refID) { "RefID mismatch: ${cf1.refID} vs ${cf2.refID}." }

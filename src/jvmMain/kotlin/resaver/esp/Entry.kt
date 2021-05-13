@@ -46,7 +46,7 @@ interface Entry {
          * @param newLimit
          * @return
          */
-        @JvmStatic
+
         fun advancingSlice(buffer: ByteBuffer, newLimit: Int): ByteBuffer {
             // Make the new slice.
             val newSlice = buffer.slice().order(ByteOrder.LITTLE_ENDIAN)

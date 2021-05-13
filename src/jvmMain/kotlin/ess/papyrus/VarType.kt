@@ -86,7 +86,7 @@ enum class VarType(private val VALID: Boolean = true) : PapyrusElement {
          * @return The `Type`.
          * @throws PapyrusFormatException
          */
-        @JvmStatic
+
         @Throws(PapyrusFormatException::class)
         fun read(input: ByteBuffer): VarType {
             val `val` = input.get().toInt()

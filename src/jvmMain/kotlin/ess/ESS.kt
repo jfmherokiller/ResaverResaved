@@ -718,7 +718,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          * @throws IOException
          */
         @OptIn(ExperimentalFileSystem::class)
-        @JvmStatic
+
         @Throws(IOException::class)
         fun readESS(saveFile: Path, model: ModelBuilder): Result {
 
@@ -825,7 +825,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          * @throws IllegalStateException Thrown if the two instances of
          * `ESS` are not equal.
          */
-        @JvmStatic
+
         @Throws(IllegalStateException::class)
         fun verifyIdentical(ess1: ESS, ess2: ESS) {
             check(ess1.calculateBodySize() == ess2.calculateBodySize()) {

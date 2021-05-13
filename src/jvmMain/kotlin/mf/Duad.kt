@@ -50,7 +50,7 @@ class Duad<T>(var A: T, var B: T) {
     }
 
     companion object {
-        @JvmStatic
+
         fun <T> make(a: T, b: T): Duad<T> {
             return Duad(a, b)
         }

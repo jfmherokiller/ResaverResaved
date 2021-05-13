@@ -37,7 +37,7 @@ enum class CompressionType : Element {
     private val VALUE: Short = super.ordinal.toShort()
 
     companion object {
-        @JvmStatic
+
         fun read(input: ByteBuffer): CompressionType {
             return values()[input.short.toInt()]
         }

@@ -239,7 +239,7 @@ abstract class Flags : Element {
          * @param input The input stream.
          * @return The `Byte` .
          */
-        @JvmStatic
+
         fun readByteFlags(input: ByteBuffer): FlagsByte {
             return FlagsByte(input)
         }

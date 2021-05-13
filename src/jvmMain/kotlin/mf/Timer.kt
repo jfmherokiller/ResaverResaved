@@ -221,7 +221,7 @@ class Timer(name: String?) {
          * @param name The name of the `Timer`.
          * @return The newly created `Timer`.
          */
-        @JvmStatic
+
         fun startNew(name: String?): Timer {
             val t = Timer(name)
             t.start()

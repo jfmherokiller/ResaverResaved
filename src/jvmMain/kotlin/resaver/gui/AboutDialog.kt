@@ -30,7 +30,7 @@ import javax.swing.JOptionPane
  */
 class AboutDialog {
     companion object:KLoggable {
-        @JvmStatic
+
         fun show(window: Window?) {
             val BUF = StringBuilder()
                 .append("ReSaver was developed for YOU personally. I hope you enjoy it.")
@@ -76,7 +76,7 @@ class AboutDialog {
                 null
             }
 
-        @JvmStatic
+
         val version: CharSequence
             get() = try {
                 val RES = SaveWindow::class.java.getResource(SaveWindow::class.java.simpleName + ".class")

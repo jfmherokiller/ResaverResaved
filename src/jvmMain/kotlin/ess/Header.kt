@@ -180,7 +180,7 @@ class Header(input: ByteBuffer, path: Path?) : Element {
          * @throws IllegalStateException Thrown if the two instances of
          * `Header` are not equal.
          */
-        @JvmStatic
+
         @Throws(IllegalStateException::class)
         fun verifyIdentical(h1: Header, h2: Header) {
             check(h1.MAGIC.contentEquals(h2.MAGIC)) {

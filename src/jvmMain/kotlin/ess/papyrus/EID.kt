@@ -155,7 +155,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * `EID` belongs.
          * @return The `EID`.
          */
-        @JvmStatic
+
         fun read4byte(input: ByteBuffer, pap: Papyrus): EID {
             val VAL = input.int
             return make4byte(VAL, pap)
@@ -169,7 +169,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * `EID` belongs.
          * @return The `EID`.
          */
-        @JvmStatic
+
         fun read8byte(input: ByteBuffer, pap: Papyrus): EID {
             val VAL = input.long
             return make8Byte(VAL, pap)
@@ -183,7 +183,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * `EID` belongs.
          * @return The `EID`.
          */
-        @JvmStatic
+
         fun make4byte(`val`: Int, pap: Papyrus): EID {
             return pap.EIDS.getOrElse(`val`) { EID32(`val`) }
         }
@@ -196,7 +196,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * `EID` belongs.
          * @return The `EID`.
          */
-        @JvmStatic
+
         fun make8Byte(`val`: Long, pap: Papyrus): EID {
             return pap.EIDS.getOrElse(`val`) { EID64(`val`) }
         }
@@ -207,7 +207,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @param id
          * @return
          */
-        @JvmStatic
+
         fun pad8(id: Int): String {
             val hex = Integer.toHexString(id)
             val length = hex.length

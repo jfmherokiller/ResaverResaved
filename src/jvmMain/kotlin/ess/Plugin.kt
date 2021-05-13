@@ -251,7 +251,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
          * @return The new Plugin.
          * @throws IOException
          */
-        @JvmStatic
+
         @Throws(IOException::class)
         fun readLitePlugin(input: ByteBuffer?, index: Int): Plugin {
             if (index < 0 || index >= 4096) {

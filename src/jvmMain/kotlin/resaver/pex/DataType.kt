@@ -34,7 +34,7 @@ enum class DataType {
          * @param input The input stream.
          * @return The `DataType`.
          */
-        @JvmStatic
+
         @Throws(IOException::class)
         fun read(input: ByteBuffer): DataType {
             val index = UtilityFunctions.toUnsignedInt(input.get())

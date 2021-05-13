@@ -232,7 +232,7 @@ abstract class PropertyData : Entry {
     }
 
     companion object {
-        @JvmStatic
+
         fun readPropertyData(type: Byte, input: ByteBuffer, ctx: ESPContext?): PropertyData {
             assert(input.hasRemaining() || type.toInt() == 0) { "No input available, type = $type" }
             return when (type.toInt()) {

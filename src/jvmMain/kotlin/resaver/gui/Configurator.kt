@@ -61,7 +61,7 @@ class Configurator {
          * allowed.
          * @return
          */
-        @JvmStatic
+
         fun choosePathModal(
             owner: SaveWindow,
             defval: GenericSupplier<Path?>?,
@@ -129,7 +129,7 @@ class Configurator {
          * @return A `Path` pointing to the export file, or
          * `null` if a file was not selected.
          */
-        @JvmStatic
+
         fun selectPluginsExport(parent: SaveWindow, savefile: Path?): Path? {
             logger.info { "Choosing an export file." }
             val previousExport = previousPluginsExport
@@ -216,7 +216,7 @@ class Configurator {
          * @return A `Path` pointing to the savefile file, or
          * `null` if a file was not selected.
          */
-        @JvmStatic
+
         fun selectNewSaveFile(parent: SaveWindow, game: Game): Path? {
             logger.info { "Choosing a savefile." }
             val previousSave = previousSave
@@ -285,7 +285,7 @@ class Configurator {
          * @return A `File` pointing to the savefile file, or
          * `null` if a file was not selected.
          */
-        @JvmStatic
+
         fun confirmSaveFile(parent: SaveWindow, game: Game, selectedPath: Path): Path? {
             logger.info { "Choosing a savefile." }
             return if (Files.exists(selectedPath) && !Files.isWritable(selectedPath)) {
@@ -321,7 +321,7 @@ class Configurator {
          * @return A `File` pointing to the savefile, or
          * `null` if a file was not selected.
          */
-        @JvmStatic
+
         fun selectSaveFile(parent: SaveWindow): Path? {
             logger.info { "Choosing a savefile." }
             val previousSave = previousSave
@@ -386,7 +386,7 @@ class Configurator {
          * @return A `File` pointing to the selected ModOrganizer ini
          * file, or `null` if a file was not selected.
          */
-        @JvmStatic
+
         fun selectMO2Ini(parent: SaveWindow?, game: Game): Path? {
             logger.info { "Choosing the ModOrganizer path." }
             val CHOOSER = JFileChooser()
@@ -433,7 +433,7 @@ class Configurator {
          * @return A `File` pointing to the selected game directory, or
          * `null` if a directory was not selected.
          */
-        @JvmStatic
+
         fun selectGameDirectory(parent: SaveWindow?, game: Game): Path? {
             logger.info { "Choosing the $game directory." }
             val CHOOSER = JFileChooser()
@@ -470,7 +470,7 @@ class Configurator {
          * @return A `Path` pointing to the savefile directory, or
          * `null` if a directory was not selected.
          */
-        @JvmStatic
+
         fun selectSavefileDirectory(parent: SaveWindow?, game: Game): Path? {
             logger.info { "Choosing a directory to watch." }
             val CHOOSER = JFileChooser()
@@ -520,7 +520,7 @@ class Configurator {
          * @param dir The directory to validate.
          * @return True if the directory contains the game, false otherwise.
          */
-        @JvmStatic
+
         fun validateGameDirectory(game: Game, dir: Path): Boolean {
             return validDir(dir) && dir.fileName == game.GAME_DIRECTORY && Files.exists(dir.resolve(game.EXECUTABLE))
         }
@@ -533,7 +533,7 @@ class Configurator {
          * @param path The file to validate.
          * @return True if the file is probably a savefile.
          */
-        @JvmStatic
+
         fun validateSavegame(path: Path?): Boolean {
             return validFile(path) && Game.FILTER_ALL.accept(path?.toFile())
         }
@@ -544,7 +544,7 @@ class Configurator {
          *
          * @param mo2Ini The ini file to validate and store.
          */
-        @JvmStatic
+
         fun storeMO2Ini(mo2Ini: Path) {
             if (!validFile(mo2Ini)) {
                 return
@@ -610,7 +610,7 @@ class Configurator {
          * @return True if the ini file exists and is readable and contains relevant
          * info.
          */
-        @JvmStatic
+
         fun validateMO2Ini(game: Game?, mo2Ini: Path): Boolean {
             if (!validFile(mo2Ini)) {
                 return false
@@ -790,7 +790,7 @@ class Configurator {
          * @param game The game.
          * @return The directory.
          */
-        @JvmStatic
+
         fun getGameDirectory(game: Game): Path? {
             val KEY = game.NAME + "_directory"
             val path = PREFS[KEY, ""]
@@ -820,7 +820,7 @@ class Configurator {
          * @param game The game whose MO ini file should be stored.
          * @return The ini file.
          */
-        @JvmStatic
+
         fun getMO2Ini(game: Game): Path? {
             val gameDir = MO2ROOT.resolve(game.NAME)
             val iniFile = gameDir.resolve("ModOrganizer.ini")
@@ -857,7 +857,7 @@ class Configurator {
          * @param game The game whose MO ini file should be stored.
          * @return The ini file.
          */
-        @JvmStatic
+
         fun getSaveDirectory(game: Game): Path {
             val DEFAULT = MYGAMES.resolve(game.SAVE_DIRECTORY)
             val STORED = Paths.get(PREFS["saveDirectory_$game", DEFAULT.toString()])
@@ -988,7 +988,7 @@ class Configurator {
          * @param path
          * @return
          */
-        @JvmStatic
+
         fun validWrite(path: Path?): Boolean {
             return if (null == path) {
                 false

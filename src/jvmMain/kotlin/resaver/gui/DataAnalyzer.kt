@@ -435,7 +435,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
 
     private class Highlight(val C1: Int, val C2: Int, val COLOR: Color)
     companion object {
-        @JvmStatic
+
         fun showDataAnalyzer(window: Window?, data: ByteBuffer, ess: ess.ESS) {
             val ANALYZER = DataAnalyzer(data, ess)
             val DIALOG = JDialog(window, "Analyze")

@@ -145,7 +145,7 @@ abstract class Variable : PapyrusElement, Linkable {
          * @return The new `List` of `Variable`.
          * @throws ListException
          */
-        @JvmStatic
+
         @Throws(ListException::class)
         fun readList(input: ByteBuffer, count: Int, context: PapyrusContext): List<Variable> {
             val VARIABLES: MutableList<Variable> = mutableListOf()
@@ -169,7 +169,7 @@ abstract class Variable : PapyrusElement, Linkable {
          * @return The new `Variable`.
          * @throws PapyrusFormatException
          */
-        @JvmStatic
+
         @Throws(PapyrusFormatException::class)
         fun read(input: ByteBuffer, context: PapyrusContext): Variable {
             val VarTYPE = read(input)

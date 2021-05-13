@@ -149,7 +149,7 @@ class AutoCompletion<T>(var comboBox: JComboBox<T>) : PlainDocument() {
     }
 
     companion object {
-        @JvmStatic
+
         fun <T> enable(comboBox: JComboBox<T>) {
             // has to be editable
             comboBox.isEditable = true

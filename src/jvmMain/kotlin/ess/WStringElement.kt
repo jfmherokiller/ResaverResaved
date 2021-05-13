@@ -75,7 +75,7 @@ class WStringElement : WString, Element {
          * @param input The input stream.
          * @return The new `WStringElement`.
          */
-        @JvmStatic
+
         fun read(input: ByteBuffer?): WStringElement {
             val BYTES = input?.let { mf.BufferUtil.getWStringRaw(it) }
             return BYTES?.let { WStringElement(it) }!!

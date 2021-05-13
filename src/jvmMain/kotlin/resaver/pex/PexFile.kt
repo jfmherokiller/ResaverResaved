@@ -195,7 +195,7 @@ class PexFile private constructor(input: ByteBuffer, game: Game) {
          * @throws FileNotFoundException
          * @throws IOException
          */
-        @JvmStatic
+
         @Throws(FileNotFoundException::class, IOException::class)
         fun readScript(scriptFile: Path?): PexFile {
             FileChannel.open(scriptFile, StandardOpenOption.READ).use { CHANNEL ->

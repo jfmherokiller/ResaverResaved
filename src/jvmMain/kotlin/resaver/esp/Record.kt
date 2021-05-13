@@ -47,7 +47,7 @@ abstract class Record : Entry {
          * @param ctx The mod descriptor.
          * @return A list of fields that were readFully.
          */
-        @JvmStatic
+
         fun readField(parentCode: RecordCode, input: ByteBuffer, ctx: ESPContext): FieldList {
             return readFieldAux(parentCode, input, 0, ctx)
         }
@@ -122,7 +122,7 @@ abstract class Record : Entry {
          * @param ctx The mod descriptor.
          * @return The next Record from input.
          */
-        @JvmStatic
+
         fun readRecord(input: ByteBuffer, ctx: ESPContext): Record {
             // Read the record identification code.
             val CODEBYTES = ByteArray(4)
@@ -169,7 +169,7 @@ abstract class Record : Entry {
          * @param input The LittleEndianInput to readFully.
          * @param ctx The mod descriptor.
          */
-        @JvmStatic
+
         fun skimRecord(input: ByteBuffer, ctx: ESPContext) {
             // Read the record identification code.
             val CODEBYTES = ByteArray(4)
