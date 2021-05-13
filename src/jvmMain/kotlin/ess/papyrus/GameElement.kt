@@ -27,6 +27,15 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
+/**
+ * Creates a new `GameElement` by reading from a
+ * `ByteBuffer`. No error handling is performed.
+ *
+ * @param input The input stream.
+ * @param defs The list of definitions.
+ * @param context The `PapyrusContext` info.
+ * @throws PapyrusFormatException
+ */
 abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, context: PapyrusContext) :
     AnalyzableElement, Linkable, PapyrusElement, HasID {
     /**
@@ -102,15 +111,7 @@ abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, 
 
     open val scriptName: TString
         get() = definitionName
-    /**
-     * Creates a new `GameElement` by reading from a
-     * `ByteBuffer`. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param defs The list of definitions.
-     * @param context The `PapyrusContext` info.
-     * @throws PapyrusFormatException
-     */
+
     init {
         iD = context.readEID(input)
         definitionName = context.readTString(input)
