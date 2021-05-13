@@ -29,15 +29,21 @@ class ParamTerm(`val`: String) : Parameter() {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        } else if (other == null) {
-            return false
-        } else if (javaClass != other.javaClass) {
-            return false
+        when {
+            this === other -> {
+                return true
+            }
+            other == null -> {
+                return false
+            }
+            javaClass != other.javaClass -> {
+                return false
+            }
+            else -> {
+                val other2 = other as ParamTerm
+                return VALUE == other2.VALUE
+            }
         }
-        val other2 = other as ParamTerm
-        return VALUE == other2.VALUE
     }
 
     val VALUE: String = `val`

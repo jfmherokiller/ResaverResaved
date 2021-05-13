@@ -32,10 +32,14 @@ class ParamNull : Parameter() {
     }
 
     override fun equals(other: Any?): Boolean {
-        return if (this === other) {
-            true
-        } else if (other == null) {
-            false
-        } else javaClass == other.javaClass
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            else -> javaClass == other.javaClass
+        }
     }
 }
