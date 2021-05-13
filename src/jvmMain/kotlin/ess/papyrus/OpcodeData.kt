@@ -82,7 +82,7 @@ class OpcodeData : PapyrusElement {
     }
 
     /**
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -91,7 +91,7 @@ class OpcodeData : PapyrusElement {
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see ess.Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
