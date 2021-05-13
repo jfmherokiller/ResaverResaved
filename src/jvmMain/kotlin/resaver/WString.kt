@@ -54,7 +54,7 @@ open class WString : IString {
     }
 
     /**
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      * @param output The output stream.
      */
     open fun write(output: ByteBuffer?) {
@@ -80,7 +80,7 @@ open class WString : IString {
 
     /**
      * @see java.lang.String.getBytes
-     * @see resaver.IString.getUTF8
+     * @see IString.uTF8
      * @return An array of bytes representing the `IString`.
      */
     override val uTF8: ByteArray?

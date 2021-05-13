@@ -50,7 +50,7 @@ class WStringElement : WString, Element {
     private constructor(bytes: ByteArray) : super(bytes) {}
 
     /**
-     * @see resaver.ess.Element.write
+     * @see ess.Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
