@@ -41,7 +41,7 @@ import java.nio.ByteBuffer
 class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement, Linkable, HasID, SeparateData,
     HasVariables {
     /**
-     * @see resaver.ess.Element.write
+     * @see Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -72,7 +72,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
@@ -100,7 +100,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
     }
 
     /**
-     * @see resaver.ess.Linkable.toHTML
+     * @see Linkable.toHTML
      * @param target A target within the `Linkable`.
      * @return
      */
@@ -272,7 +272,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
      */
     private inner class ArrayData(input: ByteBuffer, context: PapyrusContext?) : PapyrusDataFor<ArrayInfo?> {
         /**
-         * @see resaver.ess.Element.write
+         * @see Element.write
          * @param output The output stream.
          */
         override fun write(output: ByteBuffer?) {
@@ -281,16 +281,12 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
         }
 
         /**
-         * @see resaver.ess.Element.calculateSize
+         * @see Element.calculateSize
          * @return The size of the `Element` in bytes.
          */
         override fun calculateSize(): Int {
             var sum = iD.calculateSize()
-            var result = 0
-            for (VARIABLE in VARIABLES!!) {
-                val calculateSize = VARIABLE!!.calculateSize()
-                result += calculateSize
-            }
+            val result = VARIABLES!!.sumOf { it!!.calculateSize() }
             sum += result
             return sum
         }
@@ -329,14 +325,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
         )
     }
 
-    /**
-     * Creates a new `ArrayInfo` by reading from a
-     * `ByteBuffer`. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The `PapyrusContext` info.
-     * @throws PapyrusFormatException
-     */
+
     init {
         val t = read(input)
         if (!VALID_TYPES.contains(t)) {

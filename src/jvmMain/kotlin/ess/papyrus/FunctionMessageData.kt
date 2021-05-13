@@ -32,6 +32,16 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
+/**
+ * Creates a new `FunctionMessageData` by reading from a
+ * `ByteBuffer`. No error handling is performed.
+ *
+ * @param input The input stream.
+ * @param parent The parent of the message.
+ * @param context The `PapyrusContext` info.
+ * @throws PapyrusFormatException
+ * @throws PapyrusElementException
+ */
 class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: PapyrusContext) : PapyrusElement,
     AnalyzableElement, HasVariables {
     /**
@@ -183,16 +193,7 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
     private val UNKNOWNVAR: Variable = read(input, context)
     private var VARIABLES: MutableList<Variable?> = mutableListOf()
 
-    /**
-     * Creates a new `FunctionMessageData` by reading from a
-     * `ByteBuffer`. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param parent The parent of the message.
-     * @param context The `PapyrusContext` info.
-     * @throws PapyrusFormatException
-     * @throws PapyrusElementException
-     */
+
     init {
         try {
             val count = input.int

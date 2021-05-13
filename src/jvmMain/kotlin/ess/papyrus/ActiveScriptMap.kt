@@ -33,5 +33,5 @@ class ActiveScriptMap :
             )
         })
 
-    internal constructor() {}
+    internal constructor()
 }

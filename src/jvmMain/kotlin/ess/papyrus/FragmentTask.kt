@@ -27,7 +27,7 @@ import java.nio.charset.StandardCharsets
  */
 class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) : PapyrusElement, Linkable {
     /**
-     * @see resaver.ess.Element.write
+     * @see Element.write
      * @param output The output stream.
      */
     override fun write(output: ByteBuffer?) {
@@ -44,7 +44,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {

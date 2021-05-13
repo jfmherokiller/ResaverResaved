@@ -28,6 +28,14 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
+/**
+ * Creates a new `FunctionMessage` by reading from a
+ * `ByteBuffer`. No error handling is performed.
+ *
+ * @param input The input stream.
+ * @param context The `PapyrusContext` info.
+ * @throws PapyrusElementException
+ */
 class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable {
     /**
      * @see Element.write
@@ -41,7 +49,7 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
@@ -65,7 +73,7 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
         get() = if (hasMessage()) message!!.script else null
 
     /**
-     * @see resaver.ess.Linkable.toHTML
+     * @see Linkable.toHTML
      * @param target A target within the `Linkable`.
      * @return
      */
@@ -182,14 +190,7 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
     var message: FunctionMessageData? = null
     private val THREAD: ActiveScript? = if (iD == null) null else context.findActiveScript(iD)
     //, HasID {
-    /**
-     * Creates a new `FunctionMessage` by reading from a
-     * `ByteBuffer`. No error handling is performed.
-     *
-     * @param input The input stream.
-     * @param context The `PapyrusContext` info.
-     * @throws PapyrusElementException
-     */
+
     init {
         assert(THREAD != null)
         if (FLAG.toInt() == 0) {

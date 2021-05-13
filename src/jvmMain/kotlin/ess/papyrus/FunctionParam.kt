@@ -22,13 +22,14 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class FunctionParam
 /**
  * @see MemberDesc.MemberData
  * @param input The input stream.
  * @param context The `PapyrusContext` info.
  * @throws PapyrusFormatException
  */
+class FunctionParam
+
     (input: ByteBuffer?, context: PapyrusContext?) : MemberDesc(input, context) {
     /**
      * @return String representation.
