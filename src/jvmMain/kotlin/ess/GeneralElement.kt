@@ -235,7 +235,7 @@ open class GeneralElement protected constructor() : Element {
      * @param context The Papyrus context data.
      * @return The ID.
      */
-    fun readID32(input: ByteBuffer, name: String, context: PapyrusContext): EID? {
+    fun readID32(input: ByteBuffer, name: String, context: PapyrusContext): EID {
         return this.readElement(input, name) { i: ByteBuffer? -> context.readEID32(input) }
     }
 
@@ -247,7 +247,7 @@ open class GeneralElement protected constructor() : Element {
      * @param context The Papyrus context data.
      * @return The ID.
      */
-    fun readID64(input: ByteBuffer, name: String, context: PapyrusContext): EID? {
+    fun readID64(input: ByteBuffer, name: String, context: PapyrusContext): EID {
         return this.readElement(input, name) { i: ByteBuffer? -> context.readEID64(input) }
     }
 
@@ -259,7 +259,7 @@ open class GeneralElement protected constructor() : Element {
      * @param context The `ESSContext`.
      * @return The RefID.
      */
-    fun readRefID(input: ByteBuffer, name: String, context: ESSContext): RefID? {
+    fun readRefID(input: ByteBuffer, name: String, context: ESSContext): RefID {
         return this.readElement(input, name) { i: ByteBuffer? -> context.readRefID(input) }
     }
 
@@ -396,7 +396,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readBytesVS(input: ByteBuffer, name: String): ByteArray? {
+    fun readBytesVS(input: ByteBuffer, name: String): ByteArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -411,7 +411,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readShortsVS(input: ByteBuffer, name: String): ShortArray? {
+    fun readShortsVS(input: ByteBuffer, name: String): ShortArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -426,7 +426,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readIntsVS(input: ByteBuffer, name: String): IntArray? {
+    fun readIntsVS(input: ByteBuffer, name: String): IntArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -441,7 +441,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readLongsVS(input: ByteBuffer, name: String): LongArray? {
+    fun readLongsVS(input: ByteBuffer, name: String): LongArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -456,7 +456,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readFloatsVS(input: ByteBuffer, name: String): FloatArray? {
+    fun readFloatsVS(input: ByteBuffer, name: String): FloatArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
