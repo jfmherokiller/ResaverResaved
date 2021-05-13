@@ -170,14 +170,10 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
                     val faceDataPrsent = input.let { super.readByte(it, "FACEDATAPRESENT") }
                     if (faceDataPrsent.toInt() != 0) {
                         input.let { super.readInt(it, "MORPHS_COUNT") }.let {
-                            if (it != null) {
-                                super.readFloats(input, "MORPHS", it)
-                            }
+                            super.readFloats(input, "MORPHS", it)
                         }
                         input.let { super.readInt(it, "PRESETS_COUNT") }.let {
-                            if (it != null) {
-                                super.readInts(input, "PRESETS", it)
-                            }
+                            super.readInts(input, "PRESETS", it)
                         }
                     }
                 }

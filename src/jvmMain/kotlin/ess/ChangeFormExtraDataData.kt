@@ -103,7 +103,7 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
             }
             26 -> {
                 NAME = "TrespassPackage"
-                val ref = super.readRefID(input, "UNK", context)!!
+                val ref = super.readRefID(input, "UNK", context)
                 if (ref.isZero) {
                     assert(false) { "INCOMPLETE" }
                 }
