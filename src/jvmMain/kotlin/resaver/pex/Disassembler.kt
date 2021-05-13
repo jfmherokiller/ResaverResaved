@@ -1014,5 +1014,5 @@ object Disassembler {
         return BUF.toString()
     }
 
-    val AUTOVAR_REGEX = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE)
+    val AUTOVAR_REGEX: Pattern = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE)
 }

@@ -749,7 +749,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
             return parts
         }
 
-        val AUTOVAR_REGEX = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE)
+        val AUTOVAR_REGEX: Pattern = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE)
     }
 
     /**

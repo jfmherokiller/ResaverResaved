@@ -163,10 +163,10 @@ abstract class Parameter : PapyrusElement {
         }
 
 
-        val TEMP_PATTERN = Pattern.compile("^::.+$", Pattern.CASE_INSENSITIVE).asPredicate()
+        val TEMP_PATTERN: Predicate<String> = Pattern.compile("^::.+$", Pattern.CASE_INSENSITIVE).asPredicate()
 
-        val NONE_PATTERN = Pattern.compile("^::NoneVar$", Pattern.CASE_INSENSITIVE).asPredicate()
+        val NONE_PATTERN: Predicate<String> = Pattern.compile("^::NoneVar$", Pattern.CASE_INSENSITIVE).asPredicate()
 
-        val AUTOVAR_PATTERN = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE).asPredicate()
+        val AUTOVAR_PATTERN: Predicate<String> = Pattern.compile("^::(.+)_var$", Pattern.CASE_INSENSITIVE).asPredicate()
     }
 }
