@@ -401,7 +401,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT?.let { this.readBytes(input, name, it.value) }
+        return COUNT.let { this.readBytes(input, name, it.value) }
     }
 
     /**
@@ -416,7 +416,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT?.let { readShorts(input, name, it.value) }
+        return COUNT.let { readShorts(input, name, it.value) }
     }
 
     /**
@@ -431,7 +431,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT?.let { readInts(input, name, it.value) }
+        return COUNT.let { readInts(input, name, it.value) }
     }
 
     /**
@@ -446,7 +446,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT?.let { readLongs(input, name, it.value) }
+        return COUNT.let { readLongs(input, name, it.value) }
     }
 
     /**
@@ -461,7 +461,7 @@ open class GeneralElement protected constructor() : Element {
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
         }
-        return COUNT?.let { readFloats(input, name, it.value) }
+        return COUNT.let { readFloats(input, name, it.value) }
     }
 
     /**
@@ -503,7 +503,7 @@ open class GeneralElement protected constructor() : Element {
             require(COUNT >= 0) { "Count is negative: $COUNT" }
         }
         val `val` = mutableListOf<Element>()
-        for (i in 0 until COUNT!!) {
+        for (i in 0 until COUNT) {
             val e = reader.read(input) as Element
             `val`.add(i,e)
         }

@@ -167,7 +167,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
                     super.readInt(input, "SKINTONE")
                     super.readRefID(input, "SKIN", context)
                     super.readVSElemArray(input, "HEADPARTS") { input: ByteBuffer? -> input?.let { context.readRefID(it) } }
-                    val faceDataPrsent = input.let { super.readByte(it, "FACEDATAPRESENT") }!!
+                    val faceDataPrsent = input.let { super.readByte(it, "FACEDATAPRESENT") }
                     if (faceDataPrsent.toInt() != 0) {
                         input.let { super.readInt(it, "MORPHS_COUNT") }.let {
                             if (it != null) {

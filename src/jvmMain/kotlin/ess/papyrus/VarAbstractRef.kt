@@ -55,7 +55,7 @@ abstract class VarAbstractRef : Variable {
 
     override fun toHTML(target: Element?): String? {
         return if (null != referent) {
-            val REFLINK = referent!!.toHTML(this)
+            val REFLINK = referent.toHTML(this)
             "$type : $REFLINK"
         } else {
             val DEFLINK = makeLink("script", refType, refType.toString())
