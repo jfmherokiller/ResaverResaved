@@ -31,19 +31,19 @@ class ParamUnk8(`val`: TString?) : Parameter() {
     }
 
     override fun equals(other: Any?): Boolean {
-        when {
+        return when {
             this === other -> {
-                return true
+                true
             }
             other == null -> {
-                return false
+                false
             }
             javaClass != other.javaClass -> {
-                return false
+                false
             }
             else -> {
                 val other2 = other as ParamUnk8
-                return VALUE.equals(other2.VALUE)
+                VALUE.equals(other2.VALUE)
             }
         }
     }
