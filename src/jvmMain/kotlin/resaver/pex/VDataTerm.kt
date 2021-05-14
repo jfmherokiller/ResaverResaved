@@ -2,7 +2,6 @@ package resaver.pex
 
 import PlatformByteBuffer
 import java.io.IOException
-import java.util.*
 
 /**
  * VData that stores a "term", for disassembly purposes.
@@ -30,7 +29,7 @@ class VDataTerm(`val`: String) : VData() {
 
     override fun hashCode(): Int {
         var hash = 7
-        hash = 83 * hash + Objects.hashCode(value)
+        hash = 83 * hash + value.hashCode()
         return hash
     }
 
@@ -56,7 +55,7 @@ class VDataTerm(`val`: String) : VData() {
         return PVALUE
     }
 
-    val value: String = Objects.requireNonNull(`val`)
+    val value: String = `val`
     private val PVALUE: String = "($value)"
 
 }

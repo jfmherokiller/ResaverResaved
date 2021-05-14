@@ -47,15 +47,21 @@ class VDataID internal constructor(`val`: TString?) : VData() {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        } else if (other == null) {
-            return false
-        } else if (javaClass != other.javaClass) {
-            return false
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as VDataID
+                value == other2.value
+            }
         }
-        val other2 = other as VDataID
-        return value == other2.value
     }
 
     var value: TString = `val`!!

@@ -20,7 +20,7 @@ import UtilityFunctions
 import resaver.IString
 import resaver.ListException
 import java.io.IOException
-import java.util.*
+
 
 /**
  * An abstraction describing a string table.
@@ -38,7 +38,6 @@ class StringTable(input: PlatformByteBuffer) : ArrayList<TString?>() {
      */
     @Throws(IOException::class)
     fun read(input: PlatformByteBuffer): TString {
-        Objects.requireNonNull(input)
         val index = UtilityFunctions.toUnsignedInt(input.getShort())
         if (index < 0 || index >= this.size) {
             throw IOException(String.format("Invalid TString index: %d (size %d)", index, this.size))

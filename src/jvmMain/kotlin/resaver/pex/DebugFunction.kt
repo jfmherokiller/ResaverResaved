@@ -78,7 +78,7 @@ internal class DebugFunction(input: PlatformByteBuffer, strings: StringTable) {
      */
     override fun toString(): String {
         val buf = StringBuilder()
-        buf.append(String.format("%s %s.%s (type %d): ", OBJECTNAME, STATENAME, FUNCNAME, FUNCTYPE))
+        buf.append("$OBJECTNAME $STATENAME.$FUNCNAME (type $FUNCTYPE): ")
         INSTRUCTIONS.forEach { instr: Int? -> buf.append(String.format("%04x ", instr)) }
         return buf.toString()
     }

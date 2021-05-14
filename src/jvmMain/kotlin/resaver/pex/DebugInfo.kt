@@ -74,24 +74,12 @@ class DebugInfo internal constructor(private val pexFile: PexFile, input: Platfo
         var sum = 1
         if (hasDebugInfo.toInt() != 0) {
             sum += 8
-            var result1 = 0
-            for (DEBUGFUNCTION in DEBUGFUNCTIONS) {
-                val i = DEBUGFUNCTION.calculateSize()
-                result1 += i
-            }
+            val result1 = DEBUGFUNCTIONS.sumOf { it.calculateSize() }
             sum += 2 + result1
             if (pexFile.GAME!!.isFO4) {
-                var sum1 = 0
-                for (PROPERTYGROUP in PROPERTYGROUPS) {
-                    val size = PROPERTYGROUP.calculateSize()
-                    sum1 += size
-                }
+                val sum1 = PROPERTYGROUPS.sumOf { it.calculateSize() }
                 sum += 2 + sum1
-                var result = 0
-                for (STRUCTORDER in STRUCTORDERS) {
-                    val calculateSize = STRUCTORDER.calculateSize()
-                    result += calculateSize
-                }
+                val result = STRUCTORDERS.sumOf { it.calculateSize() }
                 sum += 2 + result
             }
         }

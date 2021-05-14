@@ -27,7 +27,7 @@ class VDataStr internal constructor(`val`: TString?) : VData() {
         get() = DataType.STRING
 
     override fun toString(): String {
-        return String.format("\"%s\"", string)
+        return "\"$string\""
     }
 
     override fun hashCode(): Int {
@@ -44,7 +44,7 @@ class VDataStr internal constructor(`val`: TString?) : VData() {
             other == null -> {
                 false
             }
-            javaClass != other.javaClass -> {
+            this::class != other::class -> {
                 false
             }
             else -> {

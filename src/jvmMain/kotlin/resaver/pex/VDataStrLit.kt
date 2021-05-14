@@ -40,15 +40,21 @@ internal class VDataStrLit(`val`: String) : VData() {
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        } else if (other == null) {
-            return false
-        } else if (javaClass != other.javaClass) {
-            return false
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as VDataStrLit
+                value == other2.value
+            }
         }
-        val other2 = other as VDataStrLit
-        return value == other2.value
     }
 
     val value: String = `val`

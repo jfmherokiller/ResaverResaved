@@ -19,7 +19,7 @@ package resaver.pex
  *
  * @author Mark Fairchild
  */
-class DisassemblyException @JvmOverloads constructor(
+class DisassemblyException constructor(
     message: String?,
     partial: List<String> = emptyList(),
     pdel: Int = 0,

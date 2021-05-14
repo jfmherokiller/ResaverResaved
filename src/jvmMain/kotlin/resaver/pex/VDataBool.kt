@@ -26,20 +26,26 @@ class VDataBool internal constructor(val value: Boolean) : VData() {
 
     override fun hashCode(): Int {
         var hash = 7
-        hash = 83 * hash + java.lang.Boolean.hashCode(value)
+        hash = 83 * hash + value.hashCode()
         return hash
     }
 
     override fun equals(other: Any?): Boolean {
-        if (this === other) {
-            return true
-        } else if (other == null) {
-            return false
-        } else if (javaClass != other.javaClass) {
-            return false
+        return when {
+            this === other -> {
+                true
+            }
+            other == null -> {
+                false
+            }
+            javaClass != other.javaClass -> {
+                false
+            }
+            else -> {
+                val other2 = other as VDataBool
+                value == other2.value
+            }
         }
-        val other2 = other as VDataBool
-        return value == other2.value
     }
 
 }
