@@ -393,7 +393,7 @@ class Configurator {
             CHOOSER.dialogTitle = "Locate ModOrganizer.ini"
             CHOOSER.fileSelectionMode = JFileChooser.FILES_ONLY
             CHOOSER.isMultiSelectionEnabled = false
-            if (validateMODir(getMO2Ini(game)!!)) {
+            if (validateMODir(getMO2Ini(game))) {
                 logger.info { "Choosing a ModOrganizer path: trying the pre-existing path." }
                 CHOOSER.selectedFile = getMO2Ini(game)!!.toFile()
             } else {
@@ -441,9 +441,9 @@ class Configurator {
             CHOOSER.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
             CHOOSER.isMultiSelectionEnabled = false
             val PREV_DIR = getGameDirectory(game)
-            if (validateGameDirectory(game, PREV_DIR!!)) {
+            if (validateGameDirectory(game, PREV_DIR)) {
                 logger.info { "Trying to use the stored value for the game directory." }
-                CHOOSER.selectedFile = PREV_DIR.toFile()
+                CHOOSER.selectedFile = PREV_DIR!!.toFile()
             }
             while (true) {
                 loadChooserPrefs(CHOOSER)
@@ -508,8 +508,11 @@ class Configurator {
          * @param dir The directory to validate.
          * @return True if the directory contains ModOrganizer, false otherwise.
          */
-        fun validateMODir(dir: Path): Boolean {
-            return validDir(dir) && Files.exists(dir.resolve("mods"))
+        fun validateMODir(dir: Path?): Boolean {
+            if (dir != null) {
+                return validDir(dir) && Files.exists(dir.resolve("mods"))
+            }
+            return false
         }
 
         /**
@@ -521,8 +524,11 @@ class Configurator {
          * @return True if the directory contains the game, false otherwise.
          */
 
-        fun validateGameDirectory(game: Game, dir: Path): Boolean {
-            return validDir(dir) && dir.fileName == game.GAME_DIRECTORY && Files.exists(dir.resolve(game.EXECUTABLE))
+        fun validateGameDirectory(game: Game, dir: Path?): Boolean {
+            if (dir != null) {
+                return validDir(dir) && dir.fileName == game.GAME_DIRECTORY && Files.exists(dir.resolve(game.EXECUTABLE))
+            }
+            return false
         }
 
         /**
