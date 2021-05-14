@@ -551,16 +551,27 @@ class Mod(game: Game?, dir: Path) : Serializable {
                 emptyList()
             }
         ARCHIVE_FILES =
-            if (Files.exists(directory)) Files.list(directory).filter { path: Path? -> GLOB_ARCHIVE.matches(path) }
-                .toList() else emptyList()
+            if (Files.exists(directory)) {
+                Files.list(directory).filter { path: Path? -> GLOB_ARCHIVE.matches(path) }
+                    .toList()
+            } else {
+                emptyList()
+            }
         STRINGS_FILES =
-            if (Files.exists(STRING_PATH)) Files.walk(STRING_PATH).filter { path: Path? -> GLOB_STRINGS.matches(path) }
-                .toList() else emptyList()
+            if (Files.exists(STRING_PATH)) {
+                Files.walk(STRING_PATH).filter { path: Path? -> GLOB_STRINGS.matches(path) }
+                    .toList()
+            } else {
+                emptyList()
+            }
         SCRIPT_FILES =
-            if (Files.exists(SCRIPT_PATH)) Files.walk(SCRIPT_PATH).filter { path: Path? -> GLOB_SCRIPT.matches(path) }
-                .toList() else emptyList()
+            if (Files.exists(SCRIPT_PATH)) {
+                Files.walk(SCRIPT_PATH).filter { path: Path? -> GLOB_SCRIPT.matches(path) }
+                    .toList()
+            } else {
+                emptyList() // Print out some status information.
+            }
 
-        // Print out some status information.
         if (!Files.exists(directory)) {
             logger.warn {"Mod \"$MODNAME\" doesn't exist."}
         } else {
