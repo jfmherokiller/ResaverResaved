@@ -15,13 +15,13 @@ actual class PlatformByteBuffer {
             mybuffer.order(ByteOrder.LITTLE_ENDIAN)
         }
     }
-    fun getInt():Int {
+    actual fun getInt():Int {
         return mybuffer.int
     }
     fun getInt(index:Int):Int {
         return mybuffer.getInt(index)
     }
-    fun getLong():Long {
+    actual fun getLong():Long {
         return mybuffer.long
     }
 
@@ -39,7 +39,7 @@ actual class PlatformByteBuffer {
     }
 
 
-    fun flip() {
+    actual fun flip() {
         (mybuffer as Buffer).flip()
     }
 
@@ -66,14 +66,14 @@ actual class PlatformByteBuffer {
         mybuffer.put(bytes,i,i1)
     }
 
-    fun putFloat(fl: Float) {
+    actual fun putFloat(fl: Float) {
         mybuffer.putFloat(fl)
     }
-    fun getByte():Byte {
+    actual fun getByte():Byte {
         return mybuffer.get()
     }
 
-    fun getFloat(): Float {
+    actual fun getFloat(): Float {
         return mybuffer.float
     }
 
@@ -95,13 +95,13 @@ actual class PlatformByteBuffer {
         mybuffer = (mybuffer as Buffer).position(startingOffset) as ByteBuffer
     }
 
-    fun limit(): Int {
+    actual fun limit(): Int {
         return mybuffer.limit()
     }
     actual fun limit(startingOffset: Int) {
         mybuffer = (mybuffer as Buffer).limit(startingOffset) as ByteBuffer
     }
-    fun hasRemaining(): Boolean {
+    actual fun hasRemaining(): Boolean {
         return mybuffer.hasRemaining()
     }
     fun array(): ByteArray {
@@ -136,7 +136,7 @@ actual class PlatformByteBuffer {
         return PlatformByteBuffer(mybuffer.slice())
     }
 
-    fun capacity(): Int {
+    actual fun capacity(): Int {
        return mybuffer.capacity()
     }
 
