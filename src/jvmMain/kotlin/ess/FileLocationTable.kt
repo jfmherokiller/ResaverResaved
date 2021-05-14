@@ -263,5 +263,5 @@ class FileLocationTable : Element {
     val TABLE3COUNT: Int
     var changeFormCount: Int
     val UNUSED: IntArray
-    val GAME: resaver.Game?
+    val GAME: Game?
 }

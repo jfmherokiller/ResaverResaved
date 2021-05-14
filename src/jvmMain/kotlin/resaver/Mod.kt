@@ -28,7 +28,6 @@ import java.io.Serializable
 import java.nio.BufferUnderflowException
 import java.nio.channels.FileChannel
 import java.nio.file.*
-import java.util.*
 import java.util.function.ToDoubleFunction
 import kotlin.math.sqrt
 import kotlin.streams.toList
@@ -170,20 +169,20 @@ class Mod(game: Game?, dir: Path) : Serializable {
         val STRINGSFILE_ERRORS: MutableList<Path> = mutableListOf()
 
         // Read the archives.
-        val STRINGSFILES: MutableList<resaver.esp.StringsFile> = mutableListOf()
+        val STRINGSFILES: MutableList<StringsFile> = mutableListOf()
         val SCRIPT_ORIGINS: MutableMap<Path, Path> = hashMapOf()
         for (archivePath in ARCHIVE_FILES) {
             ProcessEachArchive(archivePath, MATCHER, language, plugins, STRINGSFILE_ERRORS, SCRIPT_ORIGINS, STRINGSFILES, ARCHIVE_ERRORS)
         }
 
         // Read the loose stringtable files.
-        val LOOSE_STRINGSFILES: List<resaver.esp.StringsFile> = STRINGS_FILES
+        val LOOSE_STRINGSFILES: List<StringsFile> = STRINGS_FILES
             .filter { path: Path? -> MATCHER.matches(path) }
             .map { path: Path ->
                 try {
                     val PLUGIN = getStringsFilePlugin(path, language, plugins)
                     if (PLUGIN != null) {
-                        return@map resaver.esp.StringsFile.readStringsFile(path, PLUGIN)
+                        return@map StringsFile.readStringsFile(path, PLUGIN)
                     } else {
                         return@map null
                     }
@@ -431,7 +430,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
      */
     inner class ModReadResults(
         scriptOrigins: Map<Path, Path>,
-        strings: List<resaver.esp.StringsFile>?,
+        strings: List<StringsFile>?,
         archiveErrors: List<Path>?,
         scriptErrors: List<Path>?,
         stringsErrors: List<Path>?
@@ -443,7 +442,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
         //        .flatMap { obj: List<Path> -> obj.stream() }
         val MOD: Mod
         val SCRIPT_ORIGINS: Map<Path, Path>
-        val STRINGSFILES: List<resaver.esp.StringsFile>
+        val STRINGSFILES: List<StringsFile>
         val ARCHIVE_ERRORS: List<Path>
         val SCRIPT_ERRORS: List<Path>
         val STRINGS_ERRORS: List<Path>

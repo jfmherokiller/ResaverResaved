@@ -274,7 +274,7 @@ class Pex internal constructor(input: PlatformByteBuffer, game: Game, flags: Lis
         return buf.toString()
     }
 
-    val GAME: resaver.Game
+    val GAME: Game
     val NAME: TString
     var size: Int
     val PARENTNAME: TString?

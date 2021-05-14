@@ -34,7 +34,7 @@ class ChangeFormRefr(input: PlatformByteBuffer, flags: Flags.FlagsInt, refid: Re
      * @param save
      * @return
      */
-    override fun getInfo(analysis: resaver.Analysis?, save: ESS?): String {
+    override fun getInfo(analysis: Analysis?, save: ESS?): String {
         val BUILDER = StringBuilder()
         if (FLAGS.FLAGS != 0) {
             BUILDER.append("<hr/>")
@@ -63,7 +63,7 @@ class ChangeFormRefr(input: PlatformByteBuffer, flags: Flags.FlagsInt, refid: Re
      * @param mod
      * @return
      */
-    override fun matches(analysis: resaver.Analysis?, mod: String?): Boolean {
+    override fun matches(analysis: Analysis?, mod: String?): Boolean {
         return false
     }
 
