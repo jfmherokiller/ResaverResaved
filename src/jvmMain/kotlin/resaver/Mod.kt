@@ -253,7 +253,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
     }
 
     private fun ProcessStringsFile(
-        input: Optional<PlatformByteBuffer>,
+        input: PlatformByteBuffer?,
         path: Path?,
         language: String,
         plugins: PluginInfo,
@@ -261,11 +261,11 @@ class Mod(game: Game?, dir: Path) : Serializable {
         STRINGSFILE_ERRORS: MutableList<Path>,
         archivePath: Path
     ) {
-        if (input.isPresent) {
+        if (input != null) {
             val PLUGIN = path?.let { getStringsFilePlugin(it, language, plugins) }
             if (PLUGIN != null) {
                 try {
-                    val STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN, input.get())
+                    val STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN, input)
                     ARCHIVE_STRINGSFILES.add(STRINGSFILE)
                 } catch (ex: BufferUnderflowException) {
                     STRINGSFILE_ERRORS.add(archivePath.fileName)

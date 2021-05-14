@@ -35,18 +35,18 @@ internal class BA2FileRecord(input: PlatformByteBuffer, header: BA2Header?) {
         return name ?: String.format("%d bytes at offset %d", FILESIZE.coerceAtLeast(REALSIZE), OFFSET)
     }
 
-    fun getData(channel: FileChannel): Optional<PlatformByteBuffer> {
+    fun getData(channel: FileChannel): PlatformByteBuffer? {
         return try {
             when (FILESIZE) {
                 0 -> {
                     val DATA = PlatformByteBuffer.allocate(REALSIZE)
                     DATA.readFileChannel(channel,OFFSET)
-                    Optional.of(DATA)
+                    DATA
                 }
                 REALSIZE -> {
                     val DATA = PlatformByteBuffer.allocate(FILESIZE)
                     DATA.readFileChannel(channel,OFFSET)
-                    Optional.of(DATA)
+                    DATA
                 }
                 else -> {
                     val COMPRESSED = PlatformByteBuffer.allocate(FILESIZE)
@@ -54,13 +54,13 @@ internal class BA2FileRecord(input: PlatformByteBuffer, header: BA2Header?) {
                     COMPRESSED.readFileChannel(channel,OFFSET)
                     COMPRESSED.flip()
                     val DATA = BufferUtil.inflateZLIB(COMPRESSED, REALSIZE, FILESIZE)
-                    Optional.of(DATA)
+                    DATA
                 }
             }
         } catch (ex: IOException) {
-            Optional.empty()
+            null
         } catch (ex: DataFormatException) {
-            Optional.empty()
+            null
         }
     }
 

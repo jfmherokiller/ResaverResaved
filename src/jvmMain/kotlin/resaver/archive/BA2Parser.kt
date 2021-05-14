@@ -33,7 +33,7 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
      * @see ArchiveParser.getFiles
      */
     @Throws(IOException::class)
-    override fun getFiles(dir: Path?, matcher: PathMatcher?): MutableMap<Path?, Optional<PlatformByteBuffer>> {
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): MutableMap<Path?, PlatformByteBuffer?> {
         return FILES
             .filter { file: BA2FileRecord -> dir == null || file.path!!.startsWith(dir) }
             .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }

@@ -47,7 +47,7 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
      * @throws IOException
      */
     @Throws(IOException::class)
-    abstract fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<PlatformByteBuffer>>?
+    abstract fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, PlatformByteBuffer?>?
 
     /**
      * Creates a `Map` pairing full `Path` to `
