@@ -15,17 +15,20 @@
  */
 package resaver
 
+import PlatformByteBuffer
 import ess.Plugin
 import ess.PluginInfo
 import mu.KLoggable
 import mu.KLogger
 import resaver.archive.ArchiveParser.Companion.createParser
+import resaver.esp.StringsFile
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.Serializable
 import java.nio.BufferUnderflowException
 import java.nio.channels.FileChannel
 import java.nio.file.*
+import java.util.*
 import java.util.function.ToDoubleFunction
 import kotlin.math.sqrt
 import kotlin.streams.toList
@@ -170,43 +173,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
         val STRINGSFILES: MutableList<resaver.esp.StringsFile> = mutableListOf()
         val SCRIPT_ORIGINS: MutableMap<Path, Path> = hashMapOf()
         for (archivePath in ARCHIVE_FILES) {
-            try {
-                FileChannel.open(archivePath, StandardOpenOption.READ).use { channel ->
-                    createParser(archivePath, channel).use { PARSER ->
-                        val ARCHIVE_STRINGSFILES: MutableList<resaver.esp.StringsFile> = mutableListOf()
-                        for ((path, input) in PARSER!!.getFiles(Paths.get("strings"), MATCHER)!!) {
-                            if (input.isPresent) {
-                                val PLUGIN = path?.let { getStringsFilePlugin(it, language, plugins) }
-                                if (PLUGIN != null) {
-                                    try {
-                                        val STRINGSFILE = resaver.esp.StringsFile.readStringsFile(path, PLUGIN, input.get())
-                                        ARCHIVE_STRINGSFILES.add(STRINGSFILE)
-                                    } catch (ex: BufferUnderflowException) {
-                                        STRINGSFILE_ERRORS.add(archivePath.fileName)
-                                    }
-                                }
-                            } else {
-                                STRINGSFILE_ERRORS.add(archivePath.fileName)
-                            }
-                        }
-                        val ARCHIVE_SCRIPTS = PARSER.getFilenames(Paths.get("scripts"), GLOB_SCRIPT)
-                        SCRIPT_ORIGINS.putAll(ARCHIVE_SCRIPTS!!)
-                        STRINGSFILES.addAll(ARCHIVE_STRINGSFILES)
-                        var stringsCount = 0
-                        for (s in ARCHIVE_STRINGSFILES) {
-                            val i = s.TABLE.size
-                            stringsCount += i
-                        }
-                        val scriptsCount = ARCHIVE_SCRIPTS.size
-                        if (stringsCount > 0 || scriptsCount > 0) {
-                            val msg = String.format("Read %5d scripts and %5d strings from ${ARCHIVE_STRINGSFILES.size} stringsfiles in ${archivePath.fileName} of \"$SHORTNAME\"", scriptsCount, stringsCount)
-                            logger.info(msg)
-                        }
-                    }
-                }
-            } catch (ex: IOException) {
-                ARCHIVE_ERRORS.add(archivePath.fileName)
-            }
+            ProcessEachArchive(archivePath, MATCHER, language, plugins, STRINGSFILE_ERRORS, SCRIPT_ORIGINS, STRINGSFILES, ARCHIVE_ERRORS)
         }
 
         // Read the loose stringtable files.
@@ -246,6 +213,67 @@ class Mod(game: Game?, dir: Path) : Serializable {
             logger.info{msg}
         }
         return ModReadResults(SCRIPT_ORIGINS, STRINGSFILES, ARCHIVE_ERRORS, null, STRINGSFILE_ERRORS)
+    }
+
+    private fun ProcessEachArchive(
+        archivePath: Path,
+        MATCHER: PathMatcher?,
+        language: String,
+        plugins: PluginInfo,
+        STRINGSFILE_ERRORS: MutableList<Path>,
+        SCRIPT_ORIGINS: MutableMap<Path, Path>,
+        STRINGSFILES: MutableList<StringsFile>,
+        ARCHIVE_ERRORS: MutableList<Path>
+    ) {
+        try {
+            FileChannel.open(archivePath, StandardOpenOption.READ).use { channel ->
+                createParser(archivePath, channel).use { PARSER ->
+                    val ARCHIVE_STRINGSFILES: MutableList<StringsFile> = mutableListOf()
+                    for ((path, input) in PARSER!!.getFiles(Paths.get("strings"), MATCHER)!!) {
+                        ProcessStringsFile(input, path, language, plugins, ARCHIVE_STRINGSFILES, STRINGSFILE_ERRORS, archivePath)
+                    }
+                    val ARCHIVE_SCRIPTS = PARSER.getFilenames(Paths.get("scripts"), GLOB_SCRIPT)
+                    SCRIPT_ORIGINS.putAll(ARCHIVE_SCRIPTS!!)
+                    STRINGSFILES.addAll(ARCHIVE_STRINGSFILES)
+                    val stringsCount = ARCHIVE_STRINGSFILES.sumOf { it.TABLE.size }
+                    val scriptsCount = ARCHIVE_SCRIPTS.size
+                    if (stringsCount > 0 || scriptsCount > 0) {
+                        val msg = String.format(
+                            "Read %5d scripts and %5d strings from ${ARCHIVE_STRINGSFILES.size} stringsfiles in ${archivePath.fileName} of \"$SHORTNAME\"",
+                            scriptsCount,
+                            stringsCount
+                        )
+                        logger.info(msg)
+                    }
+                }
+            }
+        } catch (ex: IOException) {
+            ARCHIVE_ERRORS.add(archivePath.fileName)
+        }
+    }
+
+    private fun ProcessStringsFile(
+        input: Optional<PlatformByteBuffer>,
+        path: Path?,
+        language: String,
+        plugins: PluginInfo,
+        ARCHIVE_STRINGSFILES: MutableList<StringsFile>,
+        STRINGSFILE_ERRORS: MutableList<Path>,
+        archivePath: Path
+    ) {
+        if (input.isPresent) {
+            val PLUGIN = path?.let { getStringsFilePlugin(it, language, plugins) }
+            if (PLUGIN != null) {
+                try {
+                    val STRINGSFILE = StringsFile.readStringsFile(path, PLUGIN, input.get())
+                    ARCHIVE_STRINGSFILES.add(STRINGSFILE)
+                } catch (ex: BufferUnderflowException) {
+                    STRINGSFILE_ERRORS.add(archivePath.fileName)
+                }
+            }
+        } else {
+            STRINGSFILE_ERRORS.add(archivePath.fileName)
+        }
     }
 
     /**
