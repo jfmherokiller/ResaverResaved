@@ -25,6 +25,13 @@ import resaver.IString
  * Describes the debugging information for a property group.
  *
  */
+/**
+ * Creates a DebugFunction by reading from a DataInput.
+ *
+ * @param input A datainput for a Skyrim PEX file.
+ * @param strings The `StringTable` for the `PexFile`.
+ * @throws IOException Exceptions aren't handled.
+ */
 internal class PropertyGroup(input: PlatformByteBuffer, strings: StringTable) {
     /**
      * Write the object to a `ByteBuffer`.
@@ -82,26 +89,15 @@ internal class PropertyGroup(input: PlatformByteBuffer, strings: StringTable) {
         return "$OBJECTNAME.$GROUPNAME [$PROPERTIES]"
     }
 
-    private val OBJECTNAME: TString
-    private val GROUPNAME: TString
-    private val DOCSTRING: TString
-    private val USERFLAGS: Int
-    private val PROPERTIES: MutableList<TString>
+    private val OBJECTNAME: TString = strings.read(input)
+    private val GROUPNAME: TString = strings.read(input)
+    private val DOCSTRING: TString = strings.read(input)
+    private val USERFLAGS: Int = input.getInt()
+    private val PROPERTIES: MutableList<TString> = mutableListOf()
 
-    /**
-     * Creates a DebugFunction by reading from a DataInput.
-     *
-     * @param input A datainput for a Skyrim PEX file.
-     * @param strings The `StringTable` for the `PexFile`.
-     * @throws IOException Exceptions aren't handled.
-     */
+
     init {
-        OBJECTNAME = strings.read(input)
-        GROUPNAME = strings.read(input)
-        DOCSTRING = strings.read(input)
-        USERFLAGS = input.getInt()
         val propertyCount = UtilityFunctions.toUnsignedInt(input.getShort())
-        PROPERTIES = ArrayList(propertyCount)
         for (i in 0 until propertyCount) {
             PROPERTIES.add(strings.read(input))
         }

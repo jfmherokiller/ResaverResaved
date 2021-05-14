@@ -216,8 +216,8 @@ open class IString : CharSequence, Serializable, Comparable<IString> {
          * @param args The arguments to the format string.
          * @return A formatted `IString`
          */
-        fun format(format: String?, vararg args: Any?): IString {
-            return IString(String.format(format!!, *args))
+        fun format(format: String, vararg args: Any?): IString {
+            return IString(String.format(format, *args))
         }
 
         fun compare(s1: IString, s2: IString): Int {
