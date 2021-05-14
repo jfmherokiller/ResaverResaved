@@ -17,6 +17,7 @@ package resaver.esp
 
 
 import PlatformByteBuffer
+import resaver.Entry
 import resaver.IString
 
 /**

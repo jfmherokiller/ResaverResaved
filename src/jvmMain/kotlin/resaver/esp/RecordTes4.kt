@@ -21,7 +21,7 @@ import ess.PluginInfo
 import ess.PluginInfo.Companion.makeFormID
 import mf.BufferUtil
 import resaver.IString
-import resaver.esp.Entry.Companion.advancingSlice
+import resaver.Entry.Companion.advancingSlice
 import java.nio.file.Paths
 
 /**

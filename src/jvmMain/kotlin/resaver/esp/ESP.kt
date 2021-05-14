@@ -20,6 +20,7 @@ import ess.Plugin
 import ess.PluginInfo
 import mu.KLoggable
 import mu.KLogger
+import resaver.Entry
 import resaver.Game
 import resaver.esp.Record.Companion.readRecord
 import resaver.esp.Record.Companion.skimRecord

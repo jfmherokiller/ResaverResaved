@@ -15,6 +15,7 @@
  */
 package resaver.esp
 
+import resaver.Entry
 import resaver.IString
 
 /**

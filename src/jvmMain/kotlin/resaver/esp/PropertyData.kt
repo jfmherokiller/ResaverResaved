@@ -18,6 +18,7 @@ package resaver.esp
 import GenericSupplier
 import PlatformByteBuffer
 import mf.BufferUtil
+import resaver.Entry
 import java.nio.charset.StandardCharsets
 
 /**

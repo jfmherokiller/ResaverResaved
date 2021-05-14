@@ -84,21 +84,21 @@ actual class PlatformByteBuffer {
     operator fun get(bytes: ByteArray) {
         mybuffer[bytes]
     }
-    fun makeLe() {
+    actual fun makeLe() {
         mybuffer.order(ByteOrder.LITTLE_ENDIAN)
     }
 
-    fun position(): Int {
+    actual fun position(): Int {
         return mybuffer.position()
     }
-    fun position(newpos:Int) {
-        mybuffer = (mybuffer as Buffer).position(newpos) as ByteBuffer
+    actual fun position(startingOffset:Int) {
+        mybuffer = (mybuffer as Buffer).position(startingOffset) as ByteBuffer
     }
 
     fun limit(): Int {
         return mybuffer.limit()
     }
-    fun limit(startingOffset: Int) {
+    actual fun limit(startingOffset: Int) {
         mybuffer = (mybuffer as Buffer).limit(startingOffset) as ByteBuffer
     }
     fun hasRemaining(): Boolean {
@@ -132,7 +132,7 @@ actual class PlatformByteBuffer {
     fun compact() {
         mybuffer.compact()
     }
-    fun slice():PlatformByteBuffer {
+    actual fun slice():PlatformByteBuffer {
         return PlatformByteBuffer(mybuffer.slice())
     }
 

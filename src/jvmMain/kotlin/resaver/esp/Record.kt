@@ -17,8 +17,9 @@ package resaver.esp
 
 import PlatformByteBuffer
 import ess.papyrus.EID.Companion.pad8
+import resaver.Entry
 import resaver.IString
-import resaver.esp.Entry.Companion.advancingSlice
+import resaver.Entry.Companion.advancingSlice
 import java.util.zip.DataFormatException
 
 /**

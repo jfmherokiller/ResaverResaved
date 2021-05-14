@@ -1,6 +1,7 @@
 package resaver.esp
 
 import PlatformByteBuffer
+import resaver.Entry
 
 /**
  * Header represents the standard header for all records except GRUP.

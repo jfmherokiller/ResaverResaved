@@ -15,6 +15,8 @@
  */
 package resaver.esp
 
+import resaver.Entry
+
 /**
  * The base class for script fragments.
  *
