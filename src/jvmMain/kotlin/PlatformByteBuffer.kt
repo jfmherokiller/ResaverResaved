@@ -4,7 +4,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 
-class PlatformByteBuffer {
+actual class PlatformByteBuffer {
     var mybuffer:ByteBuffer = ByteBuffer.allocate(0)
     var IsLittleEndien:Boolean = false
 
