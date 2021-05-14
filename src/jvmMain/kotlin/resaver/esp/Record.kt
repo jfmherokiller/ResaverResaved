@@ -15,12 +15,10 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import ess.papyrus.EID.Companion.pad8
 import resaver.IString
 import resaver.esp.Entry.Companion.advancingSlice
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.zip.DataFormatException
 
 /**
@@ -48,7 +46,7 @@ abstract class Record : Entry {
          * @return A list of fields that were readFully.
          */
 
-        fun readField(parentCode: RecordCode, input: ByteBuffer, ctx: ESPContext): FieldList {
+        fun readField(parentCode: RecordCode, input: PlatformByteBuffer, ctx: ESPContext): FieldList {
             return readFieldAux(parentCode, input, 0, ctx)
         }
 
@@ -64,7 +62,7 @@ abstract class Record : Entry {
          * @param ctx The mod descriptor.
          * @return A list of fields that were readFully.
          */
-        private fun readFieldAux(parentCode: RecordCode, input: ByteBuffer, bigSize: Int, ctx: ESPContext): FieldList {
+        private fun readFieldAux(parentCode: RecordCode, input: PlatformByteBuffer, bigSize: Int, ctx: ESPContext): FieldList {
             assert(input.hasRemaining())
 
             // Read the record identification code.
@@ -75,7 +73,7 @@ abstract class Record : Entry {
 
             // Read the record size.
             val BIG = bigSize > 0
-            val DATASIZE = UtilityFunctions.toUnsignedInt(input.short)
+            val DATASIZE = UtilityFunctions.toUnsignedInt(input.getShort())
             val ACTUALSIZE = if (BIG) bigSize else DATASIZE
 
             // This list will hold between zero and two fields that are read.
@@ -123,7 +121,7 @@ abstract class Record : Entry {
          * @return The next Record from input.
          */
 
-        fun readRecord(input: ByteBuffer, ctx: ESPContext): Record {
+        fun readRecord(input: PlatformByteBuffer, ctx: ESPContext): Record {
             // Read the record identification code.
             val CODEBYTES = ByteArray(4)
             input[CODEBYTES]
@@ -131,7 +129,7 @@ abstract class Record : Entry {
             val CODE = RecordCode.valueOf(CODESTRING)
 
             // Read the record size.
-            val DATASIZE = input.int
+            val DATASIZE = input.getInt()
 
             // GRUPs get handled differently than other records.
             return if (CODE == RecordCode.GRUP) {
@@ -170,7 +168,7 @@ abstract class Record : Entry {
          * @param ctx The mod descriptor.
          */
 
-        fun skimRecord(input: ByteBuffer, ctx: ESPContext) {
+        fun skimRecord(input: PlatformByteBuffer, ctx: ESPContext) {
             // Read the record identification code.
             val CODEBYTES = ByteArray(4)
             input[CODEBYTES]
@@ -183,17 +181,19 @@ abstract class Record : Entry {
             }
 
             // Read the record size.
-            val DATASIZE = input.int
+            val DATASIZE = input.getInt()
 
             // GRUPs get handled differently than other records.
             if (CODE == RecordCode.GRUP) {
                 val HEADER = advancingSlice(input, 16)
-                val PREFIX = HEADER.int
-                val TYPE = HEADER.int
+                val PREFIX = HEADER.getInt()
+                val TYPE = HEADER.getInt()
                 when (TYPE) {
                     0 -> {
-                        val TOP = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(PREFIX)
-                        (TOP as Buffer).flip()
+                        val TOP = PlatformByteBuffer.allocate(4)
+                        TOP.makeLe()
+                         TOP.putInt(PREFIX)
+                        TOP.flip()
                         val tops = String(TOP.array())
                         ctx.pushContext(tops)
                     }

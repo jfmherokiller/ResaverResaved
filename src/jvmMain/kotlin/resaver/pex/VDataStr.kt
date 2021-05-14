@@ -1,7 +1,8 @@
 package resaver.pex
 
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
+
 
 
 /**
@@ -9,7 +10,7 @@ import java.nio.ByteBuffer
  */
 class VDataStr internal constructor(`val`: TString?) : VData() {
     @Throws(IOException::class)
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(type.ordinal.toByte())
         string.write(output)
     }

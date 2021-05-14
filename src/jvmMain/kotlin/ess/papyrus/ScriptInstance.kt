@@ -15,6 +15,7 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.ESS
 import ess.Element
 import ess.Linkable.Companion.makeLink
@@ -22,7 +23,6 @@ import ess.RefID
 import ess.papyrus.Variable.Companion.readList
 import resaver.Analysis
 import resaver.ListException
-import java.nio.ByteBuffer
 import java.util.*
 import kotlin.experimental.and
 
@@ -31,13 +31,13 @@ import kotlin.experimental.and
  *
  * @author Mark Fairchild
  */
-class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusContext) :
+class ScriptInstance internal constructor(input: PlatformByteBuffer, scripts: ScriptMap, context: PapyrusContext) :
     GameElement(input, scripts, context), SeparateData, HasVariables {
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         super.write(output)
         output?.putShort(UNKNOWN2BITS)
         output?.putShort(unknown)
@@ -56,7 +56,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
      * @throws PapyrusFormatException
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
-    override fun readData(input: ByteBuffer?, context: PapyrusContext?) {
+    override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
         data = ScriptData(input!!, context!!)
     }
 
@@ -64,7 +64,7 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
      * @see SeparateData.writeData
      * @param input
      */
-    override fun writeData(input: ByteBuffer?) {
+    override fun writeData(input: PlatformByteBuffer?) {
         data!!.write(input)
     }
 
@@ -353,12 +353,12 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
      *
      * @author Mark Fairchild
      */
-    inner class ScriptData(input: ByteBuffer, context: PapyrusContext) : PapyrusDataFor<ScriptInstance?> {
+    inner class ScriptData(input: PlatformByteBuffer, context: PapyrusContext) : PapyrusDataFor<ScriptInstance?> {
         /**
          * @see ess.Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             iD.write(output)
             output?.put(FLAG)
             this.type.write(output)
@@ -425,12 +425,12 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
          * @throws PapyrusFormatException
          */
         init {
-            FLAG = input.get()
+            FLAG = input.getByte()
             this.type = context.readTString(input)
-            UNKNOWN1 = input.int
-            UNKNOWN2 = if ((FLAG and 0x04.toByte()).toInt() != 0) input.int else 0
+            UNKNOWN1 = input.getInt()
+            UNKNOWN2 = if ((FLAG and 0x04.toByte()).toInt() != 0) input.getInt() else 0
             try {
-                val count = input.int
+                val count = input.getInt()
                 VARIABLES = readList(input, count, context).toMutableList()
             } catch (ex: ListException) {
                 throw PapyrusElementException("Couldn't read struct variables.", ex, this)
@@ -452,13 +452,13 @@ class ScriptInstance internal constructor(input: ByteBuffer, scripts: ScriptMap,
      * @throws PapyrusFormatException
      */
     init {
-        UNKNOWN2BITS = input.short
-        unknown = input.short
+        UNKNOWN2BITS = input.getShort()
+        unknown = input.getShort()
         refID = context.readRefID(input)
-        UNKNOWN_BYTE = input.get()
+        UNKNOWN_BYTE = input.getByte()
         UNKNOWN_FO_BYTE = if (context.game!!.isFO4) {
             if ((UNKNOWN2BITS and 0x3.toShort()) == 0x3.toShort()) {
-                input.get()
+                input.getByte()
             } else {
                 null
             }

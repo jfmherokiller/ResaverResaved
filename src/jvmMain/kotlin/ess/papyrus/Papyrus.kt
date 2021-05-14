@@ -15,6 +15,7 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
 import ess.Element
 import ess.GlobalDataBlock
@@ -25,8 +26,6 @@ import mu.KLoggable
 import mu.KLogger
 import resaver.ListException
 import java.nio.BufferUnderflowException
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.*
 
 /**
@@ -35,12 +34,12 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : PapyrusElement, GlobalDataBlock {
+class Papyrus(input: PlatformByteBuffer, essContext: ESSContext, model: ModelBuilder) : PapyrusElement, GlobalDataBlock {
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         check(!truncated) { "Papyrus is truncated. Cannot write." }
         val startingPosition = output?.position()
         output?.putShort(header)
@@ -236,10 +235,10 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
     /**
      * @return Accessor for the Arrays block.
      */
-    val arraysBlock: ByteBuffer
+    val arraysBlock: PlatformByteBuffer
         get() {
-            val BUFFER = ByteBuffer.wrap(ARRAYSBLOCK)
-            BUFFER.order(ByteOrder.LITTLE_ENDIAN)
+            val BUFFER = PlatformByteBuffer.wrap(ARRAYSBLOCK)
+            BUFFER.makeLe()
             return BUFFER
         }
 
@@ -760,7 +759,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
             }
 
             // Read the header.            
-            header = input.short
+            header = input.getShort()
             SUM.click(2)
 
             // Read the string table.
@@ -772,8 +771,8 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
                 model.addStringTable(stringTable!!)
             }
             SUM.click(STRINGS!!.calculateSize())
-            val scriptCount = input.int
-            val structCount = if (essContext.game!!.isFO4) input.int else 0
+            val scriptCount = input.getInt()
+            val structCount = if (essContext.game!!.isFO4) input.getInt() else 0
             SUM.click(if (essContext.game!!.isFO4) 8 else 4)
 
             // Read the scripts.
@@ -977,7 +976,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
             }
 
             // Read the function message table.
-            val functionMessageCount = input.int
+            val functionMessageCount = input.getInt()
             FUNCTIONMESSAGES = ArrayList(functionMessageCount)
             try {
                 for (i in 0 until functionMessageCount) {
@@ -1017,11 +1016,11 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
             model.addSuspendedStacks2(suspendedStacks2)
 
             // Read the "unknown" fields.
-            UNK1 = input.int
+            UNK1 = input.getInt()
             SUM.click(4)
-            UNK2 = if (UNK1 == 0) Optional.empty() else Optional.of(input.int)
+            UNK2 = if (UNK1 == 0) Optional.empty() else Optional.of(input.getInt())
             SUM.click(if (UNK2.isPresent) 4 else 0)
-            val unknownCount = input.int
+            val unknownCount = input.getInt()
             UNKS = ArrayList(unknownCount)
             for (i in 0 until unknownCount) {
                 UNKS.add(context.readEID(input))
@@ -1043,7 +1042,7 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
             }
 
             // For Skyrim, readRefID the save file version field.
-            SAVE_FILE_VERSION = if (essContext.game!!.isSkyrim) Optional.of(input.short) else Optional.empty()
+            SAVE_FILE_VERSION = if (essContext.game!!.isSkyrim) Optional.of(input.getShort()) else Optional.empty()
             val stacks: Map<EID?, SuspendedStack?> = suspendedStacks
             activeScripts.values.forEach { script: ActiveScript -> script.resolveStack(stacks) }
 
@@ -1062,8 +1061,8 @@ class Papyrus(input: ByteBuffer, essContext: ESSContext, model: ModelBuilder) : 
             // Read the "other" stuff.
             var other: OtherData? = null
             try {
-                val ARRAYSBUFFER = ByteBuffer.wrap(ARRAYSBLOCK)
-                ARRAYSBUFFER.order(ByteOrder.LITTLE_ENDIAN)
+                val ARRAYSBUFFER = PlatformByteBuffer.wrap(ARRAYSBLOCK)
+                ARRAYSBUFFER.makeLe()
                 other = OtherData(input, context)
             } catch (ex: BufferUnderflowException) {
             } finally {

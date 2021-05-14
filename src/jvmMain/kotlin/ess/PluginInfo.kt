@@ -15,9 +15,9 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.Plugin.Companion.readFullPlugin
 import ess.Plugin.Companion.readLitePlugin
-import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -30,12 +30,12 @@ import kotlin.streams.toList
  *
  * @author Mark Fairchild
  */
-class PluginInfo(input: ByteBuffer, supportsESL: Boolean) : Element {
+class PluginInfo(input: PlatformByteBuffer, supportsESL: Boolean) : Element {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.putInt(calculateSize() - 4)
         output.put(PLUGINS_FULL!!.size.toByte())
         PLUGINS_FULL.forEach { p: Plugin -> p.write(output) }
@@ -187,8 +187,8 @@ class PluginInfo(input: ByteBuffer, supportsESL: Boolean) : Element {
      * @throws IOException
      */
     init {
-        val pluginInfoSize = input.int
-        val numberOfFull = UtilityFunctions.toUnsignedInt(input.get())
+        val pluginInfoSize = input.getInt()
+        val numberOfFull = UtilityFunctions.toUnsignedInt(input.getByte())
         require(!(numberOfFull < 0 || numberOfFull >= 256)) { "Invalid full plugin count: $numberOfFull" }
         PLUGINS_FULL = mutableListOf()
         for (i in 0 until numberOfFull) {
@@ -196,7 +196,7 @@ class PluginInfo(input: ByteBuffer, supportsESL: Boolean) : Element {
             PLUGINS_FULL.add(p)
         }
         if (supportsESL) {
-            val numberOfLite = input.short.toInt()
+            val numberOfLite = input.getShort().toInt()
             require(!(numberOfLite < 0 || numberOfLite >= 4096)) { "Invalid lite plugin count: $numberOfLite" }
             PLUGINS_LITE = mutableListOf()
             for (i in 0 until numberOfLite) {

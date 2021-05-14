@@ -15,8 +15,7 @@
  */
 package ess.papyrus
 
-import kotlin.Throws
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  *
@@ -24,6 +23,6 @@ import java.nio.ByteBuffer
  */
 interface SeparateData {
     @Throws(PapyrusFormatException::class, PapyrusElementException::class)
-    fun readData(input: ByteBuffer?, context: PapyrusContext?)
-    fun writeData(input: ByteBuffer?)
+    fun readData(input: PlatformByteBuffer, context: PapyrusContext?)
+    fun writeData(input: PlatformByteBuffer?)
 }

@@ -15,13 +15,12 @@
  */
 package ess.papyrus
 
-import resaver.Analysis
+import PlatformByteBuffer
 import ess.AnalyzableElement
 import ess.Element
 import ess.Linkable
 import ess.papyrus.EID.Companion.pad8
-import java.nio.ByteBuffer
-
+import resaver.Analysis
 
 
 /**
@@ -29,12 +28,12 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class QueuedUnbind(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
+class QueuedUnbind(input: PlatformByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
     /**
      * @see Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         iD.write(output)
         output!!.putInt(unknown)
     }
@@ -141,7 +140,7 @@ class QueuedUnbind(input: ByteBuffer, context: PapyrusContext) : PapyrusElement,
     /**
      * @return The unknown field.
      */
-    val unknown: Int = input.int
+    val unknown: Int = input.getInt()
 
     /**
      * @return The corresponding `ScriptInstance`.

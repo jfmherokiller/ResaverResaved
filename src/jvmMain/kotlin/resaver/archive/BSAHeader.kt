@@ -15,17 +15,16 @@
  */
 package resaver.archive
 
-import java.util.Objects
+import PlatformByteBuffer
 import java.io.IOException
-import java.lang.IllegalArgumentException
-import java.nio.ByteBuffer
+import java.util.*
 
 /**
  * Describes a BSA header.
  *
  * @author Mark Fairchild
  */
-class BSAHeader(input: ByteBuffer, name: String) {
+class BSAHeader(input: PlatformByteBuffer, name: String) {
     override fun toString(): String {
         return NAME
     }
@@ -74,14 +73,14 @@ class BSAHeader(input: ByteBuffer, name: String) {
             throw IOException("Invalid archive format: ${String(MAGIC)}", ex)
         }
         TYPE = type
-        VERSION = input.int
-        FOLDER_OFFSET = input.int
-        ARCHIVE_FLAGS = input.int
-        FOLDER_COUNT = input.int
-        FILE_COUNT = input.int
-        TOTAL_FOLDERNAME_LENGTH = input.int
-        TOTAL_FILENAME_LENGTH = input.int
-        FILE_FLAGS = input.int
+        VERSION = input.getInt()
+        FOLDER_OFFSET = input.getInt()
+        ARCHIVE_FLAGS = input.getInt()
+        FOLDER_COUNT = input.getInt()
+        FILE_COUNT = input.getInt()
+        TOTAL_FOLDERNAME_LENGTH = input.getInt()
+        TOTAL_FILENAME_LENGTH = input.getInt()
+        FILE_FLAGS = input.getInt()
         INCLUDE_DIRECTORYNAMES = ARCHIVE_FLAGS and 0x1 != 0
         INCLUDE_FILENAMES = ARCHIVE_FLAGS and 0x2 != 0
         ISCOMPRESSED = ARCHIVE_FLAGS and 0x4 != 0

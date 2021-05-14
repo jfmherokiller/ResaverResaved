@@ -15,10 +15,10 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import resaver.ListException
 import resaver.pex.Opcode
 import java.nio.BufferUnderflowException
-import java.nio.ByteBuffer
 
 
 /**
@@ -36,8 +36,8 @@ class OpcodeData : PapyrusElement {
      * @throws PapyrusFormatException
      * @throws ListException
      */
-    constructor(input: ByteBuffer, context: PapyrusContext?) {
-        val code = input.get().toInt()
+    constructor(input: PlatformByteBuffer, context: PapyrusContext?) {
+        val code = input.getByte().toInt()
         if (code < 0 || code >= OPCODES.size) {
             throw PapyrusFormatException("Invalid opcode: $code")
         }
@@ -85,7 +85,7 @@ class OpcodeData : PapyrusElement {
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(opcode.ordinal.toByte())
         PARAMETERS.forEach { `var`: Parameter -> `var`.write(output) }
     }

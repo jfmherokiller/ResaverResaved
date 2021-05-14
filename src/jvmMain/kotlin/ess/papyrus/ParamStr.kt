@@ -1,6 +1,6 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 
 /**
@@ -10,7 +10,7 @@ class ParamStr(`val`: TString?) : Parameter() {
     override val type: ParamType
         get() = ParamType.STRING
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         VALUE.write(output)
     }

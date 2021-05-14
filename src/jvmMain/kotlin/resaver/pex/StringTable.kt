@@ -15,10 +15,11 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
+import UtilityFunctions
 import resaver.IString
 import resaver.ListException
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.util.*
 
 /**
@@ -26,7 +27,7 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-class StringTable(input: ByteBuffer) : ArrayList<TString?>() {
+class StringTable(input: PlatformByteBuffer) : ArrayList<TString?>() {
     /**
      * Creates a new `TString` by reading from a
      * `DataInput`. No error handling is performed.
@@ -36,9 +37,9 @@ class StringTable(input: ByteBuffer) : ArrayList<TString?>() {
      * @throws IOException
      */
     @Throws(IOException::class)
-    fun read(input: ByteBuffer): TString {
+    fun read(input: PlatformByteBuffer): TString {
         Objects.requireNonNull(input)
-        val index = UtilityFunctions.toUnsignedInt(input.short)
+        val index = UtilityFunctions.toUnsignedInt(input.getShort())
         if (index < 0 || index >= this.size) {
             throw IOException(String.format("Invalid TString index: %d (size %d)", index, this.size))
         }
@@ -58,7 +59,7 @@ class StringTable(input: ByteBuffer) : ArrayList<TString?>() {
      * @throws IOException
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         output.putShort(this.size.toShort())
         for (tstr in this) {
             try {
@@ -131,7 +132,7 @@ class StringTable(input: ByteBuffer) : ArrayList<TString?>() {
      * @param input The input stream.
      */
     init {
-        val strCount = UtilityFunctions.toUnsignedInt(input.short)
+        val strCount = UtilityFunctions.toUnsignedInt(input.getShort())
         ensureCapacity(strCount)
         for (i in 0 until strCount) {
             try {

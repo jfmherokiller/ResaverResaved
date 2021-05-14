@@ -15,10 +15,8 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import mf.BufferUtil
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
 import java.util.zip.DataFormatException
 
@@ -27,7 +25,7 @@ import java.util.zip.DataFormatException
  *
  * @author Mark Fairchild
  */
-class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: ByteBuffer, ctx: ESPContext) : Record() {
+class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: PlatformByteBuffer, ctx: ESPContext) : Record() {
     /**
      *
      * @return The total size of the uncompressed data in the
@@ -42,9 +40,9 @@ class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: Byte
 
     /**
      */
-    private val uncompressedData: ByteBuffer
+    private val uncompressedData: PlatformByteBuffer
         private get() {
-            val DATA = ByteBuffer.allocate(uncompressedSize)
+            val DATA = PlatformByteBuffer.allocate(uncompressedSize)
             FIELDS.forEach { field: Field? ->
                 field?.write(DATA)
             }
@@ -55,11 +53,11 @@ class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: Byte
      * @see Entry.write
      * @param output The ByteBuffer.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(this.code.toString().toByteArray(StandardCharsets.UTF_8))
         val UNCOMPRESSED = uncompressedData
         val UNCOMPRESSED_SIZE = UNCOMPRESSED.capacity()
-        (UNCOMPRESSED as Buffer).flip()
+        (UNCOMPRESSED).flip()
         val COMPRESSED = BufferUtil.deflateZLIB(UNCOMPRESSED, UNCOMPRESSED_SIZE)
         val COMPRESSED_SIZE = COMPRESSED.limit()
         output?.putInt(4 + COMPRESSED_SIZE)
@@ -75,7 +73,7 @@ class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: Byte
     override fun calculateSize(): Int {
         val UNCOMPRESSED = uncompressedData
         val UNCOMPRESSED_SIZE = UNCOMPRESSED.capacity()
-        (UNCOMPRESSED as Buffer).flip()
+        (UNCOMPRESSED).flip()
         val COMPRESSED = BufferUtil.deflateZLIB(UNCOMPRESSED, UNCOMPRESSED_SIZE)
         val COMPRESSED_SIZE = COMPRESSED.capacity()
         return 28 + COMPRESSED_SIZE
@@ -110,11 +108,11 @@ class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: Byte
          * @param ctx The mod descriptor.
          */
         @Throws(DataFormatException::class)
-        fun skimRecord(recordCode: RecordCode, header: RecordHeader, input: ByteBuffer, ctx: ESPContext) {
+        fun skimRecord(recordCode: RecordCode, header: RecordHeader, input: PlatformByteBuffer, ctx: ESPContext) {
             assert(input.hasRemaining())
-            val DECOMPRESSED_SIZE = input.int
+            val DECOMPRESSED_SIZE = input.getInt()
             val uncompressed = BufferUtil.inflateZLIB(input, DECOMPRESSED_SIZE)
-            uncompressed.order(ByteOrder.LITTLE_ENDIAN)
+            uncompressed.makeLe()
             val FIELDS = FieldList()
             while (uncompressed.hasRemaining()) {
                 val newFields = readField(recordCode, uncompressed, ctx)
@@ -138,9 +136,9 @@ class RecordCompressed(recordCode: RecordCode, header: RecordHeader, input: Byte
         this.code = recordCode
         HEADER = header
         FIELDS = FieldList()
-        val DECOMPRESSED_SIZE = input.int
+        val DECOMPRESSED_SIZE = input.getInt()
         val uncompressed = BufferUtil.inflateZLIB(input, DECOMPRESSED_SIZE)
-        uncompressed.order(ByteOrder.LITTLE_ENDIAN)
+        uncompressed.makeLe()
         while (uncompressed.hasRemaining()) {
             val newFields = readField(recordCode, uncompressed, ctx)
             FIELDS.addAll(newFields)

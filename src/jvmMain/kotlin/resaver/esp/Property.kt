@@ -15,22 +15,22 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import resaver.IString
 import resaver.esp.PropertyData.Companion.readPropertyData
-import java.nio.ByteBuffer
 
 /**
  * Describes a property entry in a VMAD's scripts.
  *
  * @author Mark Fairchild
  */
-class Property(input: ByteBuffer, ctx: ESPContext) : Entry {
+class Property(input: PlatformByteBuffer, ctx: ESPContext) : Entry {
     /**
      * @see Entry.write
      * @param output The ByteBuffer.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(NAME.uTF8)
         output?.put(TYPE)
         output?.put(STATUS)
@@ -62,8 +62,8 @@ class Property(input: ByteBuffer, ctx: ESPContext) : Entry {
     init {
         NAME = IString[BufferUtil.getWString(input)!!]
         ctx.pushContext("prop:$NAME")
-        TYPE = input.get()
-        STATUS = input.get()
+        TYPE = input.getByte()
+        STATUS = input.getByte()
         try {
             DATA = readPropertyData(TYPE, input, ctx)
         } finally {

@@ -15,13 +15,11 @@
  */
 package resaver.archive
 
+import PlatformByteBuffer
 import mf.BufferUtil
-import java.nio.channels.FileChannel
-import java.nio.ByteOrder
-import java.io.IOException
 import net.jpountz.lz4.LZ4Exception
-import java.nio.Buffer
-import java.nio.ByteBuffer
+import java.io.IOException
+import java.nio.channels.FileChannel
 import java.util.zip.DataFormatException
 
 /**
@@ -30,13 +28,13 @@ import java.util.zip.DataFormatException
  * @author Mark Fairchild
  */
 object BSAFileData {
-    fun getData(channel: FileChannel, record: BSAFileRecord, header: BSAHeader): ByteBuffer? {
+    fun getData(channel: FileChannel, record: BSAFileRecord, header: BSAHeader): PlatformByteBuffer? {
         return try {
             channel.position(record.OFFSET.toLong())
-            val buffer = ByteBuffer.allocate(record.FILESIZE)
-            val bytesRead = channel.read(buffer)
-            buffer.order(ByteOrder.LITTLE_ENDIAN)
-            (buffer as Buffer).flip()
+            val buffer = PlatformByteBuffer.allocate(record.FILESIZE)
+            val bytesRead = buffer.readFileChannel(channel)
+            buffer.makeLe()
+            buffer.flip()
             check(bytesRead == record.FILESIZE) {
                 String.format(
                     "Read %d bytes but expected %d bytes.",
@@ -48,7 +46,7 @@ object BSAFileData {
             // If the filename is embedded, readFully it from the data block.
             // Otherwise retrieve it from the file record.
             if (header.EMBED_FILENAME) {
-                val b = buffer.get()
+                val b = buffer.getByte()
                 buffer.position(b + 2)
             }
 
@@ -56,13 +54,13 @@ object BSAFileData {
             if (!record.ISCOMPRESSED) {
                 buffer
             } else {
-                val uncompressedSize = buffer.int
-                val uncompressedData: ByteBuffer = when (header.VERSION) {
+                val uncompressedSize = buffer.getInt()
+                val uncompressedData: PlatformByteBuffer = when (header.VERSION) {
                     104 -> BufferUtil.inflateZLIB(buffer, uncompressedSize, record.FILESIZE)
                     105 -> BufferUtil.inflateLZ4(buffer, uncompressedSize)
                     else -> throw IOException("Unknown version ${header.VERSION}")
                 } // = ByteBuffer.allocate(uncompressedSize);
-                uncompressedData.order(ByteOrder.LITTLE_ENDIAN)
+                uncompressedData.makeLe()
                 uncompressedData
             }
         } catch (ex: LZ4Exception) {

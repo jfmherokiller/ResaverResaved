@@ -1,6 +1,6 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 
 /**
@@ -10,7 +10,7 @@ class ParamInt(val VALUE: Int) : Parameter() {
     override val type: ParamType
         get() = ParamType.INTEGER
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         output?.putInt(VALUE)
     }

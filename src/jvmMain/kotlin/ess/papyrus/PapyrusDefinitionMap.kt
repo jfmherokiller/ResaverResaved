@@ -15,8 +15,8 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import resaver.ListException
-import java.nio.ByteBuffer
 
 
 /**
@@ -25,7 +25,7 @@ import java.nio.ByteBuffer
  * @param <T>
 </T> */
 open class PapyrusDefinitionMap<T : Definition?> : LinkedHashMap<TString?, T>, PapyrusElement {
-    internal constructor(count: Int, input: ByteBuffer?, reader: PapyrusElementReader<T>) {
+    internal constructor(count: Int, input: PlatformByteBuffer?, reader: PapyrusElementReader<T>) {
         try {
             for (i in 0 until count) {
                 try {
@@ -51,13 +51,13 @@ open class PapyrusDefinitionMap<T : Definition?> : LinkedHashMap<TString?, T>, P
         return 4 + sum
     }
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         this.values.forEach { v: T -> v!!.write(output) }
     }
 
     internal fun interface PapyrusElementReader<T> {
         @Throws(PapyrusFormatException::class, PapyrusElementException::class)
-        fun read(input: ByteBuffer?): T
+        fun read(input: PlatformByteBuffer?): T
     }
 
     companion object {

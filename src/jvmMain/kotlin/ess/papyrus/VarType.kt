@@ -15,7 +15,7 @@
  */
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Describes the eleven types of variable data.
@@ -51,7 +51,7 @@ enum class VarType(private val VALID: Boolean = true) : PapyrusElement {
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(CODE.toByte())
     }
 
@@ -88,8 +88,8 @@ enum class VarType(private val VALID: Boolean = true) : PapyrusElement {
          */
 
         @Throws(PapyrusFormatException::class)
-        fun read(input: ByteBuffer): VarType {
-            val `val` = input.get().toInt()
+        fun read(input: PlatformByteBuffer): VarType {
+            val `val` = input.getByte().toInt()
             if (`val` < 0 || `val` >= VALUES.size) {
                 throw PapyrusFormatException("Invalid type value: $`val`")
             }

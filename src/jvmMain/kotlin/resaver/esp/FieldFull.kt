@@ -15,8 +15,8 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import resaver.IString
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
 /**
@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets
  *
  * @author Mark Fairchild
  */
-class FieldFull(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx: ESPContext) : FieldSimple(
+class FieldFull(code: IString?, input: PlatformByteBuffer, size: Int, big: Boolean, ctx: ESPContext) : FieldSimple(
     code!!, input!!, size, big, ctx
 ) {
     /**
@@ -97,7 +97,7 @@ class FieldFull(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx
         when {
             ctx.TES4!!.header.isLocalized -> {
                 assert(super.data.size == 4)
-                val `val` = super.byteBuffer.int
+                val `val` = super.byteBuffer.getInt()
                 IDX = `val` //(ctx.TES4.PLUGIN.INDEX << 24) | val;
                 STR = null
             }

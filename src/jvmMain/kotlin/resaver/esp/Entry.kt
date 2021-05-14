@@ -15,9 +15,7 @@
  */
 package resaver.esp
 
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import PlatformByteBuffer
 
 /**
  * A base interface describing anything that can be read from an ESP.
@@ -30,7 +28,7 @@ interface Entry {
      *
      * @param output The `ByteBuffer` to write.
      */
-    fun write(output: ByteBuffer?)
+    fun write(output: PlatformByteBuffer?)
 
     /**
      * Calculates the size of the Entry.
@@ -47,13 +45,14 @@ interface Entry {
          * @return
          */
 
-        fun advancingSlice(buffer: ByteBuffer, newLimit: Int): ByteBuffer {
+        fun advancingSlice(buffer: PlatformByteBuffer, newLimit: Int): PlatformByteBuffer {
             // Make the new slice.
-            val newSlice = buffer.slice().order(ByteOrder.LITTLE_ENDIAN)
-            (newSlice as Buffer).limit(newLimit)
+            val newSlice = buffer.slice()
+            newSlice.makeLe()
+            newSlice.limit(newLimit)
 
             // Advance the original.
-            (buffer as Buffer).position(buffer.position() + newLimit)
+            buffer.position(buffer.position() + newLimit)
             return newSlice
         }
     }

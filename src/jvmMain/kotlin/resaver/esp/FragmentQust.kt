@@ -15,9 +15,9 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import resaver.IString
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -26,8 +26,8 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
-    override fun write(output: ByteBuffer?) {
+class FragmentQust(input: PlatformByteBuffer, ctx: ESPContext) : FragmentBase() {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(UNKNOWN)
         output?.putShort(FRAGMENTS.size.toShort())
         if (null != FILENAME) {
@@ -87,8 +87,8 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
     /**
      *
      */
-    inner class Fragment(input: ByteBuffer, ctx: ESPContext?) : Entry {
-        override fun write(output: ByteBuffer?) {
+    inner class Fragment(input: PlatformByteBuffer, ctx: ESPContext?) : Entry {
+        override fun write(output: PlatformByteBuffer?) {
             output?.putShort(STAGE.toShort())
             output?.putShort(UNKNOWN1)
             output?.putInt(LOGENTRY)
@@ -104,10 +104,10 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
             return sum
         }
 
-        private val STAGE: Int = UtilityFunctions.toUnsignedInt(input.short)
-        private val UNKNOWN1: Short = input.short
-        private val LOGENTRY: Int = input.int
-        private val UNKNOWN2: Byte = input.get()
+        private val STAGE: Int = UtilityFunctions.toUnsignedInt(input.getShort())
+        private val UNKNOWN1: Short = input.getShort()
+        private val LOGENTRY: Int = input.getInt()
+        private val UNKNOWN2: Byte = input.getByte()
         private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)]
         private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)]
 
@@ -116,8 +116,8 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
     /**
      *
      */
-    inner class Alias(input: ByteBuffer, ctx: ESPContext) : Entry {
-        override fun write(output: ByteBuffer?) {
+    inner class Alias(input: PlatformByteBuffer, ctx: ESPContext) : Entry {
+        override fun write(output: PlatformByteBuffer?) {
             output?.putLong(OBJECT)
             output?.putShort(VERSION)
             output?.putShort(OBJFORMAT)
@@ -132,14 +132,14 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
             return sum
         }
 
-        private val OBJECT: Long = input.long
-        private val VERSION: Short = input.short
-        private val OBJFORMAT: Short = input.short
+        private val OBJECT: Long = input.getLong()
+        private val VERSION: Short = input.getShort()
+        private val OBJFORMAT: Short = input.getShort()
         private val SCRIPTS: MutableList<Script>
 
         init {
             SCRIPTS = LinkedList()
-            val scriptCount = UtilityFunctions.toUnsignedInt(input.short)
+            val scriptCount = UtilityFunctions.toUnsignedInt(input.getShort())
             for (i in 0 until scriptCount) {
                 val script = Script(input, ctx)
                 SCRIPTS.add(script)
@@ -150,8 +150,8 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
 
     init {
         try {
-            UNKNOWN = input.get()
-            val fragmentCount = UtilityFunctions.toUnsignedInt(input.short)
+            UNKNOWN = input.getByte()
+            val fragmentCount = UtilityFunctions.toUnsignedInt(input.getShort())
             if (ctx.GAME.isFO4) {
                 ctx.pushContext("FragmentQust")
                 FILENAME = null
@@ -168,7 +168,7 @@ class FragmentQust(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
                 val fragment: Fragment = Fragment(input, ctx)
                 FRAGMENTS.add(fragment)
             }
-            val aliasCount = UtilityFunctions.toUnsignedInt(input.short)
+            val aliasCount = UtilityFunctions.toUnsignedInt(input.getShort())
             for (i in 0 until aliasCount) {
                 val alias = Alias(input, ctx)
                 ALIASES.add(alias)

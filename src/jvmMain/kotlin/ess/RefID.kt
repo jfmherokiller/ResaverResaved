@@ -15,9 +15,9 @@
  */
 package ess
 
+import PlatformByteBuffer
 import resaver.Analysis
 import resaver.ResaverFormatting
-import java.nio.ByteBuffer
 
 
 /**
@@ -30,7 +30,7 @@ class RefID internal constructor(private val DATA: Int, ess: ESS) : Element, Lin
      * @see Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put((DATA shr 16).toByte())
         output.put((DATA shr 8).toByte())
         output.put((DATA shr 0).toByte())

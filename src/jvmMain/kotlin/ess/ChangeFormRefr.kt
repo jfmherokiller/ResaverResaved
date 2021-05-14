@@ -15,17 +15,18 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
 import mu.KLoggable
 import mu.KLogger
-import java.nio.ByteBuffer
+import resaver.Analysis
 
 /**
  * Describes a ChangeForm containing a placed Reference.
  *
  * @author Mark Fairchild
  */
-class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, analysis: resaver.Analysis?, context: ESSContext?) :
+class ChangeFormRefr(input: PlatformByteBuffer, flags: Flags.FlagsInt, refid: RefID, analysis: Analysis?, context: ESSContext?) :
     ess.GeneralElement(), ChangeFormData {
     /**
      * @see AnalyzableElement.getInfo
@@ -97,7 +98,7 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, ana
             0
         }
         try {
-            super.readElement(input, "INITIAL") { `in`: ByteBuffer? ->
+            super.readElement(input, "INITIAL") { `in`: PlatformByteBuffer? ->
                 ChangeFormInitialData(
                     `in`!!, initialType, context
                 )
@@ -106,7 +107,7 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, ana
                 super.readBytesVS(input, "HAVOK")
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_FORM_FLAGS)) {
-                super.readElement(input, ChangeFlagConstantsRef.CHANGE_FORM_FLAGS) { input: ByteBuffer? ->
+                super.readElement(input, ChangeFlagConstantsRef.CHANGE_FORM_FLAGS) { input: PlatformByteBuffer? ->
                     ChangeFormFlags(
                         input!!
                     )
@@ -137,14 +138,14 @@ class ChangeFormRefr(input: ByteBuffer, flags: Flags.FlagsInt, refid: RefID, ana
                 || flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN)
                 || flags.getFlag(ChangeFlagConstantsRef.CHANGE_OBJECT_EXTRA_ITEM_DATA)
             ) {
-                super.readElement(input, "EXTRADATA") { `in`: ByteBuffer? ->
+                super.readElement(input, "EXTRADATA") { `in`: PlatformByteBuffer? ->
                     ChangeFormExtraData(
                         `in`!!, context!!
                     )
                 }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_INVENTORY) || flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_LEVELED_INVENTORY)) {
-                super.readVSElemArray(input, "INVENTORY") { `in`: ByteBuffer? ->
+                super.readVSElemArray(input, "INVENTORY") { `in`: PlatformByteBuffer? ->
                     ChangeFormInventoryItem(
                         `in`,
                         context

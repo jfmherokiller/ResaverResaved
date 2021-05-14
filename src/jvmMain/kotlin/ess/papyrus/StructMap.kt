@@ -15,8 +15,8 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.papyrus.PapyrusDefinitionMap.PapyrusElementReader
-import java.nio.ByteBuffer
 
 /**
  * Convenience class for Structure maps.
@@ -24,10 +24,10 @@ import java.nio.ByteBuffer
  * @author Mark Fairchild
  */
 class StructMap : PapyrusDefinitionMap<Struct> {
-    internal constructor(count: Int, input: ByteBuffer?, context: PapyrusContext) : super(
+    internal constructor(count: Int, input: PlatformByteBuffer, context: PapyrusContext) : super(
         count,
         input,
-        PapyrusElementReader<Struct> { b: ByteBuffer? ->
+        PapyrusElementReader<Struct> { b: PlatformByteBuffer? ->
             Struct(
                 b!!, context
             )

@@ -15,10 +15,9 @@
  */
 package resaver.archive
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import java.io.IOException
-import java.nio.Buffer
-import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
@@ -31,28 +30,29 @@ import java.util.zip.DataFormatException
  *
  * @author Mark Fairchild
  */
-internal class BA2FileRecord(input: ByteBuffer, header: BA2Header?) {
+internal class BA2FileRecord(input: PlatformByteBuffer, header: BA2Header?) {
     override fun toString(): String {
         return name ?: String.format("%d bytes at offset %d", FILESIZE.coerceAtLeast(REALSIZE), OFFSET)
     }
 
-    fun getData(channel: FileChannel): Optional<ByteBuffer> {
+    fun getData(channel: FileChannel): Optional<PlatformByteBuffer> {
         return try {
             when (FILESIZE) {
                 0 -> {
-                    val DATA = ByteBuffer.allocate(REALSIZE)
-                    channel.read(DATA, OFFSET)
+                    val DATA = PlatformByteBuffer.allocate(REALSIZE)
+                    DATA.readFileChannel(channel,OFFSET)
                     Optional.of(DATA)
                 }
                 REALSIZE -> {
-                    val DATA = ByteBuffer.allocate(FILESIZE)
-                    channel.read(DATA, OFFSET)
+                    val DATA = PlatformByteBuffer.allocate(FILESIZE)
+                    DATA.readFileChannel(channel,OFFSET)
                     Optional.of(DATA)
                 }
                 else -> {
-                    val COMPRESSED = ByteBuffer.allocate(FILESIZE)
-                    channel.read(COMPRESSED, OFFSET)
-                    (COMPRESSED as Buffer).flip()
+                    val COMPRESSED = PlatformByteBuffer.allocate(FILESIZE)
+                    COMPRESSED.readFileChannel(channel,OFFSET)
+                    COMPRESSED.readFileChannel(channel,OFFSET)
+                    COMPRESSED.flip()
                     val DATA = BufferUtil.inflateZLIB(COMPRESSED, REALSIZE, FILESIZE)
                     Optional.of(DATA)
                 }
@@ -93,15 +93,15 @@ internal class BA2FileRecord(input: ByteBuffer, header: BA2Header?) {
      * @throws IOException
      */
     init {
-        NAMEHASH = input.int
+        NAMEHASH = input.getInt()
         EXT = ByteArray(4)
         input[EXT]
-        DIRHASH = input.int
-        FLAGS = input.int
-        OFFSET = input.long
-        FILESIZE = input.int
-        REALSIZE = input.int
-        ALIGN = input.int
+        DIRHASH = input.getInt()
+        FLAGS = input.getInt()
+        OFFSET = input.getLong()
+        FILESIZE = input.getInt()
+        REALSIZE = input.getInt()
+        ALIGN = input.getInt()
         name = null
     }
 }

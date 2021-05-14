@@ -15,13 +15,13 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import ess.Plugin
 import ess.PluginInfo
 import ess.PluginInfo.Companion.makeFormID
 import mf.BufferUtil
 import resaver.IString
 import resaver.esp.Entry.Companion.advancingSlice
-import java.nio.ByteBuffer
 import java.nio.file.Paths
 
 /**
@@ -30,12 +30,12 @@ import java.nio.file.Paths
  *
  * @author Mark Fairchild
  */
-class RecordTes4(input: ByteBuffer, plugin: Plugin?, plugins: PluginInfo?, ctx: ESPContext) : Record() {
+class RecordTes4(input: PlatformByteBuffer, plugin: Plugin?, plugins: PluginInfo?, ctx: ESPContext) : Record() {
     /**
      * @see Entry.write
      * @param output The ByteBuffer.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(this.code.toString().toByteArray())
         output?.putInt(calculateSize() - 24)
         header.write(output)
@@ -125,7 +125,7 @@ class RecordTes4(input: ByteBuffer, plugin: Plugin?, plugins: PluginInfo?, ctx: 
         val CODESTRING = String(CODEBYTES)
         assert(CODESTRING == "TES4")
         ctx.pushContext(CODESTRING)
-        val DATASIZE = input.int
+        val DATASIZE = input.getInt()
         header = RecordHeader(input, ctx)
 
         // Read the record data.
@@ -146,7 +146,7 @@ class RecordTes4(input: ByteBuffer, plugin: Plugin?, plugins: PluginInfo?, ctx: 
             }
         }
         MASTERS = ArrayList(masters)
-        var HEDR:ByteBuffer? = null
+        var HEDR:PlatformByteBuffer? = null
         for (f in FIELDS) {
             if (f?.code!!.equals(IString["HEDR"])) {
                 if (f is FieldSimple) {
@@ -157,9 +157,9 @@ class RecordTes4(input: ByteBuffer, plugin: Plugin?, plugins: PluginInfo?, ctx: 
             }
         }
         if (HEDR != null) {
-            VERSION = HEDR.float
-            RECORD_COUNT = HEDR.int
-            NEXT_RECORD = HEDR.int
+            VERSION = HEDR.getFloat()
+            RECORD_COUNT = HEDR.getInt()
+            NEXT_RECORD = HEDR.getInt()
         } else {
             VERSION = Float.NaN
             RECORD_COUNT = 0

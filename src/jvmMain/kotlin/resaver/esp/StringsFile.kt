@@ -15,6 +15,7 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import ess.Plugin
 import mf.BufferUtil
 import mu.KLoggable
@@ -24,9 +25,6 @@ import okio.FileSystem
 import okio.Path.Companion.toPath
 import org.mozilla.universalchardet.UniversalDetector
 import java.io.IOException
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
 import java.nio.file.FileSystems
@@ -39,7 +37,7 @@ import java.nio.file.PathMatcher
  *
  * @author Mark Fairchild
  */
-class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBuffer, type: Type?) {
+class StringsFile private constructor(path: Path, plugin: Plugin?, input: PlatformByteBuffer, type: Type?) {
     /**
      * Retrieves a string using its string ID.
      *
@@ -140,7 +138,7 @@ class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBu
                 readByteString()
             }
             val size = entireFileByteString.size
-            val mbuffer = ByteBuffer.allocate(size)
+            val mbuffer = PlatformByteBuffer.allocate(size)
             return readStringsFile(file,plugin,mbuffer)
         }
         /**
@@ -152,7 +150,7 @@ class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBu
          * @param input The input stream.
          * @return The `StringsFile`.
          */
-        fun readStringsFile(file: Path, plugin: Plugin?, input: ByteBuffer): StringsFile {
+        fun readStringsFile(file: Path, plugin: Plugin?, input: PlatformByteBuffer): StringsFile {
             val type = Type.match(file)
             return StringsFile(file, plugin, input, type)
         }
@@ -195,25 +193,26 @@ class StringsFile private constructor(path: Path, plugin: Plugin?, input: ByteBu
      * @param type The type of stringtable.
      */
     init {
-        input.order(ByteOrder.LITTLE_ENDIAN)
+        input.makeLe()
         PATH = path
         PLUGIN = plugin!!
-        val COUNT = input.int
-        val SIZE = input.int
+        val COUNT = input.getInt()
+        val SIZE = input.getInt()
         val DATASTART = 8 + COUNT * 8
         TABLE = HashMap(COUNT)
-        val DIRECTORY = input.slice().order(ByteOrder.LITTLE_ENDIAN)
-        (DIRECTORY as Buffer).limit(COUNT * 8)
+        val DIRECTORY = input.slice()
+        DIRECTORY.makeLe()
+        DIRECTORY.limit(COUNT * 8)
         for (i in 0 until COUNT) {
-            val STRINGID = DIRECTORY.int
-            val OFFSET = DIRECTORY.int
-            (input as Buffer).position(DATASTART + OFFSET)
+            val STRINGID = DIRECTORY.getInt()
+            val OFFSET = DIRECTORY.getInt()
+            input.position(DATASTART + OFFSET)
             if (type == Type.STRINGS) {
                 val bytes = BufferUtil.getZStringRaw(input)
                 val string = BufferUtil.mozillaString(bytes!!)
                 TABLE[STRINGID] = string
             } else {
-                val length = input.int
+                val length = input.getInt()
                 val bytes = ByteArray(length)
                 input[bytes]
                 val string = BufferUtil.mozillaString(bytes)

@@ -15,11 +15,11 @@
  */
 package ess.papyrus
 
-import resaver.Analysis
+import PlatformByteBuffer
 import ess.AnalyzableElement
 import ess.Element
 import ess.Linkable
-import java.nio.ByteBuffer
+import resaver.Analysis
 
 
 /**
@@ -36,13 +36,13 @@ import java.nio.ByteBuffer
  * @throws PapyrusFormatException
  * @throws PapyrusElementException
  */
-class SuspendedStack constructor(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
+class SuspendedStack constructor(input: PlatformByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable, HasID {
 
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         iD.write(output)
         output!!.put(FLAG)
         assert(FLAG > 0 || message == null)
@@ -183,7 +183,7 @@ class SuspendedStack constructor(input: ByteBuffer, context: PapyrusContext) : P
 
     init {
         iD = context.readEID32(input)
-        FLAG = input.get()
+        FLAG = input.getByte()
         THREAD = context.findActiveScript(iD)
         if (FLAG.toInt() == 0) {
             message = null

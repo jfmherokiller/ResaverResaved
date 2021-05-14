@@ -1,9 +1,8 @@
 package resaver.pex
 
+import PlatformByteBuffer
 import mf.BufferUtil
-import kotlin.Throws
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Describes the header of a PexFile file. Useless beyond that.
@@ -14,7 +13,7 @@ import java.nio.ByteBuffer
  * @param input A ByteBuffer for a Skyrim PEX file.
  * @throws IOException Exceptions aren't handled.
  */
-class Header internal constructor(input: ByteBuffer) {
+class Header internal constructor(input: PlatformByteBuffer) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -23,7 +22,7 @@ class Header internal constructor(input: ByteBuffer) {
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         output.putInt(magic)
         output.putInt(version)
         output.putLong(compilationTime)
@@ -57,9 +56,9 @@ class Header internal constructor(input: ByteBuffer) {
 
 
     init {
-        magic = input.int
-        version = input.int
-        compilationTime = input.long
+        magic = input.getInt()
+        version = input.getInt()
+        compilationTime = input.getLong()
         soureFilename = BufferUtil.getUTF(input)
         userName = BufferUtil.getUTF(input)
         machineName = BufferUtil.getUTF(input)

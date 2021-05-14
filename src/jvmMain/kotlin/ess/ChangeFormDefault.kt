@@ -15,7 +15,7 @@
  */
 package ess
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Describes a default ChangeForm.
@@ -28,12 +28,12 @@ import java.nio.ByteBuffer
  * @param input The data buffer.
  * @param size Buffer size
  */
-class ChangeFormDefault(input: ByteBuffer, size: Int) : ChangeFormData {
+class ChangeFormDefault(input: PlatformByteBuffer, size: Int) : ChangeFormData {
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(DATA)
     }
 

@@ -15,20 +15,20 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import resaver.IString
-import java.nio.ByteBuffer
 
 /**
  * FieldVMAD represents all a VMAD field.
  *
  * @author Mark Fairchild
  */
-class FieldVMAD(recordCode: RecordCode, fieldCode: IString, input: ByteBuffer, big: Boolean, ctx: ESPContext) : Field {
+class FieldVMAD(recordCode: RecordCode, fieldCode: IString, input: PlatformByteBuffer, big: Boolean, ctx: ESPContext) : Field {
     /**
      * @see Entry.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(this.code.uTF8)
         output.putShort((if (BIG) 0 else calculateSize() - 6).toShort())
         output.putShort(VERSION)
@@ -97,12 +97,12 @@ class FieldVMAD(recordCode: RecordCode, fieldCode: IString, input: ByteBuffer, b
         assert(fieldCode.equals(IString["VMAD"]))
         RECORDCODE = recordCode
         this.code = fieldCode
-        VERSION = input.short
-        OBJFORMAT = input.short
+        VERSION = input.getShort()
+        OBJFORMAT = input.getShort()
         SCRIPTS = mutableListOf()
         FRAGMENTS = mutableListOf()
         BIG = big
-        val scriptCount = UtilityFunctions.toUnsignedInt(input.short)
+        val scriptCount = UtilityFunctions.toUnsignedInt(input.getShort())
         for (i in 0 until scriptCount) {
             val script = Script(input, ctx)
             ctx.PLUGIN_INFO.addScriptData(script)

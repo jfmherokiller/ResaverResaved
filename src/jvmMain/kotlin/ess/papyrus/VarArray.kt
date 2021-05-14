@@ -1,13 +1,13 @@
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.Element
 import ess.Linkable.Companion.makeLink
-import java.nio.ByteBuffer
 
 /**
  * Variable that stores an ARRAY.
  */
-class VarArray(varType: VarType, input: ByteBuffer, context: PapyrusContext) : Variable() {
+class VarArray(varType: VarType, input: PlatformByteBuffer, context: PapyrusContext) : Variable() {
     val elementType: VarType
         get() = VarType.values()[VarTYPE.ordinal - 7]
 
@@ -31,7 +31,7 @@ class VarArray(varType: VarType, input: ByteBuffer, context: PapyrusContext) : V
         get() = null
 
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         this.type.write(output)
         if (VarTYPE.isRefType) {
             REFTYPE!!.write(output)

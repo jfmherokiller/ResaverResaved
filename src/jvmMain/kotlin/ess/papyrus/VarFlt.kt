@@ -1,13 +1,13 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Variable that stores a float.
  */
 class VarFlt : Variable {
-    constructor(input: ByteBuffer) {
-        value = input.float
+    constructor(input: PlatformByteBuffer) {
+        value = input.getFloat()
     }
 
     constructor(`val`: Float) {
@@ -18,7 +18,7 @@ class VarFlt : Variable {
         return 5
     }
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         output?.putFloat(value)
     }

@@ -15,16 +15,16 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
 import resaver.IString
 import resaver.IString.Companion.format
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Describes the debugging information for a property group.
  *
  */
-internal class StructOrder(input: ByteBuffer, strings: StringTable) {
+internal class StructOrder(input: PlatformByteBuffer, strings: StringTable) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -33,7 +33,7 @@ internal class StructOrder(input: ByteBuffer, strings: StringTable) {
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         OBJECTNAME.write(output)
         ORDERNAME.write(output)
         output.putShort(NAMES.size.toShort())
@@ -90,7 +90,7 @@ internal class StructOrder(input: ByteBuffer, strings: StringTable) {
      * @throws IOException Exceptions aren't handled.
      */
     init {
-        val nameCount = input.short.toUInt()
+        val nameCount = input.getShort().toUInt()
         for (i in 0 until nameCount.toInt()) {
             NAMES.add(strings.read(input))
         }

@@ -15,17 +15,17 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.papyrus.PapyrusElementMap.PapyrusElementReader
-import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark
  */
 class SuspendedStackMap : PapyrusElementMap<SuspendedStack> {
-    internal constructor(input: ByteBuffer, context: PapyrusContext) : super(
+    internal constructor(input: PlatformByteBuffer, context: PapyrusContext) : super(
         input,
-        PapyrusElementReader<SuspendedStack> { b: ByteBuffer? ->
+        PapyrusElementReader<SuspendedStack> { b: PlatformByteBuffer? ->
             SuspendedStack(
                 b!!, context
             )

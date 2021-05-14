@@ -15,15 +15,15 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.ByteBuffer
 
 /**
  * Manages the initial data field from a `ChangeForm`.
  *
  * @author Mark Fairchild
  */
-internal class ChangeFormInitialData(input: ByteBuffer, initialType: Int, context: ESSContext?) : ess.GeneralElement() {
+internal class ChangeFormInitialData(input: PlatformByteBuffer, initialType: Int, context: ESSContext?) : ess.GeneralElement() {
     /**
      * Creates a new `ChangeFormInitialData`.
      * @param input

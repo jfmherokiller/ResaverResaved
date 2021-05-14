@@ -15,17 +15,17 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.papyrus.PapyrusElementMap.PapyrusElementReader
-import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
 class UnbindMap : PapyrusElementMap<QueuedUnbind> {
-    internal constructor(input: ByteBuffer, context: PapyrusContext) : super(
+    internal constructor(input: PlatformByteBuffer, context: PapyrusContext) : super(
         input,
-        PapyrusElementReader<QueuedUnbind> { b: ByteBuffer? ->
+        PapyrusElementReader<QueuedUnbind> { b: PlatformByteBuffer? ->
             QueuedUnbind(
                 b!!, context
             )

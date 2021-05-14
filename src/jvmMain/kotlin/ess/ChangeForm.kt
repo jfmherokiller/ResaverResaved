@@ -15,15 +15,13 @@
  */
 package ess
 
+import PlatformByteBuffer
 import UtilityFunctions
 import ess.ESS.ESSContext
 import mu.KLoggable
 import mu.KLogger
 import resaver.Analysis
-import java.nio.Buffer
 import java.nio.BufferUnderflowException
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.zip.DataFormatException
 
 /**
@@ -31,12 +29,12 @@ import java.util.zip.DataFormatException
  *
  * @author Mark Fairchild
  */
-class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableElement, Linkable {
+class ChangeForm(input: PlatformByteBuffer, context: ESSContext) : Element, AnalyzableElement, Linkable {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         refID?.write(output)
         changeFlags.write(output)
         val RAWTYPE = TYPEFIELD and 0x3F
@@ -140,12 +138,12 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
      *
      * @return The raw form of the `ChangeFormData`.
      */
-    val bodyData: ByteBuffer?
+    val bodyData: PlatformByteBuffer?
         get() = if (isCompressed) {
             decompress(RAWDATA, length2)
         } else {
             RAWDATA.let {
-                ByteBuffer.allocate(it.size).put(
+                PlatformByteBuffer.allocate(it.size).put(
                     RAWDATA
                 )
             }
@@ -172,8 +170,8 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
             return parsedData
         }
         val BODYDATA = bodyData ?: return null
-        BODYDATA.order(ByteOrder.LITTLE_ENDIAN)
-        (BODYDATA as Buffer).position(0)
+        BODYDATA.makeLe()
+        BODYDATA.position(0)
         try {
             parsedData = when (type) {
                 ChangeFormType.FLST -> context?.let { ChangeFormFLST(BODYDATA, changeFlags, it) }
@@ -196,7 +194,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         } catch (ex: ElementException) {
             logger.warn{ex.message}
             if (bestEffort) {
-                (BODYDATA as Buffer).position(0)
+                (BODYDATA).position(0)
                 parsedData = ChangeFormDefault(BODYDATA, length1)
             } else {
                 return null
@@ -204,7 +202,7 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
         } catch (ex: BufferUnderflowException) {
             logger.warn{ex.message}
             if (bestEffort) {
-                (BODYDATA as Buffer).position(0)
+                (BODYDATA).position(0)
                 parsedData = ChangeFormDefault(BODYDATA, length1)
             } else {
                 return null
@@ -386,9 +384,9 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
          * @param length
          * @return
          */
-        private fun decompress(buf: ByteArray, length: Int): ByteBuffer? {
+        private fun decompress(buf: ByteArray, length: Int): PlatformByteBuffer? {
             return try {
-                mf.BufferUtil.inflateZLIB(ByteBuffer.wrap(buf), length, buf.size)
+                mf.BufferUtil.inflateZLIB(PlatformByteBuffer.wrap(buf), length, buf.size)
             } catch (ex: DataFormatException) {
                 null
             }
@@ -423,24 +421,24 @@ class ChangeForm(input: ByteBuffer, context: ESSContext) : Element, AnalyzableEl
     init {
         refID = context.readRefID(input)
         changeFlags = Flags.readIntFlags(input)
-        TYPEFIELD = UtilityFunctions.toUnsignedInt(input.get())
-        VERSION = input.get()
+        TYPEFIELD = UtilityFunctions.toUnsignedInt(input.getByte())
+        VERSION = input.getByte()
         val typeCode = TYPEFIELD and 0x3F
         val type = context.game.let { it?.let { it1 -> ChangeFormType.getType(it1, typeCode) } }
             ?: throw IllegalStateException("Invalid changeform type index: $typeCode")
         this.type = type
         when (dataLength) {
             LengthSize.INT8 -> {
-                length1 = UtilityFunctions.toUnsignedInt(input.get())
-                length2 = UtilityFunctions.toUnsignedInt(input.get())
+                length1 = UtilityFunctions.toUnsignedInt(input.getByte())
+                length2 = UtilityFunctions.toUnsignedInt(input.getByte())
             }
             LengthSize.INT16 -> {
-                length1 = UtilityFunctions.toUnsignedInt(input.short)
-                length2 = UtilityFunctions.toUnsignedInt(input.short)
+                length1 = UtilityFunctions.toUnsignedInt(input.getShort())
+                length2 = UtilityFunctions.toUnsignedInt(input.getShort())
             }
             LengthSize.INT32 -> {
-                length1 = input.int
-                length2 = input.int
+                length1 = input.getInt()
+                length2 = input.getInt()
             }
         }
         check(length1 >= 0) {

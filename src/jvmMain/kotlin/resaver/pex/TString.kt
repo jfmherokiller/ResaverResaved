@@ -1,9 +1,9 @@
 package resaver.pex
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import resaver.WString
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * A case-insensitive string with value semantics that reads and writes as a
@@ -27,7 +27,7 @@ class TString
      * @see WString.write
      */
     @Throws(IOException::class)
-    fun writeFull(output: ByteBuffer?) {
+    fun writeFull(output: PlatformByteBuffer) {
         if (output != null) {
             BufferUtil.putWString(output, super.toString())
         }
@@ -36,7 +36,7 @@ class TString
     /**
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.putShort(INDEX.toShort())
     }
 }

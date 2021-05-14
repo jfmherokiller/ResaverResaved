@@ -1,13 +1,13 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Variable that stores an integer.
  */
 class VarInt : Variable {
-    constructor(input: ByteBuffer) {
-        value = input.int
+    constructor(input: PlatformByteBuffer) {
+        value = input.getInt()
     }
 
     constructor(`val`: Int) {
@@ -18,7 +18,7 @@ class VarInt : Variable {
         return 5
     }
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         output?.putInt(value)
     }

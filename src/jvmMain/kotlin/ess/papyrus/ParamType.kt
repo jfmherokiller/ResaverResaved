@@ -1,6 +1,7 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
+import UtilityFunctions
 
 /**
  * Types of parameters. Not quite a perfect overlap with the other Type
@@ -9,7 +10,7 @@ import java.nio.ByteBuffer
 enum class ParamType : PapyrusElement {
     NULL, IDENTIFIER, STRING, INTEGER, FLOAT, BOOLEAN, VARIANT, STRUCT, UNKNOWN8, TERM;
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(ordinal.toByte())
     }
 
@@ -19,8 +20,8 @@ enum class ParamType : PapyrusElement {
 
     companion object {
         @Throws(PapyrusFormatException::class)
-        fun read(input: ByteBuffer): ParamType {
-            val `val` = UtilityFunctions.toUnsignedInt(input.get())
+        fun read(input: PlatformByteBuffer): ParamType {
+            val `val` = UtilityFunctions.toUnsignedInt(input.getByte())
             if (`val` < 0 || `val` >= VALUES.size) {
                 throw PapyrusFormatException("Invalid type: $`val`")
             }

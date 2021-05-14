@@ -15,6 +15,7 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.ESS
 import ess.Element
 import ess.Flags
@@ -23,7 +24,6 @@ import ess.Linkable.Companion.makeLink
 import ess.papyrus.Variable.Companion.readList
 import resaver.Analysis
 import resaver.ListException
-import java.nio.ByteBuffer
 import java.util.*
 
 
@@ -40,14 +40,13 @@ class StructInstance
  * @param structs The `StructMap` containing the definitions.
  * @param context The `PapyrusContext` info.
  * @throws PapyrusFormatException
- */
-    (input: ByteBuffer, structs: StructMap, context: PapyrusContext, override val descriptors: List<MemberDesc?>?) : GameElement(input, structs, context),
+ */(input: PlatformByteBuffer, structs: StructMap, context: PapyrusContext, override val descriptors: List<MemberDesc?>?) : GameElement(input, structs, context),
     SeparateData, HasVariables {
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         super.write(output)
     }
 
@@ -59,7 +58,7 @@ class StructInstance
      * @throws PapyrusFormatException
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
-    override fun readData(input: ByteBuffer?, context: PapyrusContext?) {
+    override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
         data = StructData(input!!, context!!)
     }
 
@@ -67,7 +66,7 @@ class StructInstance
      * @see SeparateData.writeData
      * @param input
      */
-    override fun writeData(input: ByteBuffer?) {
+    override fun writeData(input: PlatformByteBuffer?) {
         data!!.write(input)
     }
 
@@ -203,12 +202,12 @@ class StructInstance
      *
      * @author Mark Fairchild
      */
-    private inner class StructData(input: ByteBuffer, context: PapyrusContext) : PapyrusDataFor<StructInstance?> {
+    private inner class StructData(input: PlatformByteBuffer, context: PapyrusContext) : PapyrusDataFor<StructInstance?> {
         /**
          * @see ess.Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             iD.write(output)
             FLAG.write(output)
             output?.putInt(VARIABLES.size)
@@ -254,7 +253,7 @@ class StructInstance
         init {
             FLAG = readByteFlags(input)
             try {
-                val count = input.int
+                val count = input.getInt()
                 VARIABLES = readList(input, count, context).toMutableList()
             } catch (ex: ListException) {
                 throw PapyrusElementException("Couldn't read struct variables.", ex, this)

@@ -15,17 +15,17 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.papyrus.PapyrusElementMap.PapyrusElementReader
-import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
 class ScriptInstanceMap : PapyrusElementMap<ScriptInstance> {
-    internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusContext) : super(
+    internal constructor(input: PlatformByteBuffer, scripts: ScriptMap, context: PapyrusContext) : super(
         input,
-        PapyrusElementReader<ScriptInstance> { b: ByteBuffer? ->
+        PapyrusElementReader<ScriptInstance> { b: PlatformByteBuffer? ->
             ScriptInstance(
                 b!!, scripts, context
             )

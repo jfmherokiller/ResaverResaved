@@ -1,13 +1,13 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Variable that stores a boolean.
  */
 class VarBool : Variable {
-    constructor(input: ByteBuffer) {
-        VALUE = input.int
+    constructor(input: PlatformByteBuffer) {
+        VALUE = input.getInt()
     }
 
     constructor(`val`: Boolean) {
@@ -21,7 +21,7 @@ class VarBool : Variable {
         return 5
     }
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         output?.putInt(VALUE)
     }

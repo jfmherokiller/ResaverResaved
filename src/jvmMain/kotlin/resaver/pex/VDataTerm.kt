@@ -1,7 +1,7 @@
 package resaver.pex
 
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.util.*
 
 /**
@@ -9,7 +9,7 @@ import java.util.*
  */
 class VDataTerm(`val`: String) : VData() {
     @Throws(IOException::class)
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         throw IllegalStateException("Not valid for Terms.")
     }
 

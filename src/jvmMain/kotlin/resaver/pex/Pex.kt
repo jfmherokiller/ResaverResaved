@@ -15,6 +15,8 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
+import resaver.Game
 import resaver.IString
 import resaver.IString.Companion.format
 import resaver.Scheme
@@ -22,7 +24,6 @@ import resaver.pex.Opcode.Companion.read
 import resaver.pex.VariableType.Companion.readLocal
 import resaver.pex.VariableType.Companion.readParam
 import java.io.IOException
-import java.nio.ByteBuffer
 import kotlin.experimental.and
 
 /**
@@ -30,7 +31,7 @@ import kotlin.experimental.and
  *
  * @author Mark Fairchild
  */
-class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: List<UserFlag?>?, strings: StringTable) {
+class Pex internal constructor(input: PlatformByteBuffer, game: Game, flags: List<UserFlag?>?, strings: StringTable) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -39,7 +40,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         NAME.write(output)
         size = calculateSize()
         output.putInt(size)
@@ -293,7 +294,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
      * Describes a Struct from a PEX file.
      *
      */
-    inner class Struct(input: ByteBuffer, strings: StringTable) {
+    inner class Struct(input: PlatformByteBuffer, strings: StringTable) {
         /**
          * Write the this Struct to a `ByteBuffer`. No IO error
          * handling is performed.
@@ -303,7 +304,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          * passed on.
          */
         @Throws(IOException::class)
-        fun write(output: ByteBuffer) {
+        fun write(output: PlatformByteBuffer) {
             this.NAME.write(output)
             output.putShort(MEMBERS.size.toShort())
             for (member in MEMBERS) {
@@ -356,7 +357,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          * Describes a Member of a Struct.
          *
          */
-        inner class Member(input: ByteBuffer, strings: StringTable) {
+        inner class Member(input: PlatformByteBuffer, strings: StringTable) {
             /**
              * Write the this.ct to a `ByteBuffer`. No IO error
              * handling is performed.
@@ -366,7 +367,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
              * simply passed on.
              */
             @Throws(IOException::class)
-            fun write(output: ByteBuffer) {
+            fun write(output: PlatformByteBuffer) {
                 this.NAME.write(output)
                 TYPE.write(output)
                 output.putInt(this.USERFLAGS)
@@ -448,9 +449,9 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             init {
                 this.NAME = strings.read(input)
                 TYPE = strings.read(input)
-                this.USERFLAGS = input.int
+                this.USERFLAGS = input.getInt()
                 VALUE = VData.readVariableData(input, strings)
-                this.CONSTFLAG = input.get()
+                this.CONSTFLAG = input.getByte()
                 DOC = strings.read(input)
             }
         }
@@ -464,7 +465,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          */
         init {
             this.NAME = strings.read(input)
-            val numMembers = UtilityFunctions.toUnsignedInt(input.short)
+            val numMembers = UtilityFunctions.toUnsignedInt(input.getShort())
             MEMBERS = ArrayList(numMembers)
             for (i in 0 until numMembers) {
                 MEMBERS.add(Member(input, strings))
@@ -476,7 +477,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
      * Describes a Property from a PEX file.
      *
      */
-    inner class Property(input: ByteBuffer, strings: StringTable) {
+    inner class Property(input: PlatformByteBuffer, strings: StringTable) {
         /**
          * Write the this.ct to a `ByteBuffer`. No IO error handling
          * is performed.
@@ -486,7 +487,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          * passed on.
          */
         @Throws(IOException::class)
-        fun write(output: ByteBuffer) {
+        fun write(output: PlatformByteBuffer) {
             this.NAME.write(output)
             TYPE.write(output)
             DOC!!.write(output)
@@ -701,8 +702,8 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             this.NAME = strings.read(input)
             TYPE = strings.read(input)
             DOC = strings.read(input)
-            this.USERFLAGS = input.int
-            FLAGS = input.get()
+            this.USERFLAGS = input.getInt()
+            FLAGS = input.getByte()
             AUTOVARNAME = if (hasAutoVar()) {
                 strings.read(input)
             } else {
@@ -725,7 +726,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
      * Describes a State in a PEX file.
      *
      */
-    inner class State(input: ByteBuffer, strings: StringTable) {
+    inner class State(input: PlatformByteBuffer, strings: StringTable) {
         /**
          * Write the object to a `ByteBuffer`.
          *
@@ -734,7 +735,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          * passed on.
          */
         @Throws(IOException::class)
-        fun write(output: ByteBuffer) {
+        fun write(output: PlatformByteBuffer) {
             this.NAME!!.write(output)
             output.putShort(FUNCTIONS.size.toShort())
             for (function in FUNCTIONS) {
@@ -841,7 +842,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          */
         init {
             this.NAME = strings.read(input)
-            val numFunctions = UtilityFunctions.toUnsignedInt(input.short)
+            val numFunctions = UtilityFunctions.toUnsignedInt(input.getShort())
             FUNCTIONS = ArrayList(numFunctions)
             for (i in 0 until numFunctions) {
                 FUNCTIONS.add(Function(input, true, strings))
@@ -853,7 +854,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
      * Describes a Function and it's code.
      *
      */
-    inner class Function(input: ByteBuffer, named: Boolean, strings: StringTable) {
+    inner class Function(input: PlatformByteBuffer, named: Boolean, strings: StringTable) {
         /**
          * Write the object to a `ByteBuffer`. No IO error handling
          * is performed.
@@ -863,7 +864,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          * passed on.
          */
         @Throws(IOException::class)
-        fun write(output: ByteBuffer) {
+        fun write(output: PlatformByteBuffer) {
             if (null != this.NAME) {
                 this.NAME!!.write(output)
             }
@@ -1123,7 +1124,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
              * `Pex`.
              * @throws IOException Exceptions aren't handled.
              */
-            constructor(input: ByteBuffer, strings: StringTable) {
+            constructor(input: PlatformByteBuffer, strings: StringTable) {
                 OPCODE = read(input)
                 OP = OPCODE.ordinal.toByte()
                 when {
@@ -1158,7 +1159,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
              * simply passed on.
              */
             @Throws(IOException::class)
-            fun write(output: ByteBuffer) {
+            fun write(output: PlatformByteBuffer) {
                 output.put(OP)
                 for (vd in ARGS) {
                     vd.write(output)
@@ -1253,19 +1254,19 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
             }
             RETURNTYPE = strings.read(input)
             DOC = strings.read(input)
-            this.USERFLAGS = input.int
-            FLAGS = input.get()
-            val paramsCount = UtilityFunctions.toUnsignedInt(input.short)
+            this.USERFLAGS = input.getInt()
+            FLAGS = input.getByte()
+            val paramsCount = UtilityFunctions.toUnsignedInt(input.getShort())
             PARAMS = ArrayList(paramsCount)
             for (i in 0 until paramsCount) {
                 PARAMS.add(readParam(input, strings))
             }
-            val localsCount = UtilityFunctions.toUnsignedInt(input.short)
+            val localsCount = UtilityFunctions.toUnsignedInt(input.getShort())
             LOCALS = ArrayList(localsCount)
             for (i in 0 until localsCount) {
                 LOCALS.add(readLocal(input, strings))
             }
-            val instructionsCount = UtilityFunctions.toUnsignedInt(input.short)
+            val instructionsCount = UtilityFunctions.toUnsignedInt(input.getShort())
             INSTRUCTIONS = ArrayList(instructionsCount)
             for (i in 0 until instructionsCount) {
                 INSTRUCTIONS.add(Instruction(input, strings))
@@ -1278,7 +1279,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
      * type, user flags, and VData.
      *
      */
-    inner class Variable(input: ByteBuffer, strings: StringTable) {
+    inner class Variable(input: PlatformByteBuffer, strings: StringTable) {
         /**
          * Write the object to a `ByteBuffer`.
          *
@@ -1287,7 +1288,7 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
          * passed on.
          */
         @Throws(IOException::class)
-        fun write(output: ByteBuffer) {
+        fun write(output: PlatformByteBuffer) {
             this.NAME.write(output)
             TYPE.write(output)
             output.putInt(this.USERFLAGS)
@@ -1384,10 +1385,10 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         init {
             this.NAME = strings.read(input)
             TYPE = strings.read(input)
-            this.USERFLAGS = input.int
+            this.USERFLAGS = input.getInt()
             DATA = VData.readVariableData(input, strings)
             CONST = if (GAME.isFO4) {
-                input.get()
+                input.getByte()
             } else {
                 0
             }
@@ -1413,19 +1414,19 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         USERFLAGDEFS = flags!!.filterNotNull()
         STRINGS = strings
         NAME = strings.read(input)
-        size = input.int
+        size = input.getInt()
         PARENTNAME = strings.read(input)
         DOCSTRING = strings.read(input)
         CONSTFLAG = if (game.isFO4) {
-            input.get()
+            input.getByte()
         } else {
             -1
         }
-        USERFLAGS = input.int
+        USERFLAGS = input.getInt()
         AUTOSTATENAME = strings.read(input)
         AUTOVARMAP = hashMapOf()
         if (game.isFO4) {
-            val numStructs = UtilityFunctions.toUnsignedInt(input.short)
+            val numStructs = UtilityFunctions.toUnsignedInt(input.getShort())
             STRUCTS = arrayListOf()
             for (i in 0 until numStructs) {
                 STRUCTS!!.add(Struct(input, strings))
@@ -1433,17 +1434,17 @@ class Pex internal constructor(input: ByteBuffer, game: resaver.Game, flags: Lis
         } else {
             STRUCTS = arrayListOf()
         }
-        val numVariables = UtilityFunctions.toUnsignedInt(input.short)
+        val numVariables = UtilityFunctions.toUnsignedInt(input.getShort())
         VARIABLES = ArrayList(numVariables)
         for (i in 0 until numVariables) {
             VARIABLES.add(Variable(input, strings))
         }
-        val numProperties = UtilityFunctions.toUnsignedInt(input.short)
+        val numProperties = UtilityFunctions.toUnsignedInt(input.getShort())
         PROPERTIES = ArrayList(numProperties)
         for (i in 0 until numProperties) {
             PROPERTIES.add(Property(input, strings))
         }
-        val numStates = UtilityFunctions.toUnsignedInt(input.short)
+        val numStates = UtilityFunctions.toUnsignedInt(input.getShort())
         STATES = ArrayList(numStates)
         for (i in 0 until numStates) {
             STATES.add(State(input, strings))

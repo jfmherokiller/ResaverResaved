@@ -15,7 +15,7 @@
  */
 package ess
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 import kotlin.experimental.and
 
@@ -88,15 +88,15 @@ abstract class Flags : Element {
      * 8-bit array of flags.
      */
     class FlagsByte : Flags {
-        constructor(input: ByteBuffer) {
-            FLAGS = input.get()
+        constructor(input: PlatformByteBuffer) {
+            FLAGS = input.getByte()
         }
 
         constructor(`val`: Byte) {
             FLAGS = `val`
         }
 
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.put(FLAGS)
         }
 
@@ -138,8 +138,8 @@ abstract class Flags : Element {
      * 16-bit array of flags.
      */
     class FlagsShort : Flags {
-        constructor(input: ByteBuffer) {
-            FLAGS = input.short
+        constructor(input: PlatformByteBuffer) {
+            FLAGS = input.getShort()
         }
 
         constructor(`val`: Short) {
@@ -151,7 +151,7 @@ abstract class Flags : Element {
             return result != 0
         }
 
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putShort(FLAGS)
         }
 
@@ -187,8 +187,8 @@ abstract class Flags : Element {
      * 32-bit array of flags.
      */
     class FlagsInt : Flags {
-        constructor(input: ByteBuffer) {
-            FLAGS = input.int
+        constructor(input: PlatformByteBuffer) {
+            FLAGS = input.getInt()
         }
 
         constructor(`val`: Int) {
@@ -200,7 +200,7 @@ abstract class Flags : Element {
             return result != 0
         }
 
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putInt(FLAGS)
         }
 
@@ -240,7 +240,7 @@ abstract class Flags : Element {
          * @return The `Byte` .
          */
 
-        fun readByteFlags(input: ByteBuffer): FlagsByte {
+        fun readByteFlags(input: PlatformByteBuffer): FlagsByte {
             return FlagsByte(input)
         }
 
@@ -251,7 +251,7 @@ abstract class Flags : Element {
          * @param input The input stream.
          * @return The `Short` .
          */
-        fun readShortFlags(input: ByteBuffer): FlagsShort {
+        fun readShortFlags(input: PlatformByteBuffer): FlagsShort {
             return FlagsShort(input)
         }
 
@@ -262,7 +262,7 @@ abstract class Flags : Element {
          * @param input The input stream.
          * @return The `Int` .
          */
-        fun readIntFlags(input: ByteBuffer): FlagsInt {
+        fun readIntFlags(input: PlatformByteBuffer): FlagsInt {
             return FlagsInt(input)
         }
 

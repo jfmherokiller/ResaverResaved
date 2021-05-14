@@ -15,18 +15,18 @@
  */
 package ess
 
+import PlatformByteBuffer
 import UtilityFunctions
 import ess.ESS.ESSContext
 import mu.KLoggable
 import mu.KLogger
-import java.nio.ByteBuffer
 
 /**
  * Manages the data in one element of a change form's extra data.
  *
  * @author Mark Fairchild
  */
-class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.GeneralElement() {
+class ChangeFormExtraDataData(input: PlatformByteBuffer, context: ESSContext) : ess.GeneralElement() {
     /**
      * @param level Number of tabs by which to indent.
      * @return String representation.
@@ -44,7 +44,7 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
 
     var NAME: String? = null
 
-    private class AliasInstance internal constructor(input: ByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
+    private class AliasInstance internal constructor(input: PlatformByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 if (context != null) {
@@ -57,7 +57,7 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
         }
     }
 
-    private class MagicTarget internal constructor(input: ByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
+    private class MagicTarget internal constructor(input: PlatformByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 if (context != null) {
@@ -175,8 +175,8 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
                 NAME = "LeveledCreature"
                 super.readRefID(input, "UNK1", context)
                 super.readRefID(input, "UNK2", context)
-                val flags = super.readElement(input, "NPCChangeFlags") { input: ByteBuffer? -> input?.let { Flags.readIntFlags(it) } }
-                super.readElement(input, "NPC") { `in`: ByteBuffer? -> `in`?.let { flags?.let { it1 ->
+                val flags = super.readElement(input, "NPCChangeFlags") { input: PlatformByteBuffer? -> input?.let { Flags.readIntFlags(it) } }
+                super.readElement(input, "NPC") { `in`: PlatformByteBuffer? -> `in`?.let { flags?.let { it1 ->
                     ChangeFormNPC(it,
                         it1, context)
                 } } }
@@ -204,7 +204,7 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
             50 -> {
                 NAME = "NonActorMagicTarget"
                 super.readRefID(input, "ref", context)
-                super.readVSElemArray(input, "targets") { `in`: ByteBuffer? -> MagicTarget(`in`, context) }
+                super.readVSElemArray(input, "targets") { `in`: PlatformByteBuffer? -> MagicTarget(`in`, context) }
             }
             52 -> {
                 NAME = "PlayerCrimeList"
@@ -242,11 +242,11 @@ class ChangeFormExtraDataData(input: ByteBuffer, context: ESSContext) : ess.Gene
             }
             136 -> {
                 NAME = "AliasInstanceArray"
-                super.readVSElemArray(input, "ALIASES") { `in`: ByteBuffer? -> AliasInstance(`in`, context) }
+                super.readVSElemArray(input, "ALIASES") { `in`: PlatformByteBuffer? -> AliasInstance(`in`, context) }
             }
             140 -> {
                 NAME = "PromotedRef"
-                super.readVSElemArray(input, "REFS") { `in`: ByteBuffer? -> context.readRefID(input) }
+                super.readVSElemArray(input, "REFS") { `in`: PlatformByteBuffer? -> context.readRefID(input) }
             }
             else -> {
                 logger.error {"Unknown ExtraData: type=$TYPE"}

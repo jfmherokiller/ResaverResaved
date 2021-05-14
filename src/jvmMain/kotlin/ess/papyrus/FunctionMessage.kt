@@ -15,12 +15,12 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import resaver.Analysis
 import ess.AnalyzableElement
 import ess.Element
 import ess.Linkable
 import ess.papyrus.EID.Companion.pad8
-import java.nio.ByteBuffer
 
 
 /**
@@ -36,12 +36,12 @@ import java.nio.ByteBuffer
  * @param context The `PapyrusContext` info.
  * @throws PapyrusElementException
  */
-class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable {
+class FunctionMessage(input: PlatformByteBuffer, context: PapyrusContext) : PapyrusElement, AnalyzableElement, Linkable {
     /**
      * @see Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(UNKNOWN)
         iD?.write(output)
         output.put(FLAG)
@@ -176,13 +176,13 @@ class FunctionMessage(input: ByteBuffer, context: PapyrusContext) : PapyrusEleme
      */
     val isUndefined: Boolean
         get() = hasMessage() && message!!.isUndefined
-    private val UNKNOWN: Byte = input.get()
+    private val UNKNOWN: Byte = input.getByte()
 
     /**
      * @return The ID of the papyrus element.
      */
     val iD: EID? = if (UNKNOWN <= 2) context.readEID32(input) else null
-    private val FLAG: Byte = input.get()
+    private val FLAG: Byte = input.getByte()
 
     /**
      * @return The message field.

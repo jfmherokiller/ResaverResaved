@@ -15,8 +15,8 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import resaver.ListException
-import java.nio.ByteBuffer
 
 
 /**
@@ -24,12 +24,12 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-open class MemberDesc(input: ByteBuffer?, context: PapyrusContext?) : PapyrusElement, Comparable<MemberDesc> {
+open class MemberDesc(input: PlatformByteBuffer?, context: PapyrusContext?) : PapyrusElement, Comparable<MemberDesc> {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         name.write(output)
         type.write(output)
     }
@@ -75,7 +75,7 @@ open class MemberDesc(input: ByteBuffer?, context: PapyrusContext?) : PapyrusEle
          * @throws ListException
          */
         @Throws(ListException::class)
-        fun readList(input: ByteBuffer?, count: Int, context: PapyrusContext): List<MemberDesc> {
+        fun readList(input: PlatformByteBuffer?, count: Int, context: PapyrusContext): List<MemberDesc> {
             val DESCS: MutableList<MemberDesc> = mutableListOf()
             for (i in 0 until count) {
                 try {

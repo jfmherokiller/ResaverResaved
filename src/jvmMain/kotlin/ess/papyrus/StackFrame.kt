@@ -15,6 +15,7 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.*
 import ess.Linkable.Companion.makeLink
 import ess.papyrus.Parameter.Companion.createTerm
@@ -26,7 +27,6 @@ import resaver.IString
 import resaver.IString.Companion.format
 import resaver.ListException
 import resaver.pex.Opcode
-import java.nio.ByteBuffer
 import java.util.*
 import java.util.regex.Pattern
 
@@ -35,13 +35,13 @@ import java.util.regex.Pattern
  *
  * @author Mark Fairchild
  */
-class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusContext) : PapyrusElement, AnalyzableElement,
+class StackFrame(input: PlatformByteBuffer, thread: ActiveScript?, context: PapyrusContext) : PapyrusElement, AnalyzableElement,
     Linkable, HasVariables {
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.putInt(VARIABLES.size)
         FLAG.write(output)
         FN_Var_TYPE.write(output)
@@ -763,7 +763,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
      * @throws PapyrusElementException
      */
     init {
-        val variableCount = input.int
+        val variableCount = input.getInt()
         if (variableCount < 0 || variableCount > 50000) {
             throw PapyrusFormatException("Invalid variableCount $variableCount")
         }
@@ -776,27 +776,27 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         event = context.readTString(input)
         STATUS =
             if (!FLAG.getFlag(0) && FN_Var_TYPE === VarType.NULL) Optional.of(context.readTString(input)) else Optional.empty()
-        OPCODE_MAJORVERSION = input.get()
-        OPCODE_MINORVERSION = input.get()
+        OPCODE_MAJORVERSION = input.getByte()
+        OPCODE_MINORVERSION = input.getByte()
         RETURNTYPE = context.readTString(input)
         docString = context.readTString(input)
         FN_USERFLAGS = Flags.FlagsInt(input)
         FN_FLAGS = Flags.FlagsByte(input)
-        val functionParameterCount = UtilityFunctions.toUnsignedInt(input.short)
+        val functionParameterCount = UtilityFunctions.toUnsignedInt(input.getShort())
         assert(functionParameterCount in 0..2047) { "Invalid functionParameterCount $functionParameterCount" }
         FN_PARAMS = mutableListOf()
         for (i in 0 until functionParameterCount) {
             val param = FunctionParam(input, context)
             FN_PARAMS.add(param)
         }
-        val functionLocalCount = UtilityFunctions.toUnsignedInt(input.short)
+        val functionLocalCount = UtilityFunctions.toUnsignedInt(input.getShort())
         assert(functionLocalCount in 0..2047) { "Invalid functionLocalCount $functionLocalCount" }
         FN_LOCALS = ArrayList(functionLocalCount)
         for (i in 0 until functionLocalCount) {
             val local = FunctionLocal(input, context)
             FN_LOCALS.add(local)
         }
-        val opcodeCount = UtilityFunctions.toUnsignedInt(input.short)
+        val opcodeCount = UtilityFunctions.toUnsignedInt(input.getShort())
         assert(0 <= opcodeCount)
         try {
             CODE = mutableListOf()
@@ -807,7 +807,7 @@ class StackFrame(input: ByteBuffer, thread: ActiveScript?, context: PapyrusConte
         } catch (ex: ListException) {
             throw PapyrusElementException("Failed to read StackFrame OpcodeData.", ex, this)
         }
-        PTR = input.int
+        PTR = input.getInt()
         assert(0 <= PTR)
         owner = read(input, context)
         try {

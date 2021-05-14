@@ -16,21 +16,21 @@
 package resaver.esp
 
 
+import PlatformByteBuffer
 import resaver.IString
-import java.nio.ByteBuffer
 
 /**
  * Describes a script entry in a VMAD field.
  *
  * @author Mark Fairchild
  */
-class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
+class Script(input: PlatformByteBuffer, ctx: ESPContext) : Entry {
     /**
      * Writes the Script.
      *
      * @param output The ByteBuffer to write.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         if (NAME.isEmpty()) {
             output!!.put(NAME.uTF8)
             return
@@ -72,8 +72,8 @@ class Script(input: ByteBuffer, ctx: ESPContext) : Entry {
         }
         else {
             ctx.pushContext("script:$NAME")
-            STATUS = input.get()
-            val propertyCount = UtilityFunctions.toUnsignedInt(input.short)
+            STATUS = input.getByte()
+            val propertyCount = UtilityFunctions.toUnsignedInt(input.getShort())
             PROPERTIES = mutableListOf()
             try {
                 for (i in 0 until propertyCount) {

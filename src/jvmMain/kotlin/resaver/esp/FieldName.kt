@@ -15,15 +15,15 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import resaver.IString
-import java.nio.ByteBuffer
 
 /**
  * FieldSimple represents a Name field.
  *
  * @author Mark Fairchild
  */
-class FieldName(code: IString, input: ByteBuffer, size: Int, big: Boolean, ctx: ESPContext) :
+class FieldName(code: IString, input: PlatformByteBuffer, size: Int, big: Boolean, ctx: ESPContext) :
     FieldSimple(code, input, size, big, ctx) {
     /**
      * Returns a String representation of the Field, which will just be the code
@@ -51,7 +51,7 @@ class FieldName(code: IString, input: ByteBuffer, size: Int, big: Boolean, ctx: 
      */
     init {
         assert(size == 4)
-        val id = super.byteBuffer.int
+        val id = super.byteBuffer.getInt()
         formID = ctx.remapFormID(id)
     }
 }

@@ -15,8 +15,8 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.papyrus.PapyrusElementMap.PapyrusElementReader
-import java.nio.ByteBuffer
 
 /**
  *
@@ -24,9 +24,9 @@ import java.nio.ByteBuffer
  */
 class ActiveScriptMap :
     PapyrusElementMap<ActiveScript> {
-    internal constructor(input: ByteBuffer?, context: PapyrusContext?) : super(
+    internal constructor(input: PlatformByteBuffer?, context: PapyrusContext?) : super(
         input!!,
-        PapyrusElementReader<ActiveScript> { b: ByteBuffer? ->
+        PapyrusElementReader<ActiveScript> { b: PlatformByteBuffer? ->
             ActiveScript(
                 b!!,
                 context!!

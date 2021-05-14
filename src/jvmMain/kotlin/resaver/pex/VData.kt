@@ -15,8 +15,8 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Describes the data stored by a variable, property, or parameter.
@@ -33,7 +33,7 @@ abstract class VData {
      * passed on.
      */
     @Throws(IOException::class)
-    abstract fun write(output: ByteBuffer?)
+    abstract fun write(output: PlatformByteBuffer?)
 
     /**
      * Calculates the size of the VData, in bytes.
@@ -72,34 +72,34 @@ abstract class VData {
          * @throws IOException Exceptions aren't handled.
          */
         @Throws(IOException::class)
-        fun readVariableData(input: ByteBuffer, strings: StringTable): VData {
+        fun readVariableData(input: PlatformByteBuffer, strings: StringTable): VData {
             val TYPE = DataType.read(input)
             return when (TYPE) {
                 DataType.NONE -> VDataNone()
                 DataType.IDENTIFIER -> {
-                    val index = UtilityFunctions.toUnsignedInt(input.short)
+                    val index = UtilityFunctions.toUnsignedInt(input.getShort())
                     if (index < 0 || index >= strings.size) {
                         throw IOException()
                     }
                     VDataID(strings[index])
                 }
                 DataType.STRING -> {
-                    val index = UtilityFunctions.toUnsignedInt(input.short)
+                    val index = UtilityFunctions.toUnsignedInt(input.getShort())
                     if (index < 0 || index >= strings.size) {
                         throw IOException()
                     }
                     VDataStr(strings[index])
                 }
                 DataType.INTEGER -> {
-                    val `val` = input.int
+                    val `val` = input.getInt()
                     VDataInt(`val`)
                 }
                 DataType.FLOAT -> {
-                    val `val` = input.float
+                    val `val` = input.getFloat()
                     VDataFlt(`val`)
                 }
                 DataType.BOOLEAN -> {
-                    val `val` = input.get().toInt() != 0
+                    val `val` = input.getByte().toInt() != 0
                     VDataBool(`val`)
                 }
             }

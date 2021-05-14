@@ -15,12 +15,12 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
+import ess.Element
+import ess.Linkable
 import resaver.Analysis
 import resaver.IString
 import resaver.ListException
-import ess.Element
-import ess.Linkable
-import java.nio.ByteBuffer
 
 
 /**
@@ -37,12 +37,12 @@ import java.nio.ByteBuffer
  * @throws PapyrusFormatException
  * @throws PapyrusElementException
  */
-class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
+class Script(input: PlatformByteBuffer, context: PapyrusContext) : Definition() {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         name.write(output)
         type.write(output)
         output!!.putInt(MEMBERS!!.size)
@@ -319,7 +319,7 @@ class Script(input: ByteBuffer, context: PapyrusContext) : Definition() {
         name = context.readTString(input)
         type = context.readTString(input)
         try {
-            val count = input.int
+            val count = input.getInt()
             MEMBERS = MemberDesc.readList(input, count, context)
         } catch (ex: ListException) {
             throw PapyrusElementException("Failed to read Script members.", ex, this)

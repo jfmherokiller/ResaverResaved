@@ -1,7 +1,7 @@
 package ess
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 fun interface ElementReader<T : Element?> {
-    fun read(input: ByteBuffer?): T
+    fun read(input: PlatformByteBuffer?): T
 }

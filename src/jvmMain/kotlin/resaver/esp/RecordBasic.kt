@@ -15,7 +15,7 @@
  */
 package resaver.esp
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 import java.nio.charset.StandardCharsets
 
 /**
@@ -34,13 +34,13 @@ class RecordBasic(
     /**
      * @return The record header.
      */
-    val header: RecordHeader, input: ByteBuffer, ctx: ESPContext
+    val header: RecordHeader, input: PlatformByteBuffer, ctx: ESPContext
 ) : Record() {
     /**
      * @see Entry.write
      * @param output The ByteBuffer.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(this.code.toString().toByteArray(StandardCharsets.UTF_8))
         output?.putInt(calculateSize() - 24)
         header.write(output)
@@ -83,7 +83,7 @@ class RecordBasic(
          * @param input The `ByteBuffer` to read.
          * @param ctx The mod descriptor.
          */
-        fun skimRecord(recordCode: RecordCode, header: RecordHeader, input: ByteBuffer, ctx: ESPContext) {
+        fun skimRecord(recordCode: RecordCode, header: RecordHeader, input: PlatformByteBuffer, ctx: ESPContext) {
             val FIELDS = FieldList()
             while (input.hasRemaining()) {
                 val newFields = readField(recordCode, input, ctx)

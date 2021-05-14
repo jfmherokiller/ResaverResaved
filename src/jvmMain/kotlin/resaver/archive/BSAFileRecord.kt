@@ -16,7 +16,7 @@
 package resaver.archive
 
 import GenericSupplier
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 import java.nio.file.InvalidPathException
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -26,7 +26,7 @@ import java.nio.file.Paths
  *
  * @author Mark Fairchild
  */
-class BSAFileRecord(input: ByteBuffer, header: BSAHeader, names: GenericSupplier<String?>) {
+class BSAFileRecord(input: PlatformByteBuffer, header: BSAHeader, names: GenericSupplier<String?>) {
     override fun toString(): String {
         return NAME ?: String.format("%d bytes at offset %d", FILESIZE, OFFSET)
     }
@@ -56,12 +56,12 @@ class BSAFileRecord(input: ByteBuffer, header: BSAHeader, names: GenericSupplier
      * @param names
      */
     init {
-        NAMEHASH = input.long
-        val size = input.int
+        NAMEHASH = input.getLong()
+        val size = input.getInt()
         val BIT30 = 1 shl 30
         val compressToggle = size and BIT30 != 0
         FILESIZE = size and BIT30.inv()
-        OFFSET = input.int
+        OFFSET = input.getInt()
         ISCOMPRESSED = header.ISCOMPRESSED xor compressToggle
         NAME = names.invoke()
     }

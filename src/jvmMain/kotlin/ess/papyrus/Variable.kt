@@ -15,11 +15,11 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.Element
 import ess.Linkable
 import ess.papyrus.VarType.Companion.read
 import resaver.ListException
-import java.nio.ByteBuffer
 
 
 /**
@@ -147,7 +147,7 @@ abstract class Variable : PapyrusElement, Linkable {
          */
 
         @Throws(ListException::class)
-        fun readList(input: ByteBuffer, count: Int, context: PapyrusContext): List<Variable> {
+        fun readList(input: PlatformByteBuffer, count: Int, context: PapyrusContext): List<Variable> {
             val VARIABLES: MutableList<Variable> = mutableListOf()
             for (i in 0 until count) {
                 try {
@@ -171,7 +171,7 @@ abstract class Variable : PapyrusElement, Linkable {
          */
 
         @Throws(PapyrusFormatException::class)
-        fun read(input: ByteBuffer, context: PapyrusContext): Variable {
+        fun read(input: PlatformByteBuffer, context: PapyrusContext): Variable {
             val VarTYPE = read(input)
             return when (VarTYPE) {
                 VarType.NULL -> VarNull(input)

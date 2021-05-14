@@ -15,7 +15,7 @@
  */
 package ess
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  *
@@ -24,7 +24,7 @@ import java.nio.ByteBuffer
 enum class CompressionType : Element {
     UNCOMPRESSED, ZLIB, LZ4;
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.putShort(VALUE)
     }
 
@@ -38,8 +38,8 @@ enum class CompressionType : Element {
 
     companion object {
 
-        fun read(input: ByteBuffer): CompressionType {
-            return values()[input.short.toInt()]
+        fun read(input: PlatformByteBuffer): CompressionType {
+            return values()[input.getShort().toInt()]
         }
     }
 

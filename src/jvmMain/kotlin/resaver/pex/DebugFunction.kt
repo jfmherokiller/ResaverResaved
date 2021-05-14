@@ -15,18 +15,18 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
 import resaver.IString.Companion.format
 import kotlin.Throws
 import java.io.IOException
 import resaver.IString
 import java.lang.StringBuilder
-import java.nio.ByteBuffer
 
 /**
  * Describes the debugging information for a function.
  *
  */
-internal class DebugFunction(input: ByteBuffer, strings: StringTable) {
+internal class DebugFunction(input: PlatformByteBuffer, strings: StringTable) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -35,7 +35,7 @@ internal class DebugFunction(input: ByteBuffer, strings: StringTable) {
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         OBJECTNAME.write(output)
         STATENAME.write(output)
         FUNCNAME.write(output)
@@ -86,7 +86,7 @@ internal class DebugFunction(input: ByteBuffer, strings: StringTable) {
     private val OBJECTNAME: TString = strings.read(input)
     private val STATENAME: TString = strings.read(input)
     private val FUNCNAME: TString = strings.read(input)
-    private val FUNCTYPE: Byte = input.get()
+    private val FUNCTYPE: Byte = input.getByte()
     private val INSTRUCTIONS: MutableList<Int>
 
     /**
@@ -97,10 +97,10 @@ internal class DebugFunction(input: ByteBuffer, strings: StringTable) {
      * @throws IOException Exceptions aren't handled.
      */
     init {
-        val instructionCount = UtilityFunctions.toUnsignedInt(input.short)
+        val instructionCount = UtilityFunctions.toUnsignedInt(input.getShort())
         INSTRUCTIONS = mutableListOf()
         for (i in 0 until instructionCount) {
-            INSTRUCTIONS.add(UtilityFunctions.toUnsignedInt(input.short))
+            INSTRUCTIONS.add(UtilityFunctions.toUnsignedInt(input.getShort()))
         }
     }
 }

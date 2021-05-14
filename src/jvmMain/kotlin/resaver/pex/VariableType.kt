@@ -15,8 +15,8 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
 
 
 /**
@@ -25,7 +25,7 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class VariableType private constructor(input: ByteBuffer, strings: StringTable, role: Role) {
+class VariableType private constructor(input: PlatformByteBuffer, strings: StringTable, role: Role) {
     /**
      * The role of the `VariableType`.
      */
@@ -41,7 +41,7 @@ class VariableType private constructor(input: ByteBuffer, strings: StringTable, 
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer?) {
         name.write(output)
         TYPE.write(output)
     }
@@ -107,7 +107,7 @@ class VariableType private constructor(input: ByteBuffer, strings: StringTable, 
          * @throws IOException Exceptions aren't handled.
          */
         @Throws(IOException::class)
-        fun readLocal(input: ByteBuffer, strings: StringTable): VariableType {
+        fun readLocal(input: PlatformByteBuffer, strings: StringTable): VariableType {
             return VariableType(input, strings, Role.LOCAL)
         }
 
@@ -119,7 +119,7 @@ class VariableType private constructor(input: ByteBuffer, strings: StringTable, 
          * @throws IOException Exceptions aren't handled.
          */
         @Throws(IOException::class)
-        fun readParam(input: ByteBuffer, strings: StringTable): VariableType {
+        fun readParam(input: PlatformByteBuffer, strings: StringTable): VariableType {
             return VariableType(input, strings, Role.PARAM)
         }
 

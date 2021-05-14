@@ -1,12 +1,12 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Variable that stores a string.
  */
 class VarStr : Variable {
-    constructor(input: ByteBuffer, context: PapyrusContext) {
+    constructor(input: PlatformByteBuffer, context: PapyrusContext) {
         value = context.readTString(input)
     }
 
@@ -18,7 +18,7 @@ class VarStr : Variable {
         return 1 + value.calculateSize()
     }
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         value.write(output)
     }

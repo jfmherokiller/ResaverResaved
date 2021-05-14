@@ -15,8 +15,7 @@
  */
 package ess
 
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import PlatformByteBuffer
 
 /**
  * Describes a the data for a `GlobalData` when it is not parsed.
@@ -27,14 +26,18 @@ class DefaultGlobalDataBlock(data: ByteArray?) : GlobalDataBlock {
     /**
      * @return A read-only view of the data.
      */
-    val data: ByteBuffer
-        get() = ByteBuffer.wrap(DATA).asReadOnlyBuffer().order(ByteOrder.LITTLE_ENDIAN)
+    val data: PlatformByteBuffer
+        get() {
+            val data = PlatformByteBuffer.wrap(DATA)
+            data.makeLe()
+            return data
+        }
 
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(DATA)
     }
 

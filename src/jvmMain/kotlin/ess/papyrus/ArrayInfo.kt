@@ -15,14 +15,13 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import resaver.Analysis
 import resaver.ListException
 import ess.AnalyzableElement
 import ess.Element
 import ess.Linkable
 import ess.papyrus.VarType.Companion.read
-import java.nio.ByteBuffer
-
 
 
 /**
@@ -38,13 +37,13 @@ import java.nio.ByteBuffer
  * @param context The `PapyrusContext` info.
  * @throws PapyrusElementException
  */
-class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement, Linkable, HasID, SeparateData,
+class ArrayInfo(input: PlatformByteBuffer, context: PapyrusContext) : AnalyzableElement, Linkable, HasID, SeparateData,
     HasVariables {
     /**
      * @see Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         iD.write(output)
         varType.write(output)
         refType?.write(output)
@@ -59,7 +58,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
      * @throws PapyrusFormatException
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
-    override fun readData(input: ByteBuffer?, context: PapyrusContext?) {
+    override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
         data = input?.let { ArrayData(it, context) }
     }
 
@@ -67,7 +66,7 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
      * @see SeparateData.writeData
      * @param input
      */
-    override fun writeData(input: ByteBuffer?) {
+    override fun writeData(input: PlatformByteBuffer?) {
         data!!.write(input)
     }
 
@@ -270,12 +269,12 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
      *
      * @author Mark Fairchild
      */
-    private inner class ArrayData(input: ByteBuffer, context: PapyrusContext?) : PapyrusDataFor<ArrayInfo?> {
+    private inner class ArrayData(input: PlatformByteBuffer, context: PapyrusContext?) : PapyrusDataFor<ArrayInfo?> {
         /**
          * @see Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             iD.write(output)
             VARIABLES!!.forEach { `var`: Variable? -> `var`!!.write(output) }
         }
@@ -333,6 +332,6 @@ class ArrayInfo(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement,
         }
         varType = t
         refType = if (varType.isRefType) context.readTString(input) else null
-        length = input.int
+        length = input.getInt()
     }
 }

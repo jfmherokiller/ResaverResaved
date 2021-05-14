@@ -15,16 +15,16 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
 import kotlin.Throws
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Describes a user flag from a PEX file.
  *
  * @author Mark Fairchild
  */
-class UserFlag internal constructor(input: ByteBuffer, strings: StringTable) {
+class UserFlag internal constructor(input: PlatformByteBuffer, strings: StringTable) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -33,7 +33,7 @@ class UserFlag internal constructor(input: ByteBuffer, strings: StringTable) {
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         NAME.write(output)
         output.put(FLAGINDEX)
     }
@@ -75,6 +75,6 @@ class UserFlag internal constructor(input: ByteBuffer, strings: StringTable) {
     }
 
     private val NAME: TString = strings.read(input)
-    private val FLAGINDEX: Byte = input.get()
+    private val FLAGINDEX: Byte = input.getByte()
 
 }

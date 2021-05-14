@@ -15,16 +15,16 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import resaver.IString
-import java.nio.ByteBuffer
 
 /**
  * FieldSimple represents an EDID field.
  *
  * @author Mark Fairchild
  */
-class FieldEDID(code: IString?, input: ByteBuffer?, size: Int, big: Boolean, ctx: ESPContext?) : FieldSimple(
+class FieldEDID(code: IString?, input: PlatformByteBuffer, size: Int, big: Boolean, ctx: ESPContext?) : FieldSimple(
     code!!, input!!, size, big, ctx
 ) {
     /**

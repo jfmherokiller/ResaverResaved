@@ -15,9 +15,9 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import resaver.IString
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
 /**
@@ -25,8 +25,8 @@ import java.nio.charset.StandardCharsets
  *
  * @author Mark
  */
-class FragmentInfoPack(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
-    override fun write(output: ByteBuffer?) {
+class FragmentInfoPack(input: PlatformByteBuffer, ctx: ESPContext) : FragmentBase() {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(UNKNOWN)
         output?.put(FLAGS)
         if (null != SCRIPT) {
@@ -73,8 +73,8 @@ class FragmentInfoPack(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         }
     }
 
-    val UNKNOWN: Byte = input.get()
-    val FLAGS: Byte = input.get()
+    val UNKNOWN: Byte = input.getByte()
+    val FLAGS: Byte = input.getByte()
     var SCRIPT: Script? = null
     var FILENAME: String? = null
     val FRAGMENTS: MutableList<Fragment>
@@ -82,8 +82,8 @@ class FragmentInfoPack(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
     /**
      *
      */
-    inner class Fragment(input: ByteBuffer) : Entry {
-        override fun write(output: ByteBuffer?) {
+    inner class Fragment(input: PlatformByteBuffer) : Entry {
+        override fun write(output: PlatformByteBuffer?) {
             output?.put(this.UNKNOWN)
             output?.put(SCRIPTNAME.uTF8)
             output?.put(FRAGMENTNAME.uTF8)
@@ -93,7 +93,7 @@ class FragmentInfoPack(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
             return 5 + SCRIPTNAME.length + FRAGMENTNAME.length
         }
 
-        private val UNKNOWN: Byte = input.get()
+        private val UNKNOWN: Byte = input.getByte()
         private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)]
         private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)]
 

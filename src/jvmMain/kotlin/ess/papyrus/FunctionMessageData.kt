@@ -15,6 +15,7 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.AnalyzableElement
 import ess.ESS
 import ess.papyrus.Variable.Companion.read
@@ -23,7 +24,6 @@ import resaver.Analysis
 import resaver.IString
 import resaver.IString.Companion.format
 import resaver.ListException
-import java.nio.ByteBuffer
 
 
 
@@ -42,13 +42,13 @@ import java.nio.ByteBuffer
  * @throws PapyrusFormatException
  * @throws PapyrusElementException
  */
-class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: PapyrusContext) : PapyrusElement,
+class FunctionMessageData(input: PlatformByteBuffer, parent: PapyrusElement?, context: PapyrusContext) : PapyrusElement,
     AnalyzableElement, HasVariables {
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(UNKNOWN)
         scriptName.write(output)
         event.write(output)
@@ -174,7 +174,7 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
      */
     val isUndefined: Boolean
         get() = script?.isUndefined ?: !Script.NATIVE_SCRIPTS.contains(scriptName.toWString())
-    private val UNKNOWN: Byte = input.get()
+    private val UNKNOWN: Byte = input.getByte()
 
     /**
      * @return The script name field.
@@ -196,7 +196,7 @@ class FunctionMessageData(input: ByteBuffer, parent: PapyrusElement?, context: P
 
     init {
         try {
-            val count = input.int
+            val count = input.getInt()
             VARIABLES = readList(input, count, context).toMutableList()
         } catch (ex: ListException) {
             throw PapyrusElementException("Failed to read FunctionMessage variables.", ex, this)

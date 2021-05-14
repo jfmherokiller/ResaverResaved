@@ -15,7 +15,8 @@
  */
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
+import UtilityFunctions
 
 
 /**
@@ -36,7 +37,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
             return VALUE.toLong()
         }
 
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putInt(VALUE)
         }
 
@@ -65,7 +66,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
             return VALUE
         }
 
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putLong(VALUE)
         }
 
@@ -156,8 +157,8 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @return The `EID`.
          */
 
-        fun read4byte(input: ByteBuffer, pap: Papyrus): EID {
-            val VAL = input.int
+        fun read4byte(input: PlatformByteBuffer, pap: Papyrus): EID {
+            val VAL = input.getInt()
             return make4byte(VAL, pap)
         }
 
@@ -170,8 +171,8 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @return The `EID`.
          */
 
-        fun read8byte(input: ByteBuffer, pap: Papyrus): EID {
-            val VAL = input.long
+        fun read8byte(input: PlatformByteBuffer, pap: Papyrus): EID {
+            val VAL = input.getLong()
             return make8Byte(VAL, pap)
         }
 

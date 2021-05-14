@@ -15,11 +15,11 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
 import mu.KLoggable
 import mu.KLogger
 import resaver.Analysis
-import java.nio.ByteBuffer
 
 /**
  * Describes a ChangeForm containing an NPC Reference.
@@ -27,7 +27,7 @@ import java.nio.ByteBuffer
  * @author Mark Fairchild
  */
 class ChangeFormACHR(
-    input: ByteBuffer,
+    input: PlatformByteBuffer,
     flags: Flags.FlagsInt,
     refid: RefID,
     context: ESSContext?
@@ -80,7 +80,7 @@ class ChangeFormACHR(
             0
         }
         try {
-            super.readElement(input, "INITIAL") { `in`: ByteBuffer? ->
+            super.readElement(input, "INITIAL") { `in`: PlatformByteBuffer? ->
                 `in`?.let {
                     ChangeFormInitialData(
                         it,
@@ -96,7 +96,7 @@ class ChangeFormACHR(
                 super.readElement(
                     input,
                     ChangeFlagConstantsRef.CHANGE_FORM_FLAGS
-                ) { input: ByteBuffer? -> input?.let { ChangeFormFlags(it) } }
+                ) { input: PlatformByteBuffer? -> input?.let { ChangeFormFlags(it) } }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_BASEOBJECT)) {
                 if (context != null) {
@@ -116,12 +116,12 @@ class ChangeFormACHR(
                 || flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_EXTRA_ACTIVATING_CHILDREN)
                 || flags.getFlag(ChangeFlagConstantsRef.CHANGE_OBJECT_EXTRA_ITEM_DATA)
             ) {
-                super.readElement(input, "EXTRADATA") { `in`: ByteBuffer? -> ChangeFormExtraData(`in`!!, context!!) }
+                super.readElement(input, "EXTRADATA") { `in`: PlatformByteBuffer? -> ChangeFormExtraData(`in`!!, context!!) }
             }
             if (flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_INVENTORY)
                 || flags.getFlag(ChangeFlagConstantsRef.CHANGE_REFR_LEVELED_INVENTORY)
             ) {
-                super.readVSElemArray(input, "INVENTORY") { `in`: ByteBuffer? ->
+                super.readVSElemArray(input, "INVENTORY") { `in`: PlatformByteBuffer? ->
                     ChangeFormInventoryItem(
                         `in`,
                         context

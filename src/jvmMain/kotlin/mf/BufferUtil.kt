@@ -15,15 +15,13 @@
  */
 package mf
 
-import net.jpountz.lz4.LZ4Factory
+import PlatformByteBuffer
+import UtilityFunctions
 import org.jetbrains.annotations.Contract
 import org.mozilla.universalchardet.UniversalDetector
-import java.nio.Buffer
 import java.nio.BufferUnderflowException
-import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.nio.charset.StandardCharsets
-
 import java.util.zip.DataFormatException
 import java.util.zip.Deflater
 import java.util.zip.Inflater
@@ -39,8 +37,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The `String`.
      */
-    fun getLString(buffer: ByteBuffer): String? {
-        val length = buffer.int
+    fun getLString(buffer: PlatformByteBuffer): String? {
+        val length = buffer.getInt()
         return readSizedString(buffer, length, false)
     }
 
@@ -50,8 +48,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    fun getLStringRaw(buffer: ByteBuffer): ByteArray? {
-        val length = buffer.int
+    fun getLStringRaw(buffer: PlatformByteBuffer): ByteArray? {
+        val length = buffer.getInt()
         return readSizedStringRaw(buffer, length, false)
     }
 
@@ -61,8 +59,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The `String`.
      */
-    fun getWString(buffer: ByteBuffer): String? {
-        val length = UtilityFunctions.toUnsignedInt(buffer.short)
+    fun getWString(buffer: PlatformByteBuffer): String? {
+        val length = UtilityFunctions.toUnsignedInt(buffer.getShort())
         return readSizedString(buffer, length, false)
     }
 
@@ -72,8 +70,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    fun getWStringRaw(buffer: ByteBuffer): ByteArray? {
-        val length = UtilityFunctions.toUnsignedInt(buffer.short)
+    fun getWStringRaw(buffer: PlatformByteBuffer): ByteArray? {
+        val length = UtilityFunctions.toUnsignedInt(buffer.getShort())
         return readSizedStringRaw(buffer, length, false)
     }
 
@@ -83,8 +81,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The `String`.
      */
-    fun getBString(buffer: ByteBuffer): String? {
-        val length = UtilityFunctions.toUnsignedInt(buffer.get())
+    fun getBString(buffer: PlatformByteBuffer): String? {
+        val length = UtilityFunctions.toUnsignedInt(buffer.getByte())
         return readSizedString(buffer, length, false)
     }
 
@@ -94,8 +92,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The `String`.
      */
-    fun getLZString(buffer: ByteBuffer): String? {
-        val length = buffer.int
+    fun getLZString(buffer: PlatformByteBuffer): String? {
+        val length = buffer.getInt()
         return readSizedString(buffer, length, true)
     }
 
@@ -105,8 +103,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The `String`.
      */
-    fun getWZString(buffer: ByteBuffer): String? {
-        val length = UtilityFunctions.toUnsignedInt(buffer.short)
+    fun getWZString(buffer: PlatformByteBuffer): String? {
+        val length = UtilityFunctions.toUnsignedInt(buffer.getShort())
         return readSizedString(buffer, length, true)
     }
 
@@ -116,8 +114,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The `String`.
      */
-    fun getBZString(buffer: ByteBuffer): String? {
-        val length = java.lang.Byte.toUnsignedInt(buffer.get())
+    fun getBZString(buffer: PlatformByteBuffer): String? {
+        val length = java.lang.Byte.toUnsignedInt(buffer.getByte())
         return readSizedString(buffer, length, true)
     }
 
@@ -126,7 +124,7 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The `String`.
      */
-    fun getZString(buffer: ByteBuffer): String? {
+    fun getZString(buffer: PlatformByteBuffer): String? {
         val BYTES = getZStringRaw(buffer)
         return if (BYTES == null) null else String(BYTES, StandardCharsets.UTF_8)
     }
@@ -136,16 +134,16 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The raw byte data, excluding the terminus (if any).
      */
-    fun getZStringRaw(buffer: ByteBuffer): ByteArray? {
+    fun getZStringRaw(buffer: PlatformByteBuffer): ByteArray? {
         val start = buffer.position()
 
         //while (buffer.get() != 0);
-        var b = buffer.get()
+        var b = buffer.getByte()
         while (b.toInt() != 0) {
-            b = buffer.get()
+            b = buffer.getByte()
         }
         val LENGTH = buffer.position() - start
-        (buffer as Buffer).position(start)
+        (buffer).position(start)
         require(LENGTH > 0) { "Found invalid ZString length of $LENGTH" }
         return readSizedStringRaw(buffer, LENGTH, true)
     }
@@ -158,7 +156,7 @@ object BufferUtil {
      * @param size The size of the string, including the terminus (if any).
      * @return The `String`.
      */
-    fun readSizedString(buffer: ByteBuffer, size: Int, zterminated: Boolean): String? {
+    fun readSizedString(buffer: PlatformByteBuffer, size: Int, zterminated: Boolean): String? {
         val BYTES = readSizedStringRaw(buffer, size, zterminated)
         return if (BYTES == null) null else String(BYTES, StandardCharsets.UTF_8)
     }
@@ -171,7 +169,7 @@ object BufferUtil {
      * @param size The size of the string, including the terminus (if any).
      * @return The raw byte data, excluding the terminus (if any).
      */
-    fun readSizedStringRaw(buffer: ByteBuffer, size: Int, zterminated: Boolean): ByteArray? {
+    fun readSizedStringRaw(buffer: PlatformByteBuffer, size: Int, zterminated: Boolean): ByteArray? {
         return try {
             val length = if (zterminated) size - 1 else size
             when {
@@ -184,7 +182,7 @@ object BufferUtil {
                 else -> {
                     val bytes = ByteArray(length)
                     buffer[bytes]
-                    val terminus = if (zterminated) buffer.get().toInt() else 0
+                    val terminus = if (zterminated) buffer.getByte().toInt() else 0
                     require(terminus == 0) { "Missing terminus" }
                     bytes
                 }
@@ -200,8 +198,8 @@ object BufferUtil {
      * @param buffer The `ByteBuffer` to read.
      * @return The `String`.
      */
-    fun getUTF(buffer: ByteBuffer): String {
-        val length = UtilityFunctions.toUnsignedInt(buffer.short)
+    fun getUTF(buffer: PlatformByteBuffer): String {
+        val length = UtilityFunctions.toUnsignedInt(buffer.getShort())
         require((length < 0 || length >= 32768).not()) { "Invalid string length: $length" }
         return if (length == 0) {
             ""
@@ -218,7 +216,7 @@ object BufferUtil {
      * @param string The `String`.
      * @return The `ByteBuffer` (allows chaining).
      */
-    fun putZString(buffer: ByteBuffer, string: String): ByteBuffer {
+    fun putZString(buffer: PlatformByteBuffer, string: String): PlatformByteBuffer {
         return buffer.put(string.toByteArray(StandardCharsets.UTF_8)).put(0.toByte())
     }
 
@@ -228,7 +226,7 @@ object BufferUtil {
      * @param string The `String`.
      * @return The `ByteBuffer` (allows chaining).
      */
-    fun putWString(buffer: ByteBuffer, string: String): ByteBuffer {
+    fun putWString(buffer: PlatformByteBuffer, string: String): PlatformByteBuffer {
         val bytes = string.toByteArray(StandardCharsets.UTF_8)
         return buffer.putShort(bytes.size.toShort()).put(bytes)
     }
@@ -260,7 +258,7 @@ object BufferUtil {
      * @throws java.util.zip.DataFormatException
      */
     @Throws(DataFormatException::class)
-    fun inflateZLIB(compressed: ByteBuffer, uncompressedSize: Int): ByteBuffer {
+    fun inflateZLIB(compressed: PlatformByteBuffer, uncompressedSize: Int): PlatformByteBuffer {
         val compressedSize = compressed.limit() - compressed.position()
         return inflateZLIB(compressed, uncompressedSize, compressedSize)
     }
@@ -275,7 +273,7 @@ object BufferUtil {
      * @throws java.util.zip.DataFormatException
      */
     @Throws(DataFormatException::class)
-    fun inflateZLIB(compressed: ByteBuffer, uncompressedSize: Int, compressedSize: Int): ByteBuffer {
+    fun inflateZLIB(compressed: PlatformByteBuffer, uncompressedSize: Int, compressedSize: Int): PlatformByteBuffer {
         val UNCOMPRESSED_BYTES = ByteArray(uncompressedSize)
         val COMPRESSED_BYTES = ByteArray(compressedSize)
         compressed[COMPRESSED_BYTES]
@@ -290,7 +288,7 @@ object BufferUtil {
                     uncompressedSize
                 )
             }
-            ByteBuffer.wrap(UNCOMPRESSED_BYTES)
+            PlatformByteBuffer.wrap(UNCOMPRESSED_BYTES)
         } finally {
             INFLATER.end()
         }
@@ -303,13 +301,8 @@ object BufferUtil {
      * @param uncompressedSize
      * @return
      */
-    fun inflateLZ4(compressed: ByteBuffer, uncompressedSize: Int): ByteBuffer {
-        val uncompressed = ByteBuffer.allocate(uncompressedSize)
-        val LZ4FACTORY = LZ4Factory.fastestInstance()
-        val LZ4DECOMP = LZ4FACTORY.fastDecompressor()
-        LZ4DECOMP.decompress(compressed, uncompressed)
-        (uncompressed as Buffer).flip()
-        return uncompressed
+    fun inflateLZ4(compressed: PlatformByteBuffer, uncompressedSize: Int): PlatformByteBuffer {
+        return compressed.decompress(uncompressedSize)
     }
 
     /**
@@ -319,7 +312,7 @@ object BufferUtil {
      * @param uncompressedSize
      * @return
      */
-    fun deflateZLIB(uncompressed: ByteBuffer, uncompressedSize: Int): ByteBuffer {
+    fun deflateZLIB(uncompressed: PlatformByteBuffer, uncompressedSize: Int): PlatformByteBuffer {
         val SIZE = uncompressedSize.coerceAtMost(uncompressed.limit())
         val UNCOMPRESSED_BYTES = ByteArray(SIZE)
         val COMPRESSED_BYTES = ByteArray(11 * SIZE / 10)
@@ -335,7 +328,7 @@ object BufferUtil {
                     SIZE
                 )
             }
-            ByteBuffer.wrap(COMPRESSED_BYTES, 0, DEFLATER.bytesWritten.toInt())
+            PlatformByteBuffer.wrap(COMPRESSED_BYTES, 0, DEFLATER.bytesWritten.toInt())
         } finally {
             DEFLATER.end()
         }
@@ -348,13 +341,8 @@ object BufferUtil {
      * @param uncompressedSize
      * @return
      */
-    fun deflateLZ4(uncompressed: ByteBuffer, uncompressedSize: Int): ByteBuffer {
-        val LZ4FACTORY = LZ4Factory.fastestInstance()
-        val LZ4COMP = LZ4FACTORY.fastCompressor()
-        val COMPRESSED = ByteBuffer.allocate(LZ4COMP.maxCompressedLength(uncompressedSize))
-        LZ4COMP.compress(uncompressed, COMPRESSED)
-        (COMPRESSED as Buffer).flip()
-        return COMPRESSED
+    fun deflateLZ4(uncompressed: PlatformByteBuffer, uncompressedSize: Int): PlatformByteBuffer {
+        return uncompressed.compress(uncompressedSize)
     }
 
     /**

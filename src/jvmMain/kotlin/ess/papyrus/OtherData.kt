@@ -15,18 +15,18 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.Element
 import ess.Flags
 import mu.KLoggable
 import mu.KLogger
-import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
 
-class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement(), PapyrusElement {
+class OtherData(input: PlatformByteBuffer, context: PapyrusContext) : ess.GeneralElement(), PapyrusElement {
     val arrays: List<Array<Element>>
         get() = listOfNotNull(
             ARRAY1,
@@ -50,7 +50,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
             ARRAY14,
             ARRAY15
         )
-    val ARRAY1: Array<Element> = input?.let { read32ElemArray(it, "Array1") { `in`: ByteBuffer? -> Array1(`in`, context) } }
+    val ARRAY1: Array<Element> = input?.let { read32ElemArray(it, "Array1") { `in`: PlatformByteBuffer? -> Array1(`in`, context) } }
         ?.toTypedArray()!!
     val ARRAY1A: Array<Element>
     val ARRAY2: Array<Element>
@@ -73,7 +73,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
     val ARRAY14: Array<Element>?
     val ARRAY15: Array<Element>?
 
-    internal class Array1(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
+    internal class Array1(input: PlatformByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
         override fun toString(): String {
             return if (null == THREAD) {
                 "INVALID (" + super.toString() + ")"
@@ -91,7 +91,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array1A(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
+    internal class Array1A(input: PlatformByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
         override fun toString(): String {
             return if (null == THREAD) {
                 "INVALID (" + super.toString() + ")"
@@ -115,7 +115,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array2(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
+    internal class Array2(input: PlatformByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
         override fun toString(): String {
             return if (THREAD == null) {
                 "null(${super.toString()})"
@@ -139,7 +139,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array3(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
+    internal class Array3(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 super.readByte(input, "type")
@@ -156,7 +156,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
             if (input != null) {
                 super.readInt(input, "unk2")
             }
-            super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
+            super.readElement(input, "flags") { input: PlatformByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
             if (input != null) {
                 if (context != null) {
                     super.readRefID(input, "refID", context)
@@ -165,7 +165,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array4(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
+    internal class Array4(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 super.readShort(input, "str1")
@@ -182,7 +182,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
             if (input != null) {
                 super.readInt(input, "unk3")
             }
-            super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
+            super.readElement(input, "flags") { input: PlatformByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
             if (context != null) {
                 if (input != null) {
                     super.readRefID(input, "refID", context)
@@ -191,8 +191,8 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array4A(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement()
-    internal class Array4B(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
+    internal class Array4A(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement()
+    internal class Array4B(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 super.readByte(input, "unk1")
@@ -226,7 +226,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array4C(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
+    internal class Array4C(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
             val FLAG = input?.let { super.readByte(it, "flag") }!!
             super.readInt(input, "data")
@@ -245,7 +245,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array4D(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
+    internal class Array4D(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 super.readByte(input, "flag1")
@@ -264,7 +264,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array5(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
+    internal class Array5(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 super.readShort(input, "unk1")
@@ -293,12 +293,12 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array6(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
+    internal class Array6(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 super.readShort(input, "unk")
             }
-            super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
+            super.readElement(input, "flags") { input: PlatformByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
             if (context != null) {
                 if (input != null) {
                     super.readRefID(input, "ref", context)
@@ -307,12 +307,12 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array7(input: ByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
+    internal class Array7(input: PlatformByteBuffer?, context: PapyrusContext?) : ess.GeneralElement() {
         init {
             if (input != null) {
                 super.readShort(input, "unk")
             }
-            super.readElement(input, "flags") { input: ByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
+            super.readElement(input, "flags") { input: PlatformByteBuffer? -> input?.let { Flags.readShortFlags(it) } }
             if (context != null) {
                 if (input != null) {
                     super.readRefID(input, "ref", context)
@@ -321,7 +321,7 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
         }
     }
 
-    internal class Array8(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
+    internal class Array8(input: PlatformByteBuffer?, context: PapyrusContext) : ess.GeneralElement() {
         init {
             if (input != null) {
                 super.readShort(input, "unk")
@@ -335,15 +335,15 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
             val COUNT1 = input?.let { super.readInt(it, "count1") }
             val COUNT2 = input?.let { super.readInt(it, "count2") }
             if (COUNT1 != null) {
-                super.readElements(input, "refArray1", COUNT1) { input: ByteBuffer? -> input?.let { context.readRefID(it) } }
+                super.readElements(input, "refArray1", COUNT1) { input: PlatformByteBuffer? -> input?.let { context.readRefID(it) } }
             }
             if (COUNT2 != null) {
-                super.readElements(input, "refArray2", COUNT2) { input: ByteBuffer? -> input?.let { context.readRefID(it) } }
+                super.readElements(input, "refArray2", COUNT2) { input: PlatformByteBuffer? -> input?.let { context.readRefID(it) } }
             }
         }
     }
 
-    internal class LString(input: ByteBuffer?) : ess.GeneralElement() {
+    internal class LString(input: PlatformByteBuffer?) : ess.GeneralElement() {
         override fun toString(): String {
             return STRING
         }
@@ -369,32 +369,32 @@ class OtherData(input: ByteBuffer?, context: PapyrusContext) : ess.GeneralElemen
     static final private int[] SIZES_FO4 = {};*/
     init {
         logger.info{String.format("Read ARRAY1, %d elements.", ARRAY1.size)}
-        ARRAY1A = input?.let { read32ElemArray(it, "Array1a") { `in`: ByteBuffer? -> Array1A(`in`, context) } }
+        ARRAY1A = input?.let { read32ElemArray(it, "Array1a") { `in`: PlatformByteBuffer? -> Array1A(`in`, context) } }
             ?.toTypedArray()!!
         logger.info{"Read ARRAY1A, ${ARRAY1A.size} elements."}
-        ARRAY2 = read32ElemArray(input, "Array2") { `in`: ByteBuffer? -> Array2(`in`, context) }.toTypedArray()
+        ARRAY2 = read32ElemArray(input, "Array2") { `in`: PlatformByteBuffer? -> Array2(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY2, ${ARRAY2.size} elements."}
-        ARRAY3 = read32ElemArray(input, "Array3") { `in`: ByteBuffer? -> Array3(`in`, context) }.toTypedArray()
+        ARRAY3 = read32ElemArray(input, "Array3") { `in`: PlatformByteBuffer? -> Array3(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY3, ${ARRAY3.size} elements."}
-        ARRAY4 = read32ElemArray(input, "Array4") { `in`: ByteBuffer? -> Array4(`in`, context) }.toTypedArray()
+        ARRAY4 = read32ElemArray(input, "Array4") { `in`: PlatformByteBuffer? -> Array4(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY4, ${ARRAY4.size} elements."}
-        SCRIPTS = read32ElemArray(input, "Scripts") { input: ByteBuffer? -> LString(input) }.toTypedArray()
+        SCRIPTS = read32ElemArray(input, "Scripts") { input: PlatformByteBuffer? -> LString(input) }.toTypedArray()
         logger.info{"Read SCRIPTS, ${SCRIPTS.size} element."}
-        ARRAY4A = read32ElemArray(input, "Array4A") { `in`: ByteBuffer? -> Array4A(`in`, context) }.toTypedArray()
+        ARRAY4A = read32ElemArray(input, "Array4A") { `in`: PlatformByteBuffer? -> Array4A(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY4A, ${ARRAY4A.size} elements."}
-        ARRAY4B = read32ElemArray(input, "Array4b") { `in`: ByteBuffer? -> Array4B(`in`, context) }.toTypedArray()
+        ARRAY4B = read32ElemArray(input, "Array4b") { `in`: PlatformByteBuffer? -> Array4B(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY4B, ${ARRAY4B.size} elements."}
-        ARRAY4C = read32ElemArray(input, "Array4c") { `in`: ByteBuffer? -> Array4C(`in`, context) }.toTypedArray()
+        ARRAY4C = read32ElemArray(input, "Array4c") { `in`: PlatformByteBuffer? -> Array4C(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY4C, ${ARRAY4C.size} elements."}
-        ARRAY4D = read32ElemArray(input, "Array4d") { `in`: ByteBuffer? -> Array4D(`in`, context) }.toTypedArray()
+        ARRAY4D = read32ElemArray(input, "Array4d") { `in`: PlatformByteBuffer? -> Array4D(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY4D, ${ARRAY4D.size} elements."}
-        ARRAY5 = read32ElemArray(input, "Array5") { `in`: ByteBuffer? -> Array5(`in`, context) }.toTypedArray()
+        ARRAY5 = read32ElemArray(input, "Array5") { `in`: PlatformByteBuffer? -> Array5(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY5, ${ARRAY5.size} elements."}
-        ARRAY6 = read32ElemArray(input, "Array6") { `in`: ByteBuffer? -> Array6(`in`, context) }.toTypedArray()
+        ARRAY6 = read32ElemArray(input, "Array6") { `in`: PlatformByteBuffer? -> Array6(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY6, ${ARRAY6.size} elements."}
-        ARRAY7 = read32ElemArray(input, "Array7") { `in`: ByteBuffer? -> Array7(`in`, context) }.toTypedArray()
+        ARRAY7 = read32ElemArray(input, "Array7") { `in`: PlatformByteBuffer? -> Array7(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY7, ${ARRAY7.size} elements."}
-        ARRAY8 = read32ElemArray(input, "Array8") { `in`: ByteBuffer? -> Array8(`in`, context) }.toTypedArray()
+        ARRAY8 = read32ElemArray(input, "Array8") { `in`: PlatformByteBuffer? -> Array8(`in`, context) }.toTypedArray()
         logger.info{"Read ARRAY8, ${ARRAY8.size} elements."}
         ARRAY9 = null
         //LOG.info(String.format("Read ARRAY9, %d elements.", this.ARRAY9.length));

@@ -15,9 +15,9 @@
  */
 package resaver.pex
 
-import kotlin.Throws
+import PlatformByteBuffer
+import UtilityFunctions
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Describes the six datatypes that appear in PEX files.
@@ -36,8 +36,8 @@ enum class DataType {
          */
 
         @Throws(IOException::class)
-        fun read(input: ByteBuffer): DataType {
-            val index = UtilityFunctions.toUnsignedInt(input.get())
+        fun read(input: PlatformByteBuffer): DataType {
+            val index = UtilityFunctions.toUnsignedInt(input.getByte())
             if (index < 0 || index >= VALUES.size) {
                 throw IOException("Invalid DataType.")
             }

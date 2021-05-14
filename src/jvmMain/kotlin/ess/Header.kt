@@ -15,13 +15,12 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.CompressionType.Companion.read
 import java.awt.RenderingHints
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
-import java.nio.ByteBuffer
 import java.nio.file.Path
-
 import javax.swing.ImageIcon
 import kotlin.experimental.and
 
@@ -30,12 +29,12 @@ import kotlin.experimental.and
  *
  * @author Mark Fairchild
  */
-class Header(input: ByteBuffer, path: Path?) : Element {
+class Header(input: PlatformByteBuffer, path: Path?) : Element {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(MAGIC)
         output.putInt(partialSize())
         output.putInt(VERSION)
@@ -202,11 +201,11 @@ class Header(input: ByteBuffer, path: Path?) : Element {
         input[MAGIC]
 
         // Read the header size.
-        val HEADERSIZE = input.int
+        val HEADERSIZE = input.getInt()
         require(HEADERSIZE < 256) { "Invalid header size $HEADERSIZE" }
 
         // Read the version number.
-        VERSION = input.int
+        VERSION = input.getInt()
 
         // Identify which game produced the savefile.
         // Bit of a business, really.
@@ -227,18 +226,18 @@ class Header(input: ByteBuffer, path: Path?) : Element {
             }
             else -> throw IllegalArgumentException("Unknown game: $MAGICSTRING")
         }
-        SAVENUMBER = input.int
+        SAVENUMBER = input.getInt()
         NAME = WStringElement.read(input)
-        LEVEL = input.int
+        LEVEL = input.getInt()
         LOCATION = WStringElement.read(input)
         GAMEDATE = WStringElement.read(input)
         RACEID = WStringElement.read(input)
-        SEX = input.short
-        CURRENT_XP = input.float
-        NEEDED_XP = input.float
-        FILETIME = input.long
-        SCREENSHOT_WIDTH = input.int
-        SCREENSHOT_HEIGHT = input.int
+        SEX = input.getShort()
+        CURRENT_XP = input.getFloat()
+        NEEDED_XP = input.getFloat()
+        FILETIME = input.getLong()
+        SCREENSHOT_WIDTH = input.getInt()
+        SCREENSHOT_HEIGHT = input.getInt()
         compression = if (GAME == resaver.Game.SKYRIM_SE) read(input) else null
         require(HEADERSIZE == partialSize()) {
             String.format(

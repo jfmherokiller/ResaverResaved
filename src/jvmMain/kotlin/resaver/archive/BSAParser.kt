@@ -16,11 +16,9 @@
 package resaver.archive
 
 import GenericSupplier
+import PlatformByteBuffer
 import mf.BufferUtil
 import java.io.IOException
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.PathMatcher
@@ -37,10 +35,10 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
         val FILENAMES_OFFSET = (HEADER!!.FOLDER_OFFSET
                 + HEADER!!.FOLDER_COUNT.toLong() * BSAFolderRecord.SIZE + HEADER!!.TOTAL_FOLDERNAME_LENGTH + HEADER!!.FOLDER_COUNT
                 + HEADER!!.FILE_COUNT.toLong() * BSAFileRecord.SIZE)
-        val FILENAMESBLOCK = ByteBuffer.allocate(HEADER!!.TOTAL_FILENAME_LENGTH)
-        channel.read(FILENAMESBLOCK, FILENAMES_OFFSET)
-        FILENAMESBLOCK.order(ByteOrder.LITTLE_ENDIAN)
-        (FILENAMESBLOCK as Buffer).flip()
+        val FILENAMESBLOCK = PlatformByteBuffer.allocate(HEADER!!.TOTAL_FILENAME_LENGTH)
+        FILENAMESBLOCK.readFileChannel(channel,FILENAMES_OFFSET)
+        FILENAMESBLOCK.makeLe()
+        FILENAMESBLOCK.flip()
         return { BufferUtil.getZString(FILENAMESBLOCK) }
     }
 
@@ -48,7 +46,7 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
      * @see ArchiveParser.getFiles
      */
     @Throws(IOException::class)
-    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer>> {
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<PlatformByteBuffer>> {
         return FOLDERRECORDS!!
             .filter { block: BSAFolderRecord -> dir == null || dir == block.PATH }
             .flatMap { block: BSAFolderRecord -> block.FILERECORDS }
@@ -90,10 +88,10 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
     init {
         try {
             // Read the header.
-            val HEADERBLOCK = ByteBuffer.allocate(BSAHeader.SIZE)
-            channel.read(HEADERBLOCK)
-            HEADERBLOCK.order(ByteOrder.LITTLE_ENDIAN)
-            (HEADERBLOCK as Buffer).flip()
+            val HEADERBLOCK = PlatformByteBuffer.allocate(BSAHeader.SIZE)
+            HEADERBLOCK.readFileChannel(channel)
+            HEADERBLOCK.makeLe()
+            (HEADERBLOCK).flip()
             HEADER = BSAHeader(HEADERBLOCK, path?.fileName.toString())
 
             // Read the filename table indirectly.
@@ -103,10 +101,10 @@ class BSAParser(path: Path?, channel: FileChannel) : ArchiveParser(path, channel
             FOLDERRECORDS = mutableListOf()
 
             // Read folder records.
-            val FOLDERBLOCK = ByteBuffer.allocate(HEADER!!.FOLDER_COUNT * BSAFolderRecord.SIZE)
-            channel.read(FOLDERBLOCK, HEADER!!.FOLDER_OFFSET.toLong())
-            FOLDERBLOCK.order(ByteOrder.LITTLE_ENDIAN)
-            (FOLDERBLOCK as Buffer).flip()
+            val FOLDERBLOCK = PlatformByteBuffer.allocate(HEADER!!.FOLDER_COUNT * BSAFolderRecord.SIZE)
+            FOLDERBLOCK.readFileChannel(channel,HEADER!!.FOLDER_OFFSET.toLong())
+            FOLDERBLOCK.makeLe()
+            FOLDERBLOCK.flip()
             for (i in 0 until HEADER!!.FOLDER_COUNT) {
                 val folder = BSAFolderRecord(FOLDERBLOCK, HEADER!!, channel, NAMES)
                 FOLDERRECORDS!!.add(folder)

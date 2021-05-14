@@ -15,8 +15,8 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.ByteBuffer
 
 
 /**
@@ -24,12 +24,12 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class ChangeFormLVLN(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContext?) : ChangeFormData {
+class ChangeFormLVLN(input: PlatformByteBuffer, flags: Flags.FlagsInt, context: ESSContext?) : ChangeFormData {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         refID?.write(output)
         if (null != ENTRIES) {
             output!!.putShort(ENTRIES!!.size.toShort())
@@ -152,7 +152,7 @@ class ChangeFormLVLN(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSConte
             null
         }
         if (flags.getFlag(31)) {
-            val formCount = input.get().toInt()
+            val formCount = input.getByte().toInt()
             ENTRIES = mutableListOf()
             for (i in 0 until formCount) {
                 val ENTRY = context?.let { LeveledEntry(input, it) }

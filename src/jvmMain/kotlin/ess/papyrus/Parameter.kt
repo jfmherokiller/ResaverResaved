@@ -15,7 +15,7 @@
  */
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 import java.util.function.Predicate
 
 import java.util.regex.Pattern
@@ -119,7 +119,7 @@ abstract class Parameter : PapyrusElement {
          * @throws PapyrusFormatException
          */
         @Throws(PapyrusFormatException::class)
-        fun read(input: ByteBuffer, context: PapyrusContext): Parameter {
+        fun read(input: PlatformByteBuffer, context: PapyrusContext): Parameter {
             val TYPE = ParamType.read(input)
             return when (TYPE) {
                 ParamType.NULL -> ParamNull()
@@ -132,15 +132,15 @@ abstract class Parameter : PapyrusElement {
                     ParamStr(str)
                 }
                 ParamType.INTEGER -> {
-                    val i = input.int
+                    val i = input.getInt()
                     ParamInt(i)
                 }
                 ParamType.FLOAT -> {
-                    val f = input.float
+                    val f = input.getFloat()
                     ParamFlt(f)
                 }
                 ParamType.BOOLEAN -> {
-                    val b = input.get()
+                    val b = input.getByte()
                     ParamBool(b)
                 }
                 ParamType.TERM -> throw IllegalStateException("Terms cannot be read.")

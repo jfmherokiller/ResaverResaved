@@ -15,7 +15,7 @@
  */
 package resaver.esp
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 import java.nio.charset.StandardCharsets
 
 
@@ -30,13 +30,13 @@ class RecordGrup(
      *
      * @return The record code.
      */
-    override val code: RecordCode, private val HEADER: ByteBuffer, input: ByteBuffer, ctx: ESPContext
+    override val code: RecordCode, private val HEADER: PlatformByteBuffer, input: PlatformByteBuffer, ctx: ESPContext
 ) : Record() {
     /**
      * @see Entry.write
      * @param output The ByteBuffer.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(this.code.toString().toByteArray(StandardCharsets.UTF_8))
         output?.putInt(calculateSize())
         output?.put(HEADER)

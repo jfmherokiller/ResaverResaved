@@ -1,7 +1,7 @@
 package resaver.pex
 
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.util.function.Predicate
 import java.util.regex.Pattern
 
@@ -10,7 +10,7 @@ import java.util.regex.Pattern
  */
 class VDataID internal constructor(`val`: TString?) : VData() {
     @Throws(IOException::class)
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(type.ordinal.toByte())
         value.write(output)
     }

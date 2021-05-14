@@ -15,6 +15,7 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ChangeForm.Companion.verifyIdentical
 import ess.Header.Companion.verifyIdentical
 import ess.papyrus.*
@@ -36,10 +37,7 @@ import resaver.Game
 import resaver.ListException
 import resaver.gui.FilterTreeModel
 import java.io.IOException
-import java.nio.Buffer
 import java.nio.BufferUnderflowException
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
@@ -49,10 +47,7 @@ import java.util.function.Predicate
 import java.util.regex.Pattern
 import java.util.zip.CRC32
 import java.util.zip.DataFormatException
-import kotlin.collections.ArrayDeque
-import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
-import kotlin.collections.LinkedHashMap
+
 /**
  * Describes a Skyrim or Fallout4 savegame.
  *
@@ -66,7 +61,7 @@ import kotlin.collections.LinkedHashMap
  * @param model A `ModelBuilder`.
  * @throws IOException
  */
-class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBuilder) : Element {
+class ESS private constructor(buffer: PlatformByteBuffer, saveFile: Path, model: ModelBuilder) : Element {
     /**
      * Writes the `ESS` to a `ByteBuffer`.
      *
@@ -78,32 +73,32 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         val COMPRESSION = header.getCompression()
 
         // Write the header, with a litte of extra room for compression prefixes.
-        val headerBlock = ByteBuffer.allocate(header.calculateSize() + 8).order(ByteOrder.LITTLE_ENDIAN)
+        val headerBlock = PlatformByteBuffer.allocateLe(header.calculateSize() + 8)
         header.write(headerBlock)
-        (headerBlock as Buffer).flip()
-        channel.write(headerBlock)
+        headerBlock.flip()
+        headerBlock.writeFileChannel(channel)
         headerBlock.compact()
 
         // Write the body to a ByteBuffer.
         val UNCOMPRESSED_LEN = calculateSize()
-        val UNCOMPRESSED = ByteBuffer.allocate(UNCOMPRESSED_LEN).order(ByteOrder.LITTLE_ENDIAN)
+        val UNCOMPRESSED = PlatformByteBuffer.allocateLe(UNCOMPRESSED_LEN)
         this.write(UNCOMPRESSED)
-        (UNCOMPRESSED as Buffer).flip()
+        UNCOMPRESSED.flip()
 
         // Do the decompression, if necessary.
         if (COMPRESSION.isCompressed) {
-            val COMPRESSED: ByteBuffer = when (COMPRESSION) {
+            val COMPRESSED: PlatformByteBuffer = when (COMPRESSION) {
                 CompressionType.ZLIB -> BufferUtil.deflateZLIB(UNCOMPRESSED, UNCOMPRESSED_LEN)
                 CompressionType.LZ4 -> BufferUtil.deflateLZ4(UNCOMPRESSED, UNCOMPRESSED_LEN)
                 else -> throw IOException("Unknown compression type: $COMPRESSION")
             }
             headerBlock.putInt(UNCOMPRESSED.limit())
             headerBlock.putInt(COMPRESSED.limit())
-            (headerBlock as Buffer).flip()
-            channel.write(headerBlock)
-            channel.write(COMPRESSED)
+            headerBlock.flip()
+            headerBlock.writeFileChannel(channel)
+            COMPRESSED.writeFileChannel(channel)
         } else {
-            channel.write(UNCOMPRESSED)
+            UNCOMPRESSED.writeFileChannel(channel)
         }
     }
 
@@ -113,7 +108,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
      *
      * @param output The output stream for the savegame.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         // Write the form version.
         output?.put(formVersion)
 
@@ -635,10 +630,10 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
          * @param input The input stream.
          * @return The new `RefID`.
          */
-        fun readRefID(input: ByteBuffer): RefID {
-            val B1 = input.get().toInt()
-            val B2 = input.get().toInt()
-            val B3 = input.get().toInt()
+        fun readRefID(input: PlatformByteBuffer): RefID {
+            val B1 = input.getByte().toInt()
+            val B2 = input.getByte().toInt()
+            val B3 = input.getByte().toInt()
             val VAL = (B1 and 0xFF shl 16
                     or (B2 and 0xFF shl 8)
                     or (B3 and 0xFF))
@@ -750,9 +745,9 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             val entireFileByteString = fileSystem.read(saveFile) {
                 readByteString()
             }
-            var outbuffer = ByteBuffer.allocate(entireFileByteString.size).order(ByteOrder.LITTLE_ENDIAN)
-            outbuffer = outbuffer.put(entireFileByteString.asByteBuffer())
-            (outbuffer as Buffer).flip()
+            var outbuffer = PlatformByteBuffer.allocateLe(entireFileByteString.size)
+            outbuffer = outbuffer.put(entireFileByteString.toByteArray())
+            outbuffer.flip()
             val ESS = ESS(outbuffer, saveFile.toNioPath(), model)
             val TREEMODEL = model.finish(ESS)
             TIMER.stop()
@@ -860,8 +855,8 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
                 )
             }
             check(PAP1.stringTable.containsAll(PAP2.stringTable)) { "StringTable mismatch." }
-            val BUF1 = ByteBuffer.allocate(PAP1.calculateSize())
-            val BUF2 = ByteBuffer.allocate(PAP2.calculateSize())
+            val BUF1 = PlatformByteBuffer.allocate(PAP1.calculateSize())
+            val BUF2 = PlatformByteBuffer.allocate(PAP2.calculateSize())
             PAP1.write(BUF1)
             PAP2.write(BUF2)
 
@@ -937,40 +932,39 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
 
         // This is the stream that will be used for the remainder of the 
         // constructor.
-        val INPUT: ByteBuffer
+        val INPUT: PlatformByteBuffer
 
         // Do the decompression, if necessary.
         val COMPRESSION = header.getCompression()
         if (COMPRESSION.isCompressed) {
-            val UNCOMPRESSED_LEN = buffer.int
-            val COMPRESSED_LEN = buffer.int
+            val UNCOMPRESSED_LEN = buffer.getInt()
+            val COMPRESSED_LEN = buffer.getInt()
             if (UNCOMPRESSED_LEN < 0 || COMPRESSED_LEN < 0) {
                 throw IOException("Compression error. You might need to set [SAVEGAME]uiCompression=1 in SkyrimCustom.ini.")
             }
 
             //final ByteBuffer UNCOMPRESSED = ByteBuffer.allocate(UNCOMPRESSED_LEN);
-            val COMPRESSED = ByteBuffer.allocate(COMPRESSED_LEN)
+            val COMPRESSED = PlatformByteBuffer.allocateLe(COMPRESSED_LEN)
             COMPRESSED.put(buffer)
-            (COMPRESSED as Buffer).flip()
-            COMPRESSED.order(ByteOrder.LITTLE_ENDIAN)
+            COMPRESSED.flip()
             check(!buffer.hasRemaining()) { "Some data was not compressed." }
             when (COMPRESSION) {
                 CompressionType.ZLIB -> {
                     logger.info {"ZLIB DECOMPRESSION"}
                     INPUT = BufferUtil.inflateZLIB(COMPRESSED, UNCOMPRESSED_LEN, COMPRESSED_LEN)
-                    INPUT.order(ByteOrder.LITTLE_ENDIAN)
+                    INPUT.makeLe()
                 }
                 CompressionType.LZ4 -> {
                     logger.info {"LZ4 DECOMPRESSION"}
                     INPUT = BufferUtil.inflateLZ4(COMPRESSED, UNCOMPRESSED_LEN)
-                    INPUT.order(ByteOrder.LITTLE_ENDIAN)
+                    INPUT.makeLe()
                 }
                 else -> throw IOException("Unknown compression type: $COMPRESSION")
             }
         } else {
             logger.info {"NO FILE COMPRESSION"}
             INPUT = buffer.slice()
-            INPUT.order(ByteOrder.LITTLE_ENDIAN)
+            INPUT.makeLe()
         }
 
         // sanity check
@@ -985,13 +979,14 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
 
         // Make a CRC for the ESS header block.
         val CRC32 = CRC32()
-        (buffer as Buffer).position(0)
-        (buffer as Buffer).limit(startingOffset)
-        CRC32.update(buffer)
+        buffer.position(0)
+        buffer.limit(startingOffset)
+        //Todo Handle CRC32
+        CRC32.update(buffer.mybuffer)
 
         // Update the CRC with the ESS body block.
-        CRC32.update(INPUT)
-        (INPUT as Buffer).flip()
+        CRC32.update(INPUT.mybuffer)
+        INPUT.flip()
         digest = CRC32.value
         val SUM = Counter(buffer.capacity())
         SUM.addCountListener { sum: Int ->
@@ -1006,7 +1001,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         }
 
         // Read the form version.
-        formVersion = INPUT.get()
+        formVersion = INPUT.getByte()
         SUM.click()
         logger.info {
             String.format(
@@ -1054,12 +1049,12 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         // Read the FormID table.
         var formIDs: IntArray? = null
         try {
-            (INPUT as Buffer).position(fLT.formIDArrayCountOffset - startingOffset)
-            val formIDCount = INPUT.int
+            INPUT.position(fLT.formIDArrayCountOffset - startingOffset)
+            val formIDCount = INPUT.getInt()
             formIDs = IntArray(formIDCount)
             for (formIDIndex in 0 until formIDCount) {
                 try {
-                    formIDs[formIDIndex] = INPUT.int
+                    formIDs[formIDIndex] = INPUT.getInt()
                 } catch (ex: BufferUnderflowException) {
                     throw ListException("Truncation in the FormID array.", formIDIndex, formIDCount, ex)
                 }
@@ -1077,7 +1072,7 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
         } finally {
             FORMIDARRAY = formIDs
         }
-        (INPUT as Buffer).position(fLT.table1Offset - startingOffset)
+        INPUT.position(fLT.table1Offset - startingOffset)
 
         // Read the first and second sets of data tables.
         val context = context
@@ -1237,11 +1232,11 @@ class ESS private constructor(buffer: ByteBuffer, saveFile: Path, model: ModelBu
             // Read the worldspaces-visited table. Skip past the FormID array since
             // it was readRefID earlier.
             val skipFormIDArray = fLT.formIDArrayCountOffset - startingOffset + (4 + 4 * FORMIDARRAY!!.size)
-            (INPUT as Buffer).position(skipFormIDArray)
-            val worldspaceIDCount = INPUT.int
+            INPUT.position(skipFormIDArray)
+            val worldspaceIDCount = INPUT.getInt()
             visitedWorldSpaces = IntArray(worldspaceIDCount)
             for (worldspaceIndex in 0 until worldspaceIDCount) {
-                visitedWorldSpaces[worldspaceIndex] = INPUT.int
+                visitedWorldSpaces[worldspaceIndex] = INPUT.getInt()
             }
             logger.info {"Reading savegame: read visited worldspace array."}
         } catch (ex: BufferUnderflowException) {

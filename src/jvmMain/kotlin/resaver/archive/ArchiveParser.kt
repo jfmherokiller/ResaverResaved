@@ -15,9 +15,9 @@
  */
 package resaver.archive
 
+import PlatformByteBuffer
 import java.io.Closeable
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.PathMatcher
@@ -47,7 +47,7 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
      * @throws IOException
      */
     @Throws(IOException::class)
-    abstract fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<ByteBuffer>>?
+    abstract fun getFiles(dir: Path?, matcher: PathMatcher?): Map<Path?, Optional<PlatformByteBuffer>>?
 
     /**
      * Creates a `Map` pairing full `Path` to `
@@ -74,8 +74,8 @@ abstract class ArchiveParser protected constructor(path: Path?, channel: FileCha
 
         @Throws(IOException::class)
         fun createParser(path: Path?, channel: FileChannel): ArchiveParser? {
-            val magic = ByteBuffer.allocate(4)
-            channel.read(magic, 0)
+            val magic = PlatformByteBuffer.allocate(4)
+            magic.readFileChannel(channel,0)
             if (magic.array().contentEquals(BSA_MAGIC)) {
                 return BSAParser(path, channel)
             } else if (magic.array().contentEquals( BA2GEN_MAGIC)) {

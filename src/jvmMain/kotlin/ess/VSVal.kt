@@ -15,9 +15,10 @@
  */
 package ess
 
-import java.lang.IllegalArgumentException
-import java.nio.ByteBuffer
+import PlatformByteBuffer
+import UtilityFunctions
 import kotlin.experimental.and
+
 /**
  * A Skyrim variable-size value.
  *
@@ -62,13 +63,13 @@ class VSVal : Element {
      *
      * @param input The input stream.
      */
-    constructor(input: ByteBuffer) {
-        val firstByte = input.get()
+    constructor(input: PlatformByteBuffer) {
+        val firstByte = input.getByte()
         val size: Int = (firstByte and 0x3.toByte()).toInt()
         DATA = when (size) {
             0 -> byteArrayOf(firstByte)
-            1 -> byteArrayOf(firstByte, input.get())
-            else -> byteArrayOf(firstByte, input.get(), input.get())
+            1 -> byteArrayOf(firstByte, input.getByte())
+            else -> byteArrayOf(firstByte, input.getByte(), input.getByte())
         }
     }
 
@@ -76,7 +77,7 @@ class VSVal : Element {
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(DATA)
     }
 

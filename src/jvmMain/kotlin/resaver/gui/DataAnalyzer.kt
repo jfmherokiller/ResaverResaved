@@ -16,16 +16,14 @@
 package resaver.gui
 
 
+import PlatformByteBuffer
 import resaver.Analysis
 import ess.ESS.ESSContext
 import ess.Flags
 import ess.papyrus.*
 import java.awt.*
 import java.awt.event.ActionEvent
-import java.nio.Buffer
 import java.nio.BufferUnderflowException
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.*
 import javax.swing.*
 import javax.swing.border.TitledBorder
@@ -37,7 +35,7 @@ import javax.swing.text.*
  *
  * @author Mark
  */
-class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_SPLIT) {
+class DataAnalyzer(newData: PlatformByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_SPLIT) {
     private fun initComponents() {
         setLeftComponent(SCROLLER)
         setRightComponent(SIDEPANE)
@@ -115,15 +113,15 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
         //this.currentSlice = this.DATA.slice(this.DATA.position() - OFFSET, SIZE);
         currentSlice = DATA.slice()
         currentSlice.limit(SIZE)
-        currentSlice.order(ByteOrder.LITTLE_ENDIAN)
+       currentSlice.makeLe()
         try {
             val DOC: StyledDocument = DefaultStyledDocument()
             while (currentSlice.hasRemaining()) {
-                val B = currentSlice.get()
+                val B = currentSlice.getByte()
                 val STR = String.format("%02x ", B)
                 DOC.insertString(DOC.length, STR, BINARY)
             }
-            (currentSlice as Buffer).flip()
+            currentSlice.flip()
             TEXTPANE.document = DOC
             if (DATA.limit() > 0) {
                 TEXTPANE.caretPosition = 1
@@ -274,11 +272,11 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
             try {
                 when (type) {
                     DataType.Integer_10 -> {
-                        val `val` = currentSlice.int
+                        val `val` = currentSlice.getInt()
                         BUF.append(`val`)
                     }
                     DataType.Integer_16 -> {
-                        val `val` = currentSlice.int
+                        val `val` = currentSlice.getInt()
                         val str = String.format("%08x", `val`)
                         BUF.append(str)
                     }
@@ -287,11 +285,11 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
                         BUF.append(`val`)
                     }
                     DataType.Float -> {
-                        val `val` = currentSlice.float
+                        val `val` = currentSlice.getFloat()
                         BUF.append(`val`)
                     }
                     DataType.Boolean -> {
-                        val `val` = currentSlice.get().toInt()
+                        val `val` = currentSlice.getByte().toInt()
                         BUF.append(`val` != 0)
                     }
                     DataType.BString -> {
@@ -351,7 +349,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
                         BUF.append(`val`.toHTML(null))
                     }
                     DataType.EID32 -> if (PAPYRUS_CONTEXT != null) {
-                        val `val` = currentSlice.int
+                        val `val` = currentSlice.getInt()
                         if (null != SAVE) {
                             val link = PAPYRUS_CONTEXT.broadSpectrumSearch(`val`)
                             if (null != link) {
@@ -363,7 +361,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
                         FIELD.background = Color.LIGHT_GRAY
                     }
                     DataType.EID64 -> if (PAPYRUS_CONTEXT != null) {
-                        val `val` = currentSlice.long
+                        val `val` = currentSlice.getLong()
                         if (null != SAVE) {
                             val link = PAPYRUS_CONTEXT.broadSpectrumSearch(`val`)
                             if (null != link) {
@@ -413,12 +411,12 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
         }
     }
 
-    val DATA: ByteBuffer
+    val DATA: PlatformByteBuffer
     private val SAVE: ess.ESS?
     private val ESS_CONTEXT: ESSContext?
     private val PAPYRUS_CONTEXT: PapyrusContext?
     private val ANALYSIS: Analysis?
-    private var currentSlice: ByteBuffer
+    private var currentSlice: PlatformByteBuffer
     private val SIZE: Int
     private val SCROLLER: JScrollPane
     private val TEXTPANE: JTextPane
@@ -436,7 +434,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
     private class Highlight(val C1: Int, val C2: Int, val COLOR: Color)
     companion object {
 
-        fun showDataAnalyzer(window: Window?, data: ByteBuffer, ess: ess.ESS) {
+        fun showDataAnalyzer(window: Window?, data: PlatformByteBuffer, ess: ess.ESS) {
             val ANALYZER = DataAnalyzer(data, ess)
             val DIALOG = JDialog(window, "Analyze")
             DIALOG.contentPane = ANALYZER
@@ -473,7 +471,8 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
     }
 
     init {
-        DATA = newData.duplicate().order(ByteOrder.LITTLE_ENDIAN)
+        DATA = newData.duplicate()
+        DATA.makeLe()
         SAVE = save
         ANALYSIS = save.analysis
         ESS_CONTEXT = save.context
@@ -481,7 +480,7 @@ class DataAnalyzer(newData: ByteBuffer, save: ess.ESS) : JSplitPane(HORIZONTAL_S
         currentSlice = DATA.slice()
         SIZE = 2048.coerceAtMost(currentSlice.limit())
         currentSlice.limit(SIZE)
-        currentSlice.order(ByteOrder.LITTLE_ENDIAN)
+        currentSlice.makeLe()
         TEXTPANE = JTextPane()
         SCROLLER = JScrollPane(TEXTPANE)
         SIDEPANE = JPanel()

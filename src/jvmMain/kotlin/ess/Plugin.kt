@@ -15,9 +15,9 @@
  */
 package ess
 
+import PlatformByteBuffer
 import resaver.Analysis
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -33,7 +33,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
      * @see Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         if (output != null) {
             mf.BufferUtil.putWString(output, NAME)
         }
@@ -235,7 +235,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
          * @param index The index of the plugin.
          * @return The new Plugin.
          */
-        fun readFullPlugin(input: ByteBuffer?, index: Int): Plugin {
+        fun readFullPlugin(input: PlatformByteBuffer, index: Int): Plugin {
             if (index < 0 || index > 255) {
                 throw IllegalArgumentException("Invalid index: $index")
             }
@@ -253,7 +253,7 @@ class Plugin private constructor(name: String, index: Int, lightweight: Boolean)
          */
 
         @Throws(IOException::class)
-        fun readLitePlugin(input: ByteBuffer?, index: Int): Plugin {
+        fun readLitePlugin(input: PlatformByteBuffer, index: Int): Plugin {
             if (index < 0 || index >= 4096) {
                 throw IllegalArgumentException("Invalid index: $index")
             }

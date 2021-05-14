@@ -15,9 +15,10 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import resaver.IString
-import java.nio.ByteBuffer
+
 import java.nio.charset.StandardCharsets
 
 /**
@@ -25,8 +26,8 @@ import java.nio.charset.StandardCharsets
  *
  * @author Mark Fairchild
  */
-class FragmentPerk(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
-    override fun write(output: ByteBuffer?) {
+class FragmentPerk(input: PlatformByteBuffer, ctx: ESPContext) : FragmentBase() {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(UNKNOWN)
         if (null != SCRIPT) {
             SCRIPT?.write(output)
@@ -69,8 +70,8 @@ class FragmentPerk(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
     /**
      *
      */
-    inner class Fragment(input: ByteBuffer) : Entry {
-        override fun write(output: ByteBuffer?) {
+    inner class Fragment(input: PlatformByteBuffer) : Entry {
+        override fun write(output: PlatformByteBuffer?) {
             output?.putShort(INDEX.toShort())
             output?.putShort(UNKNOWN1)
             output?.put(UNKNOWN2)
@@ -82,9 +83,9 @@ class FragmentPerk(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
             return 9 + SCRIPTNAME.length + FRAGMENTNAME.length
         }
 
-        private val INDEX: Int = UtilityFunctions.toUnsignedInt(input.short)
-        private val UNKNOWN1: Short = input.short
-        private val UNKNOWN2: Byte = input.get()
+        private val INDEX: Int = UtilityFunctions.toUnsignedInt(input.getShort())
+        private val UNKNOWN1: Short = input.getShort()
+        private val UNKNOWN2: Byte = input.getByte()
         private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)]
         private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)]
 
@@ -92,7 +93,7 @@ class FragmentPerk(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
 
     init {
         try {
-            UNKNOWN = input.get()
+            UNKNOWN = input.getByte()
             if (ctx.GAME.isFO4) {
                 ctx.pushContext("FragmentPerk")
                 FILENAME = null
@@ -103,7 +104,7 @@ class FragmentPerk(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
                 SCRIPT = null
                 ctx.pushContext("FragmentPerk:$FILENAME")
             }
-            val fragmentCount = UtilityFunctions.toUnsignedInt(input.short)
+            val fragmentCount = UtilityFunctions.toUnsignedInt(input.getShort())
             FRAGMENTS = ArrayList(fragmentCount)
             for (i in 0 until fragmentCount) {
                 val fragment = Fragment(input)

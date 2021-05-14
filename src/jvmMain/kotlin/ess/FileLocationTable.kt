@@ -15,8 +15,9 @@
  */
 package ess
 
+import PlatformByteBuffer
+import resaver.Game
 import java.io.IOException
-import java.nio.ByteBuffer
 
 
 /**
@@ -34,22 +35,22 @@ class FileLocationTable : Element {
      * @throws IOException
      */
     @Throws(IOException::class)
-    constructor(input: ByteBuffer, game: resaver.Game?) {
+    constructor(input: PlatformByteBuffer, game: Game?) {
         GAME = game
-        formIDArrayCountOffset = input.int
-        unknownTable3Offset = input.int
-        table1Offset = input.int
-        table2Offset = input.int
-        changeFormsOffset = input.int
-        table3Offset = input.int
-        TABLE1COUNT = input.int
-        TABLE2COUNT = input.int
-        val count = input.int
+        formIDArrayCountOffset = input.getInt()
+        unknownTable3Offset = input.getInt()
+        table1Offset = input.getInt()
+        table2Offset = input.getInt()
+        changeFormsOffset = input.getInt()
+        table3Offset = input.getInt()
+        TABLE1COUNT = input.getInt()
+        TABLE2COUNT = input.getInt()
+        val count = input.getInt()
         TABLE3COUNT = if (GAME!!.isSkyrim) count + 1 else count
-        changeFormCount = input.int
+        changeFormCount = input.getInt()
         UNUSED = IntArray(15)
         for (i in 0..14) {
-            UNUSED[i] = input.int
+            UNUSED[i] = input.getInt()
         }
         t1size = table2Offset - table1Offset
         t2size = changeFormsOffset - table2Offset
@@ -156,7 +157,7 @@ class FileLocationTable : Element {
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.putInt(formIDArrayCountOffset)
         output.putInt(unknownTable3Offset)
         output.putInt(table1Offset)

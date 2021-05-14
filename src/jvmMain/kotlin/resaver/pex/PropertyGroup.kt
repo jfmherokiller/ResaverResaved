@@ -15,17 +15,17 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
 import resaver.IString.Companion.format
 import kotlin.Throws
 import java.io.IOException
 import resaver.IString
-import java.nio.ByteBuffer
 
 /**
  * Describes the debugging information for a property group.
  *
  */
-internal class PropertyGroup(input: ByteBuffer, strings: StringTable) {
+internal class PropertyGroup(input: PlatformByteBuffer, strings: StringTable) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -34,7 +34,7 @@ internal class PropertyGroup(input: ByteBuffer, strings: StringTable) {
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         OBJECTNAME.write(output)
         GROUPNAME.write(output)
         DOCSTRING.write(output)
@@ -99,8 +99,8 @@ internal class PropertyGroup(input: ByteBuffer, strings: StringTable) {
         OBJECTNAME = strings.read(input)
         GROUPNAME = strings.read(input)
         DOCSTRING = strings.read(input)
-        USERFLAGS = input.int
-        val propertyCount = UtilityFunctions.toUnsignedInt(input.short)
+        USERFLAGS = input.getInt()
+        val propertyCount = UtilityFunctions.toUnsignedInt(input.getShort())
         PROPERTIES = ArrayList(propertyCount)
         for (i in 0 until propertyCount) {
             PROPERTIES.add(strings.read(input))

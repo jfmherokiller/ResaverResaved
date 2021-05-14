@@ -1,17 +1,17 @@
 package resaver.esp
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Header represents the standard header for all records except GRUP.
  *
  * @author Mark Fairchild
  */
-class RecordHeader(input: ByteBuffer, ctx: ESPContext) : Entry {
+class RecordHeader(input: PlatformByteBuffer, ctx: ESPContext) : Entry {
     /**
      * @see Entry.write
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.putInt(FLAGS)
         output.putInt(ID)
         output.putInt(REVISION)
@@ -55,12 +55,12 @@ class RecordHeader(input: ByteBuffer, ctx: ESPContext) : Entry {
      * @param ctx   The mod descriptor.
      */
     init {
-        FLAGS = input.int
-        val id = input.int
+        FLAGS = input.getInt()
+        val id = input.getInt()
         val newID = ctx.remapFormID(id)
         ID = newID
-        REVISION = input.int
-        VERSION = input.short
-        UNKNOWN = input.short
+        REVISION = input.getInt()
+        VERSION = input.getShort()
+        UNKNOWN = input.getShort()
     }
 }

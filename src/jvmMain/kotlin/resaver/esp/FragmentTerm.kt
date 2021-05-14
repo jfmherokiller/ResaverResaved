@@ -15,17 +15,17 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import resaver.IString
-import java.nio.ByteBuffer
 
 /**
  * Describes script fragments for QUST records.
  *
  * @author Mark Fairchild
  */
-class FragmentTerm(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
-    override fun write(output: ByteBuffer?) {
+class FragmentTerm(input: PlatformByteBuffer, ctx: ESPContext) : FragmentBase() {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(UNKNOWN)
         SCRIPT.write(output)
         output?.putShort(FRAGMENTS.size.toShort())
@@ -48,15 +48,15 @@ class FragmentTerm(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         return String.format("Term: %s (%d, %d fragments)", SCRIPT.NAME, UNKNOWN, FRAGMENTS.size)
     }
 
-    private val UNKNOWN: Byte = input.get()
+    private val UNKNOWN: Byte = input.getByte()
     private val SCRIPT: Script = Script(input, ctx)
     private val FRAGMENTS: MutableList<Fragment>
 
     /**
      *
      */
-    inner class Fragment(input: ByteBuffer) : Entry {
-        override fun write(output: ByteBuffer?) {
+    inner class Fragment(input: PlatformByteBuffer) : Entry {
+        override fun write(output: PlatformByteBuffer?) {
             output?.put(INDEX.toByte())
             output?.put(this.UNKNOWN)
             output?.put(SCRIPTNAME.uTF8)
@@ -71,8 +71,8 @@ class FragmentTerm(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
             return String.format("%d: %s [%s] (%d)", INDEX, SCRIPTNAME, FRAGMENTNAME, this.UNKNOWN)
         }
 
-        private val INDEX: Int = input.int
-        private val UNKNOWN: Byte = input.get()
+        private val INDEX: Int = input.getInt()
+        private val UNKNOWN: Byte = input.getByte()
         private val SCRIPTNAME: IString = IString[BufferUtil.getUTF(input)]
         private val FRAGMENTNAME: IString = IString[BufferUtil.getUTF(input)]
 
@@ -81,7 +81,7 @@ class FragmentTerm(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
     init {
         //input = <code>ByteBuffer</code>.debug(input);
         ctx.PLUGIN_INFO.addScriptData(SCRIPT)
-        val fragCount = input.short.toInt()
+        val fragCount = input.getShort().toInt()
         FRAGMENTS = ArrayList(fragCount)
         for (i in 0 until fragCount) {
             val fragment = Fragment(input)

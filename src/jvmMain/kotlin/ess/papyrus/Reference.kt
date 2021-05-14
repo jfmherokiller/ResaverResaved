@@ -15,13 +15,13 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.ESS
 import ess.Element
 import ess.Linkable.Companion.makeLink
 import ess.papyrus.Variable.Companion.readList
 import resaver.Analysis
 import resaver.ListException
-import java.nio.ByteBuffer
 import java.util.*
 
 import kotlin.experimental.and
@@ -40,7 +40,7 @@ class Reference
  * @param scripts The `ScriptMap` containing the definitions.
  * @param context The `PapyrusContext` info.
  */
-internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusContext) :
+internal constructor(input: PlatformByteBuffer, scripts: ScriptMap, context: PapyrusContext) :
     GameElement(input, scripts, context), SeparateData, HasVariables {
 
     /**
@@ -51,7 +51,7 @@ internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusCont
      * @throws PapyrusFormatException
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
-    override fun readData(input: ByteBuffer?, context: PapyrusContext?) {
+    override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
         data = input?.let { context?.let { it1 -> ReferenceData(it, it1) } }
     }
 
@@ -59,7 +59,7 @@ internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusCont
      * @see SeparateData.writeData
      * @param input
      */
-    override fun writeData(input: ByteBuffer?) {
+    override fun writeData(input: PlatformByteBuffer?) {
         data!!.write(input)
     }
 
@@ -211,12 +211,12 @@ internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusCont
      */
     var data: ReferenceData? = null
 
-    inner class ReferenceData(input: ByteBuffer, context: PapyrusContext) : PapyrusDataFor<Reference?> {
+    inner class ReferenceData(input: PlatformByteBuffer, context: PapyrusContext) : PapyrusDataFor<Reference?> {
         /**
          * @see ess.Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             iD.write(output)
             output?.put(FLAG)
             TYPE.write(output)
@@ -246,10 +246,10 @@ internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusCont
             return sum
         }
 
-        private val FLAG: Byte = input.get()
+        private val FLAG: Byte = input.getByte()
         val TYPE: TString = context.readTString(input)
-        val UNKNOWN1: Int = input.int
-        val UNKNOWN2: Int = if ((FLAG and 0x04.toByte()).toInt() != 0) input.int else 0
+        val UNKNOWN1: Int = input.getInt()
+        val UNKNOWN2: Int = if ((FLAG and 0x04.toByte()).toInt() != 0) input.getInt() else 0
         var VARIABLES: MutableList<Variable?> = mutableListOf()
 
         /**
@@ -263,7 +263,7 @@ internal constructor(input: ByteBuffer, scripts: ScriptMap, context: PapyrusCont
          */
         init {
             try {
-                val count = input.int
+                val count = input.getInt()
                 VARIABLES = readList(input, count, context).toMutableList()
             } catch (ex: ListException) {
                 throw PapyrusElementException("Couldn't read struct variables.", ex, this)

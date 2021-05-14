@@ -15,25 +15,22 @@
  */
 package resaver.pex
 
+import PlatformByteBuffer
 import resaver.Game
 import resaver.IString
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.nio.Buffer
-import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
-
 import java.util.regex.Pattern
-
 /**
  * Describes a Skyrim PEX script and will read and write it from streams.
  *
  * @author Mark Fairchild
  */
-class PexFile private constructor(input: ByteBuffer, game: Game) {
+class PexFile private constructor(input: PlatformByteBuffer, game: Game) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -42,7 +39,7 @@ class PexFile private constructor(input: ByteBuffer, game: Game) {
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         HEADER!!.write(output)
         STRINGS!!.write(output)
         DEBUG!!.write(output)
@@ -175,7 +172,7 @@ class PexFile private constructor(input: ByteBuffer, game: Game) {
          * @throws IOException
          */
         @Throws(IOException::class)
-        fun readScript(data: ByteBuffer): PexFile {
+        fun readScript(data: PlatformByteBuffer): PexFile {
             return when (data.getInt(0)) {
                 -0x213fa806 -> PexFile(data, Game.FALLOUT4)
                 -0x5a83f22 -> PexFile(data, Game.SKYRIM_LE)
@@ -199,11 +196,11 @@ class PexFile private constructor(input: ByteBuffer, game: Game) {
         @Throws(FileNotFoundException::class, IOException::class)
         fun readScript(scriptFile: Path?): PexFile {
             FileChannel.open(scriptFile, StandardOpenOption.READ).use { CHANNEL ->
-                val input = ByteBuffer.allocate(
+                val input = PlatformByteBuffer.allocate(
                     Files.size(scriptFile!!).toInt()
                 )
-                CHANNEL.read(input)
-                (input as Buffer).flip()
+                input.readFileChannel(CHANNEL)
+                input.flip()
                 return readScript(input)
             }
         }
@@ -230,10 +227,10 @@ class PexFile private constructor(input: ByteBuffer, game: Game) {
                 StandardOpenOption.WRITE,
                 StandardOpenOption.TRUNCATE_EXISTING
             ).use { CHANNEL ->
-                val output = ByteBuffer.allocate(2 * script.calculateSize())
+                val output = PlatformByteBuffer.allocate(2 * script.calculateSize())
                 script.write(output)
                 output.flip()
-                CHANNEL.write(output)
+                output.writeFileChannel(CHANNEL)
             }
         }
     }
@@ -251,13 +248,13 @@ class PexFile private constructor(input: ByteBuffer, game: Game) {
             HEADER = Header(input)
             STRINGS = StringTable(input)
             DEBUG = DebugInfo(this, input, STRINGS)
-            var flagCount = UtilityFunctions.toUnsignedInt(input.short)
+            var flagCount = UtilityFunctions.toUnsignedInt(input.getShort())
             USERFLAGDEFS = mutableListOf()
             while (0 < flagCount) {
                 USERFLAGDEFS!!.add(UserFlag(input, STRINGS!!))
                 flagCount--
             }
-            var scriptCount = UtilityFunctions.toUnsignedInt(input.short)
+            var scriptCount = UtilityFunctions.toUnsignedInt(input.getShort())
             check(scriptCount >= 1) { "Pex files must contain at least one script." }
             SCRIPTS = mutableListOf()
             while (0 < scriptCount) {

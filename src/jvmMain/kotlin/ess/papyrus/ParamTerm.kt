@@ -1,6 +1,6 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * An opcode parameter that stores a boolean.
@@ -9,7 +9,7 @@ class ParamTerm(`val`: String) : Parameter() {
     override val type: ParamType
         get() = ParamType.TERM
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         throw IllegalStateException("Terms can't be written.")
     }
 

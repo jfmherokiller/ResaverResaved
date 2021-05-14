@@ -1,14 +1,14 @@
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.Element
 import ess.Linkable.Companion.makeLink
-import java.nio.ByteBuffer
 
 /**
  * ABT for a variable that stores some type of ref.
  */
 abstract class VarAbstractRef : Variable {
-    constructor(input: ByteBuffer, context: PapyrusContext) {
+    constructor(input: PlatformByteBuffer, context: PapyrusContext) {
         refType = context.readTString(input)
         ref = context.readEID(input)
         referent = context.findReferrent(ref)
@@ -35,7 +35,7 @@ abstract class VarAbstractRef : Variable {
         return sum
     }
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         refType.write(output)
         ref.write(output)

@@ -15,20 +15,19 @@
  */
 package ess
 
-import java.lang.StringBuilder
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Describes the ChangeForm flags for a ChangeForm.
  *
  * @author Mark Fairchild
  */
-class ChangeFormFlags(input: ByteBuffer) : Element {
+class ChangeFormFlags(input: PlatformByteBuffer) : Element {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.putInt(flags)
         output.putShort(unknown)
     }
@@ -81,7 +80,7 @@ class ChangeFormFlags(input: ByteBuffer) : Element {
      * @param input The input stream.
      */
     init {
-        flags = input.int
-        unknown = input.short
+        flags = input.getInt()
+        unknown = input.getShort()
     }
 }

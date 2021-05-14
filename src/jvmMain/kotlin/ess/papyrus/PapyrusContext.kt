@@ -15,13 +15,13 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
 import ess.Linkable
 import ess.papyrus.EID.Companion.make4byte
 import ess.papyrus.EID.Companion.make8Byte
 import ess.papyrus.EID.Companion.read4byte
 import ess.papyrus.EID.Companion.read8byte
-import java.nio.ByteBuffer
 
 
 /**
@@ -58,7 +58,7 @@ class PapyrusContext : ESSContext {
      * @param input The input stream.
      * @return The `EID`.
      */
-    fun readEID(input: ByteBuffer): EID {
+    fun readEID(input: PlatformByteBuffer): EID {
         return if (game!!.isID64) readEID64(input) else readEID32(input)
     }
 
@@ -80,7 +80,7 @@ class PapyrusContext : ESSContext {
      * @param input The input stream.
      * @return The `EID`.
      */
-    fun readEID32(input: ByteBuffer): EID {
+    fun readEID32(input: PlatformByteBuffer): EID {
         return read4byte(input, papyrus)
     }
 
@@ -90,7 +90,7 @@ class PapyrusContext : ESSContext {
      * @param input The input stream.
      * @return The `EID`.
      */
-    fun readEID64(input: ByteBuffer): EID {
+    fun readEID64(input: PlatformByteBuffer): EID {
         return read8byte(input, papyrus)
     }
 
@@ -122,7 +122,7 @@ class PapyrusContext : ESSContext {
      * @throws PapyrusFormatException
      */
     @Throws(PapyrusFormatException::class)
-    fun readTString(input: ByteBuffer): TString {
+    fun readTString(input: PlatformByteBuffer): TString {
         return papyrus.stringTable.read(input)!!
     }
 

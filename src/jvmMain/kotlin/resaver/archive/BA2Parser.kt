@@ -15,10 +15,9 @@
  */
 package resaver.archive
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import java.io.IOException
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.channels.FileChannel
 import java.nio.file.Path
 import java.nio.file.PathMatcher
@@ -34,7 +33,7 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
      * @see ArchiveParser.getFiles
      */
     @Throws(IOException::class)
-    override fun getFiles(dir: Path?, matcher: PathMatcher?): MutableMap<Path?, Optional<ByteBuffer>> {
+    override fun getFiles(dir: Path?, matcher: PathMatcher?): MutableMap<Path?, Optional<PlatformByteBuffer>> {
         return FILES
             .filter { file: BA2FileRecord -> dir == null || file.path!!.startsWith(dir) }
             .filter { file: BA2FileRecord -> matcher!!.matches(file.path) }
@@ -65,14 +64,17 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
     init {
 
         // Read the header.
-        val HEADERBLOCK = ByteBuffer.allocate(BA2Header.SIZE).order(ByteOrder.LITTLE_ENDIAN)
-        channel.read(HEADERBLOCK)
+        val HEADERBLOCK = PlatformByteBuffer.allocate(BA2Header.SIZE)
+        HEADERBLOCK.makeLe()
+        HEADERBLOCK.readFileChannel(channel)
         HEADERBLOCK.flip()
         HEADER = BA2Header(HEADERBLOCK)
         FILES = ArrayList(HEADER.FILE_COUNT)
-        val FILERECORDS = ByteBuffer.allocate(HEADER.FILE_COUNT * BA2FileRecord.SIZE).order(ByteOrder.LITTLE_ENDIAN)
-        channel.read(FILERECORDS)
-        FILERECORDS.order(ByteOrder.LITTLE_ENDIAN).flip()
+        val FILERECORDS = PlatformByteBuffer.allocate(HEADER.FILE_COUNT * BA2FileRecord.SIZE)
+        FILERECORDS.makeLe()
+        FILERECORDS.readFileChannel(channel)
+        FILERECORDS.makeLe()
+        FILERECORDS.flip()
 
         // Read file records.
         for (i in 0 until HEADER.FILE_COUNT) {
@@ -82,14 +84,15 @@ class BA2Parser(path: Path?, channel: FileChannel) : ArchiveParser(path!!, chann
 
         // Read the filename table.
         channel.position(HEADER.NAMETABLE_OFFSET)
-        val NAMEBUFFER = ByteBuffer.allocate(2048).order(ByteOrder.LITTLE_ENDIAN)
-        channel.read(NAMEBUFFER)
+        val NAMEBUFFER = PlatformByteBuffer.allocate(2048)
+        NAMEBUFFER.makeLe()
+        NAMEBUFFER.readFileChannel(channel)
         for (i in 0 until HEADER.FILE_COUNT) {
             NAMEBUFFER.flip()
             val fileName = BufferUtil.getWString(NAMEBUFFER)
             FILES[i].name = fileName
             NAMEBUFFER.compact()
-            channel.read(NAMEBUFFER)
+            NAMEBUFFER.readFileChannel(channel)
         }
     }
 }

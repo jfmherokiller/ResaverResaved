@@ -15,9 +15,9 @@
  */
 package resaver.pex
 
-import kotlin.Throws
+import PlatformByteBuffer
+import UtilityFunctions
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Describes the different opcodes that can appear in PEX functions, and stores
@@ -108,8 +108,8 @@ enum class Opcode(val ARGS: Int) {
          */
 
         @Throws(IOException::class)
-        fun read(input: ByteBuffer): Opcode {
-            val index = UtilityFunctions.toUnsignedInt(input.get())
+        fun read(input: PlatformByteBuffer): Opcode {
+            val index = UtilityFunctions.toUnsignedInt(input.getByte())
             if (index < 0 || index >= VALUES.size) {
                 throw IOException("Invalid Opcode.")
             }

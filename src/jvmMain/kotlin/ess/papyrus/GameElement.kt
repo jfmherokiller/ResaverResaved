@@ -15,10 +15,10 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.AnalyzableElement
 import ess.Linkable
 import resaver.Analysis
-import java.nio.ByteBuffer
 
 /**
  * `GameElement` is a superclass of `ScriptInstance`,
@@ -36,13 +36,13 @@ import java.nio.ByteBuffer
  * @param context The `PapyrusContext` info.
  * @throws PapyrusFormatException
  */
-abstract class GameElement(input: ByteBuffer, defs: Map<TString?, Definition?>, context: PapyrusContext) :
+abstract class GameElement(input: PlatformByteBuffer, defs: Map<TString?, Definition?>, context: PapyrusContext) :
     AnalyzableElement, Linkable, PapyrusElement, HasID {
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         iD.write(output)
         definitionName.write(output)
     }

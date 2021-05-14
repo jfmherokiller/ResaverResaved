@@ -1,17 +1,17 @@
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.Element
-import java.nio.ByteBuffer
 
 /**
  * Variable that stores a Variant.
  */
-class VarVariant(input: ByteBuffer, context: PapyrusContext) : Variable() {
+class VarVariant(input: PlatformByteBuffer, context: PapyrusContext) : Variable() {
     override fun calculateSize(): Int {
         return 1 + value.calculateSize()
     }
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         value.write(output)
     }

@@ -15,19 +15,19 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import resaver.IString
-import java.nio.ByteBuffer
 
 /**
  * FieldBasic represents all fields that aren't a VMAD section.
  *
  * @author Mark Fairchild
  */
-class FieldXXXX(code: IString, input: ByteBuffer) : Field {
+class FieldXXXX(code: IString, input: PlatformByteBuffer) : Field {
     /**
      * @see Entry.write
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(this.code.uTF8)
         output.putShort(4.toShort())
         output.putInt(data)
@@ -75,6 +75,6 @@ class FieldXXXX(code: IString, input: ByteBuffer) : Field {
         assert(input.hasRemaining())
         assert(code.equals(IString["XXXX"]))
         this.code = code
-        data = input.int
+        data = input.getInt()
     }
 }

@@ -15,7 +15,7 @@
  */
 package ess
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Describes a component of a Skyrim savegame.
@@ -27,7 +27,7 @@ interface Element {
      * Write the `Element` to an output stream.
      * @param output The output stream.
      */
-    fun write(output: ByteBuffer?)
+    fun write(output: PlatformByteBuffer?)
 
     /**
      * @return The size of the `Element` in bytes.

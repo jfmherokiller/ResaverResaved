@@ -1,8 +1,8 @@
 package ess.papyrus
 
-import resaver.Analysis
+import PlatformByteBuffer
 import ess.WStringElement
-import java.nio.ByteBuffer
+import resaver.Analysis
 
 /**
  * TString implementation for 16 bit TStrings.
@@ -40,7 +40,7 @@ internal class TString16 : TString {
      * @param output The output stream.
      * @see ess.Element.write
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         if (this.index > 0xFFF0 && !tStrings.STBCORRECTION) {
             output!!.putShort(0xFFFF.toShort())
             output.putInt(this.index)

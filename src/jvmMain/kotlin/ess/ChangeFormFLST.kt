@@ -15,8 +15,8 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.ByteBuffer
 
 
 /**
@@ -24,12 +24,12 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class ChangeFormFLST(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContext) : ChangeFormData {
+class ChangeFormFLST(input: PlatformByteBuffer, flags: Flags.FlagsInt, context: ESSContext) : ChangeFormData {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         refID?.write(output)
         if (null != FORMS) {
             output!!.putInt(FORMS!!.size)
@@ -182,7 +182,7 @@ class ChangeFormFLST(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSConte
      */
     init {
         if (flags.getFlag(31)) {
-            val formCount = input.int
+            val formCount = input.getInt()
             require(formCount <= 0x3FFF) { "Invalid data: found $formCount formCount in FLST." }
             FORMS = mutableListOf()
             (0 until formCount).forEach { i ->

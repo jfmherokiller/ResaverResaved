@@ -1,16 +1,14 @@
 package resaver.pex
 
-import kotlin.Throws
+import PlatformByteBuffer
 import java.io.IOException
-import java.lang.IllegalStateException
-import java.nio.ByteBuffer
 
 /**
  * VData that stores a string literal, for disassembly purposes.
  */
 internal class VDataStrLit(`val`: String) : VData() {
     @Throws(IOException::class)
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         throw IllegalStateException("Not valid for Terms.")
     }
 

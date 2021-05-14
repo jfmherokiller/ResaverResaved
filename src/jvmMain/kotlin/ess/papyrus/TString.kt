@@ -15,11 +15,11 @@
  */
 package ess.papyrus
 
-import resaver.Analysis
-import resaver.IString
+import PlatformByteBuffer
 import ess.*
 import ess.Linkable.Companion.makeLink
-import java.nio.ByteBuffer
+import resaver.Analysis
+import resaver.IString
 
 
 /**
@@ -65,7 +65,7 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
      * @see WStringElement.write
      * @param output The output stream.
      */
-    fun writeFull(output: ByteBuffer?) {
+    fun writeFull(output: PlatformByteBuffer?) {
         WSTR.write(output)
     }
 
@@ -340,7 +340,7 @@ abstract class TString : PapyrusElement, AnalyzableElement, Linkable {
                     return false
                 }
 
-                override fun write(output: ByteBuffer?) {
+                override fun write(output: PlatformByteBuffer?) {
                     throw UnsupportedOperationException("Not supported.")
                 }
 

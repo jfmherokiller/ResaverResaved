@@ -15,17 +15,17 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
 import mu.KLoggable
 import mu.KLogger
-import java.nio.ByteBuffer
 
 /**
  * Describes a ChangeForm containing an NPC.
  *
  * @author Mark Fairchild
  */
-class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContext) : ess.GeneralElement(), ChangeFormData {
+class ChangeFormNPC(input: PlatformByteBuffer, flags: Flags.FlagsInt, context: ESSContext) : ess.GeneralElement(), ChangeFormData {
     /**
      * @return String representation.
      */
@@ -138,7 +138,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
     /**
      * Faction rank.
      */
-    private class FactionRank(input: ByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
+    private class FactionRank(input: PlatformByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
         override fun toString(): String {
             return "Rank ${this.getVal("RANK").toString()} with ${this.getVal("FACTION")}"
         }
@@ -158,7 +158,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
     /**
      * Face
      */
-    private class FaceData(input: ByteBuffer?, context: ESSContext) : ess.GeneralElement() {
+    private class FaceData(input: PlatformByteBuffer?, context: ESSContext) : ess.GeneralElement() {
         init {
             val facePresent = input?.let { super.readByte(it, "FACEPRESENT") }
             if (facePresent != null) {
@@ -166,7 +166,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
                     super.readRefID(input, "HAIRCOLOR", context)
                     super.readInt(input, "SKINTONE")
                     super.readRefID(input, "SKIN", context)
-                    super.readVSElemArray(input, "HEADPARTS") { input: ByteBuffer? -> input?.let { context.readRefID(it) } }
+                    super.readVSElemArray(input, "HEADPARTS") { input: PlatformByteBuffer? -> input?.let { context.readRefID(it) } }
                     val faceDataPrsent = input.let { super.readByte(it, "FACEDATAPRESENT") }
                     if (faceDataPrsent.toInt() != 0) {
                         input.let { super.readInt(it, "MORPHS_COUNT") }.let {
@@ -195,7 +195,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
      */
     init {
         changeFormFlags = if (flags.getFlag(ChangeFlagConstantsNPC.CHANGE_FORM_FLAGS)) {
-            super.readElement(input, ChangeFlagConstantsNPC.CHANGE_FORM_FLAGS) { input: ByteBuffer? ->
+            super.readElement(input, ChangeFlagConstantsNPC.CHANGE_FORM_FLAGS) { input: PlatformByteBuffer? ->
                 ChangeFormFlags(
                     input!!
                 )
@@ -208,18 +208,18 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
                 super.readBytes(input, "ACBS", 24)
             }
             if (flags.getFlag(ChangeFlagConstantsNPC.CHANGE_ACTOR_BASE_FACTIONS)) {
-                super.readVSElemArray(input, "FACTIONRANKS") { `in`: ByteBuffer? -> FactionRank(`in`, context) }
+                super.readVSElemArray(input, "FACTIONRANKS") { `in`: PlatformByteBuffer? -> FactionRank(`in`, context) }
             }
             if (flags.getFlag(ChangeFlagConstantsNPC.CHANGE_ACTOR_BASE_SPELLLIST)) {
-                super.readVSElemArray(input, "SPELLS") { `in`: ByteBuffer? -> context.readRefID(input) }
-                super.readVSElemArray(input, "SPELLS_LEVELLED") { `in`: ByteBuffer? -> context.readRefID(input) }
-                super.readVSElemArray(input, "SHOUTS") { `in`: ByteBuffer? -> context.readRefID(input) }
+                super.readVSElemArray(input, "SPELLS") { `in`: PlatformByteBuffer? -> context.readRefID(input) }
+                super.readVSElemArray(input, "SPELLS_LEVELLED") { `in`: PlatformByteBuffer? -> context.readRefID(input) }
+                super.readVSElemArray(input, "SHOUTS") { `in`: PlatformByteBuffer? -> context.readRefID(input) }
             }
             if (flags.getFlag(ChangeFlagConstantsNPC.CHANGE_ACTOR_BASE_AIDATA)) {
                 super.readBytes(input, "AIDT", 20)
             }
             if (flags.getFlag(ChangeFlagConstantsNPC.CHANGE_ACTOR_BASE_FULLNAME)) {
-                super.readElement(input, "FULLNAME") { obj: ByteBuffer? -> WStringElement.read(obj) }
+                super.readElement(input, "FULLNAME") { obj: PlatformByteBuffer? -> WStringElement.read(obj) }
             }
             if (flags.getFlag(ChangeFlagConstantsNPC.CHANGE_NPC_SKILLS)) {
                 super.readBytes(input, "DNAM", 52)
@@ -232,7 +232,7 @@ class ChangeFormNPC(input: ByteBuffer, flags: Flags.FlagsInt, context: ESSContex
                 super.readRefID(input, "OLDRACE", context)
             }
             if (flags.getFlag(ChangeFlagConstantsNPC.CHANGE_NPC_FACE)) {
-                super.readElement(input, "FACEDATA") { `in`: ByteBuffer? -> FaceData(input, context) }
+                super.readElement(input, "FACEDATA") { `in`: PlatformByteBuffer? -> FaceData(input, context) }
             }
             if (flags.getFlag(ChangeFlagConstantsNPC.CHANGE_NPC_GENDER)) {
                 super.readByte(input, "GENDER")

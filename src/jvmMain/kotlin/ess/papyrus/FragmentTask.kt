@@ -15,8 +15,8 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.*
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
 
@@ -25,12 +25,12 @@ import java.nio.charset.StandardCharsets
  *
  * @author Mark Fairchild
  */
-class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) : PapyrusElement, Linkable {
+class FragmentTask(input: PlatformByteBuffer, unknown3: Byte, context: PapyrusContext) : PapyrusElement, Linkable {
     /**
      * @see Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         assert(null != output)
         assert(null != TYPECODE || null != VARIABLE)
 
@@ -114,12 +114,12 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     /**
      * Stores the data for the other type of fragment.
      */
-    class Type2(input: ByteBuffer?, context: PapyrusContext) : FragmentData {
+    class Type2(input: PlatformByteBuffer?, context: PapyrusContext) : FragmentData {
         /**
          * @see Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             RUNNING_ID?.write(output)
         }
 
@@ -176,8 +176,8 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     /**
      * Stores the data for a QuestStage fragment.
      */
-    class QuestStage(input: ByteBuffer, context: PapyrusContext) : FragmentData {
-        override fun write(output: ByteBuffer?) {
+    class QuestStage(input: PlatformByteBuffer, context: PapyrusContext) : FragmentData {
+        override fun write(output: PlatformByteBuffer?) {
             QUESTID.write(output)
             output!!.putShort(STAGE)
             FLAGS.write(output)
@@ -215,9 +215,9 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
         }
 
         val QUESTID: RefID = context.readRefID(input)
-        val STAGE: Short = input.short
+        val STAGE: Short = input.getShort()
         val FLAGS: Flags.FlagsByte = Flags.readByteFlags(input)
-        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.int else null
+        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.getInt() else null
         val QUEST: ChangeForm? = context.getChangeForm(QUESTID)
 
     }
@@ -225,12 +225,12 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     /**
      * Stores the data for a ScenePhaseResults fragment.
      */
-    class ScenePhaseResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
+    class ScenePhaseResults(input: PlatformByteBuffer, context: PapyrusContext) : FragmentData {
         /**
          * @see Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             QUESTID.write(output)
             output!!.putInt(INT)
             if (null != UNKNOWN_4BYTES) {
@@ -264,8 +264,8 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
         }
 
         val QUESTID: RefID = context.readRefID(input)
-        val INT: Int = input.int
-        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.int else null
+        val INT: Int = input.getInt()
+        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.getInt() else null
         val QUEST: ChangeForm? = context.getChangeForm(QUESTID)
 
     }
@@ -273,12 +273,12 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     /**
      * Stores the data for a SceneActionResults fragment.
      */
-    class SceneActionResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
+    class SceneActionResults(input: PlatformByteBuffer, context: PapyrusContext) : FragmentData {
         /**
          * @see Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             QUESTID.write(output)
             output!!.putInt(INT)
             if (null != UNKNOWN_4BYTES) {
@@ -312,8 +312,8 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
         }
 
         val QUESTID: RefID = context.readRefID(input)
-        val INT: Int = input.int
-        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.int else null
+        val INT: Int = input.getInt()
+        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.getInt() else null
         val QUEST: ChangeForm? = context.getChangeForm(QUESTID)
 
     }
@@ -321,12 +321,12 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     /**
      * Stores the data for a SceneResults fragment.
      */
-    class SceneResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
+    class SceneResults(input: PlatformByteBuffer, context: PapyrusContext) : FragmentData {
         /**
          * @see Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             QUESTID.write(output)
             if (null != UNKNOWN_4BYTES) {
                 output!!.putInt(UNKNOWN_4BYTES)
@@ -356,7 +356,7 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
         }
 
         val QUESTID: RefID = context.readRefID(input)
-        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.int else null
+        val UNKNOWN_4BYTES: Int? = if (context.game?.isFO4 == true) input.getInt() else null
         val QUEST: ChangeForm? = context.getChangeForm(QUESTID)
 
     }
@@ -364,12 +364,12 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     /**
      * Stores the data for a TerminalRunResults fragment.
      */
-    class TerminalRunResults(input: ByteBuffer, context: PapyrusContext) : FragmentData {
+    class TerminalRunResults(input: PlatformByteBuffer, context: PapyrusContext) : FragmentData {
         /**
          * @see Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.put(BYTE)
             output.putInt(INT)
             REFID.write(output)
@@ -400,8 +400,8 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
                 .toString()
         }
 
-        val BYTE: Byte = input.get()
-        val INT: Int = input.int
+        val BYTE: Byte = input.getByte()
+        val INT: Int = input.getInt()
         val REFID: RefID = context.readRefID(input)
         val TSTRING: TString = context.readTString(input)
         val FORM: ChangeForm? = context.getChangeForm(REFID)
@@ -411,12 +411,12 @@ class FragmentTask(input: ByteBuffer, unknown3: Byte, context: PapyrusContext) :
     /**
      * Stores the data for a SceneActionResults fragment.
      */
-    class TopicInfo(input: ByteBuffer?, context: PapyrusContext?) : FragmentData {
+    class TopicInfo(input: PlatformByteBuffer?, context: PapyrusContext?) : FragmentData {
         /**
          * @see Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {}
+        override fun write(output: PlatformByteBuffer?) {}
         override fun calculateSize(): Int {
             return 0
         }

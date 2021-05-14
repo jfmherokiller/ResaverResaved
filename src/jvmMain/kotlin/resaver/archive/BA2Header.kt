@@ -15,15 +15,15 @@
  */
 package resaver.archive
 
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Describes a BA2 header.
  *
  * @author Mark
  */
-class BA2Header(input: ByteBuffer) {
+class BA2Header(input: PlatformByteBuffer) {
     val TYPE: Type
     val VERSION: Int
     val SUBTYPE: BA2Subtype
@@ -46,7 +46,7 @@ class BA2Header(input: ByteBuffer) {
     init {
         MAGIC1 = ByteArray(4)
         input[MAGIC1]
-        VERSION = input.int
+        VERSION = input.getInt()
         MAGIC2 = ByteArray(4)
         input[MAGIC2]
         val type: Type
@@ -68,7 +68,7 @@ class BA2Header(input: ByteBuffer) {
         }
         TYPE = type
         SUBTYPE = subtype
-        FILE_COUNT = input.int
-        NAMETABLE_OFFSET = input.long
+        FILE_COUNT = input.getInt()
+        NAMETABLE_OFFSET = input.getLong()
     }
 }

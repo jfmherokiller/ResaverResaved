@@ -15,20 +15,20 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.ByteBuffer
 
 /**
  * Describes an entry in a leveled list.
  *
  * @author Mark Fairchild
  */
-class LeveledEntry(input: ByteBuffer, context: ESSContext) : Element, Linkable {
+class LeveledEntry(input: PlatformByteBuffer, context: ESSContext) : Element, Linkable {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(LEVEL.toByte())
         REFID.write(output)
         output.putShort(COUNT.toShort())
@@ -95,8 +95,8 @@ class LeveledEntry(input: ByteBuffer, context: ESSContext) : Element, Linkable {
     }
 
     val REFID: RefID = context.readRefID(input)
-    val LEVEL: Int = input.get().toInt()
-    val COUNT: Int = input.short.toInt()
-    val CHANCE: Int = input.get().toInt()
+    val LEVEL: Int = input.getByte().toInt()
+    val COUNT: Int = input.getShort().toInt()
+    val CHANCE: Int = input.getByte().toInt()
 
 }

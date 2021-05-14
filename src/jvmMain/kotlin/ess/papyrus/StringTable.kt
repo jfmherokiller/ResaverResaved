@@ -15,10 +15,10 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
 import ess.WStringElement
 import java.nio.BufferUnderflowException
-import java.nio.ByteBuffer
 
 /**
  * An abstraction describing a string table.
@@ -35,17 +35,17 @@ class StringTable : ArrayList<TString?>, PapyrusElement {
      * @throws PapyrusFormatException
      */
     @Throws(PapyrusFormatException::class)
-    fun read(input: ByteBuffer): TString? {
+    fun read(input: PlatformByteBuffer): TString? {
         var index: Int
         if (STR32) {
             // SkyrimSE, Fallout4, and SkyrimLE with CrashFixes uses 32bit string indices.            
-            index = input.int
+            index = input.getInt()
         } else {
-            index = java.lang.Short.toUnsignedInt(input.short)
+            index = java.lang.Short.toUnsignedInt(input.getShort())
             // SkyrimLegendary and Fallout4 use 16bit string indices.
             // Various corrections are possible though.
             if (index == 0xFFFF && !STBCORRECTION) {
-                index = input.int
+                index = input.getInt()
             }
         }
         if (index < 0 || index >= this.size) {
@@ -62,22 +62,22 @@ class StringTable : ArrayList<TString?>, PapyrusElement {
      * @param context The `ESSContext` info.
      * @throws PapyrusElementException
      */
-    constructor(input: ByteBuffer, context: ESSContext) {
+    constructor(input: PlatformByteBuffer, context: ESSContext) {
         STR32 = context.isStr32
         var strCount: Int
         if (STR32) {
             // SkyrimSE uses 32bit string indices.            
-            strCount = input.int
+            strCount = input.getInt()
             STBCORRECTION = false
         } else {
             // Skyrim Legendary (without CrashFixes) and old versions of 
             // Fallout4 use 16bit string indices.
             // Various corrections are possible though.           
-            strCount = java.lang.Short.toUnsignedInt(input.short)
+            strCount = java.lang.Short.toUnsignedInt(input.getShort())
 
             // Large string table version.
             if (strCount == 0xFFFF) {
-                strCount = input.int
+                strCount = input.getInt()
             }
 
             // Fallback for catching the stringtable bug.
@@ -126,7 +126,7 @@ class StringTable : ArrayList<TString?>, PapyrusElement {
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         check(!STBCORRECTION) { "String-Table-Bug correction in effect. Cannot write." }
         check(!isTruncated) { "StringTable is truncated. Cannot write." }
         if (STR32) {

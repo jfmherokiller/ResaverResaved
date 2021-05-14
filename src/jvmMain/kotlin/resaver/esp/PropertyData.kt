@@ -16,8 +16,8 @@
 package resaver.esp
 
 import GenericSupplier
+import PlatformByteBuffer
 import mf.BufferUtil
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 
 /**
@@ -30,8 +30,8 @@ abstract class PropertyData : Entry {
      * Stores a Null property data.
      *
      */
-    class NullData(input: ByteBuffer?) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class NullData(input: PlatformByteBuffer?) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             //output.putInt(DATA);
         }
 
@@ -47,8 +47,8 @@ abstract class PropertyData : Entry {
     /**
      * Stores an Object property data.
      */
-    class ObjectData(input: ByteBuffer) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class ObjectData(input: PlatformByteBuffer) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putLong(DATA)
         }
 
@@ -60,15 +60,15 @@ abstract class PropertyData : Entry {
             return String.format("%08x", DATA)
         }
 
-        private val DATA: Long = input.long
+        private val DATA: Long = input.getLong()
 
     }
 
     /**
      * Stores a String property data.
      */
-    class StringData(input: ByteBuffer?) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class StringData(input: PlatformByteBuffer?) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.put(DATA.toByteArray(StandardCharsets.UTF_8))
         }
 
@@ -87,8 +87,8 @@ abstract class PropertyData : Entry {
     /**
      * Stores an integer property data.
      */
-    class IntData(input: ByteBuffer) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class IntData(input: PlatformByteBuffer) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putInt(DATA)
         }
 
@@ -100,15 +100,15 @@ abstract class PropertyData : Entry {
             return DATA.toString()
         }
 
-        private val DATA: Int = input.int
+        private val DATA: Int = input.getInt()
 
     }
 
     /**
      * Stores a float property data.
      */
-    class FloatData(input: ByteBuffer) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class FloatData(input: PlatformByteBuffer) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putFloat(DATA)
         }
 
@@ -120,15 +120,15 @@ abstract class PropertyData : Entry {
             return DATA.toString()
         }
 
-        private val DATA: Float = input.float
+        private val DATA: Float = input.getFloat()
 
     }
 
     /**
      * Stores a boolean property data.
      */
-    class BoolData(input: ByteBuffer) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class BoolData(input: PlatformByteBuffer) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.put(if (DATA) 1.toByte() else 0.toByte())
         }
 
@@ -140,15 +140,15 @@ abstract class PropertyData : Entry {
             return java.lang.Boolean.toString(DATA)
         }
 
-        private val DATA: Boolean = input.get().toInt() != 0
+        private val DATA: Boolean = input.getByte().toInt() != 0
 
     }
 
     /**
      * Stores a variant property data.
      */
-    class VarData(input: ByteBuffer) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class VarData(input: PlatformByteBuffer) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putInt(DATA)
         }
 
@@ -160,15 +160,15 @@ abstract class PropertyData : Entry {
             return String.format("VAR: %s", DATA)
         }
 
-        private val DATA: Int = input.int
+        private val DATA: Int = input.getInt()
 
     }
 
     /**
      * Stores a struct property data.
      */
-    class StructData(input: ByteBuffer, ctx: ESPContext?) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class StructData(input: PlatformByteBuffer, ctx: ESPContext?) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putInt(MEMBERS.size)
             MEMBERS.forEach { p: Property -> p.write(output) }
         }
@@ -185,7 +185,7 @@ abstract class PropertyData : Entry {
         private val MEMBERS: MutableList<Property>
 
         init {
-            val memberCount = input.int
+            val memberCount = input.getInt()
             MEMBERS = mutableListOf()
             for (i in 0 until memberCount) {
                 val p = ctx?.let { Property(input, it) }
@@ -201,8 +201,8 @@ abstract class PropertyData : Entry {
      *
      * @param <T> The type of PropertyData stored in the array.
     </T> */
-    class ArrayData<T : PropertyData?>(input: ByteBuffer, reader: GenericSupplier<T>) : PropertyData() {
-        override fun write(output: ByteBuffer?) {
+    class ArrayData<T : PropertyData?>(input: PlatformByteBuffer, reader: GenericSupplier<T>) : PropertyData() {
+        override fun write(output: PlatformByteBuffer?) {
             output!!.putInt(MEMBERS.size)
             MEMBERS.forEach { t: T -> t!!.write(output) }
         }
@@ -222,7 +222,7 @@ abstract class PropertyData : Entry {
         private val MEMBERS: MutableList<T>
 
         init {
-            val memberCount = input.int
+            val memberCount = input.getInt()
             MEMBERS = mutableListOf()
             for (i in 0 until memberCount) {
                 val member = reader.invoke()
@@ -233,7 +233,7 @@ abstract class PropertyData : Entry {
 
     companion object {
 
-        fun readPropertyData(type: Byte, input: ByteBuffer, ctx: ESPContext?): PropertyData {
+        fun readPropertyData(type: Byte, input: PlatformByteBuffer, ctx: ESPContext?): PropertyData {
             assert(input.hasRemaining() || type.toInt() == 0) { "No input available, type = $type" }
             return when (type.toInt()) {
                 0 -> NullData(input)

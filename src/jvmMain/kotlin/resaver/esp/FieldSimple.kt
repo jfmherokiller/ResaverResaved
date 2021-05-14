@@ -15,10 +15,8 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import resaver.IString
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.util.*
 
 /**
@@ -26,12 +24,12 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-open class FieldSimple(code: IString, input: ByteBuffer, size: Int, big: Boolean, ctx: ESPContext?) : Field {
+open class FieldSimple(code: IString, input: PlatformByteBuffer, size: Int, big: Boolean, ctx: ESPContext?) : Field {
     /**
      * @see Entry.write
      * @param output The ByteBuffer.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.put(this.code.uTF8)
         if (BIG) {
             val zero: Short = 0
@@ -55,12 +53,12 @@ open class FieldSimple(code: IString, input: ByteBuffer, size: Int, big: Boolean
      *
      * @return A `ByteBuffer`
      */
-    val byteBuffer: ByteBuffer
+    val byteBuffer: PlatformByteBuffer
         get() {
-            val buffer = ByteBuffer.allocate(SIZE)
+            val buffer = PlatformByteBuffer.allocate(SIZE)
             buffer.put(data)
-            buffer.order(ByteOrder.LITTLE_ENDIAN)
-            (buffer as Buffer).flip()
+            buffer.makeLe()
+            buffer.flip()
             return buffer
         }
 

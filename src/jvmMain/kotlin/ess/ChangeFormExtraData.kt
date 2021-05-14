@@ -15,8 +15,8 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.ByteBuffer
 
 /**
  * Manages an extra data field from a change form.
@@ -30,9 +30,9 @@ import java.nio.ByteBuffer
  * @param input The input stream.
  * @param context The `ESSContext` info.
  */
-class ChangeFormExtraData(input: ByteBuffer, context: ESSContext) : ess.GeneralElement() {
+class ChangeFormExtraData(input: PlatformByteBuffer, context: ESSContext) : ess.GeneralElement() {
 
     init {
-        super.readVSElemArray(input, "DATA") { `in`: ByteBuffer? -> `in`?.let { ChangeFormExtraDataData(it, context) } }
+        super.readVSElemArray(input, "DATA") { `in`: PlatformByteBuffer? -> `in`?.let { ChangeFormExtraDataData(it, context) } }
     }
 }

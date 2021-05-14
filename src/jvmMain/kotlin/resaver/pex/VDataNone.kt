@@ -1,15 +1,14 @@
 package resaver.pex
 
-import kotlin.Throws
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * VData that stores nothing.
  */
 class VDataNone internal constructor() : VData() {
     @Throws(IOException::class)
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(type.ordinal.toByte())
     }
 

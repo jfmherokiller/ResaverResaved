@@ -15,6 +15,7 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.*
 import ess.Linkable.Companion.makeLink
 import ess.papyrus.Variable.Companion.read
@@ -22,7 +23,6 @@ import mu.KLoggable
 import mu.KLogger
 import resaver.Analysis
 import resaver.ListException
-import java.nio.ByteBuffer
 import kotlin.experimental.and
 
 /**
@@ -31,12 +31,12 @@ import kotlin.experimental.and
  * @author Mark Fairchild
  */
 
-class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableElement, HasID, SeparateData {
+class ActiveScript(input: PlatformByteBuffer, context: PapyrusContext) : AnalyzableElement, HasID, SeparateData {
     /**
      * @see ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         iD.write(output)
         output?.put(type)
     }
@@ -49,7 +49,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
      * @throws PapyrusFormatException
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
-    override fun readData(input: ByteBuffer?, context: PapyrusContext?) {
+    override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
         data = input?.let { context?.let { it1 -> ActiveScriptData(it, it1) } }
     }
 
@@ -57,7 +57,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
      * @see SeparateData.writeData
      * @param input
      */
-    override fun writeData(input: ByteBuffer?) {
+    override fun writeData(input: PlatformByteBuffer?) {
         data!!.write(input)
     }
 
@@ -429,13 +429,13 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
         private set
     private var suspendedStack: SuspendedStack?
 
-    inner class ActiveScriptData internal constructor(input: ByteBuffer, context: PapyrusContext) :
+    inner class ActiveScriptData internal constructor(input: PlatformByteBuffer, context: PapyrusContext) :
         PapyrusDataFor<ActiveScript?> {
         /**
          * @see ess.Element.write
          * @param output The output stream.
          */
-        override fun write(output: ByteBuffer?) {
+        override fun write(output: PlatformByteBuffer?) {
             iD.write(output)
             majorVersion.let { output?.put(it) }
             MINORVERSION.let { output?.put(it) }
@@ -530,14 +530,14 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
          * @throws PapyrusFormatException
          */
         init {
-            majorVersion = input.get()
-            MINORVERSION = input.get()
+            majorVersion = input.getByte()
+            MINORVERSION = input.getByte()
             require((MINORVERSION < 1 || MINORVERSION > 2).not()) { "Wrong minor version = $MINORVERSION" }
             unknownVar = read(input, context)
-            FLAG = input.get()
-            unknownByte = input.get()
-            unknown2 = if ((FLAG and 0x01.toByte()) == 0x01.toByte()) input.int else 0
-            unknown3 = input.get()
+            FLAG = input.getByte()
+            unknownByte = input.getByte()
+            unknown2 = if ((FLAG and 0x01.toByte()) == 0x01.toByte()) input.getInt() else 0
+            unknown3 = input.getByte()
             unknown4 = when (unknown3.toInt()) {
                 1, 2, 3 -> FragmentTask(input, unknown3, context)
                 else -> null
@@ -562,7 +562,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
                 ATTACHED_ELEMENT = null
             }
             try {
-                val count = input.int
+                val count = input.getInt()
                 require(count >= 0) { "Invalid stackFrame count: $count" }
                 STACKFRAMES = mutableListOf()
                 for (i in 0 until count) {
@@ -572,7 +572,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
             } catch (ex: ListException) {
                 throw PapyrusElementException("Failed to read with StackFrame data.", ex, this)
             }
-            unknown5 = if (FLAG.toInt() != 0) input.get() else null
+            unknown5 = if (FLAG.toInt() != 0) input.getByte() else null
         }
     }
 
@@ -590,7 +590,7 @@ class ActiveScript(input: ByteBuffer, context: PapyrusContext) : AnalyzableEleme
      */
     init {
         iD = context.readEID32(input)
-        type = input.get()
+        type = input.getByte()
         instance = null
         suspendedStack = null
     }

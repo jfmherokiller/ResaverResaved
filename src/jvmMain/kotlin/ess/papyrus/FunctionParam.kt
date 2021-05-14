@@ -15,7 +15,7 @@
  */
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Describes a function parameter in a Skyrim savegame.
@@ -30,7 +30,7 @@ import java.nio.ByteBuffer
  */
 class FunctionParam
 
-    (input: ByteBuffer?, context: PapyrusContext?) : MemberDesc(input, context) {
+    (input: PlatformByteBuffer?, context: PapyrusContext?) : MemberDesc(input, context) {
     /**
      * @return String representation.
      */

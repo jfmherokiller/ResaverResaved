@@ -15,7 +15,7 @@
  */
 package resaver
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Extends `IString` by handling charsets and storing the original
@@ -57,7 +57,7 @@ open class WString : IString {
      * @see ess.Element.write
      * @param output The output stream.
      */
-    open fun write(output: ByteBuffer?) {
+    open fun write(output: PlatformByteBuffer?) {
         if (output != null) {
             val BYTES = uTF8
             if (BYTES!!.size > 0xFFFF) {
@@ -105,7 +105,7 @@ open class WString : IString {
          * @param input The input stream.
          * @return The new `WString`.
          */
-        fun read(input: ByteBuffer?): WString {
+        fun read(input: PlatformByteBuffer?): WString {
             val BYTES = input?.let { mf.BufferUtil.getWStringRaw(it) }
             return WString(BYTES)
         }

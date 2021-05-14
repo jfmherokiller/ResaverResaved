@@ -17,13 +17,11 @@ package resaver.archive
 
 
 import GenericSupplier
+import PlatformByteBuffer
 import java.nio.channels.FileChannel
 import java.io.IOException
-import java.nio.Buffer
-import java.nio.ByteOrder
 import java.nio.file.Paths
 import java.nio.BufferUnderflowException
-import java.nio.ByteBuffer
 import java.nio.file.Path
 
 /**
@@ -31,7 +29,7 @@ import java.nio.file.Path
  *
  * @author Mark Fairchild
  */
-internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: FileChannel, names: GenericSupplier<String?>) {
+internal class BSAFolderRecord(input: PlatformByteBuffer, header: BSAHeader, channel: FileChannel, names: GenericSupplier<String?>) {
     override fun toString(): String {
         return NAME!!
     }
@@ -65,25 +63,25 @@ internal class BSAFolderRecord(input: ByteBuffer, header: BSAHeader, channel: Fi
      * @param names
      */
     init {
-        NAMEHASH = input.long
-        COUNT = input.int
+        NAMEHASH = input.getLong()
+        COUNT = input.getInt()
         when (header.VERSION) {
             103, 104 -> {
                 PADDING = 0
-                OFFSET = input.int.toLong()
+                OFFSET = input.getInt().toLong()
             }
             105 -> {
-                PADDING = input.int
-                OFFSET = input.long
+                PADDING = input.getInt()
+                OFFSET = input.getLong()
             }
             else -> throw IOException("Unknown header version ${header.VERSION}")
         }
-        val BLOCK = ByteBuffer.allocate(1024 + COUNT * BSAFileRecord.SIZE)
-        channel.read(BLOCK, OFFSET - header.TOTAL_FILENAME_LENGTH)
-        BLOCK.order(ByteOrder.LITTLE_ENDIAN)
-        (BLOCK as Buffer).flip()
+        val BLOCK = PlatformByteBuffer.allocate(1024 + COUNT * BSAFileRecord.SIZE)
+        BLOCK.readFileChannel(channel,OFFSET - header.TOTAL_FILENAME_LENGTH)
+        BLOCK.makeLe()
+        BLOCK.flip()
         NAME = if (header.INCLUDE_DIRECTORYNAMES) {
-            val NAMELEN = UtilityFunctions.toUnsignedInt(BLOCK.get())
+            val NAMELEN = UtilityFunctions.toUnsignedInt(BLOCK.getByte())
             mf.BufferUtil.getZString(BLOCK)
         } else {
             null

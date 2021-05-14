@@ -15,12 +15,11 @@
  */
 package ess.papyrus
 
-import resaver.Analysis
-import resaver.ListException
+import PlatformByteBuffer
 import ess.Element
 import ess.Linkable
-import java.nio.ByteBuffer
-
+import resaver.Analysis
+import resaver.ListException
 
 
 /**
@@ -28,12 +27,12 @@ import java.nio.ByteBuffer
  *
  * @author Mark Fairchild
  */
-class Struct(input: ByteBuffer, context: PapyrusContext) : Definition() {
+class Struct(input: PlatformByteBuffer, context: PapyrusContext) : Definition() {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         assert(null != output)
         name.write(output)
         output!!.putInt(MEMBERS!!.size)
@@ -216,7 +215,7 @@ class Struct(input: ByteBuffer, context: PapyrusContext) : Definition() {
     init {
         name = context.readTString(input)
         try {
-            val count = input.int
+            val count = input.getInt()
             MEMBERS = MemberDesc.readList(input, count, context)
         } catch (ex: ListException) {
             throw PapyrusElementException("Failed to read Struct members.", ex, this)

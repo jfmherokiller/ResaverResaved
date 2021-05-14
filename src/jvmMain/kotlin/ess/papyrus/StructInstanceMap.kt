@@ -15,17 +15,17 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.papyrus.PapyrusElementMap.PapyrusElementReader
-import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
 class StructInstanceMap : PapyrusElementMap<StructInstance> {
-    internal constructor(input: ByteBuffer, structs: StructMap, context: PapyrusContext) : super(
+    internal constructor(input: PlatformByteBuffer, structs: StructMap, context: PapyrusContext) : super(
         input,
-        PapyrusElementReader<StructInstance> { b: ByteBuffer? ->
+        PapyrusElementReader<StructInstance> { b: PlatformByteBuffer? ->
             StructInstance(
                 b!!, structs, context,null
             )

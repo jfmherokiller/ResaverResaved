@@ -15,22 +15,20 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 /**
  * Describes 3-byte formIDs from Skyrim savegames.
  *
  * @author Mark Fairchild
  */
-class GlobalData(input: ByteBuffer, context: ESSContext?, model: ModelBuilder?) : Element {
+class GlobalData(input: PlatformByteBuffer, context: ESSContext?, model: ModelBuilder?) : Element {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.putInt(type)
         output.putInt(dataBlock!!.calculateSize())
         dataBlock!!.write(output)
@@ -112,11 +110,12 @@ class GlobalData(input: ByteBuffer, context: ESSContext?, model: ModelBuilder?) 
      * @throws PapyrusException
      */
     init {
-        type = input.int
-        val blockSize = input.int
-        val subSection = input.slice().order(ByteOrder.LITTLE_ENDIAN)
-        (subSection as Buffer).limit(blockSize)
-        (input as Buffer).position((input as Buffer).position() + blockSize)
+        type = input.getInt()
+        val blockSize = input.getInt()
+        val subSection = input.slice()
+        subSection.makeLe()
+        subSection.limit(blockSize)
+        input.position(input.position() + blockSize)
         dataBlock = when (type) {
             3 -> GlobalVariableTable(subSection, context)
             1001 -> context?.let { model?.let { it1 -> ess.papyrus.Papyrus(subSection, it, it1) } }

@@ -1,14 +1,14 @@
 package resaver.pex
 
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * VData that stores a boolean.
  */
 class VDataBool internal constructor(val value: Boolean) : VData() {
     @Throws(IOException::class)
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(type.ordinal.toByte())
         output?.put(if (value) 1.toByte() else 0.toByte())
     }

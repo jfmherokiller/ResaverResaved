@@ -15,17 +15,17 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.papyrus.PapyrusElementMap.PapyrusElementReader
-import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark Fairchild
  */
 class ArrayMap : PapyrusElementMap<ArrayInfo> {
-    internal constructor(input: ByteBuffer?, context: PapyrusContext?) : super(
+    internal constructor(input: PlatformByteBuffer, context: PapyrusContext?) : super(
         input!!,
-        PapyrusElementReader<ArrayInfo> { b: ByteBuffer? -> ArrayInfo(b!!, context!!) }) {
+        PapyrusElementReader<ArrayInfo> { b: PlatformByteBuffer? -> ArrayInfo(b!!, context!!) }) {
     }
 
     internal constructor() {}

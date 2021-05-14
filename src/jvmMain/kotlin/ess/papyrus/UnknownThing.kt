@@ -15,6 +15,7 @@
  */
 package ess.papyrus
 
+import PlatformByteBuffer
 import ess.papyrus.EID.Companion.pad8
 import java.nio.ByteBuffer
 
@@ -27,7 +28,7 @@ class UnknownThing(input: ByteBuffer) : PapyrusElement {
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.putInt(VALUE)
     }
 

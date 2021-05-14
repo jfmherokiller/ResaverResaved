@@ -16,6 +16,7 @@
 package resaver.gui
 
 
+import PlatformByteBuffer
 import ess.*
 import ess.ESS.Companion.readESS
 import ess.ESS.Companion.verifyIdentical
@@ -51,7 +52,6 @@ import resaver.pex.PexFile.Companion.readScript
 import java.awt.*
 import java.awt.event.*
 import java.io.IOException
-import java.nio.ByteBuffer
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Callable
@@ -922,7 +922,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
      * of the base object.
      */
     private fun lookupBase() {}
-    private fun showDataAnalyzer(data: ByteBuffer) {
+    private fun showDataAnalyzer(data: PlatformByteBuffer) {
         showDataAnalyzer(this, data, save!!)
     }
 

@@ -15,20 +15,20 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
 import ess.papyrus.EID
-import java.nio.ByteBuffer
 
 /**
  *
  * @author Mark
  */
-class GlobalVariable(input: ByteBuffer?, context: ESSContext) : Element {
+class GlobalVariable(input: PlatformByteBuffer?, context: ESSContext) : Element {
     /**
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         REFID.write(output)
         output!!.putFloat(value)
     }
@@ -93,6 +93,6 @@ class GlobalVariable(input: ByteBuffer?, context: ESSContext) : Element {
      * Sets the value of the `GlobalVariable`.
      * @param newVal The new value of the `GlobalVariable`.
      */
-    var value: Float = input?.float ?: 0.0f
+    var value: Float = input?.getFloat() ?: 0.0f
 
 }

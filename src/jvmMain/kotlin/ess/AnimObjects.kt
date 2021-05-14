@@ -15,9 +15,8 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.ByteBuffer
-
 
 
 /**
@@ -32,8 +31,8 @@ class AnimObjects : GlobalDataBlock {
      * @param input The input data.
      * @param context The `ESSContext` info.
      */
-    constructor(input: ByteBuffer, context: ESSContext?) {
-        val COUNT = input.int
+    constructor(input: PlatformByteBuffer, context: ESSContext?) {
+        val COUNT = input.getInt()
         require(!(COUNT < 0 || COUNT > 1e6)) { "AnimObject count was an illegal value: $COUNT" }
         ANIMATIONS = mutableListOf()
         for (i in 0 until COUNT) {
@@ -53,7 +52,7 @@ class AnimObjects : GlobalDataBlock {
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.putInt(ANIMATIONS.size)
         ANIMATIONS.forEach { `var`: AnimObject -> `var`.write(output) }
     }
@@ -106,7 +105,7 @@ class AnimObjects : GlobalDataBlock {
     /**
      *
      */
-    class AnimObject(input: ByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
+    class AnimObject(input: PlatformByteBuffer, context: ESSContext?) : ess.GeneralElement() {
         /**
          * Creates a new `AnimObject` by reading from a
          * `LittleEndianInput`. No error handling is performed.

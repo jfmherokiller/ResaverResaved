@@ -15,15 +15,15 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.ByteBuffer
 
 /**
  * Manages an inventory item.
  *
  * @author Mark Fairchild
  */
-class ChangeFormInventoryItem(input: ByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
+class ChangeFormInventoryItem(input: PlatformByteBuffer?, context: ESSContext?) : ess.GeneralElement() {
     /**
      * Creates a new `ChangeFormInventoryItem` by reading from a
      * `LittleEndianDataOutput`. No error handling is performed.
@@ -40,7 +40,7 @@ class ChangeFormInventoryItem(input: ByteBuffer?, context: ESSContext?) : ess.Ge
         if (input != null) {
             super.readInt(input, "COUNT")
         }
-        super.readElement(input, "EXTRA") { `in`: ByteBuffer? ->
+        super.readElement(input, "EXTRA") { `in`: PlatformByteBuffer? ->
             ChangeFormExtraData(
                 `in`!!, context!!
             )

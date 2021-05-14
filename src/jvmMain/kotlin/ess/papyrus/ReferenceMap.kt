@@ -15,7 +15,8 @@
  */
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
+import ess.papyrus.PapyrusElementMap.PapyrusElementReader
 
 /**
  *
@@ -23,9 +24,9 @@ import java.nio.ByteBuffer
  */
 class ReferenceMap :
     PapyrusElementMap<Reference> {
-    internal constructor(input: ByteBuffer?, scripts: ScriptMap?, context: PapyrusContext?) : super(
+    internal constructor(input: PlatformByteBuffer, scripts: ScriptMap?, context: PapyrusContext?) : super(
         input!!,
-        PapyrusElementReader<Reference> { b: ByteBuffer? ->
+        PapyrusElementReader<Reference> { b: PlatformByteBuffer? ->
             Reference(
                 b!!,
                 scripts!!,

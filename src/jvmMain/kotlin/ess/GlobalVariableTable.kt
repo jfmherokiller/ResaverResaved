@@ -15,9 +15,8 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
-import java.nio.ByteBuffer
-
 
 
 /**
@@ -31,7 +30,7 @@ class GlobalVariableTable : Element, GlobalDataBlock {
      * @param input The input data.
      * @param context The `ESSContext` info.
      */
-    constructor(input: ByteBuffer?, context: ESSContext?) {
+    constructor(input: PlatformByteBuffer?, context: ESSContext?) {
         COUNT = input?.let { VSVal(it) }!!
         val C = COUNT.value
         VARIABLES = ArrayList(C)
@@ -53,7 +52,7 @@ class GlobalVariableTable : Element, GlobalDataBlock {
      * @see resaver.ess.Element.write
      * @param output The output stream.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         COUNT.write(output)
         VARIABLES.forEach { `var`: GlobalVariable -> `var`.write(output) }
     }

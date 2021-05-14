@@ -1,9 +1,9 @@
 package ess.papyrus
 
-import resaver.Analysis
+import PlatformByteBuffer
 import ess.WStringElement
+import resaver.Analysis
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * TString implementation for 32 bit TStrings.
@@ -34,7 +34,7 @@ internal class TString32 : TString {
      * @see ess.Element.write
      */
     @Throws(IOException::class)
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         output!!.putInt(this.index)
     }
 

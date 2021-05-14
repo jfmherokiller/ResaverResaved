@@ -15,6 +15,7 @@
  */
 package ess
 
+import PlatformByteBuffer
 import ess.ESS.ESSContext
 import ess.papyrus.EID
 import ess.papyrus.PapyrusContext
@@ -23,7 +24,6 @@ import mu.KLoggable
 import mu.KLogger
 import resaver.Analysis
 import resaver.IString
-import java.nio.ByteBuffer
 import kotlin.reflect.KClass
 import kotlin.reflect.safeCast
 
@@ -134,8 +134,8 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The byte.
      */
-    fun readByte(input: ByteBuffer, name: String): Byte {
-        val `val` = input.get()
+    fun readByte(input: PlatformByteBuffer, name: String): Byte {
+        val `val` = input.getByte()
         return addValue(name, `val`)
     }
 
@@ -147,8 +147,8 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The short.
      */
-    fun readShort(input: ByteBuffer, name: String): Short {
-        val `val` = input.short
+    fun readShort(input: PlatformByteBuffer, name: String): Short {
+        val `val` = input.getShort()
         return addValue(name, `val`)
     }
 
@@ -159,8 +159,8 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The int.
      */
-    fun readInt(input: ByteBuffer, name: String): Int {
-        val `val` = input.int
+    fun readInt(input: PlatformByteBuffer, name: String): Int {
+        val `val` = input.getInt()
         return addValue(name, `val`)
     }
 
@@ -171,8 +171,8 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The long.
      */
-    fun readLong(input: ByteBuffer, name: String): Long {
-        val `val` = input.long
+    fun readLong(input: PlatformByteBuffer, name: String): Long {
+        val `val` = input.getLong()
         return addValue(name, `val`)
     }
 
@@ -183,8 +183,8 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The float.
      */
-    fun readFloat(input: ByteBuffer, name: String): Float {
-        val `val` = input.float
+    fun readFloat(input: PlatformByteBuffer, name: String): Float {
+        val `val` = input.getFloat()
         return addValue(name, `val`)
     }
 
@@ -195,7 +195,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The string.
      */
-    fun readZString(input: ByteBuffer, name: String): String {
+    fun readZString(input: PlatformByteBuffer, name: String): String {
         val `val` = BufferUtil.getZString(input)!!
         return addValue(name, `val`)
     }
@@ -209,7 +209,7 @@ open class GeneralElement protected constructor() : Element {
      * @param <T> The element type.
      * @return The element.
     </T> */
-    inline fun <reified T : Element?> readElement(input: ByteBuffer?, name: Enum<*>, reader: ElementReader<T>): T? {
+    inline fun <reified T : Element?> readElement(input: PlatformByteBuffer?, name: Enum<*>, reader: ElementReader<T>): T? {
         return this.readElement(input, name.toString(), reader)
     }
 
@@ -222,7 +222,7 @@ open class GeneralElement protected constructor() : Element {
      * @param <T> The element type.
      * @return The element.
     </T> */
-    inline fun <reified T : Element?> readElement(input: ByteBuffer?, name: String, reader: ElementReader<T>): T {
+    inline fun <reified T : Element?> readElement(input: PlatformByteBuffer?, name: String, reader: ElementReader<T>): T {
         val element = reader.read(input)
         return addValue(name, element)
     }
@@ -235,8 +235,8 @@ open class GeneralElement protected constructor() : Element {
      * @param context The Papyrus context data.
      * @return The ID.
      */
-    fun readID32(input: ByteBuffer, name: String, context: PapyrusContext): EID {
-        return this.readElement(input, name) { i: ByteBuffer? -> context.readEID32(input) }
+    fun readID32(input: PlatformByteBuffer, name: String, context: PapyrusContext): EID {
+        return this.readElement(input, name) { i: PlatformByteBuffer? -> context.readEID32(input) }
     }
 
     /**
@@ -247,8 +247,8 @@ open class GeneralElement protected constructor() : Element {
      * @param context The Papyrus context data.
      * @return The ID.
      */
-    fun readID64(input: ByteBuffer, name: String, context: PapyrusContext): EID {
-        return this.readElement(input, name) { i: ByteBuffer? -> context.readEID64(input) }
+    fun readID64(input: PlatformByteBuffer, name: String, context: PapyrusContext): EID {
+        return this.readElement(input, name) { i: PlatformByteBuffer? -> context.readEID64(input) }
     }
 
     /**
@@ -259,8 +259,8 @@ open class GeneralElement protected constructor() : Element {
      * @param context The `ESSContext`.
      * @return The RefID.
      */
-    fun readRefID(input: ByteBuffer, name: String, context: ESSContext): RefID {
-        return this.readElement(input, name) { i: ByteBuffer? -> context.readRefID(input) }
+    fun readRefID(input: PlatformByteBuffer, name: String, context: ESSContext): RefID {
+        return this.readElement(input, name) { i: PlatformByteBuffer? -> context.readRefID(input) }
     }
 
     /**
@@ -270,7 +270,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The RefID.
      */
-    fun readVSVal(input: ByteBuffer, name: String): VSVal {
+    fun readVSVal(input: PlatformByteBuffer, name: String): VSVal {
         val `val` = VSVal(input)
         return addValue(name, `val`)
     }
@@ -283,7 +283,7 @@ open class GeneralElement protected constructor() : Element {
      * @param size The size of the array.
      * @return The array.
      */
-    fun readBytes(input: ByteBuffer, name: String, size: Int): ByteArray {
+    fun readBytes(input: PlatformByteBuffer, name: String, size: Int): ByteArray {
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = ByteArray(size)
@@ -299,12 +299,12 @@ open class GeneralElement protected constructor() : Element {
      * @param size The size of the array.
      * @return The array.
      */
-    fun readShorts(input: ByteBuffer, name: String, size: Int): ShortArray {
+    fun readShorts(input: PlatformByteBuffer, name: String, size: Int): ShortArray {
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = ShortArray(size)
         for (i in 0 until size) {
-            `val`[i] = input.short
+            `val`[i] = input.getShort()
         }
         return addValue(name, `val`)
     }
@@ -317,12 +317,12 @@ open class GeneralElement protected constructor() : Element {
      * @param size The size of the array.
      * @return The array.
      */
-    fun readInts(input: ByteBuffer, name: String, size: Int): IntArray {
+    fun readInts(input: PlatformByteBuffer, name: String, size: Int): IntArray {
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = IntArray(size)
         for (i in 0 until size) {
-            `val`[i] = input.int
+            `val`[i] = input.getInt()
         }
         return addValue(name, `val`)
     }
@@ -335,12 +335,12 @@ open class GeneralElement protected constructor() : Element {
      * @param size The size of the array.
      * @return The array.
      */
-    fun readLongs(input: ByteBuffer, name: String, size: Int): LongArray {
+    fun readLongs(input: PlatformByteBuffer, name: String, size: Int): LongArray {
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = LongArray(size)
         for (i in 0 until size) {
-            `val`[i] = input.long
+            `val`[i] = input.getLong()
         }
         return addValue(name, `val`)
     }
@@ -353,12 +353,12 @@ open class GeneralElement protected constructor() : Element {
      * @param size The size of the array.
      * @return The array.
      */
-    fun readFloats(input: ByteBuffer, name: String, size: Int): FloatArray {
+    fun readFloats(input: PlatformByteBuffer, name: String, size: Int): FloatArray {
         require(size >= 0) { "Negative array count: $size" }
         require(256 >= size) { "Excessive array count: $size" }
         val `val` = FloatArray(size)
         for (i in 0 until size) {
-            `val`[i] = input.float
+            `val`[i] = input.getFloat()
         }
         return addValue(name, `val`)
     }
@@ -374,7 +374,7 @@ open class GeneralElement protected constructor() : Element {
      * @param <T> The element type.
     </T> */
     fun <T : Element?> readElements(
-        input: ByteBuffer,
+        input: PlatformByteBuffer,
         name: String,
         size: Int,
         reader: ElementReader<T>
@@ -396,7 +396,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readBytesVS(input: ByteBuffer, name: String): ByteArray {
+    fun readBytesVS(input: PlatformByteBuffer, name: String): ByteArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -411,7 +411,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readShortsVS(input: ByteBuffer, name: String): ShortArray {
+    fun readShortsVS(input: PlatformByteBuffer, name: String): ShortArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -426,7 +426,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readIntsVS(input: ByteBuffer, name: String): IntArray {
+    fun readIntsVS(input: PlatformByteBuffer, name: String): IntArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -441,7 +441,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readLongsVS(input: ByteBuffer, name: String): LongArray {
+    fun readLongsVS(input: PlatformByteBuffer, name: String): LongArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -456,7 +456,7 @@ open class GeneralElement protected constructor() : Element {
      * @param name The name of the new element.
      * @return The array.
      */
-    fun readFloatsVS(input: ByteBuffer, name: String): FloatArray {
+    fun readFloatsVS(input: PlatformByteBuffer, name: String): FloatArray {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -473,7 +473,7 @@ open class GeneralElement protected constructor() : Element {
      * @param <T> The element type.
      * @return The array.
     </T> */
-    fun <T : Element?> readVSElemArray(input: ByteBuffer, name: String, reader: ElementReader<T>): MutableList<Element> {
+    fun <T : Element?> readVSElemArray(input: PlatformByteBuffer, name: String, reader: ElementReader<T>): MutableList<Element> {
         val COUNT = readVSVal(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT.value >= 0) { "Negative array count: $COUNT" }
@@ -497,7 +497,7 @@ open class GeneralElement protected constructor() : Element {
      * @param <T> The element type.
      * @return The array.
     </T> */
-    fun <T : Element?> read32ElemArray(input: ByteBuffer, name: String, reader: ElementReader<T>): MutableList<Element> {
+    fun <T : Element?> read32ElemArray(input: PlatformByteBuffer, name: String, reader: ElementReader<T>): MutableList<Element> {
         val COUNT = readInt(input, name + "_COUNT")
         if (COUNT != null) {
             require(COUNT >= 0) { "Count is negative: $COUNT" }
@@ -553,7 +553,7 @@ open class GeneralElement protected constructor() : Element {
      * @see Element.write
      * @param output output buffer
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         DATA.values.forEach { v: Any? ->
             when (v) {
                 is Element -> {

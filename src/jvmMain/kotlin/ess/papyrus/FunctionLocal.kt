@@ -15,7 +15,7 @@
  */
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Describes a function local variable in a Skyrim savegame.
@@ -29,7 +29,7 @@ class FunctionLocal
  * @param strtab The StringTable.
  * @throws PapyrusFormatException
  */
-    (input: ByteBuffer?, context: PapyrusContext) : MemberDesc(input, context) {
+    (input: PlatformByteBuffer?, context: PapyrusContext) : MemberDesc(input, context) {
     /**
      * @return String representation.
      */

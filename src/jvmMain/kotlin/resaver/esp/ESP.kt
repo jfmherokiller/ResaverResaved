@@ -15,6 +15,7 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import ess.Plugin
 import ess.PluginInfo
 import mu.KLoggable
@@ -24,9 +25,6 @@ import resaver.esp.Record.Companion.readRecord
 import resaver.esp.Record.Companion.skimRecord
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.nio.Buffer
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.channels.ClosedByInterruptException
 import java.nio.channels.FileChannel
 import java.nio.file.Files
@@ -38,13 +36,13 @@ import java.nio.file.StandardOpenOption
  *
  * @author Mark Fairchild
  */
-class ESP(input: ByteBuffer, game: Game, plugin: Plugin, name: String?, plugins: PluginInfo?) : Entry {
+class ESP(input: PlatformByteBuffer, game: Game, plugin: Plugin, name: String?, plugins: PluginInfo?) : Entry {
     /**
      * Write the ESP to a `ByteBuffer`.
      *
      * @param output The `ByteBuffer` to write.
      */
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         RECORDS.forEach { record: Record -> record.write(output) }
     }
 
@@ -99,10 +97,10 @@ class ESP(input: ByteBuffer, game: Game, plugin: Plugin, name: String?, plugins:
             // Prepare input stream.
             try {
                 FileChannel.open(path, StandardOpenOption.READ).use { input ->
-                    val BUFFER = ByteBuffer.allocateDirect(input.size().toInt())
-                    input.read(BUFFER)
-                    BUFFER.order(ByteOrder.LITTLE_ENDIAN)
-                    (BUFFER as Buffer).flip()
+                    val BUFFER = PlatformByteBuffer.allocateDirect(input.size().toInt())
+                    BUFFER.readFileChannel(input)
+                    BUFFER.makeLe()
+                    BUFFER.flip()
                     val TES4 = RecordTes4(BUFFER, plugin, plugins, ESPContext(game, plugin, null))
                     val CTX = ESPContext(game, plugin, TES4)
                     while (BUFFER.hasRemaining()) {

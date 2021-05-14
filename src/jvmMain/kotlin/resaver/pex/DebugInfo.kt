@@ -1,12 +1,12 @@
 package resaver.pex
 
+import PlatformByteBuffer
 import java.io.IOException
-import java.nio.ByteBuffer
 
 /**
  * Describe the debugging info section of a PEX file.
  */
-class DebugInfo internal constructor(private val pexFile: PexFile, input: ByteBuffer, strings: StringTable?) {
+class DebugInfo internal constructor(private val pexFile: PexFile, input: PlatformByteBuffer, strings: StringTable?) {
     /**
      * Write the object to a `ByteBuffer`.
      *
@@ -15,7 +15,7 @@ class DebugInfo internal constructor(private val pexFile: PexFile, input: ByteBu
      * passed on.
      */
     @Throws(IOException::class)
-    fun write(output: ByteBuffer) {
+    fun write(output: PlatformByteBuffer) {
         output.put(hasDebugInfo)
         if (hasDebugInfo.toInt() != 0) {
             output.putLong(modificationTime)
@@ -128,25 +128,25 @@ class DebugInfo internal constructor(private val pexFile: PexFile, input: ByteBu
      * @throws IOException Exceptions aren't handled.
      */
     init {
-        hasDebugInfo = input.get()
+        hasDebugInfo = input.getByte()
         DEBUGFUNCTIONS = ArrayList(0)
         PROPERTYGROUPS = ArrayList(0)
         STRUCTORDERS = ArrayList(0)
         if (hasDebugInfo.toInt() == 0) {
         } else {
-            modificationTime = input.long
-            val functionCount = UtilityFunctions.toUnsignedInt(input.short)
+            modificationTime = input.getLong()
+            val functionCount = UtilityFunctions.toUnsignedInt(input.getShort())
             DEBUGFUNCTIONS.ensureCapacity(functionCount)
             for (i in 0 until functionCount) {
                 DEBUGFUNCTIONS.add(DebugFunction(input, strings!!))
             }
             if (pexFile.GAME!!.isFO4) {
-                val propertyCount = UtilityFunctions.toUnsignedInt(input.short)
+                val propertyCount = UtilityFunctions.toUnsignedInt(input.getShort())
                 PROPERTYGROUPS.ensureCapacity(propertyCount)
                 for (i in 0 until propertyCount) {
                     PROPERTYGROUPS.add(PropertyGroup(input, strings!!))
                 }
-                val orderCount = UtilityFunctions.toUnsignedInt(input.short)
+                val orderCount = UtilityFunctions.toUnsignedInt(input.getShort())
                 STRUCTORDERS.ensureCapacity(orderCount)
                 for (i in 0 until orderCount) {
                     strings?.let { StructOrder(input, it) }?.let { STRUCTORDERS.add(it) }

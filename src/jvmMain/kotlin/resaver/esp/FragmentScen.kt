@@ -15,9 +15,9 @@
  */
 package resaver.esp
 
+import PlatformByteBuffer
 import mf.BufferUtil
 import resaver.IString
-import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.util.*
 
@@ -26,8 +26,8 @@ import java.util.*
  *
  * @author Mark Fairchild
  */
-class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
-    override fun write(output: ByteBuffer?) {
+class FragmentScen(input: PlatformByteBuffer, ctx: ESPContext) : FragmentBase() {
+    override fun write(output: PlatformByteBuffer?) {
         output?.put(UNKNOWN)
         output?.put(FLAGS)
         if (null != SCRIPT) {
@@ -104,8 +104,8 @@ class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
     /**
      *
      */
-    inner class Fragment(input: ByteBuffer) : Entry {
-        override fun write(output: ByteBuffer?) {
+    inner class Fragment(input: PlatformByteBuffer) : Entry {
+        override fun write(output: PlatformByteBuffer?) {
             output?.put(this.UNKNOWN)
             output?.put(SCRIPTNAME.uTF8)
             output?.put(FRAGMENTNAME.uTF8)
@@ -124,7 +124,7 @@ class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         private val FRAGMENTNAME: IString
 
         init {
-            this.UNKNOWN = input.get()
+            this.UNKNOWN = input.getByte()
             SCRIPTNAME = IString[BufferUtil.getUTF(input)]
             FRAGMENTNAME = IString[BufferUtil.getUTF(input)]
         }
@@ -133,8 +133,8 @@ class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
     /**
      *
      */
-    inner class Phase(input: ByteBuffer) : Entry {
-        override fun write(output: ByteBuffer?) {
+    inner class Phase(input: PlatformByteBuffer) : Entry {
+        override fun write(output: PlatformByteBuffer?) {
             output?.put(UNKNOWN1)
             output?.putInt(PHASE)
             output?.put(UNKNOWN2)
@@ -157,17 +157,17 @@ class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
         private val FRAGMENTNAME: IString
 
         init {
-            UNKNOWN1 = input.get()
-            PHASE = input.int
-            UNKNOWN2 = input.get()
+            UNKNOWN1 = input.getByte()
+            PHASE = input.getInt()
+            UNKNOWN2 = input.getByte()
             SCRIPTNAME = IString[BufferUtil.getUTF(input)]
             FRAGMENTNAME = IString[BufferUtil.getUTF(input)]
         }
     }
 
     init {
-        UNKNOWN = input.get()
-        FLAGS = input.get()
+        UNKNOWN = input.getByte()
+        FLAGS = input.getByte()
         if (ctx.GAME.isFO4) {
             ctx.pushContext("FragmentScene")
             FILENAME = null
@@ -185,7 +185,7 @@ class FragmentScen(input: ByteBuffer, ctx: ESPContext) : FragmentBase() {
             val fragment = Fragment(input)
             FRAGMENTS.add(fragment)
         }
-        val phaseCount = UtilityFunctions.toUnsignedInt(input.short)
+        val phaseCount = UtilityFunctions.toUnsignedInt(input.getShort())
         for (i in 0 until phaseCount) {
             val phase = Phase(input)
             PHASES.add(phase)

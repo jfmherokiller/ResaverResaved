@@ -1,16 +1,16 @@
 package ess.papyrus
 
-import java.nio.ByteBuffer
+import PlatformByteBuffer
 
 /**
  * Variable that stores nothing.
  */
-class VarNull(input: ByteBuffer) : Variable() {
+class VarNull(input: PlatformByteBuffer) : Variable() {
     override fun calculateSize(): Int {
         return 5
     }
 
-    override fun write(output: ByteBuffer?) {
+    override fun write(output: PlatformByteBuffer?) {
         type.write(output)
         output?.putInt(VALUE)
     }
@@ -26,6 +26,6 @@ class VarNull(input: ByteBuffer) : Variable() {
         return "NULL"
     }
 
-    private val VALUE: Int = input.int
+    private val VALUE: Int = input.getInt()
 
 }
