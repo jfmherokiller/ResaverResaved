@@ -504,8 +504,7 @@ class ESS private constructor(buffer: PlatformByteBuffer, saveFile: Path, model:
      * @return The new `RefID`.
      */
     fun make(`val`: Int): RefID {
-        val r = RefID(`val`, this)
-        return REFIDS.computeIfAbsent(`val`) { v: Int? -> RefID(`val`, this) }
+        return REFIDS.computeIfAbsent(`val`) { RefID(`val`, this) }
     }
 
     /**

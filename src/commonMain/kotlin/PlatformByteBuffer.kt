@@ -13,4 +13,5 @@ expect class PlatformByteBuffer {
     fun getInt():Int
     fun getLong():Long
     fun hasRemaining(): Boolean
+    fun getShort(): Short
 }

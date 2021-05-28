@@ -77,7 +77,7 @@ actual class PlatformByteBuffer {
         return mybuffer.float
     }
 
-    fun getShort(): Short {
+    actual fun getShort(): Short {
         return mybuffer.short
     }
 
