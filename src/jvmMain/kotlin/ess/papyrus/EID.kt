@@ -222,7 +222,7 @@ private constructor() : PapyrusElement, Comparable<EID> {
          * @return
          */
         fun pad16(id: Long): String {
-            val hex =id.toString(16)
+            val hex =id.toULong().toString(16)
             val length = hex.length
             return ZEROES[16 - length].toString() + hex
         }
