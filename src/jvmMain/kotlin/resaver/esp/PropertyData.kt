@@ -138,7 +138,7 @@ abstract class PropertyData : Entry {
         }
 
         override fun toString(): String {
-            return java.lang.Boolean.toString(DATA)
+            return DATA.toString()
         }
 
         private val DATA: Boolean = input.getByte().toInt() != 0
@@ -158,7 +158,7 @@ abstract class PropertyData : Entry {
         }
 
         override fun toString(): String {
-            return String.format("VAR: %s", DATA)
+            return "VAR: $DATA"
         }
 
         private val DATA: Int = input.getInt()
