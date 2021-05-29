@@ -176,7 +176,7 @@ class PluginData(plugin: Plugin) {
      * @param plugin The name of the ESP.
      */
     init {
-        MAP = HashMap()
+        MAP = hashMapOf()
         ESPNAME = plugin
         scriptDataSize = 0
     }
