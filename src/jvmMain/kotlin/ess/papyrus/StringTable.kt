@@ -41,7 +41,7 @@ class StringTable : ArrayList<TString?>, PapyrusElement {
             // SkyrimSE, Fallout4, and SkyrimLE with CrashFixes uses 32bit string indices.            
             index = input.getInt()
         } else {
-            index = java.lang.Short.toUnsignedInt(input.getShort())
+            index = UtilityFunctions.toUnsignedInt(input.getShort())
             // SkyrimLegendary and Fallout4 use 16bit string indices.
             // Various corrections are possible though.
             if (index == 0xFFFF && !STBCORRECTION) {
@@ -73,7 +73,7 @@ class StringTable : ArrayList<TString?>, PapyrusElement {
             // Skyrim Legendary (without CrashFixes) and old versions of 
             // Fallout4 use 16bit string indices.
             // Various corrections are possible though.           
-            strCount = java.lang.Short.toUnsignedInt(input.getShort())
+            strCount = UtilityFunctions.toUnsignedInt(input.getShort())
 
             // Large string table version.
             if (strCount == 0xFFFF) {

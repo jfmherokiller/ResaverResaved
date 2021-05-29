@@ -115,7 +115,7 @@ object BufferUtil {
      * @return The `String`.
      */
     fun getBZString(buffer: PlatformByteBuffer): String? {
-        val length = java.lang.Byte.toUnsignedInt(buffer.getByte())
+        val length = UtilityFunctions.toUnsignedInt(buffer.getByte())
         return readSizedString(buffer, length, true)
     }
 
