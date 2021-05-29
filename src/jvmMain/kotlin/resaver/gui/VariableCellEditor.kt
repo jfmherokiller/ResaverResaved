@@ -195,10 +195,10 @@ class VariableCellEditor(context: PapyrusContext) : AbstractCellEditor(), TableC
             return EDITER
         }
 
-        private val EDITER: JComboBox<Boolean> = JComboBox(arrayOf(java.lang.Boolean.TRUE, java.lang.Boolean.FALSE))
+        private val EDITER: JComboBox<Boolean> = JComboBox(arrayOf(true, false))
 
         init {
-            EDITER.prototypeDisplayValue = java.lang.Boolean.FALSE
+            EDITER.prototypeDisplayValue = false
         }
     }
 
