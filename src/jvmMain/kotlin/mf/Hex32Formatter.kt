@@ -17,7 +17,6 @@ package mf
 
 import javax.swing.JFormattedTextField.AbstractFormatter
 import kotlin.Throws
-import java.lang.NumberFormatException
 import java.text.ParseException
 
 /**
@@ -28,7 +27,7 @@ class Hex32Formatter : AbstractFormatter() {
     @Throws(ParseException::class)
     override fun stringToValue(text: String): Int {
         return try {
-            Integer.parseUnsignedInt(text, 16)
+            UtilityFunctions.parseUnsignedInt(text, 16)
         } catch (ex: NumberFormatException) {
             throw ParseException(text, 0)
         }

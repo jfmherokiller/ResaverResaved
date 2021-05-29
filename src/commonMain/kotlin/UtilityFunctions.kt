@@ -107,5 +107,74 @@ class UtilityFunctions {
         fun compare(x: Long, y: Long): Int {
             return if (x < y) -1 else if (x == y) 0 else 1
         }
+
+        /**
+         * Parses the string argument as an unsigned integer in the radix
+         * specified by the second argument.  An unsigned integer maps the
+         * values usually associated with negative numbers to positive
+         * numbers larger than `MAX_VALUE`.
+         *
+         * The characters in the string must all be digits of the
+         * specified radix (as determined by whether [ ][java.lang.Character.digit] returns a nonnegative
+         * value), except that the first character may be an ASCII plus
+         * sign `'+'` (`'\u005Cu002B'`). The resulting
+         * integer value is returned.
+         *
+         *
+         * An exception of type `NumberFormatException` is
+         * thrown if any of the following situations occurs:
+         *
+         *  * The first argument is `null` or is a string of
+         * length zero.
+         *
+         *  * The radix is either smaller than
+         * [java.lang.Character.MIN_RADIX] or
+         * larger than [java.lang.Character.MAX_RADIX].
+         *
+         *  * Any character of the string is not a digit of the specified
+         * radix, except that the first character may be a plus sign
+         * `'+'` (`'\u005Cu002B'`) provided that the
+         * string is longer than length 1.
+         *
+         *  * The value represented by the string is larger than the
+         * largest unsigned `int`, 2<sup>32</sup>-1.
+         *
+         * @param      s   the `String` containing the unsigned integer
+         * representation to be parsed
+         * @param      radix   the radix to be used while parsing `s`.
+         * @return     the integer represented by the string argument in the
+         * specified radix.
+         * @throws     NumberFormatException if the `String`
+         * does not contain a parsable `int`.
+         * @since 1.8
+         */
+        @Throws(NumberFormatException::class)
+        fun parseUnsignedInt(s: String?, radix: Int): Int {
+            if (s == null) {
+                throw NumberFormatException("null")
+            }
+            val len = s.length
+            return if (len > 0) {
+                val firstChar = s[0]
+                if (firstChar == '-') {
+                    throw NumberFormatException("Illegal leading minus sign on unsigned string $s.")
+                } else {
+                    if (len <= 5 ||  // Integer.MAX_VALUE in Character.MAX_RADIX is 6 digits
+                        radix == 10 && len <= 9
+                    ) { // Integer.MAX_VALUE in base 10 is 10 digits
+                        s.toInt(radix)
+                    } else {
+                        val ell = s.toLong(radix)
+                        if (ell and -0x100000000L == 0L) {
+                            ell.toInt()
+                        } else {
+                            throw NumberFormatException("String value $s exceeds range of unsigned int.")
+                        }
+                    }
+                }
+            } else {
+                throw NumberFormatException()
+            }
+        }
     }
 }
