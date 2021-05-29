@@ -100,11 +100,11 @@ class BatchCleaner(window: SaveWindow?, save: ess.ESS?) : SwingWorker<Boolean, D
                     // Group 2 is an optional deletion prompt.
                     if (null == MATCHER.group(2)) {
                         CLEAN_NAMES.add(DEF)
-                        logger.info{String.format("Definition present, adding to cleaning list: %s", DEF)}
+                        logger.info{ "Definition present, adding to cleaning list: $DEF" }
                     } else {
-                        logger.info{String.format("Definition present, prompting for deletion: %s", DEF)}
+                        logger.info{ "Definition present, prompting for deletion: $DEF" }
                         val PROMPT = MATCHER.group(2).trim { it <= ' ' }
-                        val MSG = String.format("Delete %s?\n%s", DEF, PROMPT)
+                        val MSG = "Delete $DEF?\n$PROMPT"
                         val TITLE = "Confirm"
                         val result = JOptionPane.showConfirmDialog(
                             WINDOW,
