@@ -67,17 +67,9 @@ class PexFile private constructor(input: PlatformByteBuffer, game: Game) {
         sum += HEADER!!.calculateSize()
         sum += STRINGS!!.calculateSize()
         sum += DEBUG!!.calculateSize()
-        var sum1 = 0
-        for (USERFLAGDEF in USERFLAGDEFS!!) {
-            val size = USERFLAGDEF!!.calculateSize()
-            sum1 += size
-        }
+        val sum1 = USERFLAGDEFS!!.sumOf { it!!.calculateSize() }
         sum += 2 + sum1
-        var result = 0
-        for (SCRIPT in SCRIPTS!!) {
-            val calculateSize = SCRIPT.calculateSize()
-            result += calculateSize
-        }
+        val result = SCRIPTS!!.sumOf { it.calculateSize() }
         sum += 2 + result
         return sum
     }
