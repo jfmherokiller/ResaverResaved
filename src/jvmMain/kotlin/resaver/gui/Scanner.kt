@@ -71,7 +71,7 @@ class Scanner(
                 MODS.addAll(MOMODS)
             }
             PROGRESS.invoke("Organizing")
-            val PLUGINFILEMAP: MutableMap<Plugin?, Path> = HashMap()
+            val PLUGINFILEMAP: MutableMap<Plugin?, Path> = hashMapOf()
             MODS
                 .asSequence()
                 .flatMap { it.getESPFiles().asSequence() }
