@@ -94,11 +94,7 @@ class Timer(name: String?) {
         if (null == records) {
             records = linkedMapOf()
         }
-        records!!.merge(recordName, elapsed) { a: Long?, b: Long? ->
-            java.lang.Long.sum(
-                a!!, b!!
-            )
-        }
+        records!!.merge(recordName, elapsed) { a: Long?, b: Long? -> a!! + b!! }
     }
 
     /**
