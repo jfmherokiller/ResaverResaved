@@ -17,7 +17,6 @@ package resaver.gui
 
 import javax.swing.JTable
 import javax.swing.ListSelectionModel
-import javax.swing.event.TableModelEvent
 import javax.swing.JViewport
 import ess.AnalyzableElement
 import ess.papyrus.*
@@ -37,9 +36,9 @@ class VariableTable(window: SaveWindow?) : JTable() {
      */
     private fun initComponent() {
         setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
-        this.model.addTableModelListener { e: TableModelEvent? -> WINDOW.setModified() }
+        this.model.addTableModelListener { WINDOW.setModified() }
         TABLE_POPUP_MENU.add(MI_FIND)
-        MI_FIND.addActionListener { e: ActionEvent? ->
+        MI_FIND.addActionListener {
             val viewRow = selectedRow
             val modelRow = convertRowIndexToModel(viewRow)
             val column = model.columnCount - 1
