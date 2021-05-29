@@ -66,7 +66,7 @@ class GlobalVariable(input: PlatformByteBuffer?, context: ESSContext) : Element 
     override fun hashCode(): Int {
         var hash = 7
         hash = 53 * hash + REFID.hashCode()
-        hash = 53 * hash + java.lang.Float.floatToIntBits(value)
+        hash = 53 * hash + value.toRawBits()
         return hash
     }
 
