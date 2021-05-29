@@ -67,7 +67,6 @@ import javax.swing.*
 import javax.swing.border.Border
 import javax.swing.event.HyperlinkEvent
 import javax.swing.event.HyperlinkListener
-import javax.swing.event.TreeSelectionEvent
 import javax.swing.plaf.basic.BasicComboBoxRenderer
 import javax.swing.text.BadLocationException
 import javax.swing.text.StyleConstants
@@ -88,7 +87,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
     private fun initComponents(path: Path?, autoParse: Boolean) {
         resetTitle(null)
         dropTarget = ReSaverDropTarget { f: Path -> open(f, PREFS.getBoolean("settings.alwaysParse", false)) }
-        TREE.addTreeSelectionListener { e: TreeSelectionEvent? -> updateContextInformation() }
+        TREE.addTreeSelectionListener { updateContextInformation() }
         DATASCROLLER.border = BorderFactory.createTitledBorder(DATASCROLLER.border, "Data")
         INFOSCROLLER.border = BorderFactory.createTitledBorder(INFOSCROLLER.border, "Information")
         MAINSPLITTER.resizeWeight = 0.5
@@ -174,56 +173,56 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         MENUBAR.add(OPTIONSMENU)
         MENUBAR.add(DATAMENU)
         MENUBAR.add(HELPMENU)
-        MI_EXIT.addActionListener { e: ActionEvent? -> exitWithPrompt() }
-        MI_LOAD.addActionListener { e: ActionEvent? -> openWithPrompt() }
-        MI_LOADESPS.addActionListener { e: ActionEvent? -> scanESPs(true) }
-        MI_WATCHSAVES.addActionListener { e: ActionEvent? ->
+        MI_EXIT.addActionListener { exitWithPrompt() }
+        MI_LOAD.addActionListener { openWithPrompt() }
+        MI_LOADESPS.addActionListener { scanESPs(true) }
+        MI_WATCHSAVES.addActionListener {
             PREFS.putBoolean(
                 "settings.watch",
                 MI_WATCHSAVES.isSelected
             )
         }
-        MI_WATCHSAVES.addActionListener { e: ActionEvent? -> setWatching(MI_WATCHSAVES.isSelected) }
-        MI_SAVE.addActionListener { e: ActionEvent? -> save(false, null) }
-        MI_SAVEAS.addActionListener { e: ActionEvent? -> save(true, null) }
-        MI_EXPORTPLUGINS.addActionListener { e: ActionEvent? -> exportPlugins() }
-        MI_SETTINGS.addActionListener { e: ActionEvent? -> showSettings() }
-        MI_SHOWUNATTACHED.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_SHOWUNDEFINED.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_SHOWMEMBERLESS.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_SHOWCANARIES.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_SHOWNULLREFS.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_SHOWNONEXISTENTCREATED.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_SHOWLONGSTRINGS.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_SHOWDELETED.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_SHOWEMPTY.addActionListener { e: ActionEvent? -> updateFilters(false) }
-        MI_CHANGEFILTER.addActionListener { e: ActionEvent? -> setChangeFlagFilter() }
-        MI_CHANGEFORMFILTER!!.addActionListener { e: ActionEvent? -> setChangeFormFlagFilter() }
-        MI_REMOVEUNATTACHED.addActionListener { e: ActionEvent? -> cleanUnattached() }
-        MI_REMOVEUNDEFINED.addActionListener { e: ActionEvent? -> cleanUndefined() }
-        MI_RESETHAVOK.addActionListener { e: ActionEvent? -> resetHavok() }
-        MI_CLEANSEFORMLISTS.addActionListener { e: ActionEvent? -> cleanseFormLists() }
-        MI_REMOVENONEXISTENT.addActionListener { e: ActionEvent? -> cleanNonexistent() }
-        MI_BATCHCLEAN.addActionListener { e: ActionEvent? -> batchClean() }
-        MI_KILL.addActionListener { e: ActionEvent? -> kill() }
-        MI_SHOWMODS.addActionListener { e: ActionEvent? -> setAnalysis(analysis) }
-        MI_SHOWMODS.addActionListener { e: ActionEvent? ->
+        MI_WATCHSAVES.addActionListener { setWatching(MI_WATCHSAVES.isSelected) }
+        MI_SAVE.addActionListener { save(false, null) }
+        MI_SAVEAS.addActionListener { save(true, null) }
+        MI_EXPORTPLUGINS.addActionListener { exportPlugins() }
+        MI_SETTINGS.addActionListener { showSettings() }
+        MI_SHOWUNATTACHED.addActionListener { updateFilters(false) }
+        MI_SHOWUNDEFINED.addActionListener { updateFilters(false) }
+        MI_SHOWMEMBERLESS.addActionListener { updateFilters(false) }
+        MI_SHOWCANARIES.addActionListener { updateFilters(false) }
+        MI_SHOWNULLREFS.addActionListener { updateFilters(false) }
+        MI_SHOWNONEXISTENTCREATED.addActionListener { updateFilters(false) }
+        MI_SHOWLONGSTRINGS.addActionListener { updateFilters(false) }
+        MI_SHOWDELETED.addActionListener { updateFilters(false) }
+        MI_SHOWEMPTY.addActionListener { updateFilters(false) }
+        MI_CHANGEFILTER.addActionListener { setChangeFlagFilter() }
+        MI_CHANGEFORMFILTER!!.addActionListener { setChangeFormFlagFilter() }
+        MI_REMOVEUNATTACHED.addActionListener { cleanUnattached() }
+        MI_REMOVEUNDEFINED.addActionListener { cleanUndefined() }
+        MI_RESETHAVOK.addActionListener { resetHavok() }
+        MI_CLEANSEFORMLISTS.addActionListener { cleanseFormLists() }
+        MI_REMOVENONEXISTENT.addActionListener { cleanNonexistent() }
+        MI_BATCHCLEAN.addActionListener { batchClean() }
+        MI_KILL.addActionListener { kill() }
+        MI_SHOWMODS.addActionListener { setAnalysis(analysis) }
+        MI_SHOWMODS.addActionListener {
             PREFS.putBoolean(
                 "settings.showMods",
                 MI_SHOWMODS.isSelected
             )
         }
-        MI_LOOKUPID.addActionListener { e: ActionEvent? -> lookupID() }
-        MI_LOOKUPBASE.addActionListener { e: ActionEvent? -> lookupBase() }
-        MI_ANALYZE_ARRAYS.addActionListener { e: ActionEvent? ->
+        MI_LOOKUPID.addActionListener { lookupID() }
+        MI_LOOKUPBASE.addActionListener { lookupBase() }
+        MI_ANALYZE_ARRAYS.addActionListener {
             showDataAnalyzer(
                 save!!.papyrus!!.arraysBlock
             )
         }
-        MI_COMPARETO.addActionListener { e: ActionEvent? -> compareTo() }
-        MI_SHOWLOG.addActionListener { e: ActionEvent? -> showLog() }
-        MI_ABOUT.addActionListener { e: ActionEvent? -> show(this) }
-        MI_USEMO2.addActionListener { e: ActionEvent? -> PREFS.putBoolean("settings.useMO2", MI_USEMO2.isSelected) }
+        MI_COMPARETO.addActionListener { compareTo() }
+        MI_SHOWLOG.addActionListener { showLog() }
+        MI_ABOUT.addActionListener { show(this) }
+        MI_USEMO2.addActionListener { PREFS.putBoolean("settings.useMO2", MI_USEMO2.isSelected) }
         MI_EXIT.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_E, KeyEvent.CTRL_DOWN_MASK)
         MI_LOAD.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK)
         MI_LOADESPS.accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_P, KeyEvent.CTRL_DOWN_MASK)
@@ -367,7 +366,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             // Make an abbreviated filename.
             val fullName = savefile?.fileName.toString()
             val MAXLEN = 80
-            val NAME = if (fullName.length > MAXLEN) fullName.substring(0, MAXLEN) + "..." else fullName
+            val NAME = if (fullName.length > MAXLEN) "${fullName.substring(0, MAXLEN)}..." else fullName
             val TITLE = String.format("ReSaver $version: $NAME (%1.2f mb, digest = %08x)", size, DIGEST)
             title = TITLE
         }
@@ -1127,9 +1126,9 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             PREFS.putInt("settings.windowY", this.location.y)
             PREFS.putInt("settings.mainDivider", MAINSPLITTER.dividerLocation)
             PREFS.putInt("settings.rightDivider", RIGHTSPLITTER!!.dividerLocation)
-            System.out.printf("Pos = %s\n", this.location)
-            System.out.printf("Size = %s\n", this.size)
-            System.out.printf("Dividers = %d,%d\n", MAINSPLITTER.dividerLocation, RIGHTSPLITTER.dividerLocation)
+            println("Pos = ${this.location}")
+            println("Size = ${this.size}")
+            println("Dividers = ${MAINSPLITTER.dividerLocation},${RIGHTSPLITTER.dividerLocation}")
         } else {
             PREFS.putInt("settings.mainDividerMax", MAINSPLITTER.dividerLocation)
             PREFS.putInt("settings.rightDividerMax", RIGHTSPLITTER!!.dividerLocation)
