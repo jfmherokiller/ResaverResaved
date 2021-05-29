@@ -339,7 +339,7 @@ class FilterMaker {
          */
         fun createChangeFlagFilter(mask: Int, filter: Int): Predicate<FilterTreeModel.Node> {
             return if (mask == 0) {
-                Predicate { node: FilterTreeModel.Node? -> true }
+                Predicate { true }
             } else {
                 Predicate { node: FilterTreeModel.Node ->
                     if (!node.hasElement()) {
