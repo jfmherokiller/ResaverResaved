@@ -36,11 +36,7 @@ class FragmentTerm(input: PlatformByteBuffer, ctx: ESPContext) : FragmentBase() 
     override fun calculateSize(): Int {
         var sum = 3
         sum += SCRIPT.calculateSize()
-        var result = 0
-        for (FRAGMENT in FRAGMENTS) {
-            val calculateSize = FRAGMENT.calculateSize()
-            result += calculateSize
-        }
+        val result = FRAGMENTS.sumOf { it.calculateSize() }
         sum += result
         return sum
     }
