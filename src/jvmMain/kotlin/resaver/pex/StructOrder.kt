@@ -75,7 +75,7 @@ internal class StructOrder(input: PlatformByteBuffer, strings: StringTable) {
      * @return A string representation of the DebugFunction.
      */
     override fun toString(): String {
-        return String.format("%s.%s [%s]", OBJECTNAME, ORDERNAME, NAMES.toString())
+        return "$OBJECTNAME.$ORDERNAME [$NAMES]"
     }
 
     private val OBJECTNAME: TString = strings.read(input)

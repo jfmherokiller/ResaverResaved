@@ -79,8 +79,7 @@ class VariableType private constructor(input: PlatformByteBuffer, strings: Strin
      * @return A string representation of the VariableType.
      */
     override fun toString(): String {
-        val FORMAT = "%s %s"
-        return String.format(FORMAT, TYPE, name)
+        return "$TYPE $name"
     }
 
     /**

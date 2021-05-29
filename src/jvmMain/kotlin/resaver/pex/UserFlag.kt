@@ -70,8 +70,7 @@ class UserFlag internal constructor(input: PlatformByteBuffer, strings: StringTa
      * @return A string representation of the UserFlag.
      */
     override fun toString(): String {
-        val FORMAT = "%s"
-        return String.format(FORMAT, NAME)
+        return "$NAME"
     }
 
     private val NAME: TString = strings.read(input)
