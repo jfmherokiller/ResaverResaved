@@ -1747,13 +1747,13 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         val ADDRESS = MATCHER.group("address")
         var index1: Int? = null
         try {
-            index1 = MATCHER.group("target1").toInt()
+            index1 = MATCHER.group("target1")?.toInt()
         } catch (ex: NumberFormatException) {
         } catch (ex: NullPointerException) {
         }
         var index2: Int? = null
         try {
-            index2 = MATCHER.group("target2").toInt()
+            index2 = MATCHER.group("target2")?.toInt()
         } catch (ex: NumberFormatException) {
         } catch (ex: NullPointerException) {
         }
