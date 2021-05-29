@@ -93,15 +93,15 @@ class DataAnalyzer(newData: PlatformByteBuffer, save: ess.ESS) : JSplitPane(HORI
             SIDE_INT.add(DATAFIELD, C1)
             SIDE_INT.add(COLOR, C2)
             SEARCH[DATAFIELD] = COLOR
-            DATAFIELD.addActionListener { l: ActionEvent? -> updateFormatting() }
+            DATAFIELD.addActionListener { updateFormatting() }
             COLOR.addActionListener { l: ActionEvent ->
                 val source = l.source as JButton
                 val color = JColorChooser.showDialog(this, "Select Color", source.background)
                 source.background = color
             }
         }
-        TEXTPANE.addCaretListener { e: CaretEvent? -> updateFormatting() }
-        TEXTPANE.addCaretListener { e: CaretEvent? -> updateFormatting() }
+        TEXTPANE.addCaretListener { updateFormatting() }
+        TEXTPANE.addCaretListener { updateFormatting() }
         refill()
     }
 
