@@ -59,7 +59,7 @@ class StructInstance
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
     override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
-        data = StructData(input!!, context!!)
+        data = StructData(input, context!!)
     }
 
     /**

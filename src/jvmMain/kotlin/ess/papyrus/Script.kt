@@ -274,7 +274,7 @@ class Script(input: PlatformByteBuffer, context: PapyrusContext) : Definition() 
      * @return A flag indicating if the `Script` is undefined.
      */
     override val isUndefined: Boolean
-        get() = if (null != type && !type.isEmpty) {
+        get() = if (!type.isEmpty) {
             false
         } else !NATIVE_SCRIPTS.contains(name.toIString())
 

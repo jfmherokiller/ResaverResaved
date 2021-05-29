@@ -52,7 +52,7 @@ internal constructor(input: PlatformByteBuffer, scripts: ScriptMap, context: Pap
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
     override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
-        data = input?.let { context?.let { it1 -> ReferenceData(it, it1) } }
+        data = input.let { context?.let { it1 -> ReferenceData(it, it1) } }
     }
 
     /**

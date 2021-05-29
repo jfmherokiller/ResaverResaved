@@ -57,7 +57,7 @@ class ScriptInstance internal constructor(input: PlatformByteBuffer, scripts: Sc
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
     override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
-        data = ScriptData(input!!, context!!)
+        data = ScriptData(input, context!!)
     }
 
     /**

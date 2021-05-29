@@ -59,7 +59,7 @@ class ArrayInfo(input: PlatformByteBuffer, context: PapyrusContext) : Analyzable
      */
     @Throws(PapyrusElementException::class, PapyrusFormatException::class)
     override fun readData(input: PlatformByteBuffer, context: PapyrusContext?) {
-        data = input?.let { ArrayData(it, context) }
+        data = ArrayData(input, context)
     }
 
     /**
