@@ -28,6 +28,7 @@ import java.io.Serializable
 import java.nio.BufferUnderflowException
 import java.nio.channels.FileChannel
 import java.nio.file.*
+import java.util.*
 import java.util.function.ToDoubleFunction
 import kotlin.math.sqrt
 import kotlin.streams.toList
@@ -162,7 +163,7 @@ class Mod(game: Game?, dir: Path) : Serializable {
      * @return A `ModReadResults`.
      */
     fun readData(plugins: PluginInfo, language: String): ModReadResults {
-        val LANG = "_" + language.toLowerCase()
+        val LANG = "_" + language.lowercase(Locale.getDefault())
         val GLOB = "glob:**$LANG.*strings"
         val MATCHER = FS.getPathMatcher(GLOB)
         val ARCHIVE_ERRORS: MutableList<Path> = mutableListOf()
@@ -403,19 +404,19 @@ class Mod(game: Game?, dir: Path) : Serializable {
         fun merge(sub: Analysis): Analysis {
             MODS.addAll(sub.MODS)
             SCRIPTS.putAll(sub.SCRIPTS)
-            for ((k, v) in sub.ESPS) {
+            sub.ESPS.forEach { (k, v) ->
                 ESPS.merge(k, v) { l1: MutableSet<String>, l2: MutableSet<String>? ->
                     l1.addAll(l2!!)
                     l1.sorted().toMutableSet()
                 }
             }
-            for ((key, value) in sub.SCRIPT_ORIGINS) {
+            sub.SCRIPT_ORIGINS.forEach { (key, value) ->
                 SCRIPT_ORIGINS.merge(key, value) { l1: MutableSet<String>, l2: MutableSet<String>? ->
                     l1.addAll(l2!!)
                     l1.sorted().toMutableSet()
                 }
             }
-            for ((name, list) in sub.STRUCT_ORIGINS) {
+            sub.STRUCT_ORIGINS.forEach { (name, list) ->
                 STRUCT_ORIGINS.merge(name, list) { l1: MutableSet<String>, l2: MutableSet<String>? ->
                     l1.addAll(l2!!)
                     l1.sorted().toMutableSet()
