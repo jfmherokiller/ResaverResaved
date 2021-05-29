@@ -29,7 +29,6 @@ import java.util.function.Predicate
 import java.util.regex.Pattern
 import java.util.regex.PatternSyntaxException
 import kotlin.collections.ArrayList
-import kotlin.collections.HashSet
 
 /**
  *
@@ -48,7 +47,7 @@ class FilterMaker {
         fun createModFilter(mod: Mod, plugins: PluginInfo, analysis: Analysis?): Predicate<FilterTreeModel.Node> {
             logger.info{"Filtering: mod = \"$mod\""}
             val MODNAME = mod.getName()
-            val PLUGINS: MutableSet<Plugin?> = HashSet()
+            val PLUGINS: MutableSet<Plugin?> = hashSetOf()
             mod.getESPNames().forEach { espName: String? ->
                 for (p in plugins.fullPlugins) {
                     if (p.NAME.equals(espName, ignoreCase = true)) {
@@ -112,7 +111,7 @@ class FilterMaker {
                 } catch (ex: PatternSyntaxException) {
                 }
             }
-            return Predicate { node: FilterTreeModel.Node? -> true }
+            return Predicate { true }
         }
 
         /**
@@ -369,7 +368,7 @@ class FilterMaker {
          */
         fun createChangeFormFlagFilter(context: ESSContext?, mask: Int, filter: Int): Predicate<FilterTreeModel.Node> {
             return if (mask == 0) {
-                Predicate { node: FilterTreeModel.Node? -> true }
+                Predicate { true }
             } else {
                 Predicate { node: FilterTreeModel.Node ->
                     if (!node.hasElement()) {
@@ -420,7 +419,7 @@ class FilterMaker {
             filter: Int
         ): Predicate<FilterTreeModel.Node> {
             return if (mask == 0) {
-                Predicate { node: FilterTreeModel.Node? -> true }
+                Predicate { true }
             } else {
                 Predicate { node: FilterTreeModel.Node ->
                     if (!node.hasElement()) {
@@ -474,7 +473,7 @@ class FilterMaker {
          *
          */
         fun createFilter(): Predicate<FilterTreeModel.Node> {
-            return Predicate { x: FilterTreeModel.Node? -> true }
+            return Predicate { true }
         }
 
         /**
