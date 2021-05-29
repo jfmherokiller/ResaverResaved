@@ -20,7 +20,6 @@ import resaver.IString.Companion.format
 import kotlin.Throws
 import java.io.IOException
 import resaver.IString
-import java.lang.StringBuilder
 
 /**
  * Describes the debugging information for a function.
