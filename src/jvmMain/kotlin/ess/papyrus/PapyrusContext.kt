@@ -67,10 +67,10 @@ class PapyrusContext : ESSContext {
      * the `EID` is determined from the `ID64` flag of the
      * `Game` field of the relevant `ESS`.
      *
-     * @param val The id value.
+     * @param `val` The id value.
      * @return The `EID`.
      */
-    fun makeEID(`val`: Number): EID {
+    fun makeEID(`val`: ULong): EID {
         return if (game!!.isID64) makeEID64(`val`.toLong()) else makeEID32(`val`.toInt())
     }
 

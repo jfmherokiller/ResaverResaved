@@ -1789,7 +1789,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "scriptinstance" -> {
-                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID(ADDRESS.toULong(16))
                     if (index1 != null) {
                         this.findElement(CONTEXT.findScriptInstance(ID), index1)
                     } else {
@@ -1797,7 +1797,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "structinstance" -> {
-                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID(ADDRESS.toULong(16))
                     if (index1 != null) {
                         this.findElement(CONTEXT.findStructInstance(ID), index1)
                     } else {
@@ -1805,7 +1805,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "reference" -> {
-                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID(ADDRESS.toULong(16))
                     if (index1 != null) {
                         this.findElement(CONTEXT.findReference(ID), index1)
                     } else {
@@ -1813,7 +1813,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "array" -> {
-                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID(ADDRESS.toULong(16))
                     if (index1 != null) {
                         this.findElement(CONTEXT.findArray(ID), index1)
                     } else {
@@ -1821,7 +1821,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "thread" -> {
-                    val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID32(UtilityFunctions.parseUnsignedInt(ADDRESS, 16))
                     if (index1 != null) {
                         this.findElement(CONTEXT.findActiveScript(ID), index1)
                     } else {
@@ -1829,7 +1829,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "suspended" -> {
-                    val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID32(UtilityFunctions.parseUnsignedInt(ADDRESS, 16))
                     val STACK = save!!.papyrus!!.suspendedStacks[ID]
                     if (index1 != null) {
                         this.findElement(STACK, index1)
@@ -1838,7 +1838,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "unbind" -> {
-                    val ID = CONTEXT.makeEID(java.lang.Long.parseUnsignedLong(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID(ADDRESS.toULong(16))
                     val UNBIND = save!!.papyrus!!.unbinds[ID]
                     if (index1 != null) {
                         this.findElement(UNBIND, index1)
@@ -1847,7 +1847,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "message" -> {
-                    val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID32(UtilityFunctions.parseUnsignedInt(ADDRESS, 16))
                     val MESSAGE: FunctionMessage? = save!!.papyrus!!.functionMessages.firstOrNull { it?.iD!! == ID }
                     if (index1 != null) {
                         this.findElement(MESSAGE, index1)
@@ -1856,7 +1856,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                     }
                 }
                 "frame" -> {
-                    val ID = CONTEXT.makeEID32(Integer.parseUnsignedInt(ADDRESS, 16))
+                    val ID = CONTEXT.makeEID32(UtilityFunctions.parseUnsignedInt(ADDRESS, 16))
                     val THREAD = CONTEXT.findActiveScript(ID)
                     if (THREAD != null && index1 != null) {
                         val FRAME = THREAD.stackFrames[index1]
