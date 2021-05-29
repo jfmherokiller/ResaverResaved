@@ -31,7 +31,7 @@ class VarBool : Variable {
 
     override fun toValueString(): String {
         //return String.format("%s", Boolean.toString(this.VALUE != 0));
-        return java.lang.Boolean.toString(VALUE != 0)
+        return (VALUE != 0).toString()
     }
 
     override fun toString(): String {
