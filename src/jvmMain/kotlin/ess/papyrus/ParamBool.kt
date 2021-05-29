@@ -20,7 +20,7 @@ class ParamBool(val VALUE: Byte) : Parameter() {
     }
 
     override fun toValueString(): String {
-        return java.lang.Boolean.toString(VALUE.toInt() != 0)
+        return (VALUE.toInt() != 0).toString()
     }
 
     override fun hashCode(): Int {
