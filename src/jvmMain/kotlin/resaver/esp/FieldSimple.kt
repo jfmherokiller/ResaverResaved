@@ -102,7 +102,6 @@ open class FieldSimple(code: IString, input: PlatformByteBuffer, size: Int, big:
      * @param ctx
      */
     init {
-        Objects.requireNonNull(input)
         SIZE = size
         this.code = code
         BIG = big
