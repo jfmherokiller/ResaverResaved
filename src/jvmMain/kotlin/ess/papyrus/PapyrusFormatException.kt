@@ -15,8 +15,6 @@
  */
 package ess.papyrus
 
-import java.lang.Exception
-
 /**
  *
  * @author Mark

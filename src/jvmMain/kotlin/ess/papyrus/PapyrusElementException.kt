@@ -15,8 +15,6 @@
  */
 package ess.papyrus
 
-import java.lang.Exception
-
 /**
  * An exception that stores a partially loaded Papyrus structure.
  *
