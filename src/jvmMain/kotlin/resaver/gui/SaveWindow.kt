@@ -2077,7 +2077,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         logger.info{"Created timer."}
         save = null
         analysis = null
-        filter = Predicate { x: FilterTreeModel.Node? -> true }
+        filter = Predicate { true }
         scanner = null
         TREE = FilterTree()
         TREESCROLLER = JScrollPane(TREE)
