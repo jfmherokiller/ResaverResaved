@@ -21,6 +21,7 @@ import java.awt.RenderingHints
 import java.awt.geom.AffineTransform
 import java.awt.image.BufferedImage
 import java.nio.file.Path
+import java.util.*
 import javax.swing.ImageIcon
 import kotlin.experimental.and
 
@@ -209,7 +210,7 @@ class Header(input: PlatformByteBuffer, path: Path?) : Element {
 
         // Identify which game produced the savefile.
         // Bit of a business, really.
-        when (val MAGICSTRING = String(MAGIC).toUpperCase()) {
+        when (val MAGICSTRING = String(MAGIC).uppercase(Locale.getDefault())) {
             "TESV_SAVEGAME" -> GAME = if (VERSION <= 9 && path?.let { resaver.Game.SKYRIM_LE.testFilename(it) } == true) {
                 resaver.Game.SKYRIM_LE
             } else if (VERSION >= 12 && path?.let { resaver.Game.SKYRIM_SE.testFilename(it) } == true) {
@@ -240,11 +241,7 @@ class Header(input: PlatformByteBuffer, path: Path?) : Element {
         SCREENSHOT_HEIGHT = input.getInt()
         compression = if (GAME == resaver.Game.SKYRIM_SE) read(input) else null
         require(HEADERSIZE == partialSize()) {
-            String.format(
-                "Header size should be %d, found %d.",
-                HEADERSIZE,
-                partialSize()
-            )
+            "Header size should be $HEADERSIZE, found ${partialSize()}."
         }
         BYPP = when (GAME) {
             resaver.Game.SKYRIM_LE -> 3
