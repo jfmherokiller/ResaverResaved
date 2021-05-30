@@ -49,14 +49,14 @@ class LeveledEntry(input: PlatformByteBuffer, context: ESSContext) : Element, Li
      * @return
      */
     override fun toHTML(target: Element?): String {
-        return String.format("%d (${REFID.toHTML(target)}) = %d", LEVEL, COUNT)
+        return "$LEVEL (${REFID.toHTML(target)}) = $COUNT"
     }
 
     /**
      * @return String representation.
      */
     override fun toString(): String {
-        return String.format("%d ($REFID) = %d", LEVEL, COUNT)
+        return "$LEVEL ($REFID) = $COUNT"
     }
 
     /**
