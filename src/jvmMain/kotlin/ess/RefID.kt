@@ -107,7 +107,7 @@ class RefID internal constructor(private val DATA: Int, ess: ESS) : Element, Lin
     }
 
     override fun compareTo(other: RefID?): Int {
-        return Integer.compareUnsigned(DATA, other?.DATA ?: 0)
+        return UtilityFunctions.compareUnsigned(DATA, other?.DATA ?: 0)
     }
 
     override fun hashCode(): Int {
