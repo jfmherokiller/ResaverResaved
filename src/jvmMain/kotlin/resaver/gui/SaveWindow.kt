@@ -1358,14 +1358,10 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
         val NUM_FORMS: Int
         val NUM_INSTANCES: Int
         if (purgeScripts) {
-            val INSTANCES: MutableSet<ScriptInstance> = HashSet()
-            for (p in plugins) {
-                if (p != null) {
-                    for (scriptInstance in p.getInstances(save)) {
-                        INSTANCES.add(scriptInstance)
-                    }
-                }
-            }
+            val INSTANCES = plugins
+                .filterNotNull()
+                .flatMap { it.getInstances(save) }
+                .toSet()
             NUM_INSTANCES = INSTANCES.size
             val REMOVED = save!!.papyrus!!.removeElements(INSTANCES)
             assert(REMOVED.size == NUM_INSTANCES) {
@@ -1383,14 +1379,10 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             NUM_INSTANCES = 0
         }
         if (purgeForms) {
-            val FORMS: MutableSet<ChangeForm> = HashSet()
-            for (p in plugins) {
-                if (p != null) {
-                    for (changeForm in p.getChangeForms(save)) {
-                        FORMS.add(changeForm)
-                    }
-                }
-            }
+            val FORMS = plugins
+                .filterNotNull()
+                .flatMap { it.getChangeForms(save) }
+                .toSet()
             NUM_FORMS = FORMS.size
             val REMOVED = save!!.removeChangeForms(FORMS)
             assert(REMOVED.size == NUM_INSTANCES) { String.format("Deleted %d/%d forms.", REMOVED.size, NUM_FORMS) }
