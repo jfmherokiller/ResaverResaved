@@ -41,7 +41,7 @@ interface Linkable {
          * @return
          */
         fun makeLink(type: String?, address: Any?, text: String?): String {
-            return String.format("<a href=\"%s://%s\">%s</a>", type, address, text)
+            return "<a href=\"$type://$address\">$text</a>"
         }
 
         /**
@@ -53,7 +53,7 @@ interface Linkable {
          * @return
          */
         fun makeLink(type: String?, address: Any?, target: Int, text: String?): String {
-            return String.format("<a href=\"%s://%s[%d]\">%s</a>", type, address, target, text)
+            return "<a href=\"$type://$address[$target]\">$text</a>"
         }
 
         /**
@@ -67,27 +67,27 @@ interface Linkable {
          */
 
         fun makeLink(type: String?, address: Any?, target1: Int, target2: Int, text: String?): String {
-            return String.format("<a href=\"%s://%s[%d][%d]\">%s</a>", type, address, target1, target2, text)
+            return "<a href=\"$type://$address[$target1][$target2]\">$text</a>"
         }
 
 
         fun makeLink(thread: String, ID: EID, toString: String): String {
-            return String.format("<a href=\"%s://%s\">%s</a>", thread, ID, toString)
+            return "<a href=\"$thread://$ID\">$toString</a>"
         }
 
 
         fun makeLink(frame: String, ID: EID, frameIndex: Int, toString: String): String {
-            return String.format("<a href=\"%s://%s[%d]\">%s</a>", frame, ID, frameIndex, toString)
+            return "<a href=\"$frame://$ID[$frameIndex]\">$toString</a>"
         }
 
 
         fun makeLink(script: String, REFTYPE: TString, toString: String): String {
-            return String.format("<a href=\"%s://%s\">%s</a>", script, REFTYPE, toString)
+            return "<a href=\"$script://$REFTYPE\">$toString</a>"
         }
 
 
         fun makeLink(string: String, INDEX: Int, toString: String): String {
-            return String.format("<a href=\"%s://%s\">%s</a>", string, INDEX, toString)
+            return "<a href=\"$string://$INDEX\">$toString</a>"
         }
     }
 }
