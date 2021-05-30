@@ -35,7 +35,7 @@ class GlobalData(input: PlatformByteBuffer, context: ESSContext?, model: ModelBu
     }
 
     /**
-     * @see resaver.ess.Element.calculateSize
+     * @see ess.Element.calculateSize
      * @return The size of the `Element` in bytes.
      */
     override fun calculateSize(): Int {
@@ -59,7 +59,7 @@ class GlobalData(input: PlatformByteBuffer, context: ESSContext?, model: ModelBu
      * @return
      */
     override fun toString(): String {
-        return super.toString() + ": type " + type.toString()
+        return "${super.toString()}: type $type"
     }
 
     /**
