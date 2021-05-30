@@ -52,6 +52,25 @@ class ChangeFormDefault(input: PlatformByteBuffer, size: Int) : ChangeFormData {
      * @return
      */
     override fun getInfo(analysis: resaver.Analysis?, save: ESS?): String {
+        val BUILDER = ParseIntoBytes().toString() + ParseIntoData().toString()
+        return BUILDER
+    }
+    private fun ParseIntoData(): StringBuilder {
+        val BUILDER = StringBuilder()
+        BUILDER.append("<hr/><p>RAW DATA TEXT:</p><code><pre>")
+        val mstring = String(DATA)
+        val printable = mstring.replace(Regex("\\P{Print}"), ".")
+        for (i in printable.indices) {
+            if (i > 0 && i % 32 == 0) {
+                BUILDER.append('\n')
+            }
+            val B = printable[i]
+            BUILDER.append(String.format("%s", B))
+        }
+        BUILDER.append("</pre></code>")
+        return BUILDER
+    }
+    private fun ParseIntoBytes(): StringBuilder {
         val BUILDER = StringBuilder()
         BUILDER.append("<hr/><p>RAW DATA:</p><code><pre>")
         for (i in DATA.indices) {
@@ -62,7 +81,7 @@ class ChangeFormDefault(input: PlatformByteBuffer, size: Int) : ChangeFormData {
             BUILDER.append(String.format("%02x ", B))
         }
         BUILDER.append("</pre></code>")
-        return BUILDER.toString()
+        return BUILDER
     }
 
     /**
