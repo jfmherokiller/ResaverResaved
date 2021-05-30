@@ -175,11 +175,8 @@ class ChangeFormExtraDataData(input: PlatformByteBuffer, context: ESSContext) : 
                 NAME = "LeveledCreature"
                 super.readRefID(input, "UNK1", context)
                 super.readRefID(input, "UNK2", context)
-                val flags = super.readElement(input, "NPCChangeFlags") { input: PlatformByteBuffer? -> input?.let { Flags.readIntFlags(it) } }
-                super.readElement(input, "NPC") { `in`: PlatformByteBuffer? -> `in`?.let { flags?.let { it1 ->
-                    ChangeFormNPC(it,
-                        it1, context)
-                } } }
+                val flags = super.readElement(input, "NPCChangeFlags") { Flags.readIntFlags(input) }
+                super.readElement(input, "NPC") {  ChangeFormNPC(input, flags, context) }
             }
             46 -> {
                 NAME = "LeveledItem"
@@ -204,7 +201,7 @@ class ChangeFormExtraDataData(input: PlatformByteBuffer, context: ESSContext) : 
             50 -> {
                 NAME = "NonActorMagicTarget"
                 super.readRefID(input, "ref", context)
-                super.readVSElemArray(input, "targets") { `in`: PlatformByteBuffer? -> MagicTarget(`in`, context) }
+                super.readVSElemArray(input, "targets") { MagicTarget(input, context) }
             }
             52 -> {
                 NAME = "PlayerCrimeList"
@@ -242,11 +239,11 @@ class ChangeFormExtraDataData(input: PlatformByteBuffer, context: ESSContext) : 
             }
             136 -> {
                 NAME = "AliasInstanceArray"
-                super.readVSElemArray(input, "ALIASES") { `in`: PlatformByteBuffer? -> AliasInstance(`in`, context) }
+                super.readVSElemArray(input, "ALIASES") { AliasInstance(input, context) }
             }
             140 -> {
                 NAME = "PromotedRef"
-                super.readVSElemArray(input, "REFS") { `in`: PlatformByteBuffer? -> context.readRefID(input) }
+                super.readVSElemArray(input, "REFS") { context.readRefID(input) }
             }
             else -> {
                 logger.error {"Unknown ExtraData: type=$TYPE"}
