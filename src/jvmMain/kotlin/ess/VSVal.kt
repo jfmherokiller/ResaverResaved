@@ -93,7 +93,7 @@ class VSVal : Element {
      * @return String representation.
      */
     override fun toString(): String {
-        return String.format("%d", value)
+        return  value.toString()
     }
 
     /**
