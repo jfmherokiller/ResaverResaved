@@ -22,6 +22,11 @@ import PlatformByteBuffer
  *
  * @author Mark Fairchild
  */
+/**
+ * Creates a new `ChangeFormFlags`.
+ *
+ * @param input The input stream.
+ */
 class ChangeFormFlags(input: PlatformByteBuffer) : Element {
     /**
      * @see resaver.ess.Element.write
@@ -45,7 +50,7 @@ class ChangeFormFlags(input: PlatformByteBuffer) : Element {
      */
     override fun toString(): String {
         val BUF = StringBuilder()
-        val S = Integer.toUnsignedString(flags, 2)
+        val S = flags.toUInt().toString(2)
         var idx = 0
         while (idx < 32 - S.length) {
             if (idx > 0 && idx % 4 == 0) {
@@ -67,20 +72,10 @@ class ChangeFormFlags(input: PlatformByteBuffer) : Element {
     /**
      * @return The flag field.
      */
-    val flags: Int
+    val flags: Int = input.getInt()
 
     /**
      * @return The unknown field.
      */
-    val unknown: Short
-
-    /**
-     * Creates a new `ChangeFormFlags`.
-     *
-     * @param input The input stream.
-     */
-    init {
-        flags = input.getInt()
-        unknown = input.getShort()
-    }
+    val unknown: Short = input.getShort()
 }
