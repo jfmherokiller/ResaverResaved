@@ -60,12 +60,12 @@ class ChangeFormFLST(input: PlatformByteBuffer, flags: Flags.FlagsInt, context: 
      * @return The number of entries removed.
      */
     fun cleanse(): Int {
-        if (null == FORMS) {
+        if (FORMS.isNullOrEmpty()) {
             return 0
         }
-        val size = FORMS!!.size
-        FORMS!!.removeIf(RefID::isZero)
-        return size - FORMS!!.size
+        val Originalsize = FORMS!!.size
+        FORMS!!.filter { refID -> refID.isZero }.forEach { FORMS!!.remove(it) }
+        return Originalsize - FORMS!!.size
     }
 
     /**
