@@ -1503,28 +1503,15 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 logger.warn{MSG}
             }
         } else {
-            val DELETABLE: MutableSet<Element?> = HashSet()
-            for (v1 in elements) {
-                if (ESS.DELETABLE.test(v1)) {
-                    if (v1 !is ActiveScript) {
-                        if (v1 !is SuspendedStack) {
-                            DELETABLE.add(v1)
-                        }
-                    }
-                }
-            }
-            val STACKS: MutableSet<SuspendedStack> = HashSet()
-            for (element in elements) {
-                if (element is SuspendedStack) {
-                    STACKS.add(element)
-                }
-            }
-            val THREADS: MutableSet<ActiveScript> = HashSet()
-            for (v in elements) {
-                if (v is ActiveScript) {
-                    THREADS.add(v)
-                }
-            }
+            val DELETABLE: MutableSet<Element?> = elements
+                .filter { ESS.DELETABLE.test(it) && it !is ActiveScript && it !is SuspendedStack }
+                .toMutableSet()
+            val STACKS = elements
+                .filterIsInstance<SuspendedStack>()
+                .toMutableSet()
+            val THREADS = elements
+                .filterIsInstance<ActiveScript>()
+                .toMutableSet()
             var deleteStacks = false
             if (STACKS.isNotEmpty()) {
                 val WARN =
