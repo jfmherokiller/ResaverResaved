@@ -73,9 +73,8 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addStringTable(table: StringTable) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val DICTIONARY = table.stream()
-                .collect(Collectors.groupingBy(ALPHABETICAL))
-            val NODES: List<Node> = DICTIONARY.entries.map { (key, value) -> ContainerNode(key.toString(), value).sort() }
+            val DictionaryP = table.groupBy { ALPHABETICAL.apply(it) }.toSortedMap()
+            val NODES: List<Node> = DictionaryP.entries.map { (key, value) -> ContainerNode(key.toString(), value).sort() }
             val NODE = ContainerNode("Strings").addAll(NODES).sort()
             PROGRESS.modifyValue(1)
             NODE
@@ -178,8 +177,8 @@ class ModelBuilder(progress: ProgressModel) {
      */
     fun addScriptInstances(instances: ScriptInstanceMap) {
         TASKS.add(EXECUTOR.submit(Callable {
-            val DICTIONARY = instances.values.stream().collect(Collectors.groupingBy(ALPHABETICAL))
-            val NODES: List<Node> = DICTIONARY.entries.map { (key, value) -> ContainerNode(key.toString(), value).sort() }.toList()
+            val DictionaryP = instances.values.groupBy { ALPHABETICAL.apply(it) }.toSortedMap()
+            val NODES: List<Node> = DictionaryP.entries.map { (key, value) -> ContainerNode(key.toString(), value).sort() }.toList()
             val NODE = ContainerNode("Script Instances").addAll(NODES).sort()
             PROGRESS.modifyValue(1)
             NODE
