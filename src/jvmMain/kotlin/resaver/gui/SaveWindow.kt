@@ -1503,15 +1503,15 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 logger.warn{MSG}
             }
         } else {
-            val DELETABLE: MutableSet<Element?> = elements
+            val DELETABLE = elements
                 .filter { ESS.DELETABLE.test(it) && it !is ActiveScript && it !is SuspendedStack }
-                .toMutableSet()
+                .toSet()
             val STACKS = elements
                 .filterIsInstance<SuspendedStack>()
-                .toMutableSet()
+                .toSet()
             val THREADS = elements
                 .filterIsInstance<ActiveScript>()
-                .toMutableSet()
+                .toSet()
             var deleteStacks = false
             if (STACKS.isNotEmpty()) {
                 val WARN =
@@ -1570,7 +1570,7 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
             deleteNodesFor(REMOVED)
             val BUF = StringBuilder()
             BUF.append(REMOVED.size).append(" elements deleted.")
-            if (THREADS.size > 0) {
+            if (THREADS.isNotEmpty()) {
                 BUF.append("\n").append(THREADS.size)
                 BUF.append(if (deleteThreads) " threads terminated and deleted." else " threads terminated.")
             }
@@ -1856,9 +1856,9 @@ class SaveWindow(path: Path?, autoParse: Boolean) : JFrame() {
                 }
             }
         } catch (ex: NumberFormatException) {
-            logger.warn("Invalid address: $URL")
+            logger.warn{"Invalid address: $URL"}
         } catch (ex: IndexOutOfBoundsException) {
-            logger.warn("Invalid address: $URL")
+            logger.warn{"Invalid address: $URL"}
         }
     }
 
